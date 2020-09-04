@@ -1,0 +1,27 @@
+config:
+  argocd:
+    namespace: argo.cd  # invalid name
+  pipelines:
+    name: tst!cicd  # invalid name
+environments:
+  - name: develo.pment      # invalid name
+    pipelines:
+      integration:
+        template: dev-ci-template
+        binding: dev-ci-binding
+    apps:
+      - name: app-1$  # invalid name
+        services:
+        - name: testing
+          source_url: https://github.com/myproject/myservice1.git
+        - name:         # invalid name
+          source_url: https://github.com/myproject/myservice2.git
+          webhook:
+            secret:
+              name: webhook-secret
+              namespace: webhook-secret-key
+          pipelines:
+                integration:
+                  template: dev-ci-template
+                  bindings:  
+                  -  # invalid name

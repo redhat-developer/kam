@@ -1,0 +1,9 @@
+environments:
+  - name: app-environment
+    apps:
+      - name: my-app-1 # Application my-app-1
+        services:
+          - name: app-1-service-metrics
+      - name: my-app-1 # Duplicate application my-app-1 (invalid)
+        services:
+          - name: app-2-service

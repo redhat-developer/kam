@@ -1,0 +1,9 @@
+environments:
+  - name: development
+    cluster: testing.cluster
+
+    apps:
+      - name: my-app-1
+        services:
+          - name: service-http
+            source_url:  https://github.com/myproject/myservice.git

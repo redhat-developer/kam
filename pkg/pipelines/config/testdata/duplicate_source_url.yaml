@@ -1,0 +1,15 @@
+environments:
+  - name: duplicate-source
+    pipelines:
+      integration:
+        template: dev-ci-template
+        binding: dev-ci-binding
+    apps:
+      - name: my-app-1
+        services:
+        - name: app-1-service-http # Service Name
+          source_url: https://github.com/testing/testing.git
+      - name: my-app-2
+        services:
+        - name: app-2-service-http # Duplicate Service Name (invalid)
+          source_url:  https://github.com/testing/testing.git

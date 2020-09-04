@@ -1,0 +1,8 @@
+config:
+environments:
+    - name: development
+      apps:
+        - name: app-1
+          services:
+          - name: my-incredibly-long-name-for-a-test-service-that-fails
+            source_url: https://github.com/myproject/myservice2.git

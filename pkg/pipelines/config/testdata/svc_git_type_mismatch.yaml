@@ -1,0 +1,9 @@
+
+environments:
+- apps:
+  - name: bus    
+    services:
+    - name: bus-svc  #  service url host is gitlab.com (not matching gitops's github)
+      source_url: https://gitlab.com/myproject/myservice.git
+  name: test-dev
+gitops_url: https://github.com/wtam2018/gitops.git
