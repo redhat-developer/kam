@@ -17,7 +17,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/openshift/odo/tests/helper"
+	"github.com/chetan-rns/gitops-cli/pkg/pipelines/helper"
 )
 
 func init() {

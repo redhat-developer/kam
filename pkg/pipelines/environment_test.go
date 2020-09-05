@@ -10,8 +10,8 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"github.com/chetan-rns/gitops-cli/pkg/pipelines/config"
+	"github.com/chetan-rns/gitops-cli/pkg/pipelines/helper"
 	"github.com/chetan-rns/gitops-cli/pkg/pipelines/ioutils"
-	"github.com/openshift/odo/tests/helper"
 )
 
 func TestAddEnv(t *testing.T) {
