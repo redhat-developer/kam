@@ -6,7 +6,7 @@ import (
 	"text/template"
 )
 
-const scriptTemplate = `#!/bin/sh
+const scriptTemplate = `#!/bin/bash
 is_argocd=false
 argo_path="config/argocd"
 cicd_path="config/{{ .CICDEnv }}"
