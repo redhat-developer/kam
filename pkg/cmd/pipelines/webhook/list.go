@@ -5,7 +5,7 @@ import (
 	"os"
 	"text/tabwriter"
 
-	"github.com/chetan-rns/gitops-cli/pkg/cmd/genericclioptions"
+	"github.com/chetan-rns/gitops-cli/pkg/cmd/util"
 	"github.com/openshift/odo/pkg/log"
 	"github.com/spf13/cobra"
 
@@ -34,7 +34,7 @@ func (o *listOptions) Run() error {
 
 	if ids != nil {
 		if log.IsJSON() {
-			OutputSuccess(ids)
+			outputSuccess(ids)
 		} else {
 			w := tabwriter.NewWriter(os.Stdout, 5, 2, 3, ' ', tabwriter.TabIndent)
 			fmt.Fprintln(w, "ID")
@@ -58,7 +58,7 @@ func newCmdList(name, fullName string) *cobra.Command {
 		Long:    "List existing Git repository webhook IDs of the target repository and listener.",
 		Example: fmt.Sprintf(listExample, fullName),
 		Run: func(cmd *cobra.Command, args []string) {
-			genericclioptions.GenericRun(o, cmd, args)
+			util.GenericRun(o, cmd, args)
 		},
 	}
 

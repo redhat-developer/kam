@@ -3,7 +3,7 @@ package environment
 import (
 	"fmt"
 
-	"github.com/chetan-rns/gitops-cli/pkg/cmd/genericclioptions"
+	"github.com/chetan-rns/gitops-cli/pkg/cmd/util"
 	"github.com/chetan-rns/gitops-cli/pkg/pipelines"
 	"github.com/chetan-rns/gitops-cli/pkg/pipelines/ioutils"
 	"github.com/openshift/odo/pkg/log"
@@ -30,7 +30,6 @@ var (
 // AddEnvParameters encapsulates the parameters for the odo pipelines init command.
 type AddEnvParameters struct {
 	envName         string
-	output          string
 	pipelinesFolder string
 	cluster         string
 }
@@ -78,12 +77,12 @@ func NewCmdAddEnv(name, fullName string) *cobra.Command {
 		Long:    addEnvLongDesc,
 		Example: fmt.Sprintf(addEnvExample, fullName),
 		Run: func(cmd *cobra.Command, args []string) {
-			genericclioptions.GenericRun(o, cmd, args)
+			util.GenericRun(o, cmd, args)
 		},
 	}
 
 	addEnvCmd.Flags().StringVar(&o.envName, "env-name", "", "Name of the environment/namespace")
-	addEnvCmd.MarkFlagRequired("env-name")
+	_ = addEnvCmd.MarkFlagRequired("env-name")
 	addEnvCmd.Flags().StringVar(&o.pipelinesFolder, "pipelines-folder", ".", "Folder path to retrieve manifest, eg. /test where manifest exists at /test/pipelines.yaml")
 	addEnvCmd.Flags().StringVar(&o.cluster, "cluster", "", "Deployment cluster e.g. https://kubernetes.local.svc")
 	return addEnvCmd

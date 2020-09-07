@@ -51,7 +51,6 @@ const (
 	appTaskPath           = "04-tasks/deploy-using-kubectl-task.yaml"
 	ciPipelinesPath       = "05-pipelines/ci-dryrun-from-push-pipeline.yaml"
 	appCiPipelinesPath    = "05-pipelines/app-ci-pipeline.yaml"
-	cdPipelinesPath       = "05-pipelines/cd-deploy-from-push-pipeline.yaml"
 	pushTemplatePath      = "07-templates/ci-dryrun-from-push-template.yaml"
 	appCIPushTemplatePath = "07-templates/app-ci-build-from-push-template.yaml"
 	eventListenerPath     = "08-eventlisteners/cicd-event-listener.yaml"

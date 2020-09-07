@@ -110,9 +110,18 @@ func validateOverwriteOption(input interface{}, path string) error {
 // validateAccessToken validates if the access token is correct for a particular service repo
 func validateAccessToken(input interface{}, serviceRepo string) error {
 	if s, ok := input.(string); ok {
-		repo, _ := git.NewRepository(serviceRepo, s)
+		repo, err := git.NewRepository(serviceRepo, s)
+		if err != nil {
+			return err
+		}
 		parsedURL, err := url.Parse(serviceRepo)
+		if err != nil {
+			return err
+		}
 		repoName, err := git.GetRepoName(parsedURL)
+		if err != nil {
+			return err
+		}
 		_, _, err = repo.Client.Repositories.Find(context.Background(), repoName)
 		if err != nil {
 			return fmt.Errorf("The token passed is incorrect for repository %s", repoName)

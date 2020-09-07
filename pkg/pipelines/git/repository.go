@@ -85,19 +85,6 @@ func (r *Repository) CreateWebhook(listenerURL, secret string) (string, error) {
 	return created.ID, err
 }
 
-func getDriverName(u *url.URL) (string, error) {
-
-	if s := strings.TrimSuffix(u.Host, ".com"); s != u.Host {
-		return strings.ToLower(s), nil
-	}
-
-	if s := strings.TrimSuffix(u.Host, ".org"); s != u.Host {
-		return strings.ToLower(s), nil
-	}
-
-	return "", errors.New("unknown Git server: " + u.Host)
-}
-
 // TODO: this likely won't work for GitLab projects because it assumes that the
 // path is always composed of two elements.
 func GetRepoName(u *url.URL) (string, error) {

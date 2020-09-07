@@ -3,6 +3,7 @@ package environment
 import (
 	"fmt"
 
+	"github.com/chetan-rns/gitops-cli/pkg/cmd/util"
 	"github.com/spf13/cobra"
 )
 
@@ -12,7 +13,7 @@ const EnvRecommendedCommandName = "environment"
 // NewCmdEnv create a new environment command
 func NewCmdEnv(name, fullName string) *cobra.Command {
 
-	addEnvCmd := NewCmdAddEnv(AddEnvRecommendedCommandName, GetFullName(fullName, AddEnvRecommendedCommandName))
+	addEnvCmd := NewCmdAddEnv(AddEnvRecommendedCommandName, util.GetFullName(fullName, AddEnvRecommendedCommandName))
 
 	var envCmd = &cobra.Command{
 		Use:   name,
@@ -29,9 +30,4 @@ func NewCmdEnv(name, fullName string) *cobra.Command {
 	envCmd.Annotations = map[string]string{"command": "main"}
 	// envCmd.SetUsageTemplate(odoutil.CmdUsageTemplate)
 	return envCmd
-}
-
-// GetFullName generates a command's full name based on its parent's full name and its own name
-func GetFullName(parentName, name string) string {
-	return parentName + " " + name
 }

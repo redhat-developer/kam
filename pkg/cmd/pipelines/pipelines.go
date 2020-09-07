@@ -8,6 +8,7 @@ import (
 	"github.com/chetan-rns/gitops-cli/pkg/cmd/pipelines/environment"
 	"github.com/chetan-rns/gitops-cli/pkg/cmd/pipelines/service"
 	"github.com/chetan-rns/gitops-cli/pkg/cmd/pipelines/webhook"
+	"github.com/chetan-rns/gitops-cli/pkg/cmd/util"
 )
 
 // RecommendedCommandName is the recommended pipelines command name.
@@ -24,26 +25,21 @@ func NewCmdPipelines(name, fullName string) *cobra.Command {
 		},
 	}
 
-	bootstrapCmd := NewCmdBootstrap(BootstrapRecommendedCommandName, GetFullName(fullName, BootstrapRecommendedCommandName))
-	envCmd := environment.NewCmdEnv(environment.EnvRecommendedCommandName, GetFullName(fullName, environment.EnvRecommendedCommandName))
-	serviceCmd := service.NewCmd(service.RecommendedCommandName, GetFullName(fullName, service.RecommendedCommandName))
+	bootstrapCmd := NewCmdBootstrap(BootstrapRecommendedCommandName, util.GetFullName(fullName, BootstrapRecommendedCommandName))
+	envCmd := environment.NewCmdEnv(environment.EnvRecommendedCommandName, util.GetFullName(fullName, environment.EnvRecommendedCommandName))
+	serviceCmd := service.NewCmd(service.RecommendedCommandName, util.GetFullName(fullName, service.RecommendedCommandName))
 
-	webhookCmd := webhook.NewCmdWebhook(webhook.RecommendedCommandName, GetFullName(fullName, webhook.RecommendedCommandName))
+	webhookCmd := webhook.NewCmdWebhook(webhook.RecommendedCommandName, util.GetFullName(fullName, webhook.RecommendedCommandName))
 
 	pipelinesCmd.AddCommand(bootstrapCmd)
 	pipelinesCmd.AddCommand(envCmd)
 	pipelinesCmd.AddCommand(serviceCmd)
 	pipelinesCmd.AddCommand(webhookCmd)
 
-	buildCmd := NewCmdBuild(BuildRecommendedCommandName, GetFullName(fullName, BuildRecommendedCommandName))
+	buildCmd := NewCmdBuild(BuildRecommendedCommandName, util.GetFullName(fullName, BuildRecommendedCommandName))
 	pipelinesCmd.AddCommand(buildCmd)
 
 	pipelinesCmd.Annotations = map[string]string{"command": "main"}
 	// pipelinesCmd.SetUsageTemplate(odoutil.CmdUsageTemplate)
 	return pipelinesCmd
-}
-
-// GetFullName generates a command's full name based on its parent's full name and its own name
-func GetFullName(parentName, name string) string {
-	return parentName + " " + name
 }

@@ -6,9 +6,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/chetan-rns/gitops-cli/pkg/cmd/genericclioptions"
 	"github.com/chetan-rns/gitops-cli/pkg/cmd/pipelines/ui"
 	"github.com/chetan-rns/gitops-cli/pkg/cmd/pipelines/utility"
+	"github.com/chetan-rns/gitops-cli/pkg/cmd/util"
 	"github.com/chetan-rns/gitops-cli/pkg/pipelines"
 	"github.com/chetan-rns/gitops-cli/pkg/pipelines/ioutils"
 	"github.com/chetan-rns/gitops-cli/pkg/pipelines/namespaces"
@@ -29,8 +29,6 @@ const (
 	sealedSecretsName   = "sealed-secrets-controller"
 	sealedSecretsNS     = "kube-system"
 	argoCDNS            = "argocd"
-	argoCDOperatorName  = "argocd-operator"
-	argoCDServerName    = "argocd-server"
 	pipelinesOperatorNS = "openshift-operators"
 )
 
@@ -268,7 +266,7 @@ func NewCmdBootstrap(name, fullName string) *cobra.Command {
 		Long:    bootstrapLongDesc,
 		Example: fmt.Sprintf(bootstrapExample, fullName),
 		Run: func(cmd *cobra.Command, args []string) {
-			genericclioptions.GenericRun(o, cmd, args)
+			util.GenericRun(o, cmd, args)
 		},
 	}
 	bootstrapCmd.Flags().StringVar(&o.GitOpsRepoURL, "gitops-repo-url", "", "Provide the URL for your GitOps repository e.g. https://github.com/organisation/repository.git")
@@ -305,10 +303,7 @@ func isKnownDriver(repoURL string) bool {
 		return false
 	}
 	_, err = factory.DefaultIdentifier.Identify(host)
-	if err == nil {
-		return true
-	}
-	return false
+	return err == nil
 }
 
 func hostFromURL(s string) (string, error) {

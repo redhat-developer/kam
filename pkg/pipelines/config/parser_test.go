@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/chetan-rns/gitops-cli/pkg/pipelines/ioutils"
 	"github.com/chetan-rns/gitops-cli/pkg/pipelines/yaml"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestParse(t *testing.T) {
@@ -163,8 +163,10 @@ func TestParsePipelinesFolder(t *testing.T) {
 	}
 
 	fakeFs := ioutils.NewMemoryFilesystem()
-	yaml.MarshalItemToFile(fakeFs, "gitops/pipelines.yaml", want)
-
+	err := yaml.MarshalItemToFile(fakeFs, "gitops/pipelines.yaml", want)
+	if err != nil {
+		t.Fatal(err)
+	}
 	got, err := ParsePipelinesFolder(fakeFs, "gitops")
 	if err != nil {
 		t.Fatal(err)

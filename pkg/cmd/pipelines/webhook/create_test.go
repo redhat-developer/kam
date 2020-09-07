@@ -107,7 +107,10 @@ func executeCommand(cmd *cobra.Command, flags ...keyValuePair) (c *cobra.Command
 	buf := new(bytes.Buffer)
 	cmd.SetOutput(buf)
 	for _, flag := range flags {
-		cmd.Flags().Set(flag.key, flag.value)
+		err := cmd.Flags().Set(flag.key, flag.value)
+		if err != nil {
+			return nil, "", err
+		}
 	}
 	c, err = cmd.ExecuteC()
 	return c, buf.String(), err

@@ -23,10 +23,6 @@ type mockSpinner struct {
 	start  bool
 	end    bool
 }
-type keyValuePair struct {
-	key   string
-	value string
-}
 
 func TestValidatePrefix(t *testing.T) {
 	completeTests := []struct {
@@ -341,13 +337,6 @@ func matchError(t *testing.T, s string, e error) bool {
 		t.Fatal(err)
 	}
 	return match
-}
-
-func flag(k, v string) keyValuePair {
-	return keyValuePair{
-		key:   k,
-		value: v,
-	}
 }
 
 func (m *mockSpinner) Start(status string, debug bool) {

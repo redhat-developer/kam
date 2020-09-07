@@ -3,10 +3,10 @@ package config
 import (
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
-	"github.com/jenkins-x/go-scm/scm/factory"
 	"github.com/chetan-rns/gitops-cli/pkg/pipelines/ioutils"
 	"github.com/chetan-rns/gitops-cli/pkg/pipelines/yaml"
+	"github.com/google/go-cmp/cmp"
+	"github.com/jenkins-x/go-scm/scm/factory"
 )
 
 func TestLoadManifestUpdatesDrivers(t *testing.T) {
@@ -33,6 +33,9 @@ func TestLoadManifestUpdatesDrivers(t *testing.T) {
 	}
 
 	m, err := LoadManifest(fs, "/manifest")
+	if err != nil {
+		t.Fatal("Failed to load manifest")
+	}
 	if diff := cmp.Diff(c, m); diff != "" {
 		t.Fatalf("diff in loading manifest:\n%s", diff)
 	}

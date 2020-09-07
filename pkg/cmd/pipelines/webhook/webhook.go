@@ -3,6 +3,7 @@ package webhook
 import (
 	"fmt"
 
+	"github.com/chetan-rns/gitops-cli/pkg/cmd/util"
 	"github.com/spf13/cobra"
 )
 
@@ -11,9 +12,9 @@ const RecommendedCommandName = "webhook"
 
 // NewCmdWebhook create a new webhook command
 func NewCmdWebhook(name, fullName string) *cobra.Command {
-	createCmd := newCmdCreate(createRecommendedCommandName, GetFullName(fullName, createRecommendedCommandName))
-	deleteCmd := newCmdDelete(deleteRecommendedCommandName, GetFullName(fullName, deleteRecommendedCommandName))
-	listCmd := newCmdList(listRecommendedCommandName, GetFullName(fullName, listRecommendedCommandName))
+	createCmd := newCmdCreate(createRecommendedCommandName, util.GetFullName(fullName, createRecommendedCommandName))
+	deleteCmd := newCmdDelete(deleteRecommendedCommandName, util.GetFullName(fullName, deleteRecommendedCommandName))
+	listCmd := newCmdList(listRecommendedCommandName, util.GetFullName(fullName, listRecommendedCommandName))
 
 	var webhookCmd = &cobra.Command{
 		Use:   name,
@@ -35,9 +36,4 @@ func NewCmdWebhook(name, fullName string) *cobra.Command {
 	webhookCmd.Annotations = map[string]string{"command": "main"}
 	// webhookCmd.SetUsageTemplate(odoutil.CmdUsageTemplate)
 	return webhookCmd
-}
-
-// GetFullName generates a command's full name based on its parent's full name and its own name
-func GetFullName(parentName, name string) string {
-	return parentName + " " + name
 }

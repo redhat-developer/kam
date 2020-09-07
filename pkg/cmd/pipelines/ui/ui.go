@@ -87,7 +87,7 @@ func EnterOutputPath() string {
 	var outputPath string
 	prompt := &survey.Input{
 		Message: "Provide a path to write GitOps resources?",
-		Help:    fmt.Sprintf("This is the path where the GitOps repository configuration is stored locally before you push it to the repository GitopsRepoURL"),
+		Help:    "This is the path where the GitOps repository configuration is stored locally before you push it to the repository GitopsRepoURL",
 		Default: ".",
 	}
 
@@ -106,8 +106,7 @@ func EnterOutputPath() string {
 // EnterGitWebhookSecret allows the user to specify the webhook secret string they wish to authenticate push/pull to GitOps repo in a UI prompt.
 func EnterGitWebhookSecret() string {
 	var gitWebhookSecret string
-	var prompt *survey.Input
-	prompt = &survey.Input{
+	prompt := &survey.Input{
 		Message: "Provide a secret (minimum 16 characters) that we can use to authenticate incoming hooks from your Git hosting service for the Service repository. (if not provided, it will be auto-generated)",
 		Help:    "You can provide a string that is used as a shared secret to authenticate the origin of hook notifications from your git host.",
 	}

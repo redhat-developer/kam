@@ -63,7 +63,6 @@ const (
 	defaultServer      = "https://kubernetes.default.svc"
 	defaultProject     = "default"
 	ArgoCDNamespace    = "argocd"
-	parentAppFile      = "argo-app.yaml"
 	argoCDResourceFile = "argocd.yaml"
 )
 

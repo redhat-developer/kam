@@ -6,10 +6,10 @@ import (
 	"os"
 	"text/tabwriter"
 
-	"github.com/chetan-rns/gitops-cli/pkg/cmd/genericclioptions"
 	"github.com/openshift/odo/pkg/log"
 	"github.com/spf13/cobra"
 
+	"github.com/chetan-rns/gitops-cli/pkg/cmd/util"
 	backend "github.com/chetan-rns/gitops-cli/pkg/pipelines/webhook"
 	ktemplates "k8s.io/kubectl/pkg/util/templates"
 )
@@ -35,7 +35,7 @@ func (o *createOptions) Run() error {
 
 	if id != "" {
 		if log.IsJSON() {
-			OutputSuccess(id)
+			outputSuccess(id)
 		} else {
 			w := tabwriter.NewWriter(os.Stdout, 5, 2, 3, ' ', tabwriter.TabIndent)
 			fmt.Fprintln(w, "CREATED ID")
@@ -56,7 +56,7 @@ func newCmdCreate(name, fullName string) *cobra.Command {
 		Long:    "Create a new Git repository webhook that triggers CI/CD pipeline runs.",
 		Example: fmt.Sprintf(createExample, fullName),
 		Run: func(cmd *cobra.Command, args []string) {
-			genericclioptions.GenericRun(o, cmd, args)
+			util.GenericRun(o, cmd, args)
 		},
 	}
 
@@ -64,8 +64,8 @@ func newCmdCreate(name, fullName string) *cobra.Command {
 	return command
 }
 
-// OutputSuccess outputs a "successful" machine-readable output format in json
-func OutputSuccess(machineOutput interface{}) {
+// outputSuccess outputs a "successful" machine-readable output format in json
+func outputSuccess(machineOutput interface{}) {
 	printableOutput, err := marshalJSONIndented(machineOutput)
 
 	// If we error out... there's no way to output it (since we disable logging when using -o json)

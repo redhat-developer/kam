@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/chetan-rns/gitops-cli/pkg/cmd/pipelines"
+	"github.com/chetan-rns/gitops-cli/pkg/cmd/util"
 	"github.com/spf13/cobra"
 )
 
@@ -19,14 +20,9 @@ func makeRootCmd() *cobra.Command {
 	}
 	// Add all subcommands to base command
 	rootCmd.AddCommand(
-		pipelines.NewCmdPipelines(pipelines.RecommendedCommandName, GetFullName("gitops-cli", pipelines.RecommendedCommandName)))
+		pipelines.NewCmdPipelines(pipelines.RecommendedCommandName, util.GetFullName("gitops-cli", pipelines.RecommendedCommandName)))
 
 	return rootCmd
-}
-
-// GetFullName generates a command's full name based on its parent's full name and its own name
-func GetFullName(parentName, name string) string {
-	return parentName + " " + name
 }
 
 // Execute is the main entry point into this component.
