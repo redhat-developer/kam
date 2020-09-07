@@ -29,8 +29,8 @@ jobs:
     - name: Build
       run: go build -v ./cmd/gitops-cli
 
-    - name: Lint check
-      run: golangci-lint run ./...
+    - name: Run golangci-lint
+      uses: actions-contrib/golangci-lint@v1
 
     - name: Tests
       run: go test -v ./...
