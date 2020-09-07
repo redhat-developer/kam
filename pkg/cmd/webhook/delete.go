@@ -8,7 +8,7 @@ import (
 	"github.com/openshift/odo/pkg/log"
 	"github.com/spf13/cobra"
 
-	"github.com/chetan-rns/gitops-cli/pkg/cmd/util"
+	"github.com/chetan-rns/gitops-cli/pkg/cmd/genericclioptions"
 	backend "github.com/chetan-rns/gitops-cli/pkg/pipelines/webhook"
 	ktemplates "k8s.io/kubectl/pkg/util/templates"
 )
@@ -55,7 +55,7 @@ func newCmdDelete(name, fullName string) *cobra.Command {
 		Long:    "Delete all Git repository webhooks that trigger event to CI/CD Pipeline Event Listeners.",
 		Example: fmt.Sprintf(deleteExample, fullName),
 		Run: func(cmd *cobra.Command, args []string) {
-			util.GenericRun(o, cmd, args)
+			genericclioptions.GenericRun(o, cmd, args)
 		},
 	}
 

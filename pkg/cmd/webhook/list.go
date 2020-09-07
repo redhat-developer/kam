@@ -5,10 +5,10 @@ import (
 	"os"
 	"text/tabwriter"
 
-	"github.com/chetan-rns/gitops-cli/pkg/cmd/util"
 	"github.com/openshift/odo/pkg/log"
 	"github.com/spf13/cobra"
 
+	"github.com/chetan-rns/gitops-cli/pkg/cmd/genericclioptions"
 	backend "github.com/chetan-rns/gitops-cli/pkg/pipelines/webhook"
 	ktemplates "k8s.io/kubectl/pkg/util/templates"
 )
@@ -58,7 +58,7 @@ func newCmdList(name, fullName string) *cobra.Command {
 		Long:    "List existing Git repository webhook IDs of the target repository and listener.",
 		Example: fmt.Sprintf(listExample, fullName),
 		Run: func(cmd *cobra.Command, args []string) {
-			util.GenericRun(o, cmd, args)
+			genericclioptions.GenericRun(o, cmd, args)
 		},
 	}
 

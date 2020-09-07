@@ -83,3 +83,8 @@ func (c *Client) CheckIfPipelinesExists(ns string) error {
 	}
 	return nil
 }
+
+// GetFullName generates a command's full name based on its parent's full name and its own name
+func GetFullName(parentName, name string) string {
+	return parentName + " " + name
+}

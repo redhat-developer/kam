@@ -1,4 +1,4 @@
-package util
+package genericclioptions
 
 import (
 	"fmt"
@@ -39,11 +39,5 @@ func logErrorAndExit(err error, context string, a ...interface{}) {
 		}
 		// Always exit 1 anyways
 		os.Exit(1)
-
 	}
-}
-
-// GetFullName generates a command's full name based on its parent's full name and its own name
-func GetFullName(parentName, name string) string {
-	return parentName + " " + name
 }

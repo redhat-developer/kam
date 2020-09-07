@@ -3,8 +3,8 @@ package service
 import (
 	"fmt"
 
-	"github.com/chetan-rns/gitops-cli/pkg/cmd/pipelines/utility"
-	"github.com/chetan-rns/gitops-cli/pkg/cmd/util"
+	"github.com/chetan-rns/gitops-cli/pkg/cmd/genericclioptions"
+	"github.com/chetan-rns/gitops-cli/pkg/cmd/utility"
 	"github.com/chetan-rns/gitops-cli/pkg/pipelines"
 	"github.com/chetan-rns/gitops-cli/pkg/pipelines/ioutils"
 	"github.com/openshift/odo/pkg/log"
@@ -61,7 +61,7 @@ func newCmdAdd(name, fullName string) *cobra.Command {
 		Long:    addLongDesc,
 		Example: fmt.Sprintf(addExample, fullName),
 		Run: func(cmd *cobra.Command, args []string) {
-			util.GenericRun(o, cmd, args)
+			genericclioptions.GenericRun(o, cmd, args)
 		},
 	}
 

@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/chetan-rns/gitops-cli/pkg/cmd/pipelines/utility"
+	"github.com/chetan-rns/gitops-cli/pkg/cmd/utility"
 	"github.com/chetan-rns/gitops-cli/pkg/pipelines/git"
 	"github.com/chetan-rns/gitops-cli/pkg/pipelines/ioutils"
 	"github.com/chetan-rns/gitops-cli/pkg/pipelines/secrets"

@@ -3,7 +3,7 @@ package service
 import (
 	"fmt"
 
-	"github.com/chetan-rns/gitops-cli/pkg/cmd/util"
+	"github.com/chetan-rns/gitops-cli/pkg/cmd/utility"
 	"github.com/spf13/cobra"
 )
 
@@ -13,7 +13,7 @@ const RecommendedCommandName = "service"
 // NewCmd creates a new environment command
 func NewCmd(name, fullName string) *cobra.Command {
 
-	addCmd := newCmdAdd(addRecommendedCommandName, util.GetFullName(fullName, addRecommendedCommandName))
+	addCmd := newCmdAdd(addRecommendedCommandName, utility.GetFullName(fullName, addRecommendedCommandName))
 
 	var cmd = &cobra.Command{
 		Use:   name,

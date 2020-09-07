@@ -1,4 +1,4 @@
-package pipelines
+package cmd
 
 import (
 	"fmt"
@@ -6,9 +6,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/chetan-rns/gitops-cli/pkg/cmd/pipelines/ui"
-	"github.com/chetan-rns/gitops-cli/pkg/cmd/pipelines/utility"
-	"github.com/chetan-rns/gitops-cli/pkg/cmd/util"
+	"github.com/chetan-rns/gitops-cli/pkg/cmd/genericclioptions"
+	"github.com/chetan-rns/gitops-cli/pkg/cmd/ui"
+	"github.com/chetan-rns/gitops-cli/pkg/cmd/utility"
 	"github.com/chetan-rns/gitops-cli/pkg/pipelines"
 	"github.com/chetan-rns/gitops-cli/pkg/pipelines/ioutils"
 	"github.com/chetan-rns/gitops-cli/pkg/pipelines/namespaces"
@@ -266,7 +266,7 @@ func NewCmdBootstrap(name, fullName string) *cobra.Command {
 		Long:    bootstrapLongDesc,
 		Example: fmt.Sprintf(bootstrapExample, fullName),
 		Run: func(cmd *cobra.Command, args []string) {
-			util.GenericRun(o, cmd, args)
+			genericclioptions.GenericRun(o, cmd, args)
 		},
 	}
 	bootstrapCmd.Flags().StringVar(&o.GitOpsRepoURL, "gitops-repo-url", "", "Provide the URL for your GitOps repository e.g. https://github.com/organisation/repository.git")

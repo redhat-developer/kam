@@ -3,7 +3,7 @@ package webhook
 import (
 	"fmt"
 
-	"github.com/chetan-rns/gitops-cli/pkg/cmd/util"
+	"github.com/chetan-rns/gitops-cli/pkg/cmd/utility"
 	"github.com/spf13/cobra"
 )
 
@@ -12,9 +12,9 @@ const RecommendedCommandName = "webhook"
 
 // NewCmdWebhook create a new webhook command
 func NewCmdWebhook(name, fullName string) *cobra.Command {
-	createCmd := newCmdCreate(createRecommendedCommandName, util.GetFullName(fullName, createRecommendedCommandName))
-	deleteCmd := newCmdDelete(deleteRecommendedCommandName, util.GetFullName(fullName, deleteRecommendedCommandName))
-	listCmd := newCmdList(listRecommendedCommandName, util.GetFullName(fullName, listRecommendedCommandName))
+	createCmd := newCmdCreate(createRecommendedCommandName, utility.GetFullName(fullName, createRecommendedCommandName))
+	deleteCmd := newCmdDelete(deleteRecommendedCommandName, utility.GetFullName(fullName, deleteRecommendedCommandName))
+	listCmd := newCmdList(listRecommendedCommandName, utility.GetFullName(fullName, listRecommendedCommandName))
 
 	var webhookCmd = &cobra.Command{
 		Use:   name,
