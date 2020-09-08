@@ -3,18 +3,12 @@ language: go
 go:
   - 1.14.x
 
-install: true
-
 cache:
   directories:
     - $GOPATH/pkg/mod
 
 jobs:
   include:
-    - stage: "Build"
-      name: "Build"
-      script: go build ./cmd/gitops-cli
-
     - stage: "Unit Tests"
       name: "Unit Tests"
       script: go test -v ./...
