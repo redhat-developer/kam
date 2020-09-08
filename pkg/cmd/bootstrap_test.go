@@ -9,7 +9,7 @@ import (
 
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines"
 	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"

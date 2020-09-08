@@ -3,11 +3,11 @@ package service
 import (
 	"fmt"
 
-	"github.com/chetan-rns/gitops-cli/pkg/cmd/genericclioptions"
-	"github.com/chetan-rns/gitops-cli/pkg/cmd/utility"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/ioutils"
 	"github.com/openshift/odo/pkg/log"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/cmd/genericclioptions"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/cmd/utility"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/ioutils"
 	"github.com/spf13/cobra"
 
 	ktemplates "k8s.io/kubectl/pkg/util/templates"

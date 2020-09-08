@@ -4,12 +4,12 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/config"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/eventlisteners"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/git"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/ioutils"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/routes"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/secrets"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/config"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/eventlisteners"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/git"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/ioutils"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/routes"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/secrets"
 )
 
 type webhookInfo struct {

@@ -10,11 +10,11 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/deployment"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/meta"
-	res "github.com/chetan-rns/gitops-cli/pkg/pipelines/resources"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/roles"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/secrets"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/deployment"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/meta"
+	res "github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/resources"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/roles"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/secrets"
 )
 
 const (

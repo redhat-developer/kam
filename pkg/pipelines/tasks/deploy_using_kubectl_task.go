@@ -3,7 +3,7 @@ package tasks
 import (
 	pipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/meta"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/meta"
 )
 
 var argsForReplaceImageStep = []string{

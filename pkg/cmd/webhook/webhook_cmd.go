@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	backend "github.com/chetan-rns/gitops-cli/pkg/pipelines/webhook"
+	backend "github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/webhook"
 )
 
 type options struct {

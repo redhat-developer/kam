@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines"
 	"github.com/spf13/cobra"
 )
 

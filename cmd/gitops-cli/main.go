@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/chetan-rns/gitops-cli/pkg/cmd"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/cmd"
 )
 
 func main() {

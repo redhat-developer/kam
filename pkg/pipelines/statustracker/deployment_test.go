@@ -10,10 +10,10 @@ import (
 
 	ssv1alpha1 "github.com/bitnami-labs/sealed-secrets/pkg/apis/sealed-secrets/v1alpha1"
 	"github.com/google/go-cmp/cmp"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/deployment"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/meta"
-	res "github.com/chetan-rns/gitops-cli/pkg/pipelines/resources"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/roles"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/deployment"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/meta"
+	res "github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/resources"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/roles"
 )
 
 const testRepoURL = "https://github.com/testing/testing.git"

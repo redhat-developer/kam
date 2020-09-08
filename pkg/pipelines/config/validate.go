@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/mkmik/multierror"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/scm"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/scm"
 	"k8s.io/apimachinery/pkg/api/validation"
 	"knative.dev/pkg/apis"
 )

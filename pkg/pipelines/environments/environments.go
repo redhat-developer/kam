@@ -7,11 +7,11 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/config"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/meta"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/namespaces"
-	res "github.com/chetan-rns/gitops-cli/pkg/pipelines/resources"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/roles"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/config"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/meta"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/namespaces"
+	res "github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/resources"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/roles"
 	"github.com/spf13/afero"
 	v1 "k8s.io/api/rbac/v1"
 )

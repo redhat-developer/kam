@@ -9,8 +9,8 @@ import (
 	"github.com/openshift/odo/pkg/log"
 	"github.com/spf13/cobra"
 
-	"github.com/chetan-rns/gitops-cli/pkg/cmd/genericclioptions"
-	backend "github.com/chetan-rns/gitops-cli/pkg/pipelines/webhook"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/cmd/genericclioptions"
+	backend "github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/webhook"
 	ktemplates "k8s.io/kubectl/pkg/util/templates"
 )
 

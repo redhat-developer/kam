@@ -6,10 +6,10 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/config"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/eventlisteners"
-	res "github.com/chetan-rns/gitops-cli/pkg/pipelines/resources"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/scm"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/config"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/eventlisteners"
+	res "github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/resources"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/scm"
 	triggersv1 "github.com/tektoncd/triggers/pkg/apis/triggers/v1alpha1"
 )
 

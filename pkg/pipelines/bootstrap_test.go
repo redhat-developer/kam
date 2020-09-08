@@ -7,14 +7,14 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/config"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/deployment"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/eventlisteners"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/ioutils"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/meta"
-	res "github.com/chetan-rns/gitops-cli/pkg/pipelines/resources"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/scm"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/secrets"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/config"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/deployment"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/eventlisteners"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/ioutils"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/meta"
+	res "github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/resources"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/scm"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/secrets"
 	"k8s.io/apimachinery/pkg/types"
 )
 

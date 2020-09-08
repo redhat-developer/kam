@@ -1,12 +1,12 @@
 package eventlisteners
 
 import (
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/scm"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/scm"
 	"github.com/tektoncd/triggers/pkg/apis/triggers/v1alpha1"
 	triggersv1 "github.com/tektoncd/triggers/pkg/apis/triggers/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/meta"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/meta"
 )
 
 // Filters for interceptors

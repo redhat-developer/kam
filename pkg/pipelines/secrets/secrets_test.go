@@ -10,14 +10,14 @@ import (
 	"testing"
 
 	ssv1alpha1 "github.com/bitnami-labs/sealed-secrets/pkg/apis/sealed-secrets/v1alpha1"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/meta"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/meta"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/helper"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/helper"
 )
 
 func init() {

@@ -3,10 +3,10 @@ package cmd
 import (
 	"log"
 
-	"github.com/chetan-rns/gitops-cli/pkg/cmd/environment"
-	"github.com/chetan-rns/gitops-cli/pkg/cmd/service"
-	"github.com/chetan-rns/gitops-cli/pkg/cmd/utility"
-	"github.com/chetan-rns/gitops-cli/pkg/cmd/webhook"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/cmd/environment"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/cmd/service"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/cmd/utility"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/cmd/webhook"
 	"github.com/spf13/cobra"
 )
 

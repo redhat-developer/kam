@@ -5,13 +5,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/meta"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/namespaces"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/roles"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/meta"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/namespaces"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/roles"
 
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/config"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/config"
 
-	res "github.com/chetan-rns/gitops-cli/pkg/pipelines/resources"
+	res "github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/resources"
 
 	corev1 "k8s.io/api/core/v1"
 )

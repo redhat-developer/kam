@@ -4,14 +4,14 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/config"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/meta"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/config"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/meta"
 
 	// This is a hack because ArgoCD doesn't support a compatible (code-wise)
 	// version of k8s in common with odo.
-	argov1 "github.com/chetan-rns/gitops-cli/pkg/pipelines/argocd/operator/v1alpha1"
-	argoappv1 "github.com/chetan-rns/gitops-cli/pkg/pipelines/argocd/v1alpha1"
-	res "github.com/chetan-rns/gitops-cli/pkg/pipelines/resources"
+	argov1 "github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/argocd/operator/v1alpha1"
+	argoappv1 "github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/argocd/v1alpha1"
+	res "github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/resources"
 )
 
 const testRepoURL = "https://github.com/rhd-example-gitops/example"

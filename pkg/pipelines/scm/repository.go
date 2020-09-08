@@ -1,8 +1,8 @@
 package scm
 
 import (
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/meta"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/triggers"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/meta"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/triggers"
 	triggersv1 "github.com/tektoncd/triggers/pkg/apis/triggers/v1alpha1"
 )
 

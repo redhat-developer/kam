@@ -3,7 +3,7 @@ package service
 import (
 	"fmt"
 
-	"github.com/chetan-rns/gitops-cli/pkg/cmd/utility"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/cmd/utility"
 	"github.com/spf13/cobra"
 )
 

@@ -7,7 +7,7 @@ import (
 
 	"gopkg.in/AlecAivazis/survey.v1"
 
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/ioutils"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/ioutils"
 	"k8s.io/apimachinery/pkg/types"
 )
 

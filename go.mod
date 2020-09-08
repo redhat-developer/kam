@@ -1,9 +1,8 @@
-module github.com/chetan-rns/gitops-cli
+module github.com/rhd-gitops-example/gitops-cli
 
 go 1.14
 
 require (
-	github.com/MakeNowJust/heredoc v0.0.0-20171113091838-e9091a26100e // indirect
 	github.com/Netflix/go-expect v0.0.0-20200312175327-da48e75238e2 // indirect
 	github.com/bitnami-labs/sealed-secrets v0.12.5
 	github.com/docker/docker v17.12.0-ce-rc1.0.20200309214505-aa6a9891b09c+incompatible // indirect
@@ -14,10 +13,8 @@ require (
 	github.com/h2non/gock v1.0.9
 	github.com/hinshun/vt10x v0.0.0-20180809195222-d55458df857c // indirect
 	github.com/jenkins-x/go-scm v1.5.160
-	github.com/mattn/go-isatty v0.0.13-0.20200128103942-cb30d6282491 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mkmik/multierror v0.3.0
-	github.com/onsi/ginkgo v1.14.0 // indirect
 	github.com/openshift/api v3.9.1-0.20190924102528-32369d4db2ad+incompatible
 	github.com/openshift/client-go v0.0.0-20200116152001-92a2713fa240
 	github.com/openshift/odo v1.2.6
@@ -26,7 +23,6 @@ require (
 	github.com/spf13/cobra v1.0.0
 	github.com/tektoncd/pipeline v0.15.2
 	github.com/tektoncd/triggers v0.5.0
-	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect
 	gopkg.in/AlecAivazis/survey.v1 v1.8.0
 	k8s.io/api v0.18.2
 	k8s.io/apimachinery v0.18.2

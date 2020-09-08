@@ -3,10 +3,10 @@ package pipelines
 import (
 	"fmt"
 
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/config"
-	res "github.com/chetan-rns/gitops-cli/pkg/pipelines/resources"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/scm"
-	"github.com/chetan-rns/gitops-cli/pkg/pipelines/yaml"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/config"
+	res "github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/resources"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/scm"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/yaml"
 	"github.com/spf13/afero"
 )
 
