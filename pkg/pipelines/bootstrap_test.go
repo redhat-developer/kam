@@ -12,6 +12,7 @@ import (
 	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/eventlisteners"
 	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/ioutils"
 	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/meta"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/namespaces"
 	res "github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/resources"
 	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/scm"
 	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/secrets"
@@ -50,8 +51,8 @@ func TestBootstrapManifest(t *testing.T) {
 		ServiceRepoURL:       testSvcRepo,
 		ServiceWebhookSecret: "456",
 	}
-
-	r, err := bootstrapResources(params, ioutils.NewMemoryFilesystem())
+	ns := namespaces.NamesWithPrefix(params.Prefix)
+	r, err := bootstrapResources(params, ioutils.NewMemoryFilesystem(), ns)
 	if err != nil {
 		t.Fatal(err)
 	}

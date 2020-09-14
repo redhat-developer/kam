@@ -11,6 +11,7 @@ import (
 
 	ssv1alpha1 "github.com/bitnami-labs/sealed-secrets/pkg/apis/sealed-secrets/v1alpha1"
 	"github.com/mitchellh/go-homedir"
+	"github.com/openshift/odo/pkg/log"
 	"github.com/spf13/afero"
 	corev1 "k8s.io/api/core/v1"
 	v1rbac "k8s.io/api/rbac/v1"
@@ -141,7 +142,8 @@ func Bootstrap(o *BootstrapOptions, appFs afero.Fs) error {
 		}
 		o.ServiceWebhookSecret = appSecret
 	}
-	bootstrapped, err := bootstrapResources(o, appFs)
+	ns := namespaces.NamesWithPrefix(o.Prefix)
+	bootstrapped, err := bootstrapResources(o, appFs, ns)
 	if err != nil {
 		return fmt.Errorf("failed to bootstrap resources: %v", err)
 	}
@@ -156,12 +158,13 @@ func Bootstrap(o *BootstrapOptions, appFs afero.Fs) error {
 	if err != nil {
 		return fmt.Errorf("failed to build resources: %v", err)
 	}
+	log.Successf("Created the following ennvironments:%s,%s,%s,argocd", ns["stage"], ns["dev"], ns["cicd"])
 	bootstrapped = res.Merge(built, bootstrapped)
 	_, err = yaml.WriteResources(appFs, o.OutputPath, bootstrapped)
 	return err
 }
 
-func bootstrapResources(o *BootstrapOptions, appFs afero.Fs) (res.Resources, error) {
+func bootstrapResources(o *BootstrapOptions, appFs afero.Fs, ns map[string]string) (res.Resources, error) {
 	isInternalRegistry, imageRepo, err := imagerepo.ValidateImageRepo(o.ImageRepo, o.InternalRegistryHostname)
 	if err != nil {
 		return nil, err
@@ -184,8 +187,6 @@ func bootstrapResources(o *BootstrapOptions, appFs afero.Fs) (res.Resources, err
 	if err != nil {
 		return nil, err
 	}
-
-	ns := namespaces.NamesWithPrefix(o.Prefix)
 	appName := repoToAppName(repoName)
 	serviceName := repoName
 	secretName := secrets.MakeServiceWebhookSecretName(ns["dev"], serviceName)
@@ -471,6 +472,7 @@ func createCICDResources(fs afero.Fs, repo scm.Repository, pipelineConfig *confi
 			return nil, err
 		}
 		outputs[dockerConfigPath] = dockerSecret
+		log.Success("Authentication tokens encrypted in secrets")
 		outputs[serviceAccountPath] = roles.AddSecretToSA(sa, dockerSecretName)
 	}
 
@@ -482,6 +484,7 @@ func createCICDResources(fs afero.Fs, repo scm.Repository, pipelineConfig *confi
 			return nil, err
 		}
 		outputs = res.Merge(outputs, trackerResources)
+		log.Success("Pipelines tracker has been configured")
 	}
 
 	outputs[rolebindingsPath] = roles.CreateClusterRoleBinding(meta.NamespacedName("", roleBindingName), sa, "ClusterRole", roles.ClusterRoleName)
@@ -498,11 +501,13 @@ func createCICDResources(fs afero.Fs, repo scm.Repository, pipelineConfig *confi
 	outputs[pushTemplatePath] = triggers.CreateCIDryRunTemplate(cicdNamespace, saName)
 	outputs[appCIPushTemplatePath] = triggers.CreateDevCIBuildPRTemplate(cicdNamespace, saName)
 	outputs[eventListenerPath] = eventlisteners.Generate(repo, cicdNamespace, saName, eventlisteners.GitOpsWebhookSecret)
+	log.Success("OpenShift Pipelines resources created")
 	route, err := routes.Generate(cicdNamespace)
 	if err != nil {
 		return nil, err
 	}
 	outputs[routePath] = route
+	log.Success("Openshift Route for EventListener created")
 	return outputs, nil
 }
 
