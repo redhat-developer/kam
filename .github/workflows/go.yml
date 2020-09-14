@@ -1,0 +1,46 @@
+name: Validate PRs
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Set up Go 1.x
+      uses: actions/setup-go@v2
+      with:
+        go-version: ^1.14
+      id: go
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+
+    - name: Check go mod status
+      run: |
+        make gomod_tidy
+        if [[ ! -z $(git status -s) ]]
+        then
+          echo "Go mod state is not clean"
+          exit 1
+        fi
+    - name: Build Binary
+      run: make bin
+    
+    - name: Run Go Tests
+      run: make test
+
+    - name: Check format
+      run: |
+        make gofmt
+        if [[ ! -z $(git status -s) ]]
+        then
+          echo "not well formatted sources are found"
+          exit 1
+        fi
