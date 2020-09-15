@@ -6,17 +6,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// RecommendedCommandName is the recommended environment command name.
+// RecommendedCommandName is the recommended command name.
 const RecommendedCommandName = "version"
 
 var Version string
 
-// NewCmd creates a new environment command
+// NewCmd creates a new command
 func NewCmd(name, fullName string) *cobra.Command {
 	return &cobra.Command{
 		Use:   name,
-		Short: "Get gitops command version",
-		Long:  "Get gitops command version",
+		Short: "Print the version information",
+		Long:  "Print the version information",
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Printf("gitops version %s\n", Version)
 		},
