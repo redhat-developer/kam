@@ -56,6 +56,12 @@ func CreateSealedSecret(name, service types.NamespacedName, data, secretKey stri
 	return seal(secret, DefaultPublicKeyFunc, service)
 }
 
+// CreateSealedBasicAuthSecret creates a SealedSecret with a BasicAuth type
+// secret.
+func CreateSealedBasicAuthSecret(name, service types.NamespacedName, token string, opts ...meta.ObjectMetaOpt) (*ssv1alpha1.SealedSecret, error) {
+	return seal(createBasicAuthSecret(name, token, opts...), DefaultPublicKeyFunc, service)
+}
+
 // Returns a sealed secret
 func seal(secret *corev1.Secret, pubKey PublicKeyFunc, service types.NamespacedName) (*ssv1alpha1.SealedSecret, error) {
 	// Strip read-only server-side ObjectMeta (if present)
@@ -82,7 +88,7 @@ func seal(secret *corev1.Secret, pubKey PublicKeyFunc, service types.NamespacedN
 	return sealedSecret, err
 }
 
-// Retrieves a public key from sealed-secrets-service, by finding the
+// GetClusterPublicKey retrieves a public key from sealed-secrets-service, by finding the
 // service in the provided namespaced name and fetching its key.
 func GetClusterPublicKey(service types.NamespacedName) (*rsa.PublicKey, error) {
 	client, err := getRESTClient()
@@ -139,9 +145,8 @@ func parseKey(r io.Reader) (*rsa.PublicKey, error) {
 func getRESTClient() (*clientv1.CoreV1Client, error) {
 	config, err := clientconfig.GetRESTConfig()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get client config due to %v", err)
+		return nil, fmt.Errorf("failed to get Kubernetes client config: %w", err)
 	}
-
 	config.AcceptContentTypes = "application/x-pem-file, */*"
 	return clientv1.NewForConfig(config)
 }
@@ -157,6 +162,18 @@ func createOpaqueSecret(name types.NamespacedName, data, secretKey string) (*cor
 // body, and type DockerConfigJson.
 func createDockerConfigSecret(name types.NamespacedName, in io.Reader) (*corev1.Secret, error) {
 	return createSecret(name, ".dockerconfigjson", corev1.SecretTypeDockerConfigJson, in)
+}
+
+func createBasicAuthSecret(name types.NamespacedName, token string, opts ...meta.ObjectMetaOpt) *corev1.Secret {
+	return &corev1.Secret{
+		TypeMeta:   secretTypeMeta,
+		ObjectMeta: meta.ObjectMeta(name, opts...),
+		Type:       corev1.SecretTypeBasicAuth,
+		StringData: map[string]string{
+			"username": "tekton",
+			"password": token,
+		},
+	}
 }
 
 func createSecret(name types.NamespacedName, key string, st corev1.SecretType, in io.Reader) (*corev1.Secret, error) {

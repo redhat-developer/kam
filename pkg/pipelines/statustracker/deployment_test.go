@@ -6,9 +6,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 
-	ssv1alpha1 "github.com/bitnami-labs/sealed-secrets/pkg/apis/sealed-secrets/v1alpha1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/deployment"
 	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/meta"
@@ -81,17 +79,9 @@ func TestCreateStatusTrackerDeployment(t *testing.T) {
 }
 
 func TestResource(t *testing.T) {
-	defer func(f secretSealer) {
-		defaultSecretSealer = f
-	}(defaultSecretSealer)
-
-	testSecret := &ssv1alpha1.SealedSecret{}
-	defaultSecretSealer = func(ns, _ types.NamespacedName, data, secretKey string) (*ssv1alpha1.SealedSecret, error) {
-		return testSecret, nil
-	}
 
 	ns := "my-test-ns"
-	generated, err := Resources(ns, "test-token", meta.NamespacedName("sealed-secrets-ns", "sealed-secrets-svc"), testRepoURL, "")
+	generated, err := Resources(ns, testRepoURL, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -99,7 +89,6 @@ func TestResource(t *testing.T) {
 	sa := roles.CreateServiceAccount(name)
 	want := res.Resources{
 		"02-rolebindings/commit-status-tracker-service-account.yaml": sa,
-		"03-secrets/commit-status-tracker.yaml":                      testSecret,
 		"02-rolebindings/commit-status-tracker-role.yaml":            roles.CreateRole(name, roleRules),
 		"02-rolebindings/commit-status-tracker-rolebinding.yaml":     roles.CreateRoleBinding(name, sa, "Role", operatorName),
 		"10-commit-status-tracker/operator.yaml":                     createStatusTrackerDeployment(ns, "https://github.com/testing/testing.git", ""),

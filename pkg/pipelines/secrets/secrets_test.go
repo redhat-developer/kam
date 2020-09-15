@@ -235,7 +235,6 @@ func TestSeal(t *testing.T) {
 					}
 				}
 			}
-
 			// NB: See sealedsecret_test.go for e2e crypto test
 		})
 	}
@@ -301,6 +300,36 @@ func TestCreateDockerConfigSecret(t *testing.T) {
 
 	if diff := cmp.Diff(want, secret); diff != "" {
 		t.Fatalf("createDockerConfigSecret() failed got\n%s", diff)
+	}
+}
+
+func TestBasicAuthSecret(t *testing.T) {
+	token := "abcdefghijklmnop"
+	host := "https://github.com"
+	secret := createBasicAuthSecret(meta.NamespacedName("cicd", "github-auth"), token, meta.AddAnnotations(
+		map[string]string{
+			"tekton.dev/git-0": host,
+		}),
+	)
+
+	want := &corev1.Secret{
+		TypeMeta: secretTypeMeta,
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "github-auth",
+			Namespace: "cicd",
+			Annotations: map[string]string{
+				"tekton.dev/git-0": host,
+			},
+		},
+		Type: corev1.SecretTypeBasicAuth,
+		StringData: map[string]string{
+			"username": "tekton",
+			"password": token,
+		},
+	}
+
+	if diff := cmp.Diff(want, secret); diff != "" {
+		t.Fatalf("createBasicAuthSecret() failed got\n%s", diff)
 	}
 }
 

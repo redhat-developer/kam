@@ -12,13 +12,43 @@ func TestLabels(t *testing.T) {
 		"app":     "my-app",
 		"service": "my-service",
 	})
-	om := &metav1.ObjectMeta{}
+	om := &metav1.ObjectMeta{
+		Labels: map[string]string{
+			"my-label": "my-value",
+		},
+	}
 	v(om)
 
 	want := &metav1.ObjectMeta{
 		Labels: map[string]string{
-			"app":     "my-app",
-			"service": "my-service",
+			"my-label": "my-value",
+			"app":      "my-app",
+			"service":  "my-service",
+		},
+	}
+
+	if diff := cmp.Diff(want, om); diff != "" {
+		t.Fatalf("failed to add labels:\n%s", diff)
+	}
+}
+
+func TestAnnotations(t *testing.T) {
+	v := AddAnnotations(map[string]string{
+		"app":     "my-app",
+		"service": "my-service",
+	})
+	om := &metav1.ObjectMeta{
+		Annotations: map[string]string{
+			"my-annotation": "my-value",
+		},
+	}
+	v(om)
+
+	want := &metav1.ObjectMeta{
+		Annotations: map[string]string{
+			"my-annotation": "my-value",
+			"app":           "my-app",
+			"service":       "my-service",
 		},
 	}
 

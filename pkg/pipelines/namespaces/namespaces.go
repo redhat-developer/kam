@@ -61,11 +61,11 @@ func Create(name, gitOpsRepoURL string) *corev1.Namespace {
 func GetClientSet() (*kubernetes.Clientset, error) {
 	clientConfig, err := clientconfig.GetRESTConfig()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get client config due to %v", err)
+		return nil, fmt.Errorf("failed to get Kubernetes client config: %w", err)
 	}
 	clientSet, err := kubernetes.NewForConfig(clientConfig)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get APIs client due to %v", err)
+		return nil, fmt.Errorf("failed to create Kubernetes API client: %w", err)
 	}
 	return clientSet, nil
 }

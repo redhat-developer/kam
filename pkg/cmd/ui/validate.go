@@ -116,11 +116,11 @@ func validateAccessToken(input interface{}, serviceRepo string) error {
 		}
 		parsedURL, err := url.Parse(serviceRepo)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to parse the provided URL %q: %w", serviceRepo, err)
 		}
 		repoName, err := git.GetRepoName(parsedURL)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get the repository name from %q: %w", serviceRepo, err)
 		}
 		_, _, err = repo.Client.Repositories.Find(context.Background(), repoName)
 		if err != nil {
@@ -163,8 +163,8 @@ func CheckSecretLength(secret string) bool {
 	return false
 }
 
-// HandleError handles UI-related errors, in particular useful to gracefully handle ctrl-c interrupts gracefully
-func HandleError(err error) {
+// handleError handles UI-related errors, in particular useful to gracefully handle ctrl-c interrupts gracefully
+func handleError(err error) {
 	if err != nil {
 		if err == terminal.InterruptErr {
 			os.Exit(1)
