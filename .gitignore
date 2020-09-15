@@ -16,3 +16,6 @@
 
 # Ignore binary
 gitops
+gitops_windows_amd64.exe
+gitops_linux_amd64
+gitops_darwin_amd64
