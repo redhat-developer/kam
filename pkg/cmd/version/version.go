@@ -9,6 +9,7 @@ import (
 // RecommendedCommandName is the recommended command name.
 const RecommendedCommandName = "version"
 
+// Version is populated by the versioning information at compile time.  See the VERSION marco in Makefile.
 var Version string
 
 // NewCmd creates a new command
