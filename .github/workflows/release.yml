@@ -13,9 +13,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Build project # This would actually build your project, using zip for an example artifact
+      - name: Build project
         run: |
-          make bin
+          make all_platforms
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -26,13 +26,33 @@ jobs:
           release_name: Release ${{ github.ref }}
           draft: false
           prerelease: false
-      - name: Upload Release Asset
-        id: upload-release-asset 
+      - name: Upload gitops_linux_amd64
+        id: upload-linux-binary
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-          asset_path: ./gitops
-          asset_name: gitops linux
+          asset_path: ./gitops_linux_amd64
+          asset_name: gitops_linux_amd64
           asset_content_type: application/octet-stream
+      - name: Upload gitops_windows_amd64.exe
+        id: upload-windows-binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ./gitops_windows_amd64.exe
+          asset_name: gitops_windows_amd64.exe
+          asset_content_type: application/octet-stream          
+      - name: Upload gitops_darwin_amd64
+        id: upload-darwin-binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ./gitops_darwin_amd64
+          asset_name: gitops_darwin_amd64
+          asset_content_type: application/octet-stream             
