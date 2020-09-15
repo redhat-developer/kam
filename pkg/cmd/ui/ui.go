@@ -19,12 +19,12 @@ func EnterGitRepo() string {
 		Help:    "The GitOps repository stores your GitOps configuration files, including your Openshift Pipelines resources for driving automated deployments and builds.  Please enter a valid git repository e.g. https://github.com/example/myorg.git",
 	}
 	err := survey.AskOne(prompt, &gitOpsURL, survey.Required)
-	HandleError(err)
+	handleError(err)
 
 	p, err := url.Parse(gitOpsURL)
-	HandleError(err)
+	handleError(err)
 	if p.Host == "" {
-		HandleError(fmt.Errorf("could not identify host from %q", gitOpsURL))
+		handleError(fmt.Errorf("could not identify host from %q", gitOpsURL))
 	}
 	return gitOpsURL
 }
@@ -38,7 +38,7 @@ func EnterInternalRegistry() string {
 	}
 
 	err := survey.AskOne(prompt, &internalRegistry, nil)
-	HandleError(err)
+	handleError(err)
 	return internalRegistry
 }
 
@@ -51,7 +51,7 @@ func EnterImageRepoInternalRegistry() string {
 	}
 
 	err := survey.AskOne(prompt, &imageRepo, survey.Required)
-	HandleError(err)
+	handleError(err)
 	return imageRepo
 }
 
@@ -65,7 +65,7 @@ func EnterDockercfg() string {
 	}
 
 	err := survey.AskOne(prompt, &dockerCfg, nil)
-	HandleError(err)
+	handleError(err)
 	return dockerCfg
 }
 
@@ -78,7 +78,7 @@ func EnterImageRepoExternalRepository() string {
 	}
 
 	err := survey.AskOne(prompt, &imageRepoExt, survey.Required)
-	HandleError(err)
+	handleError(err)
 	return imageRepoExt
 }
 
@@ -99,7 +99,7 @@ func EnterOutputPath() string {
 	if !exists {
 		err = filePathError
 	}
-	HandleError(err)
+	handleError(err)
 	return outputPath
 }
 
@@ -112,7 +112,7 @@ func EnterGitWebhookSecret() string {
 	}
 
 	err := survey.AskOne(prompt, &gitWebhookSecret, makeSecretValidator())
-	HandleError(err)
+	handleError(err)
 	return gitWebhookSecret
 }
 
@@ -124,7 +124,7 @@ func EnterSealedSecretService(sealedSecretService *types.NamespacedName) string 
 		Help:    "If you have a custom installation of the Sealed Secrets operator, we need to know where to communicate with it to seal your secrets.",
 	}
 	err := survey.AskOne(prompt, &sealedSecret, makeSealedSecretsService(sealedSecretService))
-	HandleError(err)
+	handleError(err)
 	return sealedSecret
 }
 
@@ -137,19 +137,20 @@ func EnterSealedSecretNamespace() string {
 	}
 
 	err := survey.AskOne(prompt, &sealedNs, survey.Required)
-	HandleError(err)
+	handleError(err)
 	return sealedNs
 }
 
-// EnterStatusTrackerAccessToken , it becomes necessary to add the personal access token from github to autheticate the commit-status-tracker.
-func EnterStatusTrackerAccessToken(serviceRepo string) string {
+// EnterGitHostAccessToken , it becomes necessary to add the personal access
+// token to access upstream git hosts.
+func EnterGitHostAccessToken(serviceRepo string) string {
 	var accessToken string
 	prompt := &survey.Password{
-		Message: "Please provide a token used to authenticate API calls to push commit-status updates to your Git hosting service",
+		Message: fmt.Sprintf("Please provide a token used to authenticate requests to %q", serviceRepo),
 		Help:    "commit-status-tracker reports the completion status of OpenShift pipeline runs to your Git hosting status on success or failure, this token will be encrypted as a secret in your cluster.\nIf you are using Github, please see here for how to generate a token https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token\nIf you are using GitLab, please see here for how to generate a token https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html",
 	}
 	err := survey.AskOne(prompt, &accessToken, makeAccessTokenCheck(serviceRepo))
-	HandleError(err)
+	handleError(err)
 	return accessToken
 }
 
@@ -161,7 +162,7 @@ func EnterPrefix() string {
 		Help:    "The prefix helps differentiate between the different namespaces on the cluster, the default namespace cicd will appear as test-cicd if the prefix passed is test.",
 	}
 	err := survey.AskOne(prompt, &prefix, makePrefixValidator())
-	HandleError(err)
+	handleError(err)
 	return prefix
 }
 
@@ -173,12 +174,12 @@ func EnterServiceRepoURL() string {
 		Help:    "The repository name where the source code of your service is situated, this will configure a very basic CI for this repository using OpenShift pipelines.",
 	}
 	err := survey.AskOne(prompt, &serviceRepo, survey.Required)
-	HandleError(err)
+	handleError(err)
 
 	p, err := url.Parse(serviceRepo)
-	HandleError(err)
+	handleError(err)
 	if p.Host == "" {
-		HandleError(fmt.Errorf("could not identify host from %q", serviceRepo))
+		handleError(fmt.Errorf("could not identify host from %q", serviceRepo))
 	}
 	return serviceRepo
 }
@@ -192,7 +193,7 @@ func EnterServiceWebhookSecret() string {
 	}
 	err := survey.AskOne(prompt, &serviceWebhookSecret, makeSecretValidator())
 
-	HandleError(err)
+	handleError(err)
 	return serviceWebhookSecret
 }
 
@@ -206,7 +207,7 @@ func SelectOptionImageRepository() string {
 	}
 
 	err := survey.AskOne(prompt, &optionImageRegistry, survey.Required)
-	HandleError(err)
+	handleError(err)
 	return optionImageRegistry
 }
 
@@ -219,7 +220,7 @@ func SelectOptionOverwrite(path string) string {
 		Default: "no",
 	}
 	err := survey.AskOne(prompt, &overwrite, makeOverWriteValidator(path))
-	HandleError(err)
+	handleError(err)
 	return overwrite
 }
 
@@ -229,15 +230,15 @@ func SelectOptionCommitStatusTracker() string {
 	var optionCommitStatusTracker string
 	prompt := &survey.Select{
 		Message: "Do you want to enable commit-status-tracker?",
+		Help:    "commit-status-tracker reports the completion status of OpenShift pipeline runs to your git host on success or failure",
 		Options: []string{"yes", "no"},
 	}
-
 	err := survey.AskOne(prompt, &optionCommitStatusTracker, survey.Required)
-	HandleError(err)
+	handleError(err)
 	return optionCommitStatusTracker
 }
 
-// SelectPrivateGitRepoDriver lets users choose the driver for their git hosting
+// SelectPrivateRepoDriver lets users choose the driver for their git hosting
 // service.
 func SelectPrivateRepoDriver() string {
 	var driver string
@@ -247,6 +248,19 @@ func SelectPrivateRepoDriver() string {
 	}
 
 	err := survey.AskOne(prompt, &driver, survey.Required)
-	HandleError(err)
+	handleError(err)
 	return driver
+}
+
+// IsPrivateRepo lets the user choose between a private / public repository.
+func IsPrivateRepo() bool {
+	var response string
+	prompt := &survey.Select{
+		Message: "Is this repository a private repository?",
+		Options: []string{"yes", "no"},
+	}
+
+	err := survey.AskOne(prompt, &response, survey.Required)
+	handleError(err)
+	return response == "yes"
 }
