@@ -4,10 +4,13 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators"
+	fakeoperatorv1alpha1 "github.com/operator-framework/operator-lifecycle-manager/pkg/api/client/clientset/versioned/fake"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 )
 
@@ -105,9 +108,15 @@ func TestCheckIfArgoCDExists(t *testing.T) {
 			Name:      "argocd-server",
 			Namespace: "argocd",
 		},
+	}, &operators.ClusterServiceVersion{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "argocd",
+			Namespace: "argocd",
+		},
 	})
+	fakeClient := newFakeClient(fakeClientSet)
 
-	fakeClient := Client{KubeClient: fakeClientSet}
+	// fakeClient := Client{KubeClient: fakeClientSet}
 
 	err := fakeClient.CheckIfArgoCDExists("argocd")
 	if err != nil {
@@ -138,5 +147,12 @@ func TestCheckIfPipelinesExists(t *testing.T) {
 	wantErr := `deployments "unknown" not found`
 	if err == nil {
 		t.Fatalf("CheckIfPipelinesExists failed: got %v,want %v", nil, wantErr)
+	}
+}
+
+func newFakeClient(kubeClient kubernetes.Interface) *Client {
+	return &Client{
+		KubeClient:     kubeClient,
+		OperatorClient: fakeoperatorv1alpha1.NewSimpleClientset().OperatorsV1alpha1(),
 	}
 }

@@ -18,6 +18,7 @@ require (
 	github.com/openshift/api v3.9.1-0.20190924102528-32369d4db2ad+incompatible
 	github.com/openshift/client-go v0.0.0-20200116152001-92a2713fa240
 	github.com/openshift/odo v1.2.6
+	github.com/operator-framework/operator-lifecycle-manager v0.0.0-20200422144016-a6acf50218ed
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/afero v1.2.2
 	github.com/spf13/cobra v1.0.0
@@ -25,6 +26,7 @@ require (
 	github.com/tektoncd/triggers v0.5.0
 	gopkg.in/AlecAivazis/survey.v1 v1.8.0
 	k8s.io/api v0.18.2
+	k8s.io/apiextensions-apiserver v0.17.6
 	k8s.io/apimachinery v0.18.2
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/klog v1.0.0

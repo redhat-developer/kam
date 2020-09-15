@@ -13,12 +13,10 @@ import (
 	"github.com/rhd-gitops-example/gitops-cli/pkg/cmd/utility"
 	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines"
 	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/ioutils"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/namespaces"
 	"github.com/spf13/cobra"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/kubernetes"
 	ktemplates "k8s.io/kubectl/pkg/util/templates"
 )
 
@@ -80,7 +78,8 @@ func NewBootstrapParameters() *BootstrapParameters {
 // If the prefix provided doesn't have a "-" then one is added, this makes the
 // generated environment names nicer to read.
 func (io *BootstrapParameters) Complete(name string, cmd *cobra.Command, args []string) error {
-	clientSet, err := namespaces.GetClientSet()
+
+	client, err := utility.NewClient()
 	if err != nil {
 		return err
 	}
@@ -97,7 +96,7 @@ func (io *BootstrapParameters) Complete(name string, cmd *cobra.Command, args []
 	// ask for sealed secrets only when default is absent
 	flagset := cmd.Flags()
 	if flagset.NFlag() == 0 {
-		err := checkBootstrapDependencies(io, clientSet, log.NewStatus(os.Stdout))
+		err := checkBootstrapDependencies(io, client, log.NewStatus(os.Stdout))
 		if err != nil {
 			return err
 		}
@@ -106,7 +105,7 @@ func (io *BootstrapParameters) Complete(name string, cmd *cobra.Command, args []
 			return err
 		}
 	} else {
-		err := nonInteractiveMode(io, clientSet)
+		err := nonInteractiveMode(io, client)
 		if err != nil {
 			return err
 		}
@@ -114,15 +113,32 @@ func (io *BootstrapParameters) Complete(name string, cmd *cobra.Command, args []
 	return nil
 }
 
+// func getClientConfig() (*utility.Client, error) {
+// 	clientConfig, err := clientconfig.GetRESTConfig()
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	clientSet, err := kubernetes.NewForConfig(clientConfig)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	operatorClientSet, err := operatorsclientset.NewForConfig(clientConfig)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return &utility.Client{KubeClient: clientSet, OperatorClient: operatorClientSet}, nil
+// }
+
 // nonInteractiveMode gets triggered if a flag is passed, checks for mandatory flags.
-func nonInteractiveMode(io *BootstrapParameters, clientSet *kubernetes.Clientset) error {
+func nonInteractiveMode(io *BootstrapParameters, client *utility.Client) error {
 	mandatoryFlags := map[string]string{io.ServiceRepoURL: "service-repo-url", io.GitOpsRepoURL: "gitops-repo-url", io.ImageRepo: "image-repo"}
 	for key, value := range mandatoryFlags {
 		if key == "" {
 			return fmt.Errorf("The mandatory flag %q has not been set", value)
 		}
 	}
-	err := checkBootstrapDependencies(io, clientSet, log.NewStatus(os.Stdout))
+	err := checkBootstrapDependencies(io, client, log.NewStatus(os.Stdout))
 	if err != nil {
 		return err
 	}
@@ -173,9 +189,8 @@ func initiateInteractiveMode(io *BootstrapParameters) error {
 	return nil
 }
 
-func checkBootstrapDependencies(io *BootstrapParameters, kubeClient kubernetes.Interface, spinner status) error {
+func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client, spinner status) error {
 	var errs []error
-	client := utility.NewClient(kubeClient)
 	log.Progressf("\nChecking dependencies\n")
 
 	spinner.Start("Checking if Sealed Secrets is installed with the default configuration", false)
