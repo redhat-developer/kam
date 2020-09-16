@@ -26,10 +26,10 @@ const (
 	// BootstrapRecommendedCommandName the recommended command name
 	BootstrapRecommendedCommandName = "bootstrap"
 
-	sealedSecretsName   = "sealed-secrets-controller"
-	sealedSecretsNS     = "kube-system"
-	argoCDNS            = "argocd"
-	pipelinesOperatorNS = "openshift-operators"
+	sealedSecretsController = "sealedsecretcontroller-sealed-secrets"
+	sealedSecretsNS         = "cicd"
+	argoCDNS                = "argocd"
+	pipelinesOperatorNS     = "openshift-operators"
 )
 
 type drivers []string
@@ -179,10 +179,10 @@ func checkBootstrapDependencies(io *BootstrapParameters, kubeClient kubernetes.I
 	log.Progressf("\nChecking dependencies\n")
 
 	spinner.Start("Checking if Sealed Secrets is installed with the default configuration", false)
-	err := client.CheckIfSealedSecretsExists(types.NamespacedName{Namespace: sealedSecretsNS, Name: sealedSecretsName})
+	err := client.CheckIfSealedSecretsExists(types.NamespacedName{Namespace: sealedSecretsNS, Name: sealedSecretsController})
 	setSpinnerStatus(spinner, "Please install Sealed Secrets from https://github.com/bitnami-labs/sealed-secrets/releases", err)
 	if err == nil {
-		io.SealedSecretsService.Name = sealedSecretsName
+		io.SealedSecretsService.Name = sealedSecretsController
 		io.SealedSecretsService.Namespace = sealedSecretsNS
 	} else if !errors.IsNotFound(err) {
 		return clusterErr(err.Error())
@@ -280,8 +280,8 @@ func NewCmdBootstrap(name, fullName string) *cobra.Command {
 	bootstrapCmd.Flags().StringVar(&o.DockerConfigJSONFilename, "dockercfgjson", "~/.docker/config.json", "Filepath to config.json which authenticates the image push to the desired image registry ")
 	bootstrapCmd.Flags().StringVar(&o.InternalRegistryHostname, "image-repo-internal-registry-hostname", "image-registry.openshift-image-registry.svc:5000", "Host-name for internal image registry e.g. docker-registry.default.svc.cluster.local:5000, used if you are pushing your images to the internal image registry")
 	bootstrapCmd.Flags().StringVar(&o.ImageRepo, "image-repo", "", "Image repository of the form <registry>/<username>/<repository> or <project>/<app> which is used to push newly built images")
-	bootstrapCmd.Flags().StringVar(&o.SealedSecretsService.Namespace, "sealed-secrets-ns", "kube-system", "Namespace in which the Sealed Secrets operator is installed, automatically generated secrets are encrypted with this operator")
-	bootstrapCmd.Flags().StringVar(&o.SealedSecretsService.Name, "sealed-secrets-svc", "sealed-secrets-controller", "Name of the Sealed Secrets Services that encrypts secrets")
+	bootstrapCmd.Flags().StringVar(&o.SealedSecretsService.Namespace, "sealed-secrets-ns", sealedSecretsNS, "Namespace in which the Sealed Secrets operator is installed, automatically generated secrets are encrypted with this operator")
+	bootstrapCmd.Flags().StringVar(&o.SealedSecretsService.Name, "sealed-secrets-svc", sealedSecretsController, "Name of the Sealed Secrets Services that encrypts secrets")
 	bootstrapCmd.Flags().StringVar(&o.GitHostAccessToken, "git-host-access-token", "", "Used to authenticate repository clones, and commit-status notifications (if enabled)")
 	bootstrapCmd.Flags().BoolVar(&o.Overwrite, "overwrite", false, "Overwrites previously existing GitOps configuration (if any)")
 	bootstrapCmd.Flags().StringVar(&o.ServiceRepoURL, "service-repo-url", "", "Provide the URL for your Service repository e.g. https://github.com/organisation/service.git")
