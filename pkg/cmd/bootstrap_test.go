@@ -215,7 +215,7 @@ Checking if OpenShift Pipelines Operator is installed with the default configura
 }
 
 func TestDependenciesWithAllInstalled(t *testing.T) {
-	fakeClient := fake.NewSimpleClientset(sealedSecretService(), argoCDOperator(), pipelinesOperator())
+	fakeClient := fake.NewSimpleClientset(sealedSecretsService(), argoCDOperator(), pipelinesOperator())
 
 	wantMsg := `
 Checking if Sealed Secrets is installed with the default configuration
@@ -228,14 +228,14 @@ Checking if OpenShift Pipelines Operator is installed with the default configura
 	err := checkBootstrapDependencies(wizardParams, fakeClient, fakeSpinner)
 
 	assertError(t, err, "")
-	if wizardParams.SealedSecretsService.Name != "sealed-secrets-controller" && wizardParams.SealedSecretsService.Namespace != "kube-system" {
+	if wizardParams.SealedSecretsService.Name != sealedSecretsController && wizardParams.SealedSecretsService.Namespace != sealedSecretsNS {
 		t.Fatalf("Expected sealed secrets to be set")
 	}
 	assertMessage(t, buff.String(), wantMsg)
 }
 
 func TestDependenciesWithNoArgoCD(t *testing.T) {
-	fakeClient := fake.NewSimpleClientset(sealedSecretService(), pipelinesOperator())
+	fakeClient := fake.NewSimpleClientset(sealedSecretsService(), pipelinesOperator())
 
 	wantMsg := `
 Checking if Sealed Secrets is installed with the default configuration
@@ -253,7 +253,7 @@ Checking if OpenShift Pipelines Operator is installed with the default configura
 }
 
 func TestDependenciesWithNoPipelines(t *testing.T) {
-	fakeClient := fake.NewSimpleClientset(sealedSecretService(), argoCDOperator())
+	fakeClient := fake.NewSimpleClientset(sealedSecretsService(), argoCDOperator())
 
 	wantMsg := `
 Checking if Sealed Secrets is installed with the default configuration
@@ -290,11 +290,11 @@ func assertMessage(t *testing.T, got, want string) {
 	}
 }
 
-func sealedSecretService() *corev1.Service {
+func sealedSecretsService() *corev1.Service {
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "sealed-secrets-controller",
-			Namespace: "kube-system",
+			Name:      sealedSecretsController,
+			Namespace: sealedSecretsNS,
 		},
 	}
 }
