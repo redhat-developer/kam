@@ -4,11 +4,13 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators"
-	fakeoperatorv1alpha1 "github.com/operator-framework/operator-lifecycle-manager/pkg/api/client/clientset/versioned/fake"
+	v1alpha1 "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1"
+	operatorsfake "github.com/operator-framework/operator-lifecycle-manager/pkg/api/client/clientset/versioned/fake"
+	operatorsclientset "github.com/operator-framework/operator-lifecycle-manager/pkg/api/client/clientset/versioned/typed/operators/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
@@ -98,26 +100,22 @@ func TestCheckIfSealedSecretsExists(t *testing.T) {
 }
 
 func TestCheckIfArgoCDExists(t *testing.T) {
-	fakeClientSet := fake.NewSimpleClientset(&appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "argocd-operator",
-			Namespace: "argocd",
-		},
-	}, &appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "argocd-server",
-			Namespace: "argocd",
-		},
-	}, &operators.ClusterServiceVersion{
+	crc := operatorsfake.NewSimpleClientset(&v1alpha1.ClusterServiceVersion{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "argocd",
 			Namespace: "argocd",
 		},
+		Spec: v1alpha1.ClusterServiceVersionSpec{
+			CustomResourceDefinitions: v1alpha1.CustomResourceDefinitions{
+				Owned: []v1alpha1.CRDDescription{
+					{Name: "argocds.argoproj.io", Kind: "ArgoCD"},
+					{Name: "fake.crd", Kind: "ArgoCD"},
+				},
+			},
+		},
 	})
-	fakeClient := newFakeClient(fakeClientSet)
 
-	// fakeClient := Client{KubeClient: fakeClientSet}
-
+	fakeClient := newFakeClient(nil, crc.OperatorsV1alpha1())
 	err := fakeClient.CheckIfArgoCDExists("argocd")
 	if err != nil {
 		t.Fatalf("CheckIfArgoCDExists failed: got %v,want %v", err, nil)
@@ -150,9 +148,9 @@ func TestCheckIfPipelinesExists(t *testing.T) {
 	}
 }
 
-func newFakeClient(kubeClient kubernetes.Interface) *Client {
+func newFakeClient(kubeClient kubernetes.Interface, operatorClient operatorsclientset.OperatorsV1alpha1Interface) *Client {
 	return &Client{
 		KubeClient:     kubeClient,
-		OperatorClient: fakeoperatorv1alpha1.NewSimpleClientset().OperatorsV1alpha1(),
+		OperatorClient: operatorClient,
 	}
 }

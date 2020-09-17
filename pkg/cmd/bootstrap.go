@@ -195,7 +195,7 @@ func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client,
 
 	spinner.Start("Checking if Sealed Secrets is installed with the default configuration", false)
 	err := client.CheckIfSealedSecretsExists(types.NamespacedName{Namespace: sealedSecretsNS, Name: sealedSecretsController})
-	setSpinnerStatus(spinner, "Please install Sealed Secrets from https://github.com/bitnami-labs/sealed-secrets/releases", err)
+	setSpinnerStatus(spinner, "Please install Sealed Secrets operator from OperatorHub", err)
 	if err == nil {
 		io.SealedSecretsService.Name = sealedSecretsController
 		io.SealedSecretsService.Namespace = sealedSecretsNS
