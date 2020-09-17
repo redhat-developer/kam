@@ -7,9 +7,12 @@ import (
 	"regexp"
 	"testing"
 
-	"k8s.io/client-go/kubernetes"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/google/go-cmp/cmp"
+	v1alpha1 "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1"
+	operatorsfake "github.com/operator-framework/operator-lifecycle-manager/pkg/api/client/clientset/versioned/fake"
+	"github.com/rhd-gitops-example/gitops-cli/pkg/cmd/utility"
 	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines"
 	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -146,8 +149,7 @@ func TestValidateMandatoryFlags(t *testing.T) {
 				ServiceRepoURL: tt.serviceRepo,
 				ImageRepo:      tt.imagerepo},
 		}
-		clienSet := kubernetes.Clientset{}
-		err := nonInteractiveMode(&o, &clienSet)
+		err := nonInteractiveMode(&o, &utility.Client{})
 
 		if !matchError(t, tt.errMsg, err) {
 			t.Errorf("nonInteractiveMode() %#v failed to match error: got %s, want %s", tt.name, err, tt.errMsg)
@@ -198,10 +200,10 @@ func TestCheckSpinner(t *testing.T) {
 }
 
 func TestDependenciesWithNothingInstalled(t *testing.T) {
-	fakeClient := fake.NewSimpleClientset()
+	fakeClient := newFakeClient(nil, nil)
 
 	wantMsg := `
-Checking if Sealed Secrets is installed with the default configuration[Please install Sealed Secrets from https://github.com/bitnami-labs/sealed-secrets/releases]
+Checking if Sealed Secrets is installed with the default configuration[Please install Sealed Secrets operator from OperatorHub]
 Checking if ArgoCD Operator is installed with the default configuration[Please install ArgoCD operator from OperatorHub, with an ArgoCD resource called 'argocd']
 Checking if OpenShift Pipelines Operator is installed with the default configuration[Please install OpenShift Pipelines operator from OperatorHub]`
 
@@ -215,7 +217,7 @@ Checking if OpenShift Pipelines Operator is installed with the default configura
 }
 
 func TestDependenciesWithAllInstalled(t *testing.T) {
-	fakeClient := fake.NewSimpleClientset(sealedSecretsService(), argoCDOperator(), pipelinesOperator())
+	fakeClient := newFakeClient([]runtime.Object{sealedSecretsService(), pipelinesOperator()}, []runtime.Object{argoCDCSV()})
 
 	wantMsg := `
 Checking if Sealed Secrets is installed with the default configuration
@@ -235,7 +237,7 @@ Checking if OpenShift Pipelines Operator is installed with the default configura
 }
 
 func TestDependenciesWithNoArgoCD(t *testing.T) {
-	fakeClient := fake.NewSimpleClientset(sealedSecretsService(), pipelinesOperator())
+	fakeClient := newFakeClient([]runtime.Object{sealedSecretsService(), pipelinesOperator()}, nil)
 
 	wantMsg := `
 Checking if Sealed Secrets is installed with the default configuration
@@ -253,7 +255,7 @@ Checking if OpenShift Pipelines Operator is installed with the default configura
 }
 
 func TestDependenciesWithNoPipelines(t *testing.T) {
-	fakeClient := fake.NewSimpleClientset(sealedSecretsService(), argoCDOperator())
+	fakeClient := newFakeClient([]runtime.Object{sealedSecretsService()}, []runtime.Object{argoCDCSV()})
 
 	wantMsg := `
 Checking if Sealed Secrets is installed with the default configuration
@@ -299,24 +301,6 @@ func sealedSecretsService() *corev1.Service {
 	}
 }
 
-func argoCDOperator() *appv1.DeploymentList {
-	return &appv1.DeploymentList{
-		Items: []appv1.Deployment{
-			{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "argocd-operator",
-					Namespace: "argocd",
-				},
-			}, {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "argocd-server",
-					Namespace: "argocd",
-				},
-			},
-		},
-	}
-}
-
 func pipelinesOperator() *appv1.Deployment {
 	return &appv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -351,4 +335,28 @@ func (m *mockSpinner) End(status bool) {
 
 func (m *mockSpinner) WarningStatus(status string) {
 	fmt.Fprintf(m.writer, "[%s]", status)
+}
+
+func newFakeClient(k8sObjs []runtime.Object, clientObjs []runtime.Object) *utility.Client {
+	return &utility.Client{
+		KubeClient:     fake.NewSimpleClientset(k8sObjs...),
+		OperatorClient: operatorsfake.NewSimpleClientset(clientObjs...).OperatorsV1alpha1(),
+	}
+}
+
+func argoCDCSV() *v1alpha1.ClusterServiceVersion {
+	return &v1alpha1.ClusterServiceVersion{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "argocd",
+			Namespace: "argocd",
+		},
+		Spec: v1alpha1.ClusterServiceVersionSpec{
+			CustomResourceDefinitions: v1alpha1.CustomResourceDefinitions{
+				Owned: []v1alpha1.CRDDescription{
+					{Name: "argocds.argoproj.io", Kind: "ArgoCD"},
+					{Name: "fake.crd", Kind: "ArgoCD"},
+				},
+			},
+		},
+	}
 }
