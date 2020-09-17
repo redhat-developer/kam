@@ -50,7 +50,6 @@ const (
 	basicAuthTokenPath    = "03-secrets/git-host-basic-auth-token.yaml"
 	dockerConfigPath      = "03-secrets/docker-config.yaml"
 	gitopsTasksPath       = "04-tasks/deploy-from-source-task.yaml"
-	appTaskPath           = "04-tasks/deploy-using-kubectl-task.yaml"
 	ciPipelinesPath       = "05-pipelines/ci-dryrun-from-push-pipeline.yaml"
 	appCiPipelinesPath    = "05-pipelines/app-ci-pipeline.yaml"
 	pushTemplatePath      = "07-templates/ci-dryrun-from-push-template.yaml"
@@ -500,7 +499,6 @@ func createCICDResources(fs afero.Fs, repo scm.Repository, pipelineConfig *confi
 		return nil, err
 	}
 	outputs[gitopsTasksPath] = tasks.CreateDeployFromSourceTask(cicdNamespace, script)
-	outputs[appTaskPath] = tasks.CreateDeployUsingKubectlTask(cicdNamespace)
 	outputs[ciPipelinesPath] = pipelines.CreateCIPipeline(meta.NamespacedName(cicdNamespace, "ci-dryrun-from-push-pipeline"), cicdNamespace)
 	outputs[appCiPipelinesPath] = pipelines.CreateAppCIPipeline(meta.NamespacedName(cicdNamespace, "app-ci-pipeline"))
 	pushBinding, pushBindingName := repo.CreatePushBinding(cicdNamespace)

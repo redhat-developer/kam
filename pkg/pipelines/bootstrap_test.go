@@ -136,7 +136,6 @@ func TestBootstrapManifest(t *testing.T) {
 		"03-secrets/gitops-webhook-secret.yaml",
 		"03-secrets/webhook-secret-tst-dev-http-api.yaml",
 		"04-tasks/deploy-from-source-task.yaml",
-		"04-tasks/deploy-using-kubectl-task.yaml",
 		"05-pipelines/app-ci-pipeline.yaml",
 		"05-pipelines/ci-dryrun-from-push-pipeline.yaml",
 		"06-bindings/github-push-binding.yaml",
