@@ -66,6 +66,8 @@ func TestMakeScriptWithoutArgo(t *testing.T) {
 func setupGitOpsTree(t *testing.T, fs afero.Fs, base string, withArgoCD bool) {
 	t.Helper()
 	// minimal resources to have a valid GitOps tree
+	script, err := MakeScript("", "cicd")
+	assertNoError(t, err)
 	files := res.Resources{
 		"environments/dev/env/overlays/kustomization.yaml":   res.Kustomization{Bases: []string{"../base"}},
 		"environments/dev/apps/taxi/kustomization.yaml":      res.Kustomization{Bases: []string{"../overlays"}},
@@ -73,7 +75,7 @@ func setupGitOpsTree(t *testing.T, fs afero.Fs, base string, withArgoCD bool) {
 		"environments/stage/apps/go-app/kustomization.yaml":  res.Kustomization{Bases: []string{"../overlays"}},
 		"config/cicd/base/kustomization.yaml":                res.Kustomization{Resources: []string{"task.yaml"}},
 		"config/cicd/overlays/kustomization.yaml":            res.Kustomization{Bases: []string{"../base"}},
-		"config/cicd/base/task.yaml":                         tasks.CreateDeployUsingKubectlTask("cicd"),
+		"config/cicd/base/task.yaml":                         tasks.CreateDeployFromSourceTask("cicd", script),
 	}
 	if withArgoCD {
 		argoDir := res.Resources{
@@ -82,7 +84,7 @@ func setupGitOpsTree(t *testing.T, fs afero.Fs, base string, withArgoCD bool) {
 		}
 		files = res.Merge(argoDir, files)
 	}
-	_, err := yaml.WriteResources(fs, base, files)
+	_, err = yaml.WriteResources(fs, base, files)
 	assertNoError(t, err)
 }
 
