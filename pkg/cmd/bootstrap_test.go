@@ -19,7 +19,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 )
 
@@ -150,8 +149,7 @@ func TestValidateMandatoryFlags(t *testing.T) {
 				ServiceRepoURL: tt.serviceRepo,
 				ImageRepo:      tt.imagerepo},
 		}
-		clienSet := kubernetes.Clientset{}
-		err := nonInteractiveMode(&o, &utility.Client{KubeClient: &clienSet})
+		err := nonInteractiveMode(&o, &utility.Client{})
 
 		if !matchError(t, tt.errMsg, err) {
 			t.Errorf("nonInteractiveMode() %#v failed to match error: got %s, want %s", tt.name, err, tt.errMsg)

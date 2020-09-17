@@ -6,13 +6,11 @@ import (
 	"github.com/google/go-cmp/cmp"
 	v1alpha1 "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1"
 	operatorsfake "github.com/operator-framework/operator-lifecycle-manager/pkg/api/client/clientset/versioned/fake"
-	operatorsclientset "github.com/operator-framework/operator-lifecycle-manager/pkg/api/client/clientset/versioned/typed/operators/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 )
 
@@ -100,7 +98,7 @@ func TestCheckIfSealedSecretsExists(t *testing.T) {
 }
 
 func TestCheckIfArgoCDExists(t *testing.T) {
-	crc := operatorsfake.NewSimpleClientset(&v1alpha1.ClusterServiceVersion{
+	operatorClient := operatorsfake.NewSimpleClientset(&v1alpha1.ClusterServiceVersion{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "argocd",
 			Namespace: "argocd",
@@ -115,7 +113,8 @@ func TestCheckIfArgoCDExists(t *testing.T) {
 		},
 	})
 
-	fakeClient := newFakeClient(nil, crc.OperatorsV1alpha1())
+	fakeClient := &Client{OperatorClient: operatorClient.OperatorsV1alpha1()}
+
 	err := fakeClient.CheckIfArgoCDExists("argocd")
 	if err != nil {
 		t.Fatalf("CheckIfArgoCDExists failed: got %v,want %v", err, nil)
@@ -145,12 +144,5 @@ func TestCheckIfPipelinesExists(t *testing.T) {
 	wantErr := `deployments "unknown" not found`
 	if err == nil {
 		t.Fatalf("CheckIfPipelinesExists failed: got %v,want %v", nil, wantErr)
-	}
-}
-
-func newFakeClient(kubeClient kubernetes.Interface, operatorClient operatorsclientset.OperatorsV1alpha1Interface) *Client {
-	return &Client{
-		KubeClient:     kubeClient,
-		OperatorClient: operatorClient,
 	}
 }

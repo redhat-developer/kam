@@ -78,7 +78,6 @@ func NewBootstrapParameters() *BootstrapParameters {
 // If the prefix provided doesn't have a "-" then one is added, this makes the
 // generated environment names nicer to read.
 func (io *BootstrapParameters) Complete(name string, cmd *cobra.Command, args []string) error {
-
 	client, err := utility.NewClient()
 	if err != nil {
 		return err
@@ -112,23 +111,6 @@ func (io *BootstrapParameters) Complete(name string, cmd *cobra.Command, args []
 	}
 	return nil
 }
-
-// func getClientConfig() (*utility.Client, error) {
-// 	clientConfig, err := clientconfig.GetRESTConfig()
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	clientSet, err := kubernetes.NewForConfig(clientConfig)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	operatorClientSet, err := operatorsclientset.NewForConfig(clientConfig)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return &utility.Client{KubeClient: clientSet, OperatorClient: operatorClientSet}, nil
-// }
 
 // nonInteractiveMode gets triggered if a flag is passed, checks for mandatory flags.
 func nonInteractiveMode(io *BootstrapParameters, client *utility.Client) error {
