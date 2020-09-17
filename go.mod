@@ -6,7 +6,6 @@ require (
 	github.com/Netflix/go-expect v0.0.0-20200312175327-da48e75238e2 // indirect
 	github.com/bitnami-labs/sealed-secrets v0.12.5
 	github.com/docker/docker v17.12.0-ce-rc1.0.20200309214505-aa6a9891b09c+incompatible // indirect
-	github.com/docker/spdystream v0.0.0-20181023171402-6480d4af844c // indirect
 	github.com/elazarl/goproxy v0.0.0-20190911111923-ecfe977594f1 // indirect
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32 // indirect
 	github.com/google/go-cmp v0.5.0
@@ -26,7 +25,6 @@ require (
 	github.com/tektoncd/triggers v0.5.0
 	gopkg.in/AlecAivazis/survey.v1 v1.8.0
 	k8s.io/api v0.18.2
-	k8s.io/apiextensions-apiserver v0.17.6
 	k8s.io/apimachinery v0.18.2
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/klog v1.0.0
