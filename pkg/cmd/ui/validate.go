@@ -85,7 +85,7 @@ func validateSecretLength(input interface{}) error {
 	if s, ok := input.(string); ok {
 		err := CheckSecretLength(s)
 		if err {
-			return fmt.Errorf("The secret length should 16 or more ")
+			return fmt.Errorf("The length of the secret must be at least 16 characters ")
 		}
 		return nil
 	}
