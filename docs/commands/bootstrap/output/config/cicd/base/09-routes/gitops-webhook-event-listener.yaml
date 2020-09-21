@@ -1,0 +1,15 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  creationTimestamp: null
+  name: gitops-webhook-event-listener-route
+  namespace: cicd
+spec:
+  host: ""
+  port:
+    targetPort: 8080
+  to:
+    kind: Service
+    name: el-cicd-event-listener
+    weight: 100
+  wildcardPolicy: None

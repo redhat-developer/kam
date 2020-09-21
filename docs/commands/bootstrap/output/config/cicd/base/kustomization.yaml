@@ -1,0 +1,18 @@
+resources:
+- 01-namespaces/cicd-environment.yaml
+- 02-rolebindings/pipeline-service-account.yaml
+- 02-rolebindings/pipeline-service-role.yaml
+- 02-rolebindings/pipeline-service-rolebinding.yaml
+- 03-secrets/docker-config.yaml
+- 03-secrets/gitops-webhook-secret.yaml
+- 03-secrets/webhook-secret-dev-taxi.yaml
+- 04-tasks/deploy-from-source-task.yaml
+- 04-tasks/deploy-using-kubectl-task.yaml
+- 05-pipelines/app-ci-pipeline.yaml
+- 05-pipelines/ci-dryrun-from-push-pipeline.yaml
+- 06-bindings/dev-app-taxi-taxi-binding.yaml
+- 06-bindings/gitlab-push-binding.yaml
+- 07-templates/app-ci-build-from-push-template.yaml
+- 07-templates/ci-dryrun-from-push-template.yaml
+- 08-eventlisteners/cicd-event-listener.yaml
+- 09-routes/gitops-webhook-event-listener.yaml

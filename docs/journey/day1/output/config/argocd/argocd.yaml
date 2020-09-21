@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  creationTimestamp: null
+  name: argocd
+  namespace: argocd
+spec:
+  resourceExclusions: |
+    - apiGroups:
+      - tekton.dev
+      clusters:
+      - '*'
+      kinds:
+      - TaskRun
+      - PipelineRun
+  server:
+    route:
+      enabled: true

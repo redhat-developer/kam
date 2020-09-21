@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app.kubernetes.io/name: taxi
+    app.kubernetes.io/part-of: app-taxi
+  name: taxi
+  namespace: dev
+spec:
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app.kubernetes.io/name: taxi
+    app.kubernetes.io/part-of: app-taxi
+status:
+  loadBalancer: {}

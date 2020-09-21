@@ -1,0 +1,22 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  creationTimestamp: null
+  name: ci-dryrun-from-pr-pipeline
+  namespace: tst-cicd
+spec:
+  resources:
+  - name: source-repo
+    type: git
+  tasks:
+  - name: apply-source
+    params:
+    - name: DRYRUN
+      value: "true"
+    resources:
+      inputs:
+      - name: source
+        resource: source-repo
+    taskRef:
+      kind: Task
+      name: deploy-from-source-task

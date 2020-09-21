@@ -1,0 +1,72 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  creationTimestamp: null
+  name: cicd-event-listener
+  namespace: tst-cicd
+spec:
+  serviceAccountName: pipeline
+  triggers:
+  - bindings:
+    - name: github-pr-binding
+    interceptors:
+    - cel:
+        filter: (header.match('X-GitHub-Event', 'pull_request') && body.action ==
+          'opened' || body.action == 'synchronize') && body.pull_request.head.repo.full_name
+          == 'wtam2018/gitops'
+    - github:
+        secretRef:
+          namespace: tst-cicd
+          secretKey: webhook-secret-key
+          secretName: gitops-webhook-secret
+    name: ci-dryrun-from-pr
+    template:
+      name: ci-dryrun-from-pr-template
+  - bindings:
+    - name: github-push-binding
+    interceptors:
+    - cel:
+        filter: (header.match('X-GitHub-Event', 'push') && body.repository.full_name
+          == 'wtam2018/gitops') && body.ref.startsWith('refs/heads/master')
+    - github:
+        secretRef:
+          namespace: tst-cicd
+          secretKey: webhook-secret-key
+          secretName: gitops-webhook-secret
+    name: cd-deploy-from-push
+    template:
+      name: cd-deploy-from-push-template
+  - bindings:
+    - name: github-pr-binding
+    interceptors:
+    - cel:
+        filter: (header.match('X-GitHub-Event', 'pull_request') && body.action ==
+          'opened' || body.action == 'synchronize') && body.pull_request.head.repo.full_name
+          == 'wtam2018/bus'
+    - github:
+        secretRef:
+          namespace: tst-cicd
+          secretKey: webhook-secret-key
+          secretName: webhook-secret-new-env-bus
+    name: app-ci-build-from-pr-bus
+    template:
+      name: app-ci-template
+  - bindings:
+    - name: tst-dev-taxi-binding
+    - name: github-pr-binding
+    interceptors:
+    - cel:
+        filter: (header.match('X-GitHub-Event', 'pull_request') && body.action ==
+          'opened' || body.action == 'synchronize') && body.pull_request.head.repo.full_name
+          == 'wtam2018/taxi'
+    - github:
+        secretRef:
+          namespace: tst-cicd
+          secretKey: webhook-secret-key
+          secretName: webhook-secret-tst-dev-taxi
+    name: app-ci-build-from-pr-taxi
+    template:
+      name: app-ci-template
+status:
+  configuration:
+    generatedName: ""

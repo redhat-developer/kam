@@ -1,0 +1,13 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  creationTimestamp: null
+  name: dev-app-taxi-taxi-binding
+  namespace: cicd
+spec:
+  params:
+  - name: imageRepo
+    value: quay.io/isequeir/taxi
+  - name: tlsVerify
+    value: "true"
+status: {}

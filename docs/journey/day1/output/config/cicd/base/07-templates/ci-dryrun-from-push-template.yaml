@@ -1,0 +1,40 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  creationTimestamp: null
+  name: ci-dryrun-from-push-template
+  namespace: cicd
+spec:
+  params:
+  - default: master
+    description: The git revision
+    name: io.openshift.build.commit.ref
+  - description: The specific commit SHA
+    name: io.openshift.build.commit.id
+  - description: The git repository url
+    name: gitrepositoryurl
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      annotations:
+        tekton.dev/git-status: "true"
+        tekton.dev/status-context: ci-dryrun-from-push-pipeline
+        tekton.dev/status-description: CI dry run on push event
+      creationTimestamp: null
+      name: ci-dryrun-from-push-pipeline-$(uid)
+    spec:
+      pipelineRef:
+        name: ci-dryrun-from-push-pipeline
+      resources:
+      - name: source-repo
+        resourceSpec:
+          params:
+          - name: revision
+            value: $(params.io.openshift.build.commit.id)
+          - name: url
+            value: $(params.gitrepositoryurl)
+          type: git
+      serviceAccountName: pipeline
+    status: {}
+status: {}

@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  name: taxi
+  namespace: new-env
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: bus
+      app.kubernetes.io/part-of: app-bus
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app.kubernetes.io/name: bus
+        app.kubernetes.io/part-of: app-bus
+    spec:
+      containers:
+      - image: nginxinc/nginx-unprivileged:latest
+        imagePullPolicy: Always
+        name: bus
+        ports:
+        - containerPort: 8080
+        resources: {}
+      serviceAccountName: default
+status: {}

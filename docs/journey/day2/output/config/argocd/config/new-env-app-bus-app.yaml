@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  creationTimestamp: null
+  name: new-env-app-bus
+  namespace: argocd
+spec:
+  destination:
+    namespace: new-env
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: environments/new-env/apps/app-bus/base
+    repoURL: https://github.com/wtam2018/gitops.git
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+status:
+  health: {}
+  summary: {}
+  sync:
+    comparedTo:
+      destination: {}
+      source:
+        repoURL: ""
+    status: ""

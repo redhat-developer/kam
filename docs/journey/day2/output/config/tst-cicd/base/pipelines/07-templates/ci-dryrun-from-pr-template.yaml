@@ -1,0 +1,38 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  annotations:
+    tekton.dev/git-status: "true"
+    tekton.dev/status-context: ci-dryrun-from-pr-pipeline
+    tekton.dev/status-description: Stage CI Dry Run
+  creationTimestamp: null
+  name: ci-dryrun-from-pr-template
+  namespace: tst-cicd
+spec:
+  params:
+  - default: master
+    description: The git revision
+    name: gitref
+  - description: The git repository url
+    name: gitrepositoryurl
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      creationTimestamp: null
+      name: ci-dryrun-from-pr-pipeline-$(uid)
+    spec:
+      pipelineRef:
+        name: ci-dryrun-from-pr-pipeline
+      resources:
+      - name: source-repo
+        resourceSpec:
+          params:
+          - name: revision
+            value: $(params.gitref)
+          - name: url
+            value: $(params.gitrepositoryurl)
+          type: git
+      serviceAccountName: pipeline
+    status: {}
+status: {}

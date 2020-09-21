@@ -1,0 +1,48 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  creationTimestamp: null
+  name: cicd-app
+  namespace: argocd
+spec:
+  destination:
+    namespace: cicd
+    server: https://kubernetes.default.svc
+  ignoreDifferences:
+  - group: argoproj.io
+    jsonPointers:
+    - /status
+    kind: Application
+  - group: triggers.tekton.dev
+    jsonPointers:
+    - /status
+    kind: EventListener
+  - group: triggers.tekton.dev
+    jsonPointers:
+    - /status
+    kind: TriggerTemplate
+  - group: triggers.tekton.dev
+    jsonPointers:
+    - /status
+    kind: TriggerBinding
+  - group: route.openshift.io
+    jsonPointers:
+    - /spec/host
+    kind: Route
+  project: default
+  source:
+    path: config/cicd/overlays
+    repoURL: https://gitlab.com/ishitasequeira/gitops.git
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+status:
+  health: {}
+  summary: {}
+  sync:
+    comparedTo:
+      destination: {}
+      source:
+        repoURL: ""
+    status: ""

@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    app.openshift.io/vcs-uri: https://gitlab.com/ishitasequeira/gitops.git
+  creationTimestamp: null
+  name: cicd
+spec: {}
+status: {}

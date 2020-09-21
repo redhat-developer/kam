@@ -1,0 +1,50 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  creationTimestamp: null
+  name: app-ci-pipeline
+  namespace: cicd
+spec:
+  params:
+  - name: REPO
+    type: string
+  - name: COMMIT_SHA
+    type: string
+  - name: TLSVERIFY
+    type: string
+  - name: BUILD_EXTRA_ARGS
+    type: string
+  - name: GIT_REF
+    type: string
+  - name: COMMIT_DATE
+    type: string
+  - name: COMMIT_AUTHOR
+    type: string
+  - name: COMMIT_MESSAGE
+    type: string
+  - name: GIT_REPO
+    type: string
+  resources:
+  - name: source-repo
+    type: git
+  - name: runtime-image
+    type: image
+  tasks:
+  - name: build-image
+    params:
+    - name: TLSVERIFY
+      value: $(params.TLSVERIFY)
+    - name: BUILD_EXTRA_ARGS
+      value: --label=io.openshift.build.commit.author='$(params.COMMIT_AUTHOR)' --label=io.openshift.build.commit.date='$(params.COMMIT_DATE)'
+        --label=io.openshift.build.commit.id='$(params.COMMIT_SHA)' --label=io.openshift.build.commit.message='$(params.COMMIT_MESSAGE)'
+        --label=io.openshift.build.commit.ref='$(params.GIT_REF)'
+    resources:
+      inputs:
+      - name: source
+        resource: source-repo
+      outputs:
+      - name: image
+        resource: runtime-image
+    taskRef:
+      kind: ClusterTask
+      name: buildah

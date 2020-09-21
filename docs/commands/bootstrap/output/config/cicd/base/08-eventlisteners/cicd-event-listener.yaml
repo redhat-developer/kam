@@ -1,0 +1,47 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  creationTimestamp: null
+  name: cicd-event-listener
+  namespace: cicd
+spec:
+  serviceAccountName: pipeline
+  triggers:
+  - bindings:
+    - name: gitlab-push-binding
+    interceptors:
+    - gitlab:
+        secretRef:
+          namespace: cicd
+          secretKey: webhook-secret-key
+          secretName: gitops-webhook-secret
+    - cel:
+        filter: header.match('X-Gitlab-Event','Push Hook') && body.project.path_with_namespace
+          == 'ishitasequeira/gitops'
+        overlays:
+        - expression: split(body.ref,'/')[2]
+          key: ref
+    name: ci-dryrun-from-push
+    template:
+      name: ci-dryrun-from-push-template
+  - bindings:
+    - name: dev-app-taxi-taxi-binding
+    - name: gitlab-push-binding
+    interceptors:
+    - gitlab:
+        secretRef:
+          namespace: cicd
+          secretKey: webhook-secret-key
+          secretName: webhook-secret-dev-taxi
+    - cel:
+        filter: header.match('X-Gitlab-Event','Push Hook') && body.project.path_with_namespace
+          == 'ishitasequeira/taxi'
+        overlays:
+        - expression: split(body.ref,'/')[2]
+          key: ref
+    name: app-ci-build-from-push-taxi
+    template:
+      name: app-ci-template
+status:
+  configuration:
+    generatedName: ""

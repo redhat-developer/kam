@@ -1,0 +1,3 @@
+resources:
+- tst-dev-environment.yaml
+- tst-dev-rolebinding.yaml

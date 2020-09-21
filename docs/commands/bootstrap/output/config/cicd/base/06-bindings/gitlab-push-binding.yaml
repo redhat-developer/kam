@@ -1,0 +1,23 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  creationTimestamp: null
+  name: gitlab-push-binding
+  namespace: cicd
+spec:
+  params:
+  - name: gitrepositoryurl
+    value: $(body.project.git_http_url)
+  - name: fullname
+    value: $(body.project.path_with_namespace)
+  - name: io.openshift.build.commit.ref
+    value: $(body.ref)
+  - name: io.openshift.build.commit.id
+    value: $(body.after)
+  - name: io.openshift.build.commit.date
+    value: $(body.commits[-1:].timestamp)
+  - name: io.openshift.build.commit.message
+    value: $(body.commits[-1:].message)
+  - name: io.openshift.build.commit.author
+    value: $(body.commits[-1:].author.name)
+status: {}
