@@ -4,7 +4,7 @@ The `build` sub-command (re-)generates pipelines resources from a pipelines.yaml
 
 ```shell
 $ gitops build
-  [--pipelines-file]
+  [--pipelines-folder]
   [--output]
 ```
 
@@ -12,5 +12,5 @@ $ gitops build
 | ----------------------- | ----------- |
 | --help                  | Show help|
 | --output                | Optional.  Output path.  (default is the current working directory|
-| --pipelines-file | Optional.  Path to pipelines file.  Default is _pipelines.yaml_. |
+| --pipelines-folder | Optional.  Folder path to retrieve manifest, eg. /test where manifest exists at /test/pipelines.yaml. |
 

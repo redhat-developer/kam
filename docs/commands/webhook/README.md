@@ -16,13 +16,13 @@ Otherwise, a webhook will be created and the ID of the new webhook is written to
 $ gitops webhook create 
     --access-token 
     [--cicd] | [--env-name --service-name]
-    [--pipelines-file]
+    [--pipelines-folder]
 ```
 | Option                  | Description |
 | ----------------------- | ----------- |
 | --access-token | Access token to be used to operate on Git repository.|
 | --cicd, --env-name, --service-name | Specify --cicd flag if the target Git repository is a CI/CD configuration repository.  Otherwise, provide environment and service names if the target Git repository is a service's source repository.  Either --cicd or both --env-name and --service-name must be provided.|  
-| --pipelines-file | Optional.  Path to pipelines file.  Default is _pipelines.yaml_. |
+| --pipelines-folder | Optional.  Folder path to retrieve manifest, eg. /test where manifest exists at /test/pipelines.yaml (default ".") |
 
 ## Webhook delete
 
@@ -34,15 +34,14 @@ The EventListener address is retrieved from cluster based on the options passed 
 $ gitops webhook delete
     --access-token
     [--cicd] | [--env-name --service-name]
-    [--pipelines-file ]
+    [--pipelines-folder ]
 ```
 
 | Option                  | Description |
 | ----------------------- | ----------- |
 | --access-token | Access token to be used to operate on Git repository.|
 | --cicd, --env-name, --service-name | Specify --cicd flag if the target Git repository is a CI/CD configuration repository.  Otherwise, provide environment and service names if the target Git repository is a service's source repository.  Either --cicd or both --env-name and --service-name must be provided.|  
-| --pipelines-file  | Optional.  Path to pipelines file.  Default is _pipelines.yaml_. |
-
+| --pipelines-folder | Optional.  Folder path to retrieve manifest, eg. /test where manifest exists at /test/pipelines.yaml (default ".") |
 ## Webhook list
 
 The `webhook list` sub-command displays webhook IDs from the Git repository that contain the target EventListener address.
@@ -53,11 +52,11 @@ The EventListener address is retrieved from cluster based on the options passed 
 $ gitops webhook list
     --access-token
     [--cicd] | [--env-name --service-name]
-    [--pipelines-file ]
+    [--pipelines-folder ]
 ```
 
 | Option                  | Description |
 | ----------------------- | ----------- |
 | --access-token | Access token to be used to operate on Git repository.|
 | --cicd, --env-name, --service-name | Specify --cicd flag if the target Git repository is a CI/CD configuration repository.  Otherwise, provide environment and service names if the target Git repository is a service's source repository.  Either --cicd or both --env-name and --service-name must be provided.|  
-| --pipelines-file  | Optional.  Path to pipelines file.  Default is _pipelines.yaml_. |
+| --pipelines-folder | Optional.  Folder path to retrieve manifest, eg. /test where manifest exists at /test/pipelines.yaml (default ".") |

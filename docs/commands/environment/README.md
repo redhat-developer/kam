@@ -10,18 +10,18 @@ It outputs resources YAML files, Kustomization files, and updated Manifest to fi
 $ gitops environment add
   --env-name 
   [--cluster]
-  [--pipelines-file]
+  [--pipelines-folder]
 ```
 
 | Flag                    | Description |
 | ----------------------- | ----------- |
 | --cluster               | Deployment cluster (Default https://kubernetes.local.svc)|
 | --env-name              | The name of environment to be added|
-| --pipelines-file        | Optional.  Path to manifest file.  Default is pipelines.yaml. |
+| --pipelines-folder      | Optional.  Folder path to retrieve manifest, eg. /test where manifest exists at /test/pipelines.yaml |
 | --help                  | Show help|
 
 
-The following [directory layout](output) is generated.
+The directory layout generated is shown below.
 
 ```
 .
