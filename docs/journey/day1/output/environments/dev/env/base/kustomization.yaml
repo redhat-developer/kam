@@ -1,3 +1,0 @@
-resources:
-- dev-environment.yaml
-- dev-rolebinding.yaml

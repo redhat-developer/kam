@@ -1,3 +1,0 @@
-resources:
-- stage-environment.yaml
-- stage-rolebinding.yaml

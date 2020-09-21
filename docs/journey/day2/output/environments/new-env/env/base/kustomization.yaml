@@ -1,3 +1,0 @@
-resources:
-- new-env-environment.yaml
-- new-env-rolebinding.yaml
