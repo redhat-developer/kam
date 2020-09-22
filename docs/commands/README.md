@@ -1,6 +1,6 @@
 # Gitops Pipelines Commands
 
-Gitops binaries can be downloaded [here](https://github.com/redhat-developer/gitops-cli/releases).
+Gitops binaries can be downloaded [https://github.com/redhat-developer/gitops-cli/releases/latest](https://github.com/redhat-developer/gitops-cli/releases/latest)
 
 Gitops Pipelines Commands are CLI to setup GitOps environments and services.
 
@@ -8,3 +8,4 @@ Gitops Pipelines Commands are CLI to setup GitOps environments and services.
 * [gitops build](./build)
 * [gitops service](./service)
 * [gitops webhook](./webhook)
+* [gitops environment](./environment)

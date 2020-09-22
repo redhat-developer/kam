@@ -1,6 +1,7 @@
 # Day 2 Operations
 
-Day 2 Operations are actions that users take to  change a GitOps system. 
+Day 2 Operations are actions that users take to change a GitOps system.
+
 Currently, the following gitops commands are available to allow users to add new
 Evnrionments and Applications/Services.
 
@@ -8,12 +9,11 @@ Evnrionments and Applications/Services.
 * [gitops service](../../commands/service)
 * [gitops webhook](../../commands/webhook)
 
-
 ## Prerequisites
 
-* A GitOps system that has been bootstrapped in [Day 1 Operations](../day1) (Also see Day 1 Operation Prerequisities)
-* A new Git repository to be used as the new Service's source repository. 
-* Download official [gitops](https://github.com/redhat-developer/gitops-cli/releases) binary
+* A GitOps system that has been bootstrapped in [Day 1 Operations](../day1)
+* A new Git repository to be used as the new Service's source repository.
+* Download official [gitops](https://github.com/redhat-developer/gitops-cli/releases/latest) binary
 
 ## Create a new Environment
 
@@ -41,8 +41,6 @@ And, it generates the following yamls.  The new resources are namespace and role
 
 * [`environments/<env-name>/env/base/<env-name>-environment.yaml`](output/environments/new-env/env/base/new-env-environment.yaml)
 * [`environments/<env-name>/env/base/<env-name>-rolebinding.yaml`](output/environments/new-env/env/base/new-env-rolebinding.yaml)
-
-
 
 ## Create an Application/Service in the new Environment
 
@@ -233,13 +231,3 @@ Pull Request.
 This should trigger the PipelineRun:
 
 ![PipelineRun triggered](img/app-ci-pipeline.png)
-
-
-
-
-
-
-
-
-
-
