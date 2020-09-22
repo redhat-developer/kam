@@ -74,7 +74,9 @@ Now we have an a team that set out as a start-up but went on to be a full-fledge
 
 Now's your chance to ramp up your organization using our modernized approach for end-to-end application delivery.
 
-A simple GitOps configuration can be seen [here](https://github.com/rhd-gitops-example/gitops), all achieved with a list of commands listed in [gitops Command Reference](./commands), why wait?
+A sample GitOps configuration can be seen [here](https://github.com/redhat-developer/gitops-repo-example), all achieved with a list of commands listed in [gitops Command Reference](./commands), why wait?
+
+**NOTE**: The sample repository cannot be applied to a cluster, the secrets are encrypted and the key is not available.
 
 Lets get started.
 
