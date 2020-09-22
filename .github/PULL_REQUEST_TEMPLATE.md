@@ -17,9 +17,8 @@
 
 **Have you updated the necessary documentation?**
 
-See https://github.com/rhd-gitops-example/docs
-
-[ ] Updated
+[ ] Documentation update is required by this PR.
+[ ] Documentation has been updated.
 
 **Which issue(s) this PR fixes**:
 
