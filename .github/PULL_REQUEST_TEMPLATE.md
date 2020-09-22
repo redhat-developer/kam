@@ -17,8 +17,8 @@
 
 **Have you updated the necessary documentation?**
 
-[ ] Documentation update is required by this PR.
-[ ] Documentation has been updated.
+* [ ] Documentation update is required by this PR.
+* [ ] Documentation has been updated.
 
 **Which issue(s) this PR fixes**:
 
