@@ -114,25 +114,39 @@ func (io *BootstrapParameters) Complete(name string, cmd *cobra.Command, args []
 
 // nonInteractiveMode gets triggered if a flag is passed, checks for mandatory flags.
 func nonInteractiveMode(io *BootstrapParameters, client *utility.Client) error {
-	mandatoryFlags := map[string]string{io.ServiceRepoURL: "service-repo-url", io.GitOpsRepoURL: "gitops-repo-url", io.ImageRepo: "image-repo"}
-	for key, value := range mandatoryFlags {
-		if key == "" {
-			return fmt.Errorf("The mandatory flag %q has not been set", value)
-		}
+	mandatoryFlags := map[string]string{"service-repo-url": io.ServiceRepoURL, "gitops-repo-url": io.GitOpsRepoURL, "image-repo": io.ImageRepo}
+	if err := checkMandatoryFlags(mandatoryFlags); err != nil {
+		return err
 	}
-	err := checkBootstrapDependencies(io, client, log.NewStatus(os.Stdout))
-	if err != nil {
+	if err := checkBootstrapDependencies(io, client, log.NewStatus(os.Stdout)); err != nil {
 		return err
 	}
 	return nil
 }
 
+func checkMandatoryFlags(flags map[string]string) error {
+	missingFlags := []string{}
+	for k, v := range flags {
+		if v == "" {
+			missingFlags = append(missingFlags, fmt.Sprintf("%q", k))
+		}
+	}
+	if len(missingFlags) > 0 {
+		return missingFlagErr(missingFlags)
+	}
+	return nil
+}
+
+func missingFlagErr(flags []string) error {
+	return fmt.Errorf("required flag(s) %s not set", strings.Join(flags, ", "))
+}
+
 // initiateInteractiveMode starts the interactive mode impplementation if no flags are passed.
 func initiateInteractiveMode(io *BootstrapParameters) error {
+	log.Progressf("\nStarting interactive prompt\n")
 	// ask for sealed secrets only when default is absent
 	if io.SealedSecretsService == (types.NamespacedName{}) {
 		io.SealedSecretsService.Name = ui.EnterSealedSecretService(&io.SealedSecretsService)
-
 	}
 	io.GitOpsRepoURL = utility.AddGitSuffixIfNecessary(ui.EnterGitRepo())
 	if !isKnownDriver(io.GitOpsRepoURL) {
@@ -153,7 +167,7 @@ func initiateInteractiveMode(io *BootstrapParameters) error {
 		io.DockerConfigJSONFilename = ui.EnterDockercfg()
 	}
 	io.GitOpsWebhookSecret = ui.EnterGitWebhookSecret()
-	io.ServiceRepoURL = ui.EnterServiceRepoURL()
+	io.ServiceRepoURL = utility.AddGitSuffixIfNecessary(ui.EnterServiceRepoURL())
 	if ui.IsPrivateRepo() {
 		io.GitHostAccessToken = ui.EnterGitHostAccessToken(io.ServiceRepoURL)
 	}
@@ -168,6 +182,7 @@ func initiateInteractiveMode(io *BootstrapParameters) error {
 	io.Prefix = ui.EnterPrefix()
 	io.OutputPath = ui.EnterOutputPath()
 	io.Overwrite = true
+	log.Progressf("\nCompleting Bootstrap process\n")
 	return nil
 }
 
@@ -289,9 +304,9 @@ func NewCmdBootstrap(name, fullName string) *cobra.Command {
 }
 
 func nextSteps() {
-	log.Success("Bootstrapped OpenShift resources sucessfully.\n",
+	log.Success("Bootstrapped OpenShift resources sucessfully\n\n",
 		"Next Steps:\n",
-		"Please refer to https://github.com/rhd-gitops-example/docs/ to get started.",
+		"Please refer to https://github.com/redhat-developer/gitops-cli/tree/master/docs to get started.",
 	)
 }
 
