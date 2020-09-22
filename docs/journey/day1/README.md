@@ -19,7 +19,7 @@ And, you will need this.
 * Create [GitOps repository](prerequisites/gitops_repo.md)
 * Source Git repository ([taxi](prerequisites/service_repo.md) is used as an example in this document)
 * The external image repository secret to authenticate image pushes on sucessfull pipeline execution. To use quay.io, please follow [prerequisites/quay.md](prerequisites/quay.md)
-* Download official [gitops](../../commands/bin) binary
+* Download official [gitops](https://github.com/redhat-developer/gitops-cli/releases) binary
 * Steps to create the git access token for [commit-status-tracker/webhook access-token](prerequisites/git_access_token_steps.md)
 
 ## Bootstrapping the Manifest

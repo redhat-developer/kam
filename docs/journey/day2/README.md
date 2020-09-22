@@ -13,7 +13,7 @@ Evnrionments and Applications/Services.
 
 * A GitOps system that has been bootstrapped in [Day 1 Operations](../day1) (Also see Day 1 Operation Prerequisities)
 * A new Git repository to be used as the new Service's source repository. 
-* Download official [gitops](../../commands/bin) binary
+* Download official [gitops](https://github.com/redhat-developer/gitops-cli/releases) binary
 
 ## Create a new Environment
 
