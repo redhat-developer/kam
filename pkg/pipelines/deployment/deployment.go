@@ -5,7 +5,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/meta"
+	"github.com/redhat-developer/gitops-cli/pkg/pipelines/meta"
 )
 
 // KubernetesAppNameLabel string constant for Kubernetes App Name label

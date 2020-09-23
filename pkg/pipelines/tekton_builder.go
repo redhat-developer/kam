@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/config"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/eventlisteners"
-	res "github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/resources"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/scm"
+	"github.com/redhat-developer/gitops-cli/pkg/pipelines/config"
+	"github.com/redhat-developer/gitops-cli/pkg/pipelines/eventlisteners"
+	res "github.com/redhat-developer/gitops-cli/pkg/pipelines/resources"
+	"github.com/redhat-developer/gitops-cli/pkg/pipelines/scm"
 	"github.com/tektoncd/triggers/pkg/apis/triggers/v1alpha1"
 )
 

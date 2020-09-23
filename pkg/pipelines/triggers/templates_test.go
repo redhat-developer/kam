@@ -8,7 +8,7 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/meta"
+	"github.com/redhat-developer/gitops-cli/pkg/pipelines/meta"
 )
 
 const (

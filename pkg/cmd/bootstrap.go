@@ -8,11 +8,11 @@ import (
 
 	"github.com/jenkins-x/go-scm/scm/factory"
 	"github.com/openshift/odo/pkg/log"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/cmd/genericclioptions"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/cmd/ui"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/cmd/utility"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/ioutils"
+	"github.com/redhat-developer/gitops-cli/pkg/cmd/genericclioptions"
+	"github.com/redhat-developer/gitops-cli/pkg/cmd/ui"
+	"github.com/redhat-developer/gitops-cli/pkg/cmd/utility"
+	"github.com/redhat-developer/gitops-cli/pkg/pipelines"
+	"github.com/redhat-developer/gitops-cli/pkg/pipelines/ioutils"
 	"github.com/spf13/cobra"
 
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -291,7 +291,7 @@ func NewCmdBootstrap(name, fullName string) *cobra.Command {
 func nextSteps() {
 	log.Success("Bootstrapped OpenShift resources sucessfully.\n",
 		"Next Steps:\n",
-		"Please refer to https://github.com/rhd-gitops-example/docs/ to get started.",
+		"Please refer to https://github.com/redhat-developer/docs/ to get started.",
 	)
 }
 

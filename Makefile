@@ -4,7 +4,7 @@ WINDOWS=$(EXECUTABLE)_windows_amd64.exe
 LINUX=$(EXECUTABLE)_linux_amd64
 DARWIN=$(EXECUTABLE)_darwin_amd64
 VERSION=$(shell git describe --tags --always --long --dirty)
-LD_FLAGS="-s -w -X github.com/rhd-gitops-example/gitops-cli/pkg/cmd/version.Version=$(VERSION)"
+LD_FLAGS="-s -w -X github.com/redhat-developer/gitops-cli/pkg/cmd/version.Version=$(VERSION)"
 
 .PHONY: all_platforms
 all_platforms: windows linux darwin 

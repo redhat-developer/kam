@@ -5,8 +5,8 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/jenkins-x/go-scm/scm/factory"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/ioutils"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/yaml"
+	"github.com/redhat-developer/gitops-cli/pkg/pipelines/ioutils"
+	"github.com/redhat-developer/gitops-cli/pkg/pipelines/yaml"
 )
 
 func TestLoadManifestUpdatesDrivers(t *testing.T) {

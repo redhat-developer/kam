@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/config"
+	"github.com/redhat-developer/gitops-cli/pkg/pipelines/config"
 )
 
 func TestBuildURL(t *testing.T) {

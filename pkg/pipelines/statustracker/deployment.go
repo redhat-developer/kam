@@ -8,10 +8,10 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/deployment"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/meta"
-	res "github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/resources"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/roles"
+	"github.com/redhat-developer/gitops-cli/pkg/pipelines/deployment"
+	"github.com/redhat-developer/gitops-cli/pkg/pipelines/meta"
+	res "github.com/redhat-developer/gitops-cli/pkg/pipelines/resources"
+	"github.com/redhat-developer/gitops-cli/pkg/pipelines/roles"
 )
 
 const (

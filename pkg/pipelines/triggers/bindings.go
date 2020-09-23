@@ -3,7 +3,7 @@ package triggers
 import (
 	triggersv1 "github.com/tektoncd/triggers/pkg/apis/triggers/v1alpha1"
 
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/meta"
+	"github.com/redhat-developer/gitops-cli/pkg/pipelines/meta"
 )
 
 var (

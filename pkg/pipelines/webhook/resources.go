@@ -3,7 +3,7 @@ package webhook
 import (
 	routeclientset "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
 	"github.com/pkg/errors"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/clientconfig"
+	"github.com/redhat-developer/gitops-cli/pkg/pipelines/clientconfig"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )

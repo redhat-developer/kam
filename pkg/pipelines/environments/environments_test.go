@@ -6,10 +6,10 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/config"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/ioutils"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/namespaces"
-	res "github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/resources"
+	"github.com/redhat-developer/gitops-cli/pkg/pipelines/config"
+	"github.com/redhat-developer/gitops-cli/pkg/pipelines/ioutils"
+	"github.com/redhat-developer/gitops-cli/pkg/pipelines/namespaces"
+	res "github.com/redhat-developer/gitops-cli/pkg/pipelines/resources"
 	"github.com/spf13/afero"
 )
 

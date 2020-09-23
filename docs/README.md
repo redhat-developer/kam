@@ -39,7 +39,7 @@ This project provides the tooling to generate the recommended directories and ma
 
 ### Sample
 
-A sample GitOps repository can be found [here](https://github.com/rhd-gitops-example/gitops).
+A sample GitOps repository can be found [here](https://github.com/redhat-developer/gitops-repo-example).
 
 ## Business Scenario
 
@@ -65,7 +65,7 @@ Giving users the ability to simply modify the pipelines to their own needs at an
 
 Now we have an a team that set out as a start up but went on to be a full fledged organization with a multiple verticals and business set up in different geographical locations leveraging the use of OpenShift and GitOps with "Git as the source of truth".
 
-Now's your chance to ramp up your organization using our modernized approach for end-to-end application delivery. A simple GitOps configuration can be seen [here](https://github.com/rhd-gitops-example/gitops), all achieved with a list of commands listed in [gitops Command Reference](./commands), why wait? Lets get started.
+Now's your chance to ramp up your organization using our modernized approach for end-to-end application delivery. A simple GitOps configuration can be seen [here](https://github.com/redhat-developer/gitops-repo-example), all achieved with a list of commands listed in [gitops Command Reference](./commands), why wait? Lets get started.
 
 ## Support for Git hosting services
 
