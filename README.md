@@ -1,5 +1,8 @@
 # GITOPS CLI
 
+![Upload Release Asset](https://github.com/redhat-developer/gitops-cli/workflows/Upload%20Release%20Asset/badge.svg)
+
+![Validate PRs](https://github.com/redhat-developer/gitops-cli/workflows/Validate%20PRs/badge.svg)
 
 GitOps CLI provides command line interface to bootstrap GitOps and perform other operations.  See why and how [GitOps for Application Delivery](./docs/README.md) can help your business to streamline your application delivery.
 
