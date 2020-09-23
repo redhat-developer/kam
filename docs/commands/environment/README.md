@@ -1,13 +1,13 @@
-# Gitops Environment Command
+# KAM Environment Command
 
 ## Environment add
 
-The `environment add` sub-command creates a new environment in an existing GitOps setup.
+The `environment add` sub-command creates a new environment in an existing kam setup.
 
 It outputs resources YAML files, Kustomization files, and updated Manifest to filesystem.
 
 ```shell
-$ gitops environment add
+$ kam environment add
   --env-name 
   [--cluster]
   [--pipelines-folder]

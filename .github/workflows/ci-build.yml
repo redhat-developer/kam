@@ -31,7 +31,10 @@ jobs:
           exit 1
         fi
     - name: Build Binary
-      run: make bin
+      run: |
+        pwd
+        ls -l
+        make bin
     
     - name: Run Go Tests
       run: make test

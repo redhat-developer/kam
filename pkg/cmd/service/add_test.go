@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines"
+	"github.com/redhat-developer/kam/pkg/pipelines"
 	"github.com/spf13/cobra"
 )
 

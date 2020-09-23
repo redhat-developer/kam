@@ -19,7 +19,7 @@ func NewCmd(name, fullName string) *cobra.Command {
 		Short: "Print the version information",
 		Long:  "Print the version information",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Printf("gitops version %s\n", Version)
+			fmt.Printf("kam version %s\n", Version)
 		},
 	}
 }

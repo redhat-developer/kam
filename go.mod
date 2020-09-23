@@ -1,4 +1,4 @@
-module github.com/rhd-gitops-example/gitops-cli
+module github.com/redhat-developer/kam
 
 go 1.14
 

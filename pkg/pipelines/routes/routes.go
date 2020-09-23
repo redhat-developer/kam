@@ -6,7 +6,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	routev1 "github.com/openshift/api/route/v1"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/meta"
+	"github.com/redhat-developer/kam/pkg/pipelines/meta"
 )
 
 // GitOpsWebhookEventListenerRouteName is the OpenShift Route name for GitOps Webhook Listener

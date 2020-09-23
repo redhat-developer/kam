@@ -4,7 +4,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/triggers"
+	"github.com/redhat-developer/kam/pkg/pipelines/triggers"
 	triggersv1 "github.com/tektoncd/triggers/pkg/apis/triggers/v1alpha1"
 )
 

@@ -16,8 +16,8 @@ import (
 	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/util/cert"
 
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/clientconfig"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/meta"
+	"github.com/redhat-developer/kam/pkg/pipelines/clientconfig"
+	"github.com/redhat-developer/kam/pkg/pipelines/meta"
 )
 
 var (

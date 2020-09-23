@@ -5,15 +5,15 @@ Day 2 Operations are actions that users take to change a GitOps system.
 Currently, the following gitops commands are available to allow users to add new
 Evnrionments and Applications/Services.
 
-* [gitops environment](../../commands/environment)
-* [gitops service](../../commands/service)
-* [gitops webhook](../../commands/webhook)
+* [kam environment](../../commands/environment)
+* [kam service](../../commands/service)
+* [kam webhook](../../commands/webhook)
 
 ## Prerequisites
 
-* A GitOps system that has been bootstrapped in [Day 1 Operations](../day1)
+* A kam system that has been bootstrapped in [Day 1 Operations](../day1)
 * A new Git repository to be used as the new Service's source repository.
-* Download official [gitops](https://github.com/redhat-developer/gitops-cli/releases/latest) binary
+* Download official [kam](https://github.com/redhat-developer/kam/releases/latest) binary
 
 ## Create a new Environment
 
@@ -47,7 +47,7 @@ And, it generates the following yamls.  The new resources are namespace and role
 To generate resources for the new Service, run the foolowing command.
 
 ```shell
-$ gitops service add \
+$ kam service add \
   --env-name new-env \
   --app-name app-bus \
   --service-name bus \
@@ -201,7 +201,7 @@ $ oc apply -k environments/new-env/env/base/
 Create a webhook for the new source repository.   This will allow webhook on the source repository to trigger CI Pipeline to run continuous integration on the new Service's source.
 
 ```shell
-$ gitops webhook create \
+$ kam webhook create \
     --access-token \
     --env-name new-env \
     --service-name bus \
