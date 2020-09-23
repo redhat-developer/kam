@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	longServiceName  = "A service name can be no longer than 47 characters"
+	longServiceName  = "a service name cannot exceed 47 characters"
 	serviceNameLimit = 47
 )
 
