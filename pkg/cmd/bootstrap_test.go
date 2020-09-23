@@ -137,9 +137,9 @@ func TestValidateMandatoryFlags(t *testing.T) {
 		imagerepo   string
 		errMsg      string
 	}{
-		{"missing gitops-repo-url", "", "https://github.com/example/repo.git", "registry/username/repo", `The mandatory flag "gitops-repo-url" has not been set`},
-		{"missing service-repo-url", "https://github.com/example/repo.git", "", "registry/username/repo", `The mandatory flag "service-repo-url" has not been set`},
-		{"missing image-repo", "https://github.com/example/repo.git", "https://github.com/example/repo.git", "", `The mandatory flag "image-repo" has not been set`},
+		{"missing gitops-repo-url", "", "https://github.com/example/repo.git", "registry/username/repo", missingFlagErr([]string{`"gitops-repo-url"`}).Error()},
+		{"missing service-repo-url", "https://github.com/example/repo.git", "", "registry/username/repo", missingFlagErr([]string{`"service-repo-url"`}).Error()},
+		{"missing image-repo", "https://github.com/example/repo.git", "https://github.com/example/repo.git", "", missingFlagErr([]string{`"image-repo"`}).Error()},
 	}
 
 	for _, tt := range optionTests {
@@ -150,9 +150,8 @@ func TestValidateMandatoryFlags(t *testing.T) {
 				ImageRepo:      tt.imagerepo},
 		}
 		err := nonInteractiveMode(&o, &utility.Client{})
-
-		if !matchError(t, tt.errMsg, err) {
-			t.Errorf("nonInteractiveMode() %#v failed to match error: got %s, want %s", tt.name, err, tt.errMsg)
+		if tt.errMsg != err.Error() {
+			t.Fatalf("nonInteractiveMode() %#v failed to match error: got %s, want %s", tt.name, err, tt.errMsg)
 		}
 	}
 }
@@ -358,5 +357,41 @@ func argoCDCSV() *v1alpha1.ClusterServiceVersion {
 				},
 			},
 		},
+	}
+}
+
+func TestMissingFlags(t *testing.T) {
+	tests := []struct {
+		desc  string
+		flags map[string]string
+		err   error
+	}{
+		{
+			"Required flags are present",
+			map[string]string{"gitops-repo-url": "value-1", "service-repo-url": "value-2", "image-repo": "value-3"},
+			nil,
+		},
+		{
+			"A required flag is absent",
+			map[string]string{"gitops-repo-url": "value-1", "service-repo-url": "value-2", "image-repo": ""},
+			missingFlagErr([]string{`"image-repo"`}),
+		},
+		{
+			"Multiple required flags are absent",
+			map[string]string{"gitops-repo-url": "value-1", "service-repo-url": "", "image-repo": ""},
+			missingFlagErr([]string{`"service-repo-url"`, `"image-repo"`}),
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			gotErr := checkMandatoryFlags(test.flags)
+			if gotErr != nil && test.err != nil {
+				if gotErr.Error() != test.err.Error() {
+					t.Fatalf("error mismatch: got %v, want %v", gotErr, test.err)
+				}
+			} else if gotErr != test.err {
+				t.Fatalf("error mismatch: got %v, want %v", gotErr, test.err)
+			}
+		})
 	}
 }

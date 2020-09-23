@@ -158,7 +158,7 @@ func Bootstrap(o *BootstrapOptions, appFs afero.Fs) error {
 	if err != nil {
 		return fmt.Errorf("failed to build resources: %v", err)
 	}
-	log.Successf("Created dev,stage and cicd ennvironments")
+	log.Successf("Created dev, stage and CICD environments")
 	bootstrapped = res.Merge(built, bootstrapped)
 	_, err = yaml.WriteResources(appFs, o.OutputPath, bootstrapped)
 	return err
