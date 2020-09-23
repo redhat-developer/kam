@@ -17,17 +17,3 @@ In order to solve this apply:
 ```shell
 $ oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:argocd:argocd-application-controller
 ```
-
-When the pods are up, open the ArgoCD web UI by clicking on the created route  
-
-![ArgoCDPods](../img/ArgoCD_Pods.png)
-
-Get your login credentials from the cluster
-
-```shell
-$ oc get secret argocd-cluster -n argocd -ojsonpath='{.data.admin\.password}' | base64 --decode
-```
-
-You can now login with username as `admin` and password fetched in the previous step:
-
-![ArgoCDLogin](../img/ArgoCD_Login.png)
