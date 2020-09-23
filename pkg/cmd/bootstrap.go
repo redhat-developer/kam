@@ -121,7 +121,11 @@ func nonInteractiveMode(io *BootstrapParameters, client *utility.Client) error {
 	if err := checkMandatoryFlags(mandatoryFlags); err != nil {
 		return err
 	}
-	if err := checkBootstrapDependencies(io, client, log.NewStatus(os.Stdout)); err != nil {
+	if io.CommitStatusTracker && io.GitHostAccessToken == "" {
+		return fmt.Errorf("Kindly input the git-host-access-token if commit-status-tracker set to true")
+	}
+	err := checkBootstrapDependencies(io, client, log.NewStatus(os.Stdout))
+	if err != nil {
 		return err
 	}
 	return nil
