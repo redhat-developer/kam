@@ -7,8 +7,7 @@ GitOps CLI provides command line interface to bootstrap GitOps and perform other
 
 [Comand Line Reference](./docs/commands/README.md)
 
-## Contributing to <project_name>
-<!--- If your README is long or you have some specific process or steps you want contributors to follow, consider creating a separate CONTRIBUTING.md file--->
+## Contributing to `GITOPS CLI`
 To contribute to `GITOPS CLI`, follow these steps:
 
 1. Fork this repository.
