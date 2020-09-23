@@ -10,20 +10,6 @@ Click on the ArgoCD operator as shown below in the OperatorHub on your OpenShift
 
 ![ArgoCDOperator](../img/Argocd_operator_gitops.png)
 
-Create an instance of ArgoCD
-
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: ArgoCD
-metadata:
-  name: argocd
-  namespace: argocd
-spec:
-  server:
-    route:
-      enabled: true
-```
-
 Note: Due to an open [issue](https://github.com/argoproj-labs/argocd-operator/issues/107) the operator may not create enough privileges to manage multiple namespaces.
 
 In order to solve this apply:
