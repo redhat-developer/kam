@@ -22,7 +22,7 @@ func AddGitSuffixIfNecessary(url string) string {
 	if url == "" || strings.HasSuffix(strings.ToLower(url), ".git") {
 		return url
 	}
-	log.Infof("Adding .git to %s", url)
+	log.Italicf("Adding .git to %s", url)
 	return url + ".git"
 }
 
