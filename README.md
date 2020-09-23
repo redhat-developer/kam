@@ -23,7 +23,7 @@ Alternatively see the GitHub documentation on [creating a pull request](https://
 
 ## Contact
 
-If you want to contact me you can reach us at `team-gitops@redhat.com`
+If you want to contact me you can reach us at [team-gitops@redhat.com](mailto:team-gitops@redhat.com)
 
 ## License
 
