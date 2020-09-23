@@ -139,9 +139,9 @@ func TestValidateMandatoryFlags(t *testing.T) {
 		gitToken            string
 		errMsg              string
 	}{
-		{"missing gitops-repo-url", "", "https://github.com/example/repo.git", "registry/username/repo", false, "", `The mandatory flag "gitops-repo-url" has not been set`},
-		{"missing service-repo-url", "https://github.com/example/repo.git", "", "registry/username/repo", false, "", `The mandatory flag "service-repo-url" has not been set`},
-		{"missing image-repo", "https://github.com/example/repo.git", "https://github.com/example/repo.git", "", false, "", `The mandatory flag "image-repo" has not been set`},
+		{"missing gitops-repo-url", "", "https://github.com/example/repo.git", "registry/username/repo", false, "", `required flag(s) "gitops-repo-url" not set`},
+		{"missing service-repo-url", "https://github.com/example/repo.git", "", "registry/username/repo", false, "", `required flag(s) "service-repo-url" not set`},
+		{"missing image-repo", "https://github.com/example/repo.git", "https://github.com/example/repo.git", "", false, "", `required flag(s) "image-repo" not set`},
 		{"missing git-access-token", "https://github.com/example/repo.git", "https://github.com/example/repo.git", "registry/username/repo", true, "", `--git-host-access-token is required if commit-status-tracker is enabled`},
 	}
 
