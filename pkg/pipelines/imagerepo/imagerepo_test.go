@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/config"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/meta"
-	res "github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/resources"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/roles"
+	"github.com/redhat-developer/kam/pkg/pipelines/config"
+	"github.com/redhat-developer/kam/pkg/pipelines/meta"
+	res "github.com/redhat-developer/kam/pkg/pipelines/resources"
+	"github.com/redhat-developer/kam/pkg/pipelines/roles"
 	v1rbac "k8s.io/api/rbac/v1"
 )
 

@@ -4,7 +4,7 @@ import (
 	pipelinev1alpha1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	pipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/meta"
+	"github.com/redhat-developer/kam/pkg/pipelines/meta"
 )
 
 var (

@@ -5,7 +5,7 @@ configuration.
 
 Bootstrapping GitOps can be done with this command:
 
-* [gitops bootstrap](../../commands/bootstrap)
+* [kam bootstrap](../../commands/bootstrap)
 
 The bootstrap command generates a functional GitOps setup including your first application.
 
@@ -22,7 +22,7 @@ And, you will need this.
 * Create your [GitOps repository](prerequisites/gitops_repo.md)
 * Application Source repository ([taxi](prerequisites/service_repo.md) is used as an example in this document)
 * The external image repository secret to authenticate image pushes on sucessfull pipeline execution. To use quay.io, please follow [prerequisites/quay.md](prerequisites/quay.md)
-* Download official [gitops](https://github.com/redhat-developer/gitops-cli/releases) binary
+* Download official [kam](https://github.com/redhat-developer/kam/releases) binary
 * Steps to create the git access token for [GitHub](prerequisites/github_access_token_steps.md) or [GitLab](prerequisites/gitlab_access_token_steps.md).
 
 ## Bootstrapping the Manifest
@@ -232,7 +232,7 @@ Before this next stage, we need to ensure that there's a webhook configured for
 the "gitops" repo.
 
 ```shell
-$ gitops webhook create \
+$ kam webhook create \
     --access-token <github user access token> \
     --cicd
 ```

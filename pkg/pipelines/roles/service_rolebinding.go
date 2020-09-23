@@ -1,7 +1,7 @@
 package roles
 
 import (
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/meta"
+	"github.com/redhat-developer/kam/pkg/pipelines/meta"
 	corev1 "k8s.io/api/core/v1"
 	v1rbac "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/types"

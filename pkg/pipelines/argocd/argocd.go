@@ -7,13 +7,13 @@ import (
 	// This is a hack because ArgoCD doesn't support a compatible (code-wise)
 	// version of k8s in common with odo.
 
-	argov1 "github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/argocd/operator/v1alpha1"
-	argoappv1 "github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/argocd/v1alpha1"
+	argov1 "github.com/redhat-developer/kam/pkg/pipelines/argocd/operator/v1alpha1"
+	argoappv1 "github.com/redhat-developer/kam/pkg/pipelines/argocd/v1alpha1"
 	"sigs.k8s.io/yaml"
 
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/config"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/meta"
-	res "github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/resources"
+	"github.com/redhat-developer/kam/pkg/pipelines/config"
+	"github.com/redhat-developer/kam/pkg/pipelines/meta"
+	res "github.com/redhat-developer/kam/pkg/pipelines/resources"
 )
 
 var (

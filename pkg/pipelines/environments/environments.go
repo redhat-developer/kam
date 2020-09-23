@@ -7,11 +7,11 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/config"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/meta"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/namespaces"
-	res "github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/resources"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/roles"
+	"github.com/redhat-developer/kam/pkg/pipelines/config"
+	"github.com/redhat-developer/kam/pkg/pipelines/meta"
+	"github.com/redhat-developer/kam/pkg/pipelines/namespaces"
+	res "github.com/redhat-developer/kam/pkg/pipelines/resources"
+	"github.com/redhat-developer/kam/pkg/pipelines/roles"
 	"github.com/spf13/afero"
 	v1 "k8s.io/api/rbac/v1"
 )

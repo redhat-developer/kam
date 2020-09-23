@@ -5,7 +5,7 @@ import (
 
 	"github.com/openshift/odo/pkg/log"
 	operatorsclientset "github.com/operator-framework/operator-lifecycle-manager/pkg/api/client/clientset/versioned/typed/operators/v1alpha1"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/clientconfig"
+	"github.com/redhat-developer/kam/pkg/pipelines/clientconfig"
 	"k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
