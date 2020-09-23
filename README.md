@@ -1,6 +1,5 @@
 # KAM (kubernetes Application Manager) CLI
 
-
 KAM CLI provides command line interface to bootstrap GitOps and perform other operations.  See why and how [GitOps for Application Delivery](./docs/README.md) can help your business to streamline your application delivery.
 
 ## CLI Reference
@@ -12,6 +11,7 @@ KAM CLI provides command line interface to bootstrap GitOps and perform other op
 [GitOps Frequently Asked Questions](./docs/FAQ/GitopsFAQ.md)
 
 ## Contributing to `KAM CLI`
+
 To contribute to `KAM CLI`, follow these steps:
 
 1. Fork this repository.
@@ -22,15 +22,11 @@ To contribute to `KAM CLI`, follow these steps:
 
 Alternatively see the GitHub documentation on [creating a pull request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).
 
-
-
-
 ## Contact
 
 If you want to contact me you can reach us at [team-gitops@redhat.com](mailto:team-gitops@redhat.com)
 
 ## License
-
 
 This project uses the following license: [Apache 2.0](./LICENSE).
 
