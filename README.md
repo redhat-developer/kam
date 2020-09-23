@@ -7,6 +7,10 @@ GitOps CLI provides command line interface to bootstrap GitOps and perform other
 
 [Comand Line Reference](./docs/commands/README.md)
 
+## GitOps FAQs
+
+[GitOps Frequently Asked Questions](./docs/FAQ/GitopsFAQ.md)
+
 ## Contributing to `GITOPS CLI`
 To contribute to `GITOPS CLI`, follow these steps:
 
