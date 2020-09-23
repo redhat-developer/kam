@@ -5,7 +5,7 @@ The `bootstrap` sub-command creates default environments for your initial applic
 It outputs resource files in YAML format, Kustomization files, and a pipelines configuration file.
 
 The following resources are written to filesystem.
-   
+
 * CI/CD environments with pipelines and resources
 * ArgoCD environment
 * Dev environment with an application/service

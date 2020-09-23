@@ -29,4 +29,3 @@ If you want to contact me you can reach us at [team-gitops@redhat.com](mailto:te
 ## License
 
 This project uses the following license: [Apache 2.0](./LICENSE).
-
