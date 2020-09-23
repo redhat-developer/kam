@@ -3,8 +3,8 @@ package namespaces
 import (
 	"fmt"
 
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/clientconfig"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/meta"
+	"github.com/redhat-developer/kam/pkg/pipelines/clientconfig"
+	"github.com/redhat-developer/kam/pkg/pipelines/meta"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"

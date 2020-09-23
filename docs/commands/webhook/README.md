@@ -1,4 +1,4 @@
-# Gitops Webhook Command
+# KAM Webhook Command
 
 * [webhook create](#Webhook-create)
 * [webhook delete](#Webhook-delete)
@@ -13,7 +13,7 @@ If a webhook (with the same EventListener address URL) already exists, a webhook
 Otherwise, a webhook will be created and the ID of the new webhook is written to standard output.
 
 ```shell
-$ gitops webhook create 
+$ kam webhook create 
     --access-token 
     [--cicd] | [--env-name --service-name]
     [--pipelines-folder]
@@ -26,7 +26,7 @@ The `webhook delete` sub-command deletes all webhooks from Git repository that c
 The EventListener address is retrieved from cluster based on the options passed to the command. The IDs of the deleted webhooks will be written to standard output.
 
 ```shell
-$ gitops webhook delete
+$ kam webhook delete
     --access-token
     [--cicd] | [--env-name --service-name]
     [--pipelines-folder ]
@@ -39,7 +39,7 @@ The `webhook list` sub-command displays webhook IDs from the Git repository that
 The EventListener address is retrieved from cluster based on the options passed to the command. The IDs of the found webhooks will be written to standard output.
 
 ```shell
-$ gitops webhook list
+$ kam webhook list
     --access-token
     [--cicd] | [--env-name --service-name]
     [--pipelines-folder ]

@@ -1,4 +1,4 @@
-# Gitops Service Command
+# KAM Service Command
 
 ## Service add
 

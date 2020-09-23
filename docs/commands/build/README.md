@@ -1,9 +1,9 @@
-# Gitops build Command
+# KAM build Command
 
 The `build` sub-command (re-)generates pipelines resources from a pipelines.yaml file.
 
 ```shell
-$ gitops build
+$ kam build
   [--pipelines-folder]
   [--output]
 ```

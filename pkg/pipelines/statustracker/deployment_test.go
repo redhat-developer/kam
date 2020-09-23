@@ -8,10 +8,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/deployment"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/meta"
-	res "github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/resources"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/roles"
+	"github.com/redhat-developer/kam/pkg/pipelines/deployment"
+	"github.com/redhat-developer/kam/pkg/pipelines/meta"
+	res "github.com/redhat-developer/kam/pkg/pipelines/resources"
+	"github.com/redhat-developer/kam/pkg/pipelines/roles"
 )
 
 const testRepoURL = "https://github.com/testing/testing.git"

@@ -1,7 +1,7 @@
-# GITOPS CLI
+# KAM (kubernetes Application Manager) CLI
 
 
-GitOps CLI provides command line interface to bootstrap GitOps and perform other operations.  See why and how [GitOps for Application Delivery](./docs/README.md) can help your business to streamline your application delivery.
+KAM CLI provides command line interface to bootstrap GitOps and perform other operations.  See why and how [GitOps for Application Delivery](./docs/README.md) can help your business to streamline your application delivery.
 
 ## CLI Reference
 
@@ -11,8 +11,8 @@ GitOps CLI provides command line interface to bootstrap GitOps and perform other
 
 [GitOps Frequently Asked Questions](./docs/FAQ/GitopsFAQ.md)
 
-## Contributing to `GITOPS CLI`
-To contribute to `GITOPS CLI`, follow these steps:
+## Contributing to `KAM CLI`
+To contribute to `KAM CLI`, follow these steps:
 
 1. Fork this repository.
 2. Create a branch: `git checkout -b <branch_name>`.

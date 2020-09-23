@@ -8,8 +8,8 @@ import (
 	pipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/meta"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/triggers"
+	"github.com/redhat-developer/kam/pkg/pipelines/meta"
+	"github.com/redhat-developer/kam/pkg/pipelines/triggers"
 )
 
 var (

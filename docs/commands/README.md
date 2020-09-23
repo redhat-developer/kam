@@ -1,11 +1,11 @@
-# Gitops Pipelines Commands
+# KAM Pipelines Commands
 
-Gitops binaries can be downloaded [https://github.com/redhat-developer/gitops-cli/releases/latest](https://github.com/redhat-developer/gitops-cli/releases/latest)
+KAM binaries can be downloaded [https://github.com/redhat-developer/kam/releases/latest](https://github.com/redhat-developer/kam/releases/latest)
 
-Gitops Pipelines Commands are CLI to setup GitOps environments and services.
+KAM Commands are CLI to setup GitOps environments and services.
 
-* [gitops bootstrap](./bootstrap)
-* [gitops build](./build)
-* [gitops service](./service)
-* [gitops webhook](./webhook)
-* [gitops environment](./environment)
+* [kam bootstrap](./bootstrap)
+* [kam build](./build)
+* [kam service](./service)
+* [kam webhook](./webhook)
+* [kam environment](./environment)

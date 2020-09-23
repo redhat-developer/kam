@@ -1,4 +1,4 @@
-# Gitops Bootstrap Command
+# KAM Bootstrap Command
 
 The `bootstrap` sub-command creates default environments for your initial application.
 
@@ -12,7 +12,7 @@ The following resources are written to filesystem.
 * Stage environment
 
 ```shell
-$ gitops bootstrap
+$ kam bootstrap
   --gitops-repo-url
   --service-repo-url
   --image-repo
