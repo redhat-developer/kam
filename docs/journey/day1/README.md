@@ -360,3 +360,23 @@ being executed.
 ![PipelineRun doing a dry run of the configuration](img/pipelinerun-dryrun.png)
 
 This validates that the YAML can be applied, by executing a `kubectl apply --dry-run`.
+
+## Visualize your applications on ArgoCD UI
+
+Open the ArgoCD web UI from `argocd-server` route
+
+![ArgoCDPods](img/ArgoCD_Pods.png)
+
+Get your login credentials from the cluster
+
+```shell
+$ kubectl get secret argocd-cluster -n argocd -ojsonpath='{.data.admin\.password}' | base64 --decode
+```
+
+You can now login with username as `admin` and password fetched in the previous step:
+
+![ArgoCDLogin](img/ArgoCD_Login.png)
+
+The deployed applications should be healthy and in-sync
+
+![ArgoCDUI](img/ArgoCD_UI.png)
