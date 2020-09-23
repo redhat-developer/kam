@@ -142,7 +142,7 @@ func TestValidateMandatoryFlags(t *testing.T) {
 		{"missing gitops-repo-url", "", "https://github.com/example/repo.git", "registry/username/repo", false, "", `The mandatory flag "gitops-repo-url" has not been set`},
 		{"missing service-repo-url", "https://github.com/example/repo.git", "", "registry/username/repo", false, "", `The mandatory flag "service-repo-url" has not been set`},
 		{"missing image-repo", "https://github.com/example/repo.git", "https://github.com/example/repo.git", "", false, "", `The mandatory flag "image-repo" has not been set`},
-		{"missing git-access-token", "https://github.com/example/repo.git", "https://github.com/example/repo.git", "registry/username/repo", true, "", `Kindly input the git-host-access-token if commit-status-tracker set to true`},
+		{"missing git-access-token", "https://github.com/example/repo.git", "https://github.com/example/repo.git", "registry/username/repo", true, "", `--git-host-access-token is required if commit-status-tracker is enabled`},
 	}
 
 	for _, tt := range optionTests {
