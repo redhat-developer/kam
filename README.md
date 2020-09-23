@@ -1,4 +1,4 @@
-# KAM (kubernetes Application Manager) CLI
+# KAM (Kubernetes Application Manager) CLI
 
 KAM CLI provides command line interface to bootstrap GitOps and perform other operations.  See why and how [GitOps for Application Delivery](./docs/README.md) can help your business to streamline your application delivery.
 
