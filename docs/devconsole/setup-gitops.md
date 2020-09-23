@@ -1,4 +1,4 @@
-## Steps to follow for seting up a sample GitOps pipelines using [kam](releases)
+## Steps to follow for seting up a sample GitOps pipelines using [kam](/releases)
 
 - Complete all the pre-requisite steps mentioned in the [docs](/docs/journey/day1#day-1-operations)
 - Bootstrap a GitOps repository following steps mentioned in the [docs](/docs/journey/day1#bootstrapping-the-manifest)
