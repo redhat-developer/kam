@@ -18,11 +18,6 @@ $ gitops webhook create
     [--cicd] | [--env-name --service-name]
     [--pipelines-folder]
 ```
-| Option                  | Description |
-| ----------------------- | ----------- |
-| --access-token | Access token to be used to operate on Git repository.|
-| --cicd, --env-name, --service-name | Specify --cicd flag if the target Git repository is a CI/CD configuration repository.  Otherwise, provide environment and service names if the target Git repository is a service's source repository.  Either --cicd or both --env-name and --service-name must be provided.|  
-| --pipelines-folder | Optional.  Folder path to retrieve manifest, eg. /test where manifest exists at /test/pipelines.yaml (default ".") |
 
 ## Webhook delete
 
@@ -37,11 +32,6 @@ $ gitops webhook delete
     [--pipelines-folder ]
 ```
 
-| Option                  | Description |
-| ----------------------- | ----------- |
-| --access-token | Access token to be used to operate on Git repository.|
-| --cicd, --env-name, --service-name | Specify --cicd flag if the target Git repository is a CI/CD configuration repository.  Otherwise, provide environment and service names if the target Git repository is a service's source repository.  Either --cicd or both --env-name and --service-name must be provided.|  
-| --pipelines-folder | Optional.  Folder path to retrieve manifest, eg. /test where manifest exists at /test/pipelines.yaml (default ".") |
 ## Webhook list
 
 The `webhook list` sub-command displays webhook IDs from the Git repository that contain the target EventListener address.
@@ -54,9 +44,3 @@ $ gitops webhook list
     [--cicd] | [--env-name --service-name]
     [--pipelines-folder ]
 ```
-
-| Option                  | Description |
-| ----------------------- | ----------- |
-| --access-token | Access token to be used to operate on Git repository.|
-| --cicd, --env-name, --service-name | Specify --cicd flag if the target Git repository is a CI/CD configuration repository.  Otherwise, provide environment and service names if the target Git repository is a service's source repository.  Either --cicd or both --env-name and --service-name must be provided.|  
-| --pipelines-folder | Optional.  Folder path to retrieve manifest, eg. /test where manifest exists at /test/pipelines.yaml (default ".") |
