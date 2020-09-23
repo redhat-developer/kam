@@ -4,9 +4,7 @@ The Pipelines Model represents an inventory of _Environments_, _Applications_ an
 
 Within a GitOps setup, there can be many [Environments](#Environment), [Applications](#Application), and [Services](#Service).  The following diagram shows the structure of the Pipelines Model.
 
-
 ![Manifest Model](img/pipelines_model.png)
- 
 
 Pipelines Model is defined in a yaml file.  Here is an example pipelines.yaml
 
@@ -26,7 +24,7 @@ environments:
           bindings:
           - dev-app-taxi-taxi-binding
           - gitlab-push-binding
-      source_url: https://gitlab.com/ishitasequeira/taxi.git
+      source_url: https://gitlab.com/rhd-example-gitops/taxi.git
       webhook:
         secret:
           name: webhook-secret-dev-taxi
@@ -38,16 +36,14 @@ environments:
       - gitlab-push-binding
       template: app-ci-template
 - name: stage
-gitops_url: https://gitlab.com/ishitasequeira/gitops.git
-
-
+gitops_url: https://github.com/<your organization>/<your repository>
 ```
 
 ## Environment
 
 There are three types of Environments
 * CI/CD Environment
-* ArgoCd Environment
+* ArgoCD Environment
 * (Plain old) Environment
 
 ### CI/CD Environment
@@ -81,6 +77,7 @@ Different Environments are stored in different directories under the `environmen
 - `services/*` - Configuration folders specific to each Service.
 
 Each configuration directory will contain Kustomization files structured like this:
+
 ```
 .
 ├── base
@@ -96,6 +93,7 @@ Each Service is defined in its `.../services/<service-name>/base/` directory in 
 Each Application’s `.../apps/<app-name>/base/kustomization.yaml` will refer to each Service which it uses. Again, the `overlays/` directory will include new specific configuration files required for the application, for example new labels or other details to connect the services. 
 
 Finally, the `.../env/base/kustomization.yaml` will refer to each application which is to be deployed in the environment, and the `env/overlays/` directory will contain any specifics required for the environment. For example, details about service accounts and specific Ingress URLs could be specified here. It will also have a `.../env/kustomization.yaml` file so that the fully-configured applications can be deployed into the environment with this command:
-```
-kubectl apply -k environments/<env-name>/env/
+
+```shell
+$ oc apply -k environments/<env-name>/env/
 ```

@@ -16,8 +16,12 @@ import (
 
 const (
 	operatorName         = "commit-status-tracker"
-	containerImage       = "quay.io/redhat-developer/commit-status-tracker:v0.0.3"
+	containerImage       = "quay.io/redhat-developer/commit-status-tracker:v0.0.4"
 	commitStatusAppLabel = "commit-status-tracker-operator"
+
+	// CommitStatusTrackerSecret is used by commit-status-tracker to
+	// authenticate Git requests.
+	CommitStatusTrackerSecret = "git-host-access-token"
 )
 
 var (
@@ -107,6 +111,10 @@ func makeEnvironment(repoURL, driver string) []corev1.EnvVar {
 		{
 			Name:  "OPERATOR_NAME",
 			Value: operatorName,
+		},
+		{
+			Name:  "STATUS_TRACKER_SECRET",
+			Value: "git-host-access-token",
 		},
 	}
 	if host := hostFromURL(repoURL); driver != "" && host != "" {

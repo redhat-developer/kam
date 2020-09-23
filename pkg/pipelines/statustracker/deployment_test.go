@@ -65,6 +65,7 @@ func TestCreateStatusTrackerDeployment(t *testing.T) {
 									Name:  "OPERATOR_NAME",
 									Value: operatorName,
 								},
+								{Name: "STATUS_TRACKER_SECRET", Value: CommitStatusTrackerSecret},
 							},
 						},
 					},
@@ -120,6 +121,10 @@ func TestMakeEnvironmentWithCustomDriver(t *testing.T) {
 		{
 			Name:  "OPERATOR_NAME",
 			Value: operatorName,
+		},
+		{
+			Name:  "STATUS_TRACKER_SECRET",
+			Value: CommitStatusTrackerSecret,
 		},
 		{
 			Name:  "GIT_DRIVERS",

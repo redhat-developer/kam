@@ -560,7 +560,7 @@ func getResourceFiles(res res.Resources) []string {
 func generateSecrets(outputs res.Resources, sa *corev1.ServiceAccount, ns string, o *BootstrapOptions) error {
 	if o.CommitStatusTracker {
 		tokenSecret, err := secrets.CreateSealedSecret(meta.NamespacedName(
-			ns, "git-host-access-token"), o.SealedSecretsService, o.GitHostAccessToken, "token")
+			ns, statustracker.CommitStatusTrackerSecret), o.SealedSecretsService, o.GitHostAccessToken, "token")
 		if err != nil {
 			return fmt.Errorf("failed to generate access token Secret: %w", err)
 		}

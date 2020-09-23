@@ -13,14 +13,6 @@ $ gitops environment add
   [--pipelines-folder]
 ```
 
-| Flag                    | Description |
-| ----------------------- | ----------- |
-| --cluster               | Deployment cluster (Default https://kubernetes.local.svc)|
-| --env-name              | The name of environment to be added|
-| --pipelines-folder      | Optional.  Folder path to retrieve manifest, eg. /test where manifest exists at /test/pipelines.yaml |
-| --help                  | Show help|
-
-
 The directory layout generated is shown below.
 
 ```
