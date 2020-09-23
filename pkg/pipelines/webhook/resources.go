@@ -16,7 +16,6 @@ type resources struct {
 
 // NewResources create new webhook resources
 func newResources() (*resources, error) {
-
 	config, err := clientconfig.GetRESTConfig()
 	if err != nil {
 		return nil, err
@@ -36,7 +35,6 @@ func newResources() (*resources, error) {
 }
 
 func (r *resources) getWebhookSecret(ns, secetName, key string) (string, error) {
-
 	secret, err := r.kubeClient.CoreV1().Secrets(ns).Get(secetName, metav1.GetOptions{})
 	if err != nil {
 		return "", errors.Wrapf(err, "unable to get the secret %s", secret)
@@ -45,9 +43,9 @@ func (r *resources) getWebhookSecret(ns, secetName, key string) (string, error) 
 	return string(secret.Data[key]), nil
 }
 
-// getListenerAddress returns TLS is configurated external address host and port Event Listener exposed by OpenShift route
+// getListenerAddress returns TLS is configured, external address host and port
+// Event Listener exposed by OpenShift route.
 func (r *resources) getListenerAddress(ns, routeName string) (bool, string, error) {
-
 	route, err := r.routeClient.Routes(ns).Get(routeName, metav1.GetOptions{})
 	if err != nil {
 		return false, "", err

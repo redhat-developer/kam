@@ -7,6 +7,7 @@ import (
 )
 
 var (
+	// TriggerBindingTypeMeta is the TypeMeta for v1alpha1 of the Triggers API.
 	TriggerBindingTypeMeta = meta.TypeMeta("TriggerBinding", "triggers.tekton.dev/v1alpha1")
 )
 
@@ -24,7 +25,7 @@ func CreateImageRepoBinding(ns, bindingName, imageRepo, tlsVerify string) trigge
 	}
 }
 
-func createBindingParam(name string, value string) triggersv1.Param {
+func createBindingParam(name, value string) triggersv1.Param {
 	return triggersv1.Param{
 		Name:  name,
 		Value: value,

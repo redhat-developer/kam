@@ -77,7 +77,7 @@ func getPipelines(env *config.Environment, svc *config.Service, r scm.Repository
 	}
 	if svc.Pipelines != nil {
 		if len(svc.Pipelines.Integration.Bindings) > 0 {
-			pipelines.Integration.Bindings = svc.Pipelines.Integration.Bindings[:]
+			pipelines.Integration.Bindings = svc.Pipelines.Integration.Bindings
 		}
 		if svc.Pipelines.Integration.Template != "" {
 			pipelines.Integration.Template = svc.Pipelines.Integration.Template
@@ -89,7 +89,7 @@ func getPipelines(env *config.Environment, svc *config.Service, r scm.Repository
 func clonePipelines(p *config.Pipelines) *config.Pipelines {
 	return &config.Pipelines{
 		Integration: &config.TemplateBinding{
-			Bindings: p.Integration.Bindings[:],
+			Bindings: p.Integration.Bindings,
 			Template: p.Integration.Template,
 		},
 	}

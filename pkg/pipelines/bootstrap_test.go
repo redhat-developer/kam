@@ -36,7 +36,7 @@ func TestBootstrapManifest(t *testing.T) {
 	}(secrets.DefaultPublicKeyFunc)
 
 	secrets.DefaultPublicKeyFunc = func(service types.NamespacedName) (*rsa.PublicKey, error) {
-		key, err := rsa.GenerateKey(rand.Reader, 1024)
+		key, err := rsa.GenerateKey(rand.Reader, 2048)
 		if err != nil {
 			t.Fatalf("failed to generate a private RSA key: %s", err)
 		}
@@ -189,7 +189,7 @@ func TestOverwriteFlag(t *testing.T) {
 	}(secrets.DefaultPublicKeyFunc)
 
 	secrets.DefaultPublicKeyFunc = func(service types.NamespacedName) (*rsa.PublicKey, error) {
-		key, err := rsa.GenerateKey(rand.Reader, 1024)
+		key, err := rsa.GenerateKey(rand.Reader, 2048)
 		if err != nil {
 			t.Fatalf("failed to generate a private RSA key: %s", err)
 		}
@@ -212,7 +212,6 @@ func TestOverwriteFlag(t *testing.T) {
 	if diff := cmp.Diff(want, got.Error()); diff != "" {
 		t.Fatalf("overwrite failed:\n%s", diff)
 	}
-
 }
 
 func TestCreateManifest(t *testing.T) {

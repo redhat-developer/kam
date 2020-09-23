@@ -50,7 +50,6 @@ func TestAddEnv(t *testing.T) {
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Fatalf("written environments failed:\n%s", diff)
 	}
-
 }
 
 func TestAddEnvWithClusterProvided(t *testing.T) {
@@ -250,5 +249,4 @@ func mustReadFileAsMap(t *testing.T, fs afero.Fs, filename string) map[string]in
 		t.Fatal(err)
 	}
 	return m
-
 }

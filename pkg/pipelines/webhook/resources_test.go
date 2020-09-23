@@ -18,17 +18,19 @@ import (
 	ktesting "k8s.io/client-go/testing"
 )
 
+const testNamespace = "tst-cicd"
+
 func TestGetRouteHost(t *testing.T) {
 	routeClientset := fakeRouteClientset.NewSimpleClientset()
 	routeClientset.PrependReactor("get", "routes", func(action ktesting.Action) (bool, runtime.Object, error) {
-		if action.GetNamespace() != "tst-cicd" {
+		if action.GetNamespace() != testNamespace {
 			return true, nil, fmt.Errorf("'get' called with a different namespace %s", action.GetNamespace())
 		}
 
 		route := &routev1.Route{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "gitops-webhook-event-listener-route",
-				Namespace: "tst-cicd",
+				Namespace: testNamespace,
 			},
 			Spec: routev1.RouteSpec{
 				Host: "devcluster.openshift.com",
@@ -44,7 +46,7 @@ func TestGetRouteHost(t *testing.T) {
 	})
 	resources := fakeNewResources(routeClientset.RouteV1(), nil)
 
-	hasTLS, host, err := resources.getListenerAddress("tst-cicd", "gitops-webhook-event-listener-route")
+	hasTLS, host, err := resources.getListenerAddress(testNamespace, "gitops-webhook-event-listener-route")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -56,22 +58,20 @@ func TestGetRouteHost(t *testing.T) {
 	if diff := cmp.Diff(host, "devcluster.openshift.com"); diff != "" {
 		t.Errorf("host mismatch got\n%s", diff)
 	}
-
 }
 
 func TestGetSecret(t *testing.T) {
-
 	kubeClient := fakeKubeClientset.NewSimpleClientset()
 
 	kubeClient.PrependReactor("get", "secrets", func(action ktesting.Action) (bool, runtime.Object, error) {
-		if action.GetNamespace() != "tst-cicd" {
+		if action.GetNamespace() != testNamespace {
 			return true, nil, fmt.Errorf("'get' called with a different namespace %s", action.GetNamespace())
 		}
 
 		return true, &corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "gitops-webhook-secret",
-				Namespace: "tst-cicd",
+				Namespace: testNamespace,
 			},
 			Data: map[string][]byte{
 				"webhook-secret-key": []byte("testing"),
@@ -81,7 +81,7 @@ func TestGetSecret(t *testing.T) {
 
 	resources := fakeNewResources(nil, kubeClient)
 
-	secret, err := resources.getWebhookSecret("tst-cicd", "gitops-webhook-secret", "webhook-secret-key")
+	secret, err := resources.getWebhookSecret(testNamespace, "gitops-webhook-secret", "webhook-secret-key")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -92,9 +92,7 @@ func TestGetSecret(t *testing.T) {
 }
 
 func fakeNewResources(routeClient routeclientset.RouteV1Interface,
-
 	kubeClient kubernetes.Interface) *resources {
-
 	return &resources{
 		routeClient: routeClient,
 		kubeClient:  kubeClient,

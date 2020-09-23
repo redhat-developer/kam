@@ -45,9 +45,9 @@ const (
 	rolesPath             = "02-rolebindings/pipeline-service-role.yaml"
 	rolebindingsPath      = "02-rolebindings/pipeline-service-rolebinding.yaml"
 	serviceAccountPath    = "02-rolebindings/pipeline-service-account.yaml"
-	secretsPath           = "03-secrets/gitops-webhook-secret.yaml"
-	authTokenPath         = "03-secrets/git-host-access-token.yaml"
-	basicAuthTokenPath    = "03-secrets/git-host-basic-auth-token.yaml"
+	secretsPath           = "03-secrets/gitops-webhook-secret.yaml"     //nolint:gosec
+	authTokenPath         = "03-secrets/git-host-access-token.yaml"     // nolint:gosec
+	basicAuthTokenPath    = "03-secrets/git-host-basic-auth-token.yaml" // nolint:gosec
 	dockerConfigPath      = "03-secrets/docker-config.yaml"
 	gitopsTasksPath       = "04-tasks/deploy-from-source-task.yaml"
 	ciPipelinesPath       = "05-pipelines/ci-dryrun-from-push-pipeline.yaml"
@@ -123,7 +123,8 @@ var (
 	}
 )
 
-// Bootstrap bootstraps a GitOps pipelines and repository structure.
+// Bootstrap is the entry-point from the CLI for bootstrapping the GitOps
+// configuration.
 func Bootstrap(o *BootstrapOptions, appFs afero.Fs) error {
 	err := checkPipelinesFileExists(appFs, o.OutputPath, o.Overwrite)
 	if err != nil {
@@ -148,13 +149,8 @@ func Bootstrap(o *BootstrapOptions, appFs afero.Fs) error {
 		return fmt.Errorf("failed to bootstrap resources: %v", err)
 	}
 
-	buildParams := &BuildParameters{
-		PipelinesFolderPath: pipelinesFile,
-		OutputPath:          o.OutputPath,
-	}
-
 	m := bootstrapped[pipelinesFile].(*config.Manifest)
-	built, err := buildResources(appFs, buildParams, m)
+	built, err := buildResources(appFs, m)
 	if err != nil {
 		return fmt.Errorf("failed to build resources: %v", err)
 	}
@@ -213,10 +209,7 @@ func bootstrapResources(o *BootstrapOptions, appFs afero.Fs) (res.Resources, err
 	if app == nil {
 		return nil, errors.New("unable to bootstrap without application")
 	}
-	svcFiles, err := bootstrapServiceDeployment(devEnv, app)
-	if err != nil {
-		return nil, err
-	}
+	svcFiles := bootstrapServiceDeployment(devEnv, app)
 	hookSecret, err := secrets.CreateSealedSecret(
 		meta.NamespacedName(ns["cicd"], secretName),
 		o.SealedSecretsService,
@@ -256,7 +249,7 @@ func bootstrapResources(o *BootstrapOptions, appFs afero.Fs) (res.Resources, err
 	// This is specific to bootstrap, because there's only one service.
 	devEnv.Apps[0].Services[0].Pipelines = &config.Pipelines{
 		Integration: &config.TemplateBinding{
-			Bindings: append([]string{bindingName}, devEnv.Pipelines.Integration.Bindings[:]...),
+			Bindings: append([]string{bindingName}, devEnv.Pipelines.Integration.Bindings...),
 		},
 	}
 	bootstrapped[pipelinesFile] = m
@@ -269,7 +262,7 @@ func bootstrapResources(o *BootstrapOptions, appFs afero.Fs) (res.Resources, err
 	return bootstrapped, nil
 }
 
-func bootstrapServiceDeployment(dev *config.Environment, app *config.Application) (res.Resources, error) {
+func bootstrapServiceDeployment(dev *config.Environment, app *config.Application) res.Resources {
 	svc := dev.Apps[0].Services[0]
 	svcBase := filepath.Join(config.PathForService(app, dev, svc.Name), "base", "config")
 	resources := res.Resources{}
@@ -278,7 +271,7 @@ func bootstrapServiceDeployment(dev *config.Environment, app *config.Application
 	resources[filepath.Join(svcBase, "100-deployment.yaml")] = deployment.Create(app.Name, dev.Name, svc.Name, bootstrapImage, deployment.ContainerPort(8080))
 	resources[filepath.Join(svcBase, "200-service.yaml")] = createBootstrapService(app.Name, dev.Name, svc.Name)
 	resources[filepath.Join(svcBase, "kustomization.yaml")] = &res.Kustomization{Resources: []string{"100-deployment.yaml", "200-service.yaml"}}
-	return resources, nil
+	return resources
 }
 
 func bootstrapEnvironments(repo scm.Repository, prefix, secretName string, ns map[string]string) ([]*config.Environment, *config.Config, error) {
@@ -405,9 +398,9 @@ func checkPipelinesFileExists(appFs afero.Fs, outputPath string, overWrite bool)
 func createInitialFiles(fs afero.Fs, repo scm.Repository, o *BootstrapOptions) (res.Resources, error) {
 	cicd := &config.PipelinesConfig{Name: o.Prefix + "cicd"}
 	pipelineConfig := &config.Config{Pipelines: cicd}
-	pipelines := createManifest(repo.URL(), pipelineConfig)
+	manifest := createManifest(repo.URL(), pipelineConfig)
 	initialFiles := res.Resources{
-		pipelinesFile: pipelines,
+		pipelinesFile: manifest,
 	}
 	resources, err := createCICDResources(fs, repo, cicd, o)
 	if err != nil {
@@ -415,11 +408,11 @@ func createInitialFiles(fs afero.Fs, repo scm.Repository, o *BootstrapOptions) (
 	}
 
 	files := getResourceFiles(resources)
-	prefixedResources := addPrefixToResources(pipelinesPath(pipelines.Config), resources)
+	prefixedResources := addPrefixToResources(pipelinesPath(manifest.Config), resources)
 	initialFiles = res.Merge(prefixedResources, initialFiles)
 
 	pipelinesConfigKustomizations := addPrefixToResources(
-		config.PathForPipelines(pipelines.Config.Pipelines),
+		config.PathForPipelines(manifest.Config.Pipelines),
 		getCICDKustomization(files))
 	initialFiles = res.Merge(pipelinesConfigKustomizations, initialFiles)
 
@@ -427,7 +420,7 @@ func createInitialFiles(fs afero.Fs, repo scm.Repository, o *BootstrapOptions) (
 }
 
 // createDockerSecret creates a secret that allows pushing images to upstream repositories.
-func createDockerSecret(fs afero.Fs, dockerConfigJSONFilename, secretNS string, SealedSecretsService types.NamespacedName) (*ssv1alpha1.SealedSecret, error) {
+func createDockerSecret(fs afero.Fs, dockerConfigJSONFilename, secretNS string, sealedSecretsService types.NamespacedName) (*ssv1alpha1.SealedSecret, error) {
 	if dockerConfigJSONFilename == "" {
 		return nil, errors.New("failed to generate path to file: --dockerconfigjson flag is not provided")
 	}
@@ -441,7 +434,7 @@ func createDockerSecret(fs afero.Fs, dockerConfigJSONFilename, secretNS string, 
 	}
 	defer f.Close()
 
-	dockerSecret, err := secrets.CreateSealedDockerConfigSecret(meta.NamespacedName(secretNS, dockerSecretName), SealedSecretsService, f)
+	dockerSecret, err := secrets.CreateSealedDockerConfigSecret(meta.NamespacedName(secretNS, dockerSecretName), sealedSecretsService, f)
 	if err != nil {
 		return nil, err
 	}
@@ -548,9 +541,9 @@ func addPrefixToResources(prefix string, files res.Resources) map[string]interfa
 	return updated
 }
 
-func getResourceFiles(res res.Resources) []string {
+func getResourceFiles(r res.Resources) []string {
 	files := []string{}
-	for k := range res {
+	for k := range r {
 		files = append(files, k)
 	}
 	sort.Strings(files)

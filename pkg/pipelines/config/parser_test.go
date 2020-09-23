@@ -9,121 +9,121 @@ import (
 	"github.com/redhat-developer/kam/pkg/pipelines/yaml"
 )
 
+var parseTests = []struct {
+	filename string
+	want     *Manifest
+}{
+	{"testdata/example1.yaml", &Manifest{
+		Config: &Config{
+			Pipelines: &PipelinesConfig{
+				Name: "test-pipelines",
+			},
+			ArgoCD: &ArgoCDConfig{
+				Namespace: "test-argocd",
+			},
+			Git: &GitConfig{
+				Drivers: map[string]string{
+					"test.example.com": "github",
+				},
+			},
+		},
+		Environments: []*Environment{
+			{
+				Name: "development",
+				Pipelines: &Pipelines{
+					Integration: &TemplateBinding{
+						Template: "dev-ci-template",
+						Bindings: []string{"dev-ci-binding"},
+					},
+				},
+				Apps: []*Application{
+					{
+						Name: "my-app-1",
+						Services: []*Service{
+							{
+								Name:      "service-http",
+								SourceURL: "https://github.com/myproject/myservice.git",
+							},
+						},
+					},
+					{
+						Name: "my-app-2",
+						Services: []*Service{
+							{Name: "service-redis"},
+						},
+					},
+				},
+			},
+			{
+				Name: "staging",
+				Apps: []*Application{
+					{Name: "my-app-1",
+						ConfigRepo: &Repository{
+							URL:            "https://github.com/testing/testing",
+							TargetRevision: "master",
+							Path:           "config",
+						},
+					},
+				},
+			},
+			{
+				Name: "production",
+				Apps: []*Application{
+					{
+						Name: "my-app-1",
+						Services: []*Service{
+							{Name: "service-http"},
+							{Name: "service-metrics"},
+						},
+					},
+				},
+			},
+		},
+	},
+	},
+
+	{"testdata/example2.yaml", &Manifest{
+		Environments: []*Environment{
+			{
+				Name: "development",
+				Apps: []*Application{
+					{
+						Name: "my-app-1",
+						Services: []*Service{
+							{
+								Name:      "app-1-service-http",
+								SourceURL: "https://github.com/myproject/myservice.git",
+							},
+							{Name: "app-1-service-metrics"},
+						},
+					},
+				},
+			},
+			{
+				Name: "tst-cicd",
+			},
+		},
+	},
+	},
+	{"testdata/example-with-cluster.yaml", &Manifest{
+		Environments: []*Environment{
+			{
+				Name:    "development",
+				Cluster: "testing.cluster",
+				Apps: []*Application{
+					{Name: "my-app-1",
+						Services: []*Service{
+							{Name: "service-http",
+								SourceURL: "https://github.com/myproject/myservice.git"},
+						}},
+				},
+			},
+		},
+	},
+	},
+}
+
 func TestParse(t *testing.T) {
-	parseTests := []struct {
-		filename string
-		want     *Manifest
-	}{
-		{"testdata/example1.yaml", &Manifest{
-			Config: &Config{
-				Pipelines: &PipelinesConfig{
-					Name: "test-pipelines",
-				},
-				ArgoCD: &ArgoCDConfig{
-					Namespace: "test-argocd",
-				},
-				Git: &GitConfig{
-					Drivers: map[string]string{
-						"test.example.com": "github",
-					},
-				},
-			},
-			Environments: []*Environment{
-				{
-					Name: "development",
-					Pipelines: &Pipelines{
-						Integration: &TemplateBinding{
-							Template: "dev-ci-template",
-							Bindings: []string{"dev-ci-binding"},
-						},
-					},
-					Apps: []*Application{
-						{
-							Name: "my-app-1",
-							Services: []*Service{
-								{
-									Name:      "service-http",
-									SourceURL: "https://github.com/myproject/myservice.git",
-								},
-							},
-						},
-						{
-							Name: "my-app-2",
-							Services: []*Service{
-								{Name: "service-redis"},
-							},
-						},
-					},
-				},
-				{
-					Name: "staging",
-					Apps: []*Application{
-						{Name: "my-app-1",
-							ConfigRepo: &Repository{
-								URL:            "https://github.com/testing/testing",
-								TargetRevision: "master",
-								Path:           "config",
-							},
-						},
-					},
-				},
-				{
-					Name: "production",
-					Apps: []*Application{
-						{
-							Name: "my-app-1",
-							Services: []*Service{
-								{Name: "service-http"},
-								{Name: "service-metrics"},
-							},
-						},
-					},
-				},
-			},
-		},
-		},
-
-		{"testdata/example2.yaml", &Manifest{
-			Environments: []*Environment{
-				{
-					Name: "development",
-					Apps: []*Application{
-						{
-							Name: "my-app-1",
-							Services: []*Service{
-								{
-									Name:      "app-1-service-http",
-									SourceURL: "https://github.com/myproject/myservice.git",
-								},
-								{Name: "app-1-service-metrics"},
-							},
-						},
-					},
-				},
-				{
-					Name: "tst-cicd",
-				},
-			},
-		},
-		},
-		{"testdata/example-with-cluster.yaml", &Manifest{
-			Environments: []*Environment{
-				{
-					Name:    "development",
-					Cluster: "testing.cluster",
-					Apps: []*Application{
-						{Name: "my-app-1",
-							Services: []*Service{
-								{Name: "service-http",
-									SourceURL: "https://github.com/myproject/myservice.git"},
-							}},
-					},
-				},
-			},
-		},
-		},
-	}
-
 	for _, tt := range parseTests {
 		t.Run(fmt.Sprintf("parsing %s", tt.filename), func(rt *testing.T) {
 			fs := ioutils.NewFilesystem()
@@ -145,7 +145,6 @@ func TestParse(t *testing.T) {
 }
 
 func TestParsePipelinesFolder(t *testing.T) {
-
 	want := &Manifest{
 		Environments: []*Environment{
 			{

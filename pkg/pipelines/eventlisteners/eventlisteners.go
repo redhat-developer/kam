@@ -1,18 +1,21 @@
 package eventlisteners
 
 import (
-	"github.com/redhat-developer/kam/pkg/pipelines/scm"
-	"github.com/tektoncd/triggers/pkg/apis/triggers/v1alpha1"
 	triggersv1 "github.com/tektoncd/triggers/pkg/apis/triggers/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/redhat-developer/kam/pkg/pipelines/meta"
+	"github.com/redhat-developer/kam/pkg/pipelines/scm"
 )
 
 // Filters for interceptors
 const (
-	GitOpsWebhookSecret = "gitops-webhook-secret"
+	// GitOpsWebhookSecret is the name of the generated secret for hooks from
+	// the GitOps repository.
+	GitOpsWebhookSecret = "gitops-webhook-secret" //nolint:gosec
 
+	// WebhookSecretKey is the name of the generated secret for hooks from the
+	// bootstrapped application.
 	WebhookSecretKey = "webhook-secret-key"
 )
 
@@ -37,7 +40,7 @@ func Generate(repo scm.Repository, ns, saName, secretName string) triggersv1.Eve
 // CreateELFromTriggers creates an EventListener from a supplied set of
 // trigger, with the provided namespace and name.
 func CreateELFromTriggers(cicdNS, saName string, triggers []triggersv1.EventListenerTrigger) *triggersv1.EventListener {
-	return &v1alpha1.EventListener{
+	return &triggersv1.EventListener{
 		TypeMeta: eventListenerTypeMeta,
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "cicd-event-listener",

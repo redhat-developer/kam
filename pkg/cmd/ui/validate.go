@@ -20,6 +20,8 @@ import (
 	"k8s.io/klog"
 )
 
+const minSecretLen = 16
+
 func makePrefixValidator() survey.Validator {
 	return func(input interface{}) error {
 		return validatePrefix(input)
@@ -83,9 +85,9 @@ func ValidateName(name string) error {
 
 func validateSecretLength(input interface{}) error {
 	if s, ok := input.(string); ok {
-		err := CheckSecretLength(s)
+		err := checkSecretLength(s)
 		if err {
-			return fmt.Errorf("The length of the secret must be at least 16 characters ")
+			return fmt.Errorf("The length of the secret must be at least %d characters", minSecretLen)
 		}
 		return nil
 	}
@@ -141,7 +143,7 @@ func validateSealedSecretService(input interface{}, sealedSecretService *types.N
 			if compareError(err, sealedSecretService.Name) {
 				return fmt.Errorf("The given service %q is not installed in the right namespace %q", sealedSecretService.Name, sealedSecretService.Namespace)
 			}
-			return errors.New("sealed secrets could not be configured sucessfully")
+			return errors.New("sealed secrets could not be configured successfully")
 		}
 		return nil
 	}
@@ -153,10 +155,9 @@ func compareError(err error, sealedSecretService string) bool {
 	return err.Error() == createdError.Error()
 }
 
-// check if the length of secret is less than 16 chars
-func CheckSecretLength(secret string) bool {
+func checkSecretLength(secret string) bool {
 	if secret != "" {
-		if len(secret) < 16 {
+		if len(secret) < minSecretLen {
 			return true
 		}
 	}

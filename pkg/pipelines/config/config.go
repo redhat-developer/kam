@@ -197,7 +197,7 @@ type TemplateBinding struct {
 // The environments are sorted using a custom sorting mechanism, that orders by
 // name, but, moves CICD environments to the bottom of the list.
 func (m Manifest) Walk(visitor interface{}) error {
-	sort.Sort(ByName(m.Environments))
+	sort.Sort(byName(m.Environments))
 	for _, env := range m.Environments {
 		for _, app := range env.Apps {
 			for _, svc := range app.Services {
@@ -226,10 +226,10 @@ func (m Manifest) Walk(visitor interface{}) error {
 	return nil
 }
 
-type ByName []*Environment
+type byName []*Environment
 
-func (a ByName) Len() int      { return len(a) }
-func (a ByName) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
-func (a ByName) Less(i, j int) bool {
+func (a byName) Len() int      { return len(a) }
+func (a byName) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a byName) Less(i, j int) bool {
 	return a[i].Name < a[j].Name
 }

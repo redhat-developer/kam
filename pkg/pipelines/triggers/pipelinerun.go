@@ -43,7 +43,6 @@ func createDevCIPipelineRun(saName string) pipelinev1.PipelineRun {
 			Resources: createDevResource("$(params." + GitCommitID + ")"),
 		},
 	}
-
 }
 
 func createCDPipelineRun(saName string) pipelinev1.PipelineRun {
@@ -68,7 +67,6 @@ func createCIPipelineRun(saName string) pipelinev1.PipelineRun {
 			Resources:          createResources(),
 		},
 	}
-
 }
 
 func createDevResource(revision string) []pipelinev1.PipelineResourceBinding {
@@ -110,12 +108,11 @@ func createResources() []pipelinev1.PipelineResourceBinding {
 	}
 }
 
-func createResourceParams(name string, value string) pipelinev1.ResourceParam {
+func createResourceParams(name, value string) pipelinev1.ResourceParam {
 	return pipelinev1.ResourceParam{
 		Name:  name,
 		Value: value,
 	}
-
 }
 func createPipelineRef(name string) *pipelinev1.PipelineRef {
 	return &pipelinev1.PipelineRef{
@@ -123,7 +120,7 @@ func createPipelineRef(name string) *pipelinev1.PipelineRef {
 	}
 }
 
-func createPipelineBindingParam(name string, value string) pipelinev1.Param {
+func createPipelineBindingParam(name, value string) pipelinev1.Param {
 	return pipelinev1.Param{
 		Name: name,
 		Value: pipelinev1.ArrayOrString{

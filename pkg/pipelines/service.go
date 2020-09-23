@@ -32,6 +32,7 @@ type AddServiceOptions struct {
 	SealedSecretsService     types.NamespacedName // SealedSecrets service name
 }
 
+// AddService is the entry-point from the CLI for adding new services.
 func AddService(o *AddServiceOptions, appFs afero.Fs) error {
 	m, err := config.LoadManifest(appFs, o.PipelinesFolderPath)
 	if err != nil {
@@ -59,10 +60,7 @@ func AddService(o *AddServiceOptions, appFs afero.Fs) error {
 
 func serviceResources(m *config.Manifest, appFs afero.Fs, o *AddServiceOptions) (res.Resources, error) {
 	files := res.Resources{}
-	svc, err := createService(o.ServiceName, o.GitRepoURL)
-	if err != nil {
-		return nil, err
-	}
+	svc := createService(o.ServiceName, o.GitRepoURL)
 	cfg := m.GetPipelinesConfig()
 	if cfg != nil && o.WebhookSecret == "" && o.GitRepoURL != "" {
 		gitSecret, err := secrets.GenerateString(webhookSecretLength)
@@ -106,13 +104,13 @@ func serviceResources(m *config.Manifest, appFs afero.Fs, o *AddServiceOptions) 
 			files = res.Merge(resources, files)
 			svc.Pipelines = &config.Pipelines{
 				Integration: &config.TemplateBinding{
-					Bindings: append([]string{bindingName}, env.Pipelines.Integration.Bindings[:]...),
+					Bindings: append([]string{bindingName}, env.Pipelines.Integration.Bindings...),
 				},
 			}
 		}
 	}
 
-	err = m.AddService(o.EnvName, o.AppName, svc)
+	err := m.AddService(o.EnvName, o.AppName, svc)
 	if err != nil {
 		return nil, err
 	}
@@ -122,11 +120,7 @@ func serviceResources(m *config.Manifest, appFs afero.Fs, o *AddServiceOptions) 
 	}
 
 	files[filepath.Base(filepath.Join(o.PipelinesFolderPath, pipelinesFile))] = m
-	buildParams := &BuildParameters{
-		PipelinesFolderPath: o.PipelinesFolderPath,
-		OutputPath:          o.PipelinesFolderPath,
-	}
-	built, err := buildResources(appFs, buildParams, m)
+	built, err := buildResources(appFs, m)
 	if err != nil {
 		return nil, err
 	}
@@ -160,16 +154,16 @@ func createImageRepoResources(m *config.Manifest, cfg *config.PipelinesConfig, e
 	return filenames, resources, bindingName, nil
 }
 
-func createService(serviceName, url string) (*config.Service, error) {
+func createService(serviceName, url string) *config.Service {
 	if url == "" {
 		return &config.Service{
 			Name: serviceName,
-		}, nil
+		}
 	}
 	return &config.Service{
 		Name:      serviceName,
 		SourceURL: url,
-	}, nil
+	}
 }
 
 func updateKustomization(appFs afero.Fs, base string) error {
