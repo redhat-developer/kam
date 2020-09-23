@@ -28,6 +28,9 @@ const (
 	sealedSecretsNS         = "cicd"
 	argoCDNS                = "argocd"
 	pipelinesOperatorNS     = "openshift-operators"
+	gitopsRepoURLFlag       = "gitops-repo-url"
+	serviceRepoURLFlag      = "service-repo-url"
+	imageRepoFlag           = "image-repo"
 )
 
 type drivers []string
@@ -114,7 +117,7 @@ func (io *BootstrapParameters) Complete(name string, cmd *cobra.Command, args []
 
 // nonInteractiveMode gets triggered if a flag is passed, checks for mandatory flags.
 func nonInteractiveMode(io *BootstrapParameters, client *utility.Client) error {
-	mandatoryFlags := map[string]string{"service-repo-url": io.ServiceRepoURL, "gitops-repo-url": io.GitOpsRepoURL, "image-repo": io.ImageRepo}
+	mandatoryFlags := map[string]string{serviceRepoURLFlag: io.ServiceRepoURL, gitopsRepoURLFlag: io.GitOpsRepoURL, imageRepoFlag: io.ImageRepo}
 	if err := checkMandatoryFlags(mandatoryFlags); err != nil {
 		return err
 	}
@@ -126,9 +129,10 @@ func nonInteractiveMode(io *BootstrapParameters, client *utility.Client) error {
 
 func checkMandatoryFlags(flags map[string]string) error {
 	missingFlags := []string{}
-	for k, v := range flags {
-		if v == "" {
-			missingFlags = append(missingFlags, fmt.Sprintf("%q", k))
+	mandatoryFlags := []string{serviceRepoURLFlag, gitopsRepoURLFlag, imageRepoFlag}
+	for _, flag := range mandatoryFlags {
+		if flags[flag] == "" {
+			missingFlags = append(missingFlags, fmt.Sprintf("%q", flag))
 		}
 	}
 	if len(missingFlags) > 0 {

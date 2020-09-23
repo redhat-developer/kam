@@ -368,18 +368,18 @@ func TestMissingFlags(t *testing.T) {
 	}{
 		{
 			"Required flags are present",
-			map[string]string{"flag-1": "value-1", "flag-2": "value-2"},
+			map[string]string{"gitops-repo-url": "value-1", "service-repo-url": "value-2", "image-repo": "value-3"},
 			nil,
 		},
 		{
 			"A required flag is absent",
-			map[string]string{"flag-1": "value-1", "flag-2": ""},
-			missingFlagErr([]string{`"flag-2"`}),
+			map[string]string{"gitops-repo-url": "value-1", "service-repo-url": "value-2", "image-repo": ""},
+			missingFlagErr([]string{`"image-repo"`}),
 		},
 		{
 			"Multiple required flags are absent",
-			map[string]string{"flag-1": "value-1", "flag-3": "", "flag-4": "value-4", "flag-5": ""},
-			missingFlagErr([]string{`"flag-3"`, `"flag-5"`}),
+			map[string]string{"gitops-repo-url": "value-1", "service-repo-url": "", "image-repo": ""},
+			missingFlagErr([]string{`"service-repo-url"`, `"image-repo"`}),
 		},
 	}
 	for _, test := range tests {
