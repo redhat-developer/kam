@@ -1,6 +1,7 @@
 package utility
 
 import (
+	"log"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -94,6 +95,20 @@ func TestCheckIfSealedSecretsExists(t *testing.T) {
 	wantErr := `services "unknown" not found`
 	if err == nil {
 		t.Fatalf("CheckIfSealedSecretsExists failed: got %v,want %v", nil, wantErr)
+	}
+}
+
+func TestCheckNamespaceExists(t *testing.T) {
+	fakeClientSet := fake.NewSimpleClientset(&v1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: "test",
+		},
+	})
+	fakeClient := Client{KubeClient: fakeClientSet}
+	err := fakeClient.CheckIfNamespaceExists("test")
+	log.Println("this is the error", err)
+	if err == nil {
+		t.Fatalf("CheckIfPipelinesExists failed: got %v,want %v", err, nil)
 	}
 }
 

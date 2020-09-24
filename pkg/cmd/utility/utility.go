@@ -70,6 +70,15 @@ func NewClient() (*Client, error) {
 	return &Client{KubeClient: clientSet, OperatorClient: operatorClientSet}, nil
 }
 
+//CheckIfNamespaceExists checks if the namespace is present
+func (c *Client) CheckIfNamespaceExists(ns string) error {
+	_, err := c.KubeClient.CoreV1().Namespaces().Get(ns, v1.GetOptions{})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // CheckIfSealedSecretsExists checks if sealed secrets is installed
 func (c *Client) CheckIfSealedSecretsExists(secret types.NamespacedName) error {
 	_, err := c.KubeClient.CoreV1().Services(secret.Namespace).Get(secret.Name, v1.GetOptions{})

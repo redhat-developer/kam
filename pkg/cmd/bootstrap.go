@@ -37,12 +37,13 @@ const (
 
 type drivers []string
 
-var supportedDrivers = drivers{
-	"github",
-	"gitlab",
-}
-
-var sealedSecretDefaultValue = types.NamespacedName{Namespace: sealedSecretsNS, Name: sealedSecretsController}
+var (
+	supportedDrivers = drivers{
+		"github",
+		"gitlab",
+	}
+	defaultSealedSecretsServiceName = types.NamespacedName{Namespace: sealedSecretsNS, Name: sealedSecretsController}
+)
 
 func (d drivers) supported(s string) bool {
 	for _, v := range d {
@@ -159,8 +160,8 @@ func missingFlagErr(flags []string) error {
 func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client) error {
 	log.Progressf("\nStarting interactive prompt\n")
 	// ask for sealed secrets only when default is absent
-	if client.CheckIfSealedSecretsExists(sealedSecretDefaultValue) != nil {
-		io.SealedSecretsService.Name = ui.EnterSealedSecretService(&io.SealedSecretsService)
+	if client.CheckIfSealedSecretsExists(defaultSealedSecretsServiceName) != nil {
+		io.SealedSecretsService.Namespace = ui.EnterSealedSecretNamespace(&io.SealedSecretsService)
 	}
 	io.GitOpsRepoURL = utility.AddGitSuffixIfNecessary(ui.EnterGitRepo())
 	if !isKnownDriver(io.GitOpsRepoURL) {
@@ -204,7 +205,7 @@ func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client,
 	log.Progressf("\nChecking dependencies\n")
 
 	spinner.Start("Checking if Sealed Secrets is installed with the default configuration", false)
-	err := client.CheckIfSealedSecretsExists(sealedSecretDefaultValue)
+	err := client.CheckIfSealedSecretsExists(defaultSealedSecretsServiceName)
 	setSpinnerStatus(spinner, "Please install Sealed Secrets operator from OperatorHub", err)
 	if err == nil {
 		io.SealedSecretsService.Name = sealedSecretsController
