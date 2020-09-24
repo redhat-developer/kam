@@ -5,6 +5,7 @@ import (
 	"io"
 	"path/filepath"
 
+	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/afero"
 	"sigs.k8s.io/yaml"
 )
@@ -15,6 +16,10 @@ import (
 //
 // It returns the list of filenames written out.
 func WriteResources(fs afero.Fs, path string, files map[string]interface{}) ([]string, error) {
+	path, err := homedir.Expand(path)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to resolve path to file: %v", err)
+	}
 	filenames := make([]string, 0)
 	for filename, item := range files {
 		err := MarshalItemToFile(fs, filepath.Join(path, filename), item)

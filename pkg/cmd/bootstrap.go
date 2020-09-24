@@ -107,12 +107,18 @@ func (io *BootstrapParameters) Complete(name string, cmd *cobra.Command, args []
 			return err
 		}
 	} else {
+		addGitURLSuffixIfNecessary(io)
 		err := nonInteractiveMode(io, client)
 		if err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func addGitURLSuffixIfNecessary(io *BootstrapParameters) {
+	io.GitOpsRepoURL = utility.AddGitSuffixIfNecessary(io.GitOpsRepoURL)
+	io.ServiceRepoURL = utility.AddGitSuffixIfNecessary(io.ServiceRepoURL)
 }
 
 // nonInteractiveMode gets triggered if a flag is passed, checks for mandatory flags.
@@ -186,7 +192,6 @@ func initiateInteractiveMode(io *BootstrapParameters) error {
 	io.Prefix = ui.EnterPrefix()
 	io.OutputPath = ui.EnterOutputPath()
 	io.Overwrite = true
-	log.Progressf("\nCompleting Bootstrap process\n")
 	return nil
 }
 
@@ -260,14 +265,12 @@ func (io *BootstrapParameters) Validate() error {
 	}
 
 	io.Prefix = utility.MaybeCompletePrefix(io.Prefix)
-	io.GitOpsRepoURL = utility.AddGitSuffixIfNecessary(io.GitOpsRepoURL)
-	io.ServiceRepoURL = utility.AddGitSuffixIfNecessary(io.ServiceRepoURL)
-
 	return nil
 }
 
 // Run runs the project Bootstrap command.
 func (io *BootstrapParameters) Run() error {
+	log.Progressf("\nCompleting Bootstrap process\n")
 	err := pipelines.Bootstrap(io.BootstrapOptions, ioutils.NewFilesystem())
 	if err != nil {
 		return err
