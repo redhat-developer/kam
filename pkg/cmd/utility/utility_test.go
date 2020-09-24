@@ -1,7 +1,6 @@
 package utility
 
 import (
-	"log"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -106,7 +105,6 @@ func TestCheckNamespaceExists(t *testing.T) {
 	})
 	fakeClient := Client{KubeClient: fakeClientSet}
 	err := fakeClient.CheckIfNamespaceExists("test")
-	log.Println("this is the error", err)
 	if err == nil {
 		t.Fatalf("CheckIfPipelinesExists failed: got %v,want %v", err, nil)
 	}
