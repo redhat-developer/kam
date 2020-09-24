@@ -28,7 +28,7 @@ And, you will need this.
 ## Bootstrapping the Manifest
 
 ```shell
-$ gitops bootstrap \
+$ kam bootstrap \
   --service-repo-url https://github.com/<username>/taxi.git \
   --gitops-repo-url https://github.com/<username>/gitops.git \
   --image-repo quay.io/<username>/<image-repo> \
@@ -203,7 +203,7 @@ You will need to create a new webhook for your Git hosting service, this is used
 to trigger pipeline runs automatically on pushes to your repositories.
 
 ```shell
-$ gitops webhook create \
+$ kam webhook create \
     --access-token <github user access token> \
     --env-name tst-dev \
     --service-name taxi

@@ -2,7 +2,7 @@
 
 Login to OpenShift DevConsole and install Tekton Operator
 
-![OpenShift Pipelines Operator](img/tekton-operator-install.gif)
+![OpenShift Pipelines Operator](img/pipelines-operator-install.gif)
 
 
 ## Install the Buildah ClusterTask
