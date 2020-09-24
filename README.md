@@ -6,6 +6,10 @@ KAM CLI provides command line interface to bootstrap GitOps and perform other op
 
 [Comand Line Reference](./docs/commands/README.md)
 
+## Setup for DevConsole
+
+[An example setup steps which allows OpenShift DevConsole to display GitOps](./docs/devconsole)
+
 ## GitOps FAQs
 
 [GitOps Frequently Asked Questions](./docs/FAQ/GitopsFAQ.md)
