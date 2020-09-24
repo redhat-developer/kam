@@ -83,7 +83,7 @@ func newWebhookInfo(accessToken, pipelinesFile string, serviceName *QualifiedSer
 
 	gitRepoURL := getRepoURL(manifest, isCICD, serviceName)
 	if gitRepoURL == "" {
-		return nil, errors.New("failed to find Git repostory URL in manifest")
+		return nil, errors.New("failed to find Git repository URL in manifest")
 	}
 
 	cfg := manifest.GetPipelinesConfig()

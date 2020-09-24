@@ -20,7 +20,7 @@ Evnrionments and Applications/Services.
 To generate resources for a new Environment, you simiply run this command.
 
 ```shell
-$ gitops environment add \
+$ kam environment add \
   --env-name new-env \
   --pipelines-folder <path to GitOps folder>
 ```
