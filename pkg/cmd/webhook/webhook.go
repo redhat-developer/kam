@@ -3,7 +3,7 @@ package webhook
 import (
 	"fmt"
 
-	"github.com/rhd-gitops-example/gitops-cli/pkg/cmd/utility"
+	"github.com/redhat-developer/kam/pkg/cmd/utility"
 	"github.com/spf13/cobra"
 )
 

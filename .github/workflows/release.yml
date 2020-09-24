@@ -26,33 +26,33 @@ jobs:
           release_name: Release ${{ github.ref }}
           draft: false
           prerelease: false
-      - name: Upload gitops_linux_amd64
+      - name: Upload kam_linux_amd64
         id: upload-linux-binary
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-          asset_path: ./gitops_linux_amd64
-          asset_name: gitops_linux_amd64
+          asset_path: ./kam_linux_amd64
+          asset_name: kam_linux_amd64
           asset_content_type: application/octet-stream
-      - name: Upload gitops_windows_amd64.exe
+      - name: Upload kam_windows_amd64.exe
         id: upload-windows-binary
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-          asset_path: ./gitops_windows_amd64.exe
-          asset_name: gitops_windows_amd64.exe
+          asset_path: ./kam_windows_amd64.exe
+          asset_name: kam_windows_amd64.exe
           asset_content_type: application/octet-stream          
-      - name: Upload gitops_darwin_amd64
+      - name: Upload kam_darwin_amd64
         id: upload-darwin-binary
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-          asset_path: ./gitops_darwin_amd64
-          asset_name: gitops_darwin_amd64
+          asset_path: ./kam_darwin_amd64
+          asset_name: kam_darwin_amd64
           asset_content_type: application/octet-stream             

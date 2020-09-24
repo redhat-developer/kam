@@ -27,7 +27,7 @@ As a software organization, I would like to:
 
 Please download the binary for your Operating System from the latest release:
 
-[https://github.com/redhat-developer/gitops-cli/releases/latest](https://github.com/redhat-developer/gitops-cli/releases/latest)
+[https://github.com/redhat-developer/kam/releases/latest](https://github.com/redhat-developer/kam/releases/latest)
 
 ### Steps
 
@@ -44,7 +44,7 @@ This project provides the tooling to generate the recommended directories and ma
 
 ### Sample
 
-A sample GitOps repository can be found [here](https://github.com/rhd-gitops-example/gitops).
+A sample GitOps repository can be found [here](https://github.com/redhat-developer/gitops-repo-example).
 
 ## Business Scenario
 

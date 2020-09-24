@@ -4,12 +4,12 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/config"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/eventlisteners"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/git"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/ioutils"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/routes"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/secrets"
+	"github.com/redhat-developer/kam/pkg/pipelines/config"
+	"github.com/redhat-developer/kam/pkg/pipelines/eventlisteners"
+	"github.com/redhat-developer/kam/pkg/pipelines/git"
+	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
+	"github.com/redhat-developer/kam/pkg/pipelines/routes"
+	"github.com/redhat-developer/kam/pkg/pipelines/secrets"
 )
 
 type webhookInfo struct {
@@ -83,7 +83,7 @@ func newWebhookInfo(accessToken, pipelinesFile string, serviceName *QualifiedSer
 
 	gitRepoURL := getRepoURL(manifest, isCICD, serviceName)
 	if gitRepoURL == "" {
-		return nil, errors.New("failed to find Git repostory URL in manifest")
+		return nil, errors.New("failed to find Git repository URL in manifest")
 	}
 
 	cfg := manifest.GetPipelinesConfig()

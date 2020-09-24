@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/mkmik/multierror"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/ioutils"
+	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
 	"knative.dev/pkg/apis"
 )
 

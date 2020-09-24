@@ -1,11 +1,11 @@
 package pipelines
 
 import (
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/argocd"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/config"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/environments"
-	res "github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/resources"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/yaml"
+	"github.com/redhat-developer/kam/pkg/pipelines/argocd"
+	"github.com/redhat-developer/kam/pkg/pipelines/config"
+	"github.com/redhat-developer/kam/pkg/pipelines/environments"
+	res "github.com/redhat-developer/kam/pkg/pipelines/resources"
+	"github.com/redhat-developer/kam/pkg/pipelines/yaml"
 	"github.com/spf13/afero"
 )
 

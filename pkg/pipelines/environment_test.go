@@ -9,9 +9,9 @@ import (
 	"github.com/spf13/afero"
 	"sigs.k8s.io/yaml"
 
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/config"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/helper"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/ioutils"
+	"github.com/redhat-developer/kam/pkg/pipelines/config"
+	"github.com/redhat-developer/kam/pkg/pipelines/helper"
+	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
 )
 
 func TestAddEnv(t *testing.T) {

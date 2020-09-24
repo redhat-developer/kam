@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/scm"
+	"github.com/redhat-developer/kam/pkg/pipelines/scm"
 	triggersv1 "github.com/tektoncd/triggers/pkg/apis/triggers/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

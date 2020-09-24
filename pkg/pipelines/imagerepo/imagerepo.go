@@ -5,13 +5,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/meta"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/namespaces"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/roles"
+	"github.com/redhat-developer/kam/pkg/pipelines/meta"
+	"github.com/redhat-developer/kam/pkg/pipelines/namespaces"
+	"github.com/redhat-developer/kam/pkg/pipelines/roles"
 
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/config"
+	"github.com/redhat-developer/kam/pkg/pipelines/config"
 
-	res "github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/resources"
+	res "github.com/redhat-developer/kam/pkg/pipelines/resources"
 
 	corev1 "k8s.io/api/core/v1"
 )

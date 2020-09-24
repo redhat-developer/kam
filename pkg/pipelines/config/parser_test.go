@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/ioutils"
-	"github.com/rhd-gitops-example/gitops-cli/pkg/pipelines/yaml"
+	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
+	"github.com/redhat-developer/kam/pkg/pipelines/yaml"
 )
 
 func TestParse(t *testing.T) {
