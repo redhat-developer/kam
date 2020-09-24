@@ -1,4 +1,4 @@
-e Day 1 Operations
+# Day 1 Operations
 
 Day 1 Operations are actions that users take to bootstrap a GitOps
 configuration.
