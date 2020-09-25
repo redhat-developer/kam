@@ -13,6 +13,7 @@ import (
 	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
 	"gopkg.in/AlecAivazis/survey.v1"
 	"gopkg.in/AlecAivazis/survey.v1/terminal"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/klog"
@@ -135,8 +136,8 @@ func validateAccessToken(input interface{}, serviceRepo string) error {
 func validateSealedSecretService(input interface{}, sealedSecretService *types.NamespacedName) error {
 	if s, ok := input.(string); ok {
 		client, err := utility.NewClient()
-		namespaceStatus, err := client.CheckIfNamespaceExists(s)
-		if !namespaceStatus && err == nil {
+		err = client.CheckIfNamespaceExists(s)
+		if errors.IsNotFound(err) {
 			return fmt.Errorf("The namespace %s is not found on the cluster", s)
 		}
 		if err != nil {
@@ -144,8 +145,8 @@ func validateSealedSecretService(input interface{}, sealedSecretService *types.N
 		}
 		sealedSecretService.Namespace = s
 		sealedSecretService.Name = EnterSealedSecretService(sealedSecretService)
-		sealedSecretStatus, err := client.CheckIfSealedSecretsExists(*sealedSecretService)
-		if !sealedSecretStatus && err == nil {
+		err = client.CheckIfSealedSecretsExists(*sealedSecretService)
+		if errors.IsNotFound(err) {
 			return fmt.Errorf("The service %s is not found in the namespace %s", sealedSecretService.Name, sealedSecretService.Namespace)
 		}
 		if err != nil {

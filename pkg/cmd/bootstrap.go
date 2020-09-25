@@ -16,7 +16,6 @@ import (
 	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
 	"github.com/redhat-developer/kam/pkg/pipelines/statustracker"
 	"github.com/spf13/cobra"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
@@ -161,8 +160,7 @@ func missingFlagErr(flags []string) error {
 func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client) error {
 	log.Progressf("\nStarting interactive prompt\n")
 	// ask for sealed secrets only when default is absent
-	sealedSecretServiceStatus, _ := client.CheckIfSealedSecretsExists(defaultSealedSecretsServiceName)
-	if !sealedSecretServiceStatus {
+	if client.CheckIfSealedSecretsExists(defaultSealedSecretsServiceName) != nil {
 		io.SealedSecretsService.Namespace = ui.EnterSealedSecretNamespace(&io.SealedSecretsService)
 	}
 	io.GitOpsRepoURL = utility.AddGitSuffixIfNecessary(ui.EnterGitRepo())
@@ -207,7 +205,7 @@ func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client,
 	log.Progressf("\nChecking dependencies\n")
 
 	spinner.Start("Checking if Sealed Secrets is installed with the default configuration", false)
-	_, err := client.KubeClient.CoreV1().Services(defaultSealedSecretsServiceName.Namespace).Get(defaultSealedSecretsServiceName.Name, v1.GetOptions{})
+	err := client.CheckIfSealedSecretsExists(defaultSealedSecretsServiceName)
 	setSpinnerStatus(spinner, "Please install Sealed Secrets operator from OperatorHub", err)
 	if err == nil {
 		io.SealedSecretsService.Name = sealedSecretsController

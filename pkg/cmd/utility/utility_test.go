@@ -86,13 +86,14 @@ func TestCheckIfSealedSecretsExists(t *testing.T) {
 	})
 
 	fakeClient := Client{KubeClient: fakeClientSet}
-	secretCheck, _ := fakeClient.CheckIfSealedSecretsExists(types.NamespacedName{Namespace: "kube-system", Name: "sealed-secrets-controller"})
-	if secretCheck == false {
-		t.Fatalf("CheckIfSealedSecretsExists failed: got %v,want %v", secretCheck, true)
+	err := fakeClient.CheckIfSealedSecretsExists(types.NamespacedName{Namespace: "kube-system", Name: "sealed-secrets-controller"})
+	if err != nil {
+		t.Fatalf("CheckIfSealedSecretsExists failed: got %v,want %v", err, nil)
 	}
-	secretCheck, _ = fakeClient.CheckIfSealedSecretsExists(types.NamespacedName{Namespace: "unknown", Name: "unknown"})
-	if secretCheck == true {
-		t.Fatalf("CheckIfSealedSecretsExists failed: got %v,want %v", !secretCheck, false)
+	wantErr := `services "unknown" not found`
+	err = fakeClient.CheckIfSealedSecretsExists(types.NamespacedName{Namespace: "unknown", Name: "unknown"})
+	if err == nil {
+		t.Fatalf("CheckIfSealedSecretsExists failed: got %v,want %v", err, wantErr)
 	}
 }
 
@@ -103,8 +104,8 @@ func TestCheckNamespaceExists(t *testing.T) {
 		},
 	})
 	fakeClient := Client{KubeClient: fakeClientSet}
-	_, err := fakeClient.CheckIfNamespaceExists("test")
-	if err != nil {
+	err := fakeClient.CheckIfNamespaceExists("test")
+	if err == nil {
 		t.Fatalf("TestCheckNamespaceExists failed: got %v,want %v", err, nil)
 	}
 }

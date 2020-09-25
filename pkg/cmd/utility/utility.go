@@ -71,27 +71,21 @@ func NewClient() (*Client, error) {
 }
 
 //CheckIfNamespaceExists checks if the namespace is present
-func (c *Client) CheckIfNamespaceExists(ns string) (bool, error) {
+func (c *Client) CheckIfNamespaceExists(ns string) error {
 	_, err := c.KubeClient.CoreV1().Namespaces().Get(ns, v1.GetOptions{})
-	if err == nil {
-		return true, err
+	if err != nil {
+		return err
 	}
-	if errors.IsNotFound(err) {
-		return false, nil
-	}
-	return false, err
+	return nil
 }
 
 // CheckIfSealedSecretsExists checks if sealed secrets is installed
-func (c *Client) CheckIfSealedSecretsExists(secret types.NamespacedName) (bool, error) {
+func (c *Client) CheckIfSealedSecretsExists(secret types.NamespacedName) error {
 	_, err := c.KubeClient.CoreV1().Services(secret.Namespace).Get(secret.Name, v1.GetOptions{})
-	if err == nil {
-		return true, nil
+	if err != nil {
+		return err
 	}
-	if errors.IsNotFound(err) {
-		return false, nil
-	}
-	return false, err
+	return nil
 }
 
 // CheckIfArgoCDExists checks if ArgoCD operator is installed
