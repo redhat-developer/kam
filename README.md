@@ -12,6 +12,8 @@ KAM CLI provides command line interface to bootstrap GitOps and perform other op
 
 ## Contributing to `KAM CLI`
 
+Building `kam` requires Go 1.14+
+
 To contribute to `KAM CLI`, follow these steps:
 
 1. Fork this repository.
