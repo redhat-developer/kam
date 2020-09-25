@@ -2,7 +2,6 @@ package ui
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -14,7 +13,6 @@ import (
 	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
 	"gopkg.in/AlecAivazis/survey.v1"
 	"gopkg.in/AlecAivazis/survey.v1/terminal"
-	errorType "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/klog"
@@ -137,27 +135,25 @@ func validateAccessToken(input interface{}, serviceRepo string) error {
 func validateSealedSecretService(input interface{}, sealedSecretService *types.NamespacedName) error {
 	if s, ok := input.(string); ok {
 		client, err := utility.NewClient()
-		err = client.CheckIfNamespaceExists(s)
-		if errorType.IsNotFound(err) {
-			return fmt.Errorf("The namespace %s is not present on the cluster", s)
+		namespaceStatus, err := client.CheckIfNamespaceExists(s)
+		if !namespaceStatus && err == nil {
+			return fmt.Errorf("The namespace %s is not found on the cluster", s)
+		}
+		if err != nil {
+			return err
 		}
 		sealedSecretService.Namespace = s
 		sealedSecretService.Name = EnterSealedSecretService(sealedSecretService)
-		err = client.CheckIfSealedSecretsExists(*sealedSecretService)
-		if errorType.IsNotFound(err) {
-			return fmt.Errorf("The service %s is not present in the namespace %s", sealedSecretService.Name, sealedSecretService.Namespace)
+		sealedSecretStatus, err := client.CheckIfSealedSecretsExists(*sealedSecretService)
+		if !sealedSecretStatus && err == nil {
+			return fmt.Errorf("The service %s is not found in the namespace %s", sealedSecretService.Name, sealedSecretService.Namespace)
 		}
 		if err != nil {
-			return errors.New("sealed secrets could not be configured sucessfully")
+			return err
 		}
 		return nil
 	}
 	return nil
-}
-
-func compareError(err error, sealedSecretService string) bool {
-	createdError := fmt.Errorf("cannot fetch certificate: services \"%s\" not found", sealedSecretService)
-	return err.Error() == createdError.Error()
 }
 
 func checkSecretLength(secret string) bool {
