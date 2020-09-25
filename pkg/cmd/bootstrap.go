@@ -201,54 +201,49 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client) er
 }
 
 func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client, spinner status) error {
-	var errs []error
+	missingDeps := []string{}
 	log.Progressf("\nChecking dependencies\n")
 
 	spinner.Start("Checking if Sealed Secrets is installed with the default configuration", false)
-	err := client.CheckIfSealedSecretsExists(defaultSealedSecretsServiceName)
-	setSpinnerStatus(spinner, "Please install Sealed Secrets operator from OperatorHub", err)
-	if err == nil {
-		io.SealedSecretsService.Name = sealedSecretsController
-		io.SealedSecretsService.Namespace = sealedSecretsNS
-	} else if !apierrors.IsNotFound(err) {
-		return clusterErr(err.Error())
+	if err := client.CheckIfSealedSecretsExists(defaultSealedSecretsServiceName); err != nil {
+		warnIfNotFound(spinner, "Please install Sealed Secrets operator from OperatorHub", err)
+		if !apierrors.IsNotFound(err) {
+			return fmt.Errorf("failed to check for sealed secrets operator: %w", err)
+		}
+		missingDeps = append(missingDeps, "Sealed Secrets Operator")
+	} else {
+		io.SealedSecretsService = defaultSealedSecretsServiceName
 	}
 
 	spinner.Start("Checking if ArgoCD Operator is installed with the default configuration", false)
-	err = client.CheckIfArgoCDExists(argoCDNS)
-	setSpinnerStatus(spinner, "Please install ArgoCD operator from OperatorHub, with an ArgoCD resource called 'argocd'", err)
-	if err != nil {
+	if err := client.CheckIfArgoCDExists(argoCDNS); err != nil {
+		warnIfNotFound(spinner, "Please install ArgoCD operator from OperatorHub", err)
 		if !apierrors.IsNotFound(err) {
-			return clusterErr(err.Error())
+			return fmt.Errorf("failed to check for ArgoCD operator: %w", err)
 		}
-		errs = append(errs, err)
+		missingDeps = append(missingDeps, "ArgoCD operator")
 	}
 
 	spinner.Start("Checking if OpenShift Pipelines Operator is installed with the default configuration", false)
-	err = client.CheckIfPipelinesExists(pipelinesOperatorNS)
-	setSpinnerStatus(spinner, "Please install OpenShift Pipelines operator from OperatorHub", err)
-	if err != nil {
+	if err := client.CheckIfPipelinesExists(pipelinesOperatorNS); err != nil {
+		warnIfNotFound(spinner, "Please install OpenShift Pipelines operator from OperatorHub", err)
 		if !apierrors.IsNotFound(err) {
-			return clusterErr(err.Error())
+			return fmt.Errorf("failed to check for OpenShift Pipelines operator: %w", err)
 		}
-		errs = append(errs, err)
+		missingDeps = append(missingDeps, "OpenShift Pipelines Operator")
 	}
 
-	if len(errs) > 0 {
-		return fmt.Errorf("Failed to satisfy the required dependencies")
+	if len(missingDeps) > 0 {
+		return fmt.Errorf("failed to satisfy the required dependencies: %s", strings.Join(missingDeps, ", "))
 	}
 	return nil
 }
 
-func setSpinnerStatus(spinner status, warningMsg string, err error) {
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			spinner.WarningStatus(warningMsg)
-		}
-		spinner.End(false)
-		return
+func warnIfNotFound(spinner status, warningMsg string, err error) {
+	if apierrors.IsNotFound(err) {
+		spinner.WarningStatus(warningMsg)
 	}
-	spinner.End(true)
+	spinner.End(false)
 }
 
 // Validate validates the parameters of the BootstrapParameters.
@@ -322,10 +317,6 @@ func nextSteps() {
 		"Next Steps:\n",
 		"Please refer to https://github.com/redhat-developer/kam/tree/master/docs to get started.",
 	)
-}
-
-func clusterErr(errMsg string) error {
-	return fmt.Errorf("Couldn't connect to cluster: %s", errMsg)
 }
 
 func isKnownDriver(repoURL string) bool {

@@ -97,7 +97,7 @@ func TestCheckIfSealedSecretsExists(t *testing.T) {
 	}
 }
 
-func TestCheckNamespaceExists(t *testing.T) {
+func TestCheckIfNamespaceExists(t *testing.T) {
 	fakeClientSet := fake.NewSimpleClientset(&v1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "test",
@@ -106,7 +106,7 @@ func TestCheckNamespaceExists(t *testing.T) {
 	fakeClient := Client{KubeClient: fakeClientSet}
 	err := fakeClient.CheckIfNamespaceExists("test")
 	if err == nil {
-		t.Fatalf("TestCheckNamespaceExists failed: got %v,want %v", err, nil)
+		t.Fatalf("TestCheckIfNamespaceExists failed: got %v,want %v", err, nil)
 	}
 }
 
