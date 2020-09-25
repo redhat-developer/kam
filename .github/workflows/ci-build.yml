@@ -46,15 +46,4 @@ jobs:
         then
           echo "not well formatted sources are found"
           exit 1
-        fi
-
-    - name: Generate coverage report
-      run: |
-        go test `go list ./... | grep -v examples` -coverprofile=coverage.txt -covermode=atomic
-
-    - name: Upload coverage report
-      uses: codecov/codecov-action@v1
-      with:
-        file: ./coverage.txt
-        flags: unittests
-        name: codecov-umbrella        
+        fi        
