@@ -12,11 +12,19 @@ export PATH=$PATH:$GOPATH/bin
 # otherwise /.cache is used, and it fails on permission denied
 export GOLANGCI_LINT_CACHE="/tmp/.cache"
 
+git describe --always --long --dirty
+go version
+go env
+make gomod_tidy
+make bin
 make test
 
 # crosscompile and publish artifacts
 make all_platforms
-cp kam_linux_amd64.exe $ARTIFACTS_DIR
-cp kam_darwin_amd64.exe $ARTIFACTS_DIR
-cp kam_windows_amd64.exe $ARTIFACTS_DIR
+pwd
+ls -l
+ls -l $GOPATH/src/github.com/redhat-developer/kam
+#cp $GOPATH/src/github.com/redhat-developer/kam/kam_linux_amd64.exe $ARTIFACTS_DIR
+#cp $GOPATH/src/github.com/redhat-developer/kam/kam_darwin_amd64.exe $ARTIFACTS_DIR
+#cp $GOPATH/src/github.com/redhat-developer/kam/kam_windows_amd64.exe $ARTIFACTS_DIR
 
