@@ -40,7 +40,7 @@ func TestValidateSecretLength(t *testing.T) {
 	}{
 		{"Secret length too short",
 			"abc",
-			`The length of the secret must be at least 16 characters `},
+			`The length of the secret must be at least 16 characters`},
 	}
 
 	for _, tt := range cmdTests {

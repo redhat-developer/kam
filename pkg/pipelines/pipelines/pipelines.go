@@ -23,15 +23,15 @@ func CreateAppCIPipeline(name types.NamespacedName) *pipelinev1.Pipeline {
 		ObjectMeta: meta.ObjectMeta(name),
 		Spec: pipelinev1.PipelineSpec{
 			Params: []pipelinev1.ParamSpec{
-				createParamSpec("REPO", "string"),
-				createParamSpec("COMMIT_SHA", "string"),
-				createParamSpec("TLSVERIFY", "string"),
-				createParamSpec("BUILD_EXTRA_ARGS", "string"),
-				createParamSpec("GIT_REF", "string"),
-				createParamSpec("COMMIT_DATE", "string"),
-				createParamSpec("COMMIT_AUTHOR", "string"),
-				createParamSpec("COMMIT_MESSAGE", "string"),
-				createParamSpec("GIT_REPO", "string"),
+				createParamSpec("REPO"),
+				createParamSpec("COMMIT_SHA"),
+				createParamSpec("TLSVERIFY"),
+				createParamSpec("BUILD_EXTRA_ARGS"),
+				createParamSpec("GIT_REF"),
+				createParamSpec("COMMIT_DATE"),
+				createParamSpec("COMMIT_AUTHOR"),
+				createParamSpec("COMMIT_MESSAGE"),
+				createParamSpec("GIT_REPO"),
 			},
 			Resources: []pipelinev1.PipelineDeclaredResource{
 				createPipelineDeclaredResource("source-repo", "git"),
@@ -45,8 +45,8 @@ func CreateAppCIPipeline(name types.NamespacedName) *pipelinev1.Pipeline {
 	}
 }
 
-func createParamSpec(name string, paramType pipelinev1.ParamType) pipelinev1.ParamSpec {
-	return pipelinev1.ParamSpec{Name: name, Type: paramType}
+func createParamSpec(name string) pipelinev1.ParamSpec {
+	return pipelinev1.ParamSpec{Name: name, Type: "string"}
 }
 
 func createBuildImageTask(name string) pipelinev1.PipelineTask {
@@ -75,7 +75,6 @@ func createBuildImageTask(name string) pipelinev1.PipelineTask {
 			createTaskParam("BUILD_EXTRA_ARGS", strings.Join(labelArgs, " ")),
 		},
 	}
-
 }
 
 // CreateCDPipeline creates CreateCDPipeline
@@ -88,13 +87,13 @@ func CreateCDPipeline(name types.NamespacedName, stageNamespace string) *pipelin
 				createPipelineDeclaredResource("source-repo", "git"),
 			},
 			Tasks: []pipelinev1.PipelineTask{
-				createCDPipelineTask("apply-source", stageNamespace),
+				createCDPipelineTask("apply-source"),
 			},
 		},
 	}
 }
 
-func createCDPipelineTask(taskName, stageNamespace string) pipelinev1.PipelineTask {
+func createCDPipelineTask(taskName string) pipelinev1.PipelineTask {
 	return pipelinev1.PipelineTask{
 		Name:    taskName,
 		TaskRef: createTaskRef("deploy-from-source-task", pipelinev1.NamespacedTaskKind),
@@ -116,7 +115,7 @@ func CreateCIPipeline(name types.NamespacedName, stageNamespace string) *pipelin
 			},
 
 			Tasks: []pipelinev1.PipelineTask{
-				createCIPipelineTask("apply-source", stageNamespace),
+				createCIPipelineTask("apply-source"),
 			},
 		},
 	}
@@ -133,14 +132,14 @@ func CreateAppCDPipeline(name types.NamespacedName, deploymentPath, devNamespace
 				createPipelineDeclaredResource("runtime-image", "image"),
 			},
 			Tasks: []pipelinev1.PipelineTask{
-				createDevCDBuildImageTask("build-image", isInternalRegistry),
+				createDevCDBuildImageTask("build-image"),
 				createDevCDDeployImageTask("deploy-image", devNamespace, deploymentPath),
 			},
 		},
 	}
 }
 
-func createCIPipelineTask(taskName, stageNamespace string) pipelinev1.PipelineTask {
+func createCIPipelineTask(taskName string) pipelinev1.PipelineTask {
 	return pipelinev1.PipelineTask{
 		Name:    taskName,
 		TaskRef: createTaskRef("deploy-from-source-task", pipelinev1.NamespacedTaskKind),
@@ -172,14 +171,14 @@ func createDevCDDeployImageTask(name, devNamespace, deploymentPath string) pipel
 	}
 }
 
-func createInputTaskResource(name string, resource string) pipelinev1.PipelineTaskInputResource {
+func createInputTaskResource(name, resource string) pipelinev1.PipelineTaskInputResource {
 	return pipelinev1.PipelineTaskInputResource{
 		Name:     name,
 		Resource: resource,
 	}
 }
 
-func createDevCDBuildImageTask(name string, isInternalRegistry bool) pipelinev1.PipelineTask {
+func createDevCDBuildImageTask(name string) pipelinev1.PipelineTask {
 	return pipelinev1.PipelineTask{
 		Name:    name,
 		TaskRef: createTaskRef("buildah", pipelinev1.ClusterTaskKind),
@@ -193,7 +192,7 @@ func createDevCDBuildImageTask(name string, isInternalRegistry bool) pipelinev1.
 	}
 }
 
-func createOutputTaskResource(name string, resource string) pipelinev1.PipelineTaskOutputResource {
+func createOutputTaskResource(name, resource string) pipelinev1.PipelineTaskOutputResource {
 	return pipelinev1.PipelineTaskOutputResource{
 		Name:     name,
 		Resource: resource,
@@ -218,6 +217,6 @@ func createTaskParam(name, value string) pipelinev1.Param {
 	}
 }
 
-func createPipelineDeclaredResource(name string, resourceType string) pipelinev1.PipelineDeclaredResource {
+func createPipelineDeclaredResource(name, resourceType string) pipelinev1.PipelineDeclaredResource {
 	return pipelinev1.PipelineDeclaredResource{Name: name, Type: resourceType}
 }

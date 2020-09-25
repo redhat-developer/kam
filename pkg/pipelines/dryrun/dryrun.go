@@ -59,12 +59,12 @@ type templateParam struct {
 // across all environments/applications
 func MakeScript(command, cicdEnv string) (string, error) {
 	params := templateParam{CICDEnv: cicdEnv, Cmd: command}
-	template, err := template.New("dryrun_script").Parse(scriptTemplate)
+	parsed, err := template.New("dryrun_script").Parse(scriptTemplate)
 	if err != nil {
 		return "", fmt.Errorf("unable to parse template: %v", err)
 	}
 	var buf bytes.Buffer
-	err = template.Execute(&buf, params)
+	err = parsed.Execute(&buf, params)
 	if err != nil {
 		return "", fmt.Errorf("unable to execute template: %v", err)
 	}

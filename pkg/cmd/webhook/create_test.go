@@ -25,7 +25,7 @@ func TestMissingRequiredFlagsForCreate(t *testing.T) {
 	}
 	for i, tt := range testcases {
 		t.Run(fmt.Sprintf("Test %d", i), func(rt *testing.T) {
-			_, _, err := executeCommand(newCmdCreate("webhook", "odo pipelines webhook create"), tt.flags...)
+			_, err := executeCommand(newCmdCreate("webhook", "odo pipelines webhook create"), tt.flags...)
 
 			if err != nil {
 				if err.Error() != tt.wantErr {
@@ -103,17 +103,17 @@ func TestValidateForCreate(t *testing.T) {
 	}
 }
 
-func executeCommand(cmd *cobra.Command, flags ...keyValuePair) (c *cobra.Command, output string, err error) {
+func executeCommand(cmd *cobra.Command, flags ...keyValuePair) (output string, err error) {
 	buf := new(bytes.Buffer)
 	cmd.SetOutput(buf)
 	for _, flag := range flags {
 		err := cmd.Flags().Set(flag.key, flag.value)
 		if err != nil {
-			return nil, "", err
+			return "", err
 		}
 	}
-	c, err = cmd.ExecuteC()
-	return c, buf.String(), err
+	_, err = cmd.ExecuteC()
+	return buf.String(), err
 }
 
 func flag(k, v string) keyValuePair {

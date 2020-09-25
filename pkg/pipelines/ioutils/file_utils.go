@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-// NewFileSystem returns a local filesystem based afero FS implementation.
+// NewFilesystem returns a local filesystem based afero FS implementation.
 func NewFilesystem() afero.Fs {
 	return afero.NewOsFs()
 }

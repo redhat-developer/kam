@@ -37,11 +37,7 @@ func AddEnv(o *EnvParameters, appFs afero.Fs) error {
 	}
 	m.Environments = append(m.Environments, newEnv)
 	files[pipelinesFile] = m
-	buildParams := &BuildParameters{
-		PipelinesFolderPath: o.PipelinesFolderPath,
-		OutputPath:          o.PipelinesFolderPath,
-	}
-	built, err := buildResources(appFs, buildParams, m)
+	built, err := buildResources(appFs, m)
 	if err != nil {
 		return fmt.Errorf("failed to build resources: %v", err)
 	}

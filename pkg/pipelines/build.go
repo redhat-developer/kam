@@ -22,7 +22,7 @@ func BuildResources(o *BuildParameters, appFs afero.Fs) error {
 	if err != nil {
 		return err
 	}
-	resources, err := buildResources(appFs, o, m)
+	resources, err := buildResources(appFs, m)
 	if err != nil {
 		return err
 	}
@@ -30,7 +30,7 @@ func BuildResources(o *BuildParameters, appFs afero.Fs) error {
 	return err
 }
 
-func buildResources(fs afero.Fs, o *BuildParameters, m *config.Manifest) (res.Resources, error) {
+func buildResources(fs afero.Fs, m *config.Manifest) (res.Resources, error) {
 	resources := res.Resources{}
 
 	argoCD := m.GetArgoCDConfig()

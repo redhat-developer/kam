@@ -11,7 +11,7 @@ var (
 	taskTypeMeta = meta.TypeMeta("Task", "tekton.dev/v1beta1")
 )
 
-func createTaskResource(name string, resourceType string) pipelinev1.TaskResource {
+func createTaskResource(name, resourceType string) pipelinev1.TaskResource {
 	return pipelinev1.TaskResource{
 		ResourceDeclaration: pipelinev1.ResourceDeclaration{
 			Name: name,
@@ -20,7 +20,7 @@ func createTaskResource(name string, resourceType string) pipelinev1.TaskResourc
 	}
 }
 
-func createTaskParam(name string, description string, paramType pipelinev1.ParamType) pipelinev1.ParamSpec {
+func createTaskParam(name, description string, paramType pipelinev1.ParamType) pipelinev1.ParamSpec {
 	return pipelinev1.ParamSpec{
 		Name:        name,
 		Type:        paramType,
@@ -28,7 +28,7 @@ func createTaskParam(name string, description string, paramType pipelinev1.Param
 	}
 }
 
-func createTaskParamWithDefault(name string, description string, paramType pipelinev1.ParamType, paramDefault string) pipelinev1.ParamSpec {
+func createTaskParamWithDefault(name, description string, paramType pipelinev1.ParamType, paramDefault string) pipelinev1.ParamSpec {
 	return pipelinev1.ParamSpec{
 		Name:        name,
 		Type:        paramType,
@@ -40,7 +40,7 @@ func createTaskParamWithDefault(name string, description string, paramType pipel
 	}
 }
 
-func createContainer(name string, image string, workingDir string, cmd []string, args []string) corev1.Container {
+func createContainer(name, image, workingDir string, cmd, args []string) corev1.Container {
 	return corev1.Container{
 		Name:       name,
 		Image:      image,

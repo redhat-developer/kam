@@ -13,6 +13,8 @@ import (
 	triggersv1 "github.com/tektoncd/triggers/pkg/apis/triggers/v1alpha1"
 )
 
+const testRepoName = "http://github.com/org/gitops.git"
+
 func TestBuildEventListener(t *testing.T) {
 	m := &config.Manifest{
 		Config: &config.Config{
@@ -27,11 +29,10 @@ func TestBuildEventListener(t *testing.T) {
 		GitOpsURL: "http://github.com/org/gitops.git",
 	}
 	cicdPath := filepath.Join("config", "test-cicd")
-	gitOpsRepo := "http://github.com/org/gitops.git"
-	got, err := buildEventListenerResources(gitOpsRepo, m)
+	got, err := buildEventListenerResources(testRepoName, m)
 	assertNoError(t, err)
 	want := res.Resources{
-		getEventListenerPath(cicdPath): eventlisteners.CreateELFromTriggers("test-cicd", saName, fakeTriggers(t, m, gitOpsRepo)),
+		getEventListenerPath(cicdPath): eventlisteners.CreateELFromTriggers("test-cicd", saName, fakeTriggers(t, m, testRepoName)),
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Fatalf("resources didn't match:%s\n", diff)

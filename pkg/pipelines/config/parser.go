@@ -43,7 +43,7 @@ func ParsePipelinesFolder(fs afero.Fs, folderPath string) (*Manifest, error) {
 		return nil, err
 	}
 	if !info.IsDir() {
-		return nil, fmt.Errorf("The path %q is a file path (required directory path)", folderPath)
+		return nil, fmt.Errorf("the path %q is a file path (required directory path)", folderPath)
 	}
 	return ParseFile(fs, filepath.Join(folderPath, PipelinesFile))
 }

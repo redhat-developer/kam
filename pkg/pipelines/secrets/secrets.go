@@ -58,7 +58,8 @@ func CreateSealedSecret(name, service types.NamespacedName, data, secretKey stri
 
 // CreateSealedBasicAuthSecret creates a SealedSecret with a BasicAuth type
 // secret.
-func CreateSealedBasicAuthSecret(name, service types.NamespacedName, token string, opts ...meta.ObjectMetaOpt) (*ssv1alpha1.SealedSecret, error) {
+func CreateSealedBasicAuthSecret(name, service types.NamespacedName, token string,
+	opts ...meta.ObjectMetaOpt) (*ssv1alpha1.SealedSecret, error) {
 	return seal(createBasicAuthSecret(name, token, opts...), DefaultPublicKeyFunc, service)
 }
 
@@ -100,12 +101,14 @@ func GetClusterPublicKey(service types.NamespacedName) (*rsa.PublicKey, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer func() {
+		_ = f.Close()
+	}()
 	return parseKey(f)
 }
 
 // Returns a reader of public key from sealed-secrets-service
-func openCertCluster(c clientv1.CoreV1Interface, service types.NamespacedName) (io.ReadCloser, error) {
+func openCertCluster(c clientv1.ServicesGetter, service types.NamespacedName) (io.ReadCloser, error) {
 	f, err := c.
 		Services(service.Namespace).
 		ProxyGet("http", service.Name, "", "/v1/cert.pem", nil).
@@ -130,15 +133,15 @@ func parseKey(r io.Reader) (*rsa.PublicKey, error) {
 
 	// ParseCertsPem returns error if len(certs) == 0, but best to be sure...
 	if len(certs) == 0 {
-		return nil, errors.New("Failed to read any certificates")
+		return nil, errors.New("failed to read any certificates")
 	}
 
-	cert, ok := certs[0].PublicKey.(*rsa.PublicKey)
+	publicKey, ok := certs[0].PublicKey.(*rsa.PublicKey)
 	if !ok {
-		return nil, fmt.Errorf("Expected RSA public key but found %v", certs[0].PublicKey)
+		return nil, fmt.Errorf("expected RSA public key but found %v", certs[0].PublicKey)
 	}
 
-	return cert, nil
+	return publicKey, nil
 }
 
 // Gets a REST client

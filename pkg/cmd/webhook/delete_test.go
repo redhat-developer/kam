@@ -18,7 +18,7 @@ func TestMissingRequiredFlagsForDelete(t *testing.T) {
 
 	for i, tt := range testcases {
 		t.Run(fmt.Sprintf("Test %d", i), func(rt *testing.T) {
-			_, _, err := executeCommand(newCmdDelete("webhook", "odo pipelines webhook delete"), tt.flags...)
+			_, err := executeCommand(newCmdDelete("webhook", "odo pipelines webhook delete"), tt.flags...)
 
 			if err != nil {
 				if err.Error() != tt.wantErr {
