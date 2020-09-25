@@ -181,7 +181,7 @@ running [nginx](https://nginx.org/) and serving a page.
 
 ## Changing the initial deployment
 
-The bootstrap creates a `Deployment` in `environments/<prefix>-dev/services/<service name>/base/config/100-deployment.yaml` this should bring up nginx, this is purely for demo purposes, you'll need to change this to deploy your built image.
+The bootstrap creates a `Deployment` in `environments/<prefix>-dev/apps/<app name>/services/<service name>/base/config/100-deployment.yaml` this should bring up nginx, this is purely for demo purposes, you'll need to change this to deploy your built image.
 
 ```yaml
 spec:
@@ -205,7 +205,7 @@ to trigger pipeline runs automatically on pushes to your repositories.
 ```shell
 $ kam webhook create \
     --access-token <github user access token> \
-    --env-name tst-dev \
+    --env-name dev \
     --service-name taxi
 ```
 
@@ -286,7 +286,7 @@ apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: go-test
-  namespace: tst-cicd
+  namespace: cicd
 spec:
   inputs:
     resources:
@@ -315,7 +315,7 @@ kind: Pipeline
 metadata:
   creationTimestamp: null
   name: app-ci-pipeline
-  namespace: tst-cicd
+  namespace: cicd
 spec:
   params:
   - name: REPO
