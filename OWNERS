@@ -1,10 +1,10 @@
 # See the OWNERS docs: https://git.k8s.io/community/contributors/guide/owners.md
 
 approvers:
-- sbose78
 - wtam2018
 - bigkevmcd
 - chetan-rns
+- sbose78
 
 reviewers:
 - sbose78
