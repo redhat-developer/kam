@@ -246,10 +246,10 @@ Checking if OpenShift Pipelines Operator is installed with the default configura
 	buff := &bytes.Buffer{}
 	fakeSpinner := &mockSpinner{writer: buff}
 	wizardParams := &BootstrapParameters{&pipelines.BootstrapOptions{}}
-	_ := checkBootstrapDependencies(wizardParams, fakeClient, fakeSpinner)
+	err := checkBootstrapDependencies(wizardParams, fakeClient, fakeSpinner)
 	wantErr := "Failed to satisfy the required dependencies"
 
-	assertError(t, nil, wantErr)
+	assertError(t, err, wantErr)
 	assertMessage(t, buff.String(), wantMsg)
 }
 
