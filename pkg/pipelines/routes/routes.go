@@ -16,6 +16,8 @@ var (
 	routeTypeMeta = meta.TypeMeta("Route", "route.openshift.io/v1")
 )
 
+const defaultRoutePort = 8080
+
 // Generate generates an OpenShift route.
 //
 // It strips out the Status field from the route as this causes issues when
@@ -45,7 +47,7 @@ func createRoute(ns string) routev1.Route {
 				"el-cicd-event-listener",
 				100,
 			),
-			Port:           createRoutePort(8080),
+			Port:           createRoutePort(defaultRoutePort),
 			WildcardPolicy: routev1.WildcardPolicyNone,
 		},
 	}
@@ -54,12 +56,12 @@ func createRoute(ns string) routev1.Route {
 func createRoutePort(port int32) *routev1.RoutePort {
 	return &routev1.RoutePort{
 		TargetPort: intstr.IntOrString{
-			IntVal: 8080,
+			IntVal: port,
 		},
 	}
 }
 
-func creatRouteTargetReference(kind string, name string, weight int32) routev1.RouteTargetReference {
+func creatRouteTargetReference(kind, name string, weight int32) routev1.RouteTargetReference {
 	return routev1.RouteTargetReference{
 		Kind:   kind,
 		Name:   name,

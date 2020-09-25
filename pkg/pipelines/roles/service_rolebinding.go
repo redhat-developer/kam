@@ -38,16 +38,20 @@ func AddSecretToSA(sa *corev1.ServiceAccount, secretName string) *corev1.Service
 	return sa
 }
 
-// CreateRoleBinding creates and returns a new RoleBinding given name, sa, roleKind, and roleName
+// CreateRoleBinding creates and returns a new RoleBinding given name, sa,
+// roleKind, and roleName.
 func CreateRoleBinding(name types.NamespacedName, sa *corev1.ServiceAccount, roleKind, roleName string) *v1rbac.RoleBinding {
 	return CreateRoleBindingForSubjects(name, roleKind, roleName, []v1rbac.Subject{{Kind: sa.Kind, Name: sa.Name, Namespace: sa.Namespace}})
 }
 
+// CreateClusterRoleBinding creates and returns a new ClusterRoleBinding
+// associating the service account with a role.
 func CreateClusterRoleBinding(name types.NamespacedName, sa *corev1.ServiceAccount, roleKind, roleName string) *v1rbac.ClusterRoleBinding {
 	return ClusterRoleBindingForSubjects(name, roleKind, roleName, []v1rbac.Subject{{Kind: sa.Kind, Name: sa.Name, Namespace: sa.Namespace}})
 }
 
-// CreateRoleBindingForSubjects creates a RoleBinding with multiple subjects
+// CreateRoleBindingForSubjects creates and returns a RoleBinding with multiple
+// subjects.
 func CreateRoleBindingForSubjects(name types.NamespacedName, roleKind, roleName string, subjects []v1rbac.Subject) *v1rbac.RoleBinding {
 	return &v1rbac.RoleBinding{
 		TypeMeta:   roleBindingTypeMeta,
@@ -61,6 +65,8 @@ func CreateRoleBindingForSubjects(name types.NamespacedName, roleKind, roleName 
 	}
 }
 
+// ClusterRoleBindingForSubjects creates and returns a ClusterRoleBinding
+// associating the subjects with the specified role.
 func ClusterRoleBindingForSubjects(name types.NamespacedName, roleKind, roleName string, subjects []v1rbac.Subject) *v1rbac.ClusterRoleBinding {
 	return &v1rbac.ClusterRoleBinding{
 		TypeMeta:   clusterRoleBindingTypeMeta,
@@ -74,7 +80,7 @@ func ClusterRoleBindingForSubjects(name types.NamespacedName, roleKind, roleName
 	}
 }
 
-// CreateRole creates a Role given a name and policyRules
+// CreateRole creates and returns a Role given a name and policyRules.
 func CreateRole(name types.NamespacedName, policyRules []v1rbac.PolicyRule) *v1rbac.Role {
 	return &v1rbac.Role{
 		TypeMeta:   roleTypeMeta,

@@ -12,7 +12,8 @@ import (
 )
 
 const (
-	LongServiceNameError = "A service name can be no longer than 47 characters"
+	longServiceName  = "a service name cannot exceed 47 characters"
+	serviceNameLimit = 47
 )
 
 type validateVisitor struct {
@@ -24,6 +25,8 @@ type validateVisitor struct {
 	configNames  map[string]bool
 }
 
+// Validate validates the Manifest, returning a multi-error representing all the
+// errors that were detected.
 func (m *Manifest) Validate() error {
 	vv := &validateVisitor{
 		errs:         []error{},
@@ -66,10 +69,8 @@ func (vv *validateVisitor) validateServiceURLs(gitOpsURL string) []error {
 			serviceDriver, err := scm.GetDriverName(url)
 			if err != nil {
 				errs = append(errs, err)
-			} else {
-				if gitType != serviceDriver {
-					errs = append(errs, inconsistentGitTypeError(gitType, url, paths))
-				}
+			} else if gitType != serviceDriver {
+				errs = append(errs, inconsistentGitTypeError(gitType, url, paths))
 			}
 		}
 		if len(paths) > 1 {
@@ -144,8 +145,8 @@ func (vv *validateVisitor) Service(app *Application, env *Environment, svc *Serv
 		vv.errs = append(vv.errs, err)
 	}
 
-	if len(svc.Name) > 47 {
-		vv.errs = append(vv.errs, invalidNameError(svc.Name, LongServiceNameError, []string{svcPath}))
+	if len(svc.Name) > serviceNameLimit {
+		vv.errs = append(vv.errs, invalidNameError(svc.Name, longServiceName, []string{svcPath}))
 	}
 	if err := validateWebhook(svc.Webhook, svcPath); err != nil {
 		vv.errs = append(vv.errs, err...)
@@ -262,14 +263,14 @@ func invalidNameError(name, details string, paths []string) *apis.FieldError {
 	}
 }
 
-func missingFieldsError(fields []string, paths []string) *apis.FieldError {
+func missingFieldsError(fields, paths []string) *apis.FieldError {
 	return &apis.FieldError{
 		Message: fmt.Sprintf("missing field(s) %v", strings.Join(addQuotes(fields...), ",")),
 		Paths:   paths,
 	}
 }
 
-func duplicateFieldsError(fields []string, paths []string) *apis.FieldError {
+func duplicateFieldsError(fields, paths []string) *apis.FieldError {
 	return &apis.FieldError{
 		Message: fmt.Sprintf("duplicate field(s) %v", strings.Join(addQuotes(fields...), ",")),
 		Paths:   paths,

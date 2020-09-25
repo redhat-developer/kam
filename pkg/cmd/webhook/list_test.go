@@ -6,7 +6,6 @@ import (
 )
 
 func TestMissingRequiredFlagsForList(t *testing.T) {
-
 	testcases := []struct {
 		flags   []keyValuePair
 		wantErr string
@@ -18,7 +17,7 @@ func TestMissingRequiredFlagsForList(t *testing.T) {
 
 	for i, tt := range testcases {
 		t.Run(fmt.Sprintf("Test %d", i), func(rt *testing.T) {
-			_, _, err := executeCommand(newCmdList("webhook", "odo pipelines webhook create"), tt.flags...)
+			_, err := executeCommand(newCmdList("webhook", "odo pipelines webhook create"), tt.flags...)
 
 			if err != nil {
 				if err.Error() != tt.wantErr {
@@ -34,7 +33,6 @@ func TestMissingRequiredFlagsForList(t *testing.T) {
 }
 
 func TestValidateForList(t *testing.T) {
-
 	testcases := []struct {
 		options *listOptions
 		errMsg  string

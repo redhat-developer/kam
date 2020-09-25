@@ -87,6 +87,8 @@ func (r *Repository) CreateWebhook(listenerURL, secret string) (string, error) {
 
 // TODO: this likely won't work for GitLab projects because it assumes that the
 // path is always composed of two elements.
+// GetRepoName takes a URL of the form https://github.com/my-org/my-repo.git and
+// attempts to determine the name of the repo from this, i.e. "my-org/my-repo".
 func GetRepoName(u *url.URL) (string, error) {
 	var components []string
 	for _, s := range strings.Split(u.Path, "/") {

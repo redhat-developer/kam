@@ -34,6 +34,5 @@ func NewCmdWebhook(name, fullName string) *cobra.Command {
 	webhookCmd.AddCommand(listCmd)
 
 	webhookCmd.Annotations = map[string]string{"command": "main"}
-	// webhookCmd.SetUsageTemplate(odoutil.CmdUsageTemplate)
 	return webhookCmd
 }

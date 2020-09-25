@@ -28,7 +28,8 @@ func init() {
 	}
 }
 
-const testCert = `
+const (
+	testCert = `
 -----BEGIN CERTIFICATE-----
 MIIErTCCApWgAwIBAgIQBekz48i8NbrzIpIrLMIULTANBgkqhkiG9w0BAQsFADAA
 MB4XDTE3MDYyMDA0MzI0NVoXDTI3MDYxODA0MzI0NVowADCCAiIwDQYJKoZIhvcN
@@ -58,6 +59,9 @@ R9bIjJLIvp7CQPDkdRzJSjvetrKtI0l97VjsjbRB9v6ZekGY9SFI49KzKUTk8fsF
 /A==
 -----END CERTIFICATE-----
 `
+
+	testToken = "abcdefghijklmnop"
+)
 
 var (
 	testModulus  *big.Int
@@ -203,35 +207,37 @@ func TestSeal(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		t.Run(fmt.Sprint(i), func(t *testing.T) {
-			result, err := seal(&tc.secret, makeTestCertFunc(meta.NamespacedName("test-ns", "service")), meta.NamespacedName("test-ns", "service"))
+		t.Run(fmt.Sprint(i), func(rt *testing.T) {
+			result, err := seal(&tc.secret,
+				makeTestCertFunc(meta.NamespacedName("test-ns", "service")),
+				meta.NamespacedName("test-ns", "service"))
 			if err != nil {
 				if diff := cmp.Diff(tc.errMessage, err.Error()); diff != "" {
-					t.Errorf("Unexpected error \n%s", diff)
+					rt.Errorf("unexpected error \n%s", diff)
 				}
 			} else {
 				if diff := cmp.Diff(tc.errMessage, ""); diff != "" {
-					t.Errorf("Unexpected error \n%s", diff)
+					rt.Errorf("unexpected error \n%s", diff)
 				}
 				smeta := result.GetObjectMeta()
 				if got, want := smeta.GetName(), tc.want.GetName(); got != want {
-					t.Errorf("got: %q, want: %q", got, want)
+					rt.Errorf("got: %q, want: %q", got, want)
 				}
 				if got, want := smeta.GetNamespace(), tc.want.GetNamespace(); got != want {
-					t.Errorf("got: %q, want: %q", got, want)
+					rt.Errorf("got: %q, want: %q", got, want)
 				}
 				if got, want := smeta.GetAnnotations(), tc.want.GetAnnotations(); !cmp.Equal(got, want, cmpopts.EquateEmpty()) {
-					t.Errorf("got: %q, want: %q", got, want)
+					rt.Errorf("got: %q, want: %q", got, want)
 				}
 
 				for n := range tc.secret.Data {
 					if len(result.Spec.EncryptedData[n]) < 100 {
-						t.Errorf("Encrypted data is implausibly short: %v", result.Spec.EncryptedData[n])
+						rt.Errorf("encrypted data is implausibly short: %v", result.Spec.EncryptedData[n])
 					}
 				}
 				for n := range tc.secret.StringData {
 					if len(result.Spec.EncryptedData[n]) < 100 {
-						t.Errorf("Encrypted data is implausibly short: %v", result.Spec.EncryptedData[n])
+						rt.Errorf("encrypted data is implausibly short: %v", result.Spec.EncryptedData[n])
 					}
 				}
 			}
@@ -243,7 +249,8 @@ func TestSeal(t *testing.T) {
 func makeTestCertFunc(testservice types.NamespacedName) PublicKeyFunc {
 	return func(service types.NamespacedName) (*rsa.PublicKey, error) {
 		if testservice.Namespace != service.Namespace {
-			return nil, fmt.Errorf("failed to generate secret from service in incorrect namespace, got %#v, want %#v", service.Namespace, testservice.Namespace)
+			return nil, fmt.Errorf("secret generated in namespace %q, want %q",
+				service.Namespace, testservice.Namespace)
 		}
 		return parseKey(strings.NewReader(testCert))
 	}
@@ -280,7 +287,7 @@ func TestCreateDockerConfigSecretWithErrorReading(t *testing.T) {
 }
 
 func TestCreateDockerConfigSecret(t *testing.T) {
-	data := []byte(`abcdefghijklmnop`)
+	data := []byte(testToken)
 	secret, err := createDockerConfigSecret(meta.NamespacedName("cicd", "regcred"), bytes.NewReader(data))
 	if err != nil {
 		t.Fatal(err)
@@ -304,9 +311,8 @@ func TestCreateDockerConfigSecret(t *testing.T) {
 }
 
 func TestBasicAuthSecret(t *testing.T) {
-	token := "abcdefghijklmnop"
 	host := "https://github.com"
-	secret := createBasicAuthSecret(meta.NamespacedName("cicd", "github-auth"), token, meta.AddAnnotations(
+	secret := createBasicAuthSecret(meta.NamespacedName("cicd", "github-auth"), testToken, meta.AddAnnotations(
 		map[string]string{
 			"tekton.dev/git-0": host,
 		}),
@@ -324,7 +330,7 @@ func TestBasicAuthSecret(t *testing.T) {
 		Type: corev1.SecretTypeBasicAuth,
 		StringData: map[string]string{
 			"username": "tekton",
-			"password": token,
+			"password": testToken,
 		},
 	}
 

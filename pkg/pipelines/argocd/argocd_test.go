@@ -57,7 +57,7 @@ func TestBuildCreatesArgoCD(t *testing.T) {
 			TypeMeta:   applicationTypeMeta,
 			ObjectMeta: meta.ObjectMeta(meta.NamespacedName(ArgoCDNamespace, "test-dev-http-api")),
 			Spec: argoappv1.ApplicationSpec{
-				Source: makeSource(testEnv, testEnv.Apps[0], testRepoURL),
+				Source: *makeSource(testEnv, testEnv.Apps[0], testRepoURL),
 				Destination: argoappv1.ApplicationDestination{
 					Server:    defaultServer,
 					Namespace: "test-dev",
@@ -170,7 +170,7 @@ func TestBuildWithRepoConfig(t *testing.T) {
 			TypeMeta:   applicationTypeMeta,
 			ObjectMeta: meta.ObjectMeta(meta.NamespacedName(ArgoCDNamespace, "test-production-prod-api")),
 			Spec: argoappv1.ApplicationSpec{
-				Source: makeSource(prodEnv, prodEnv.Apps[0], testRepoURL),
+				Source: *makeSource(prodEnv, prodEnv.Apps[0], testRepoURL),
 				Destination: argoappv1.ApplicationDestination{
 					Server:    defaultServer,
 					Namespace: "test-production",
@@ -217,7 +217,7 @@ func TestBuildAddsClusterToApp(t *testing.T) {
 			TypeMeta:   applicationTypeMeta,
 			ObjectMeta: meta.ObjectMeta(meta.NamespacedName(ArgoCDNamespace, "test-dev-http-api")),
 			Spec: argoappv1.ApplicationSpec{
-				Source: makeSource(testEnv, testEnv.Apps[0], testRepoURL),
+				Source: *makeSource(testEnv, testEnv.Apps[0], testRepoURL),
 				Destination: argoappv1.ApplicationDestination{
 					Server:    "not.real.cluster",
 					Namespace: "test-dev",

@@ -60,17 +60,21 @@ type resource struct {
 }
 
 const (
+	// ArgoCDNamespace is the default namespace for ArgoCD installations.
+	ArgoCDNamespace = "argocd"
+
 	defaultServer      = "https://kubernetes.default.svc"
 	defaultProject     = "default"
-	ArgoCDNamespace    = "argocd"
 	argoCDResourceFile = "argocd.yaml"
 )
 
+// Build creates and returns a set of resources to be used for the ArgoCD
+// configuration.
 func Build(argoNS, repoURL string, m *config.Manifest) (res.Resources, error) {
-	// Without a RepositoryURL we can't do anything.
 	if repoURL == "" {
 		return res.Resources{}, nil
 	}
+
 	argoCDConfig := m.GetArgoCDConfig()
 	if argoCDConfig == nil {
 		return res.Resources{}, nil
@@ -116,10 +120,14 @@ func argoCDConfigResources(cfg *config.Config, repoURL string, files res.Resourc
 	}
 	basePath := filepath.Join(config.PathForArgoCD())
 	filename := filepath.Join(basePath, "kustomization.yaml")
-	files[filepath.Join(basePath, "argo-app.yaml")] = ignoreDifferences(makeApplication("argo-app", cfg.ArgoCD.Namespace, defaultProject, cfg.ArgoCD.Namespace, defaultServer, argoappv1.ApplicationSource{RepoURL: repoURL, Path: basePath}))
+	files[filepath.Join(basePath, "argo-app.yaml")] =
+		ignoreDifferences(makeApplication("argo-app", cfg.ArgoCD.Namespace,
+			defaultProject, cfg.ArgoCD.Namespace, defaultServer,
+			&argoappv1.ApplicationSource{RepoURL: repoURL, Path: basePath}))
 	if cfg.Pipelines != nil {
-		files[filepath.Join(basePath, "cicd-app.yaml")] = ignoreDifferences(makeApplication("cicd-app", cfg.ArgoCD.Namespace, defaultProject, cfg.Pipelines.Name, defaultServer,
-			argoappv1.ApplicationSource{RepoURL: repoURL, Path: filepath.Join(config.PathForPipelines(cfg.Pipelines), "overlays")}))
+		files[filepath.Join(basePath, "cicd-app.yaml")] = ignoreDifferences(
+			makeApplication("cicd-app", cfg.ArgoCD.Namespace, defaultProject, cfg.Pipelines.Name, defaultServer,
+				&argoappv1.ApplicationSource{RepoURL: repoURL, Path: filepath.Join(config.PathForPipelines(cfg.Pipelines), "overlays")}))
 	}
 	argoResource, err := argoCDResource(cfg.ArgoCD.Namespace)
 	if err != nil {
@@ -135,14 +143,14 @@ func argoCDConfigResources(cfg *config.Config, repoURL string, files res.Resourc
 	return nil
 }
 
-func makeSource(env *config.Environment, app *config.Application, repoURL string) argoappv1.ApplicationSource {
+func makeSource(env *config.Environment, app *config.Application, repoURL string) *argoappv1.ApplicationSource {
 	if app.ConfigRepo == nil {
-		return argoappv1.ApplicationSource{
+		return &argoappv1.ApplicationSource{
 			RepoURL: repoURL,
 			Path:    filepath.Join(config.PathForApplication(env, app), "base"),
 		}
 	}
-	return argoappv1.ApplicationSource{
+	return &argoappv1.ApplicationSource{
 		RepoURL:        app.ConfigRepo.URL,
 		Path:           app.ConfigRepo.Path,
 		TargetRevision: app.ConfigRepo.TargetRevision,
@@ -171,7 +179,7 @@ func argoCDResource(ns string) (*argov1.ArgoCD, error) {
 	}, nil
 }
 
-func makeApplication(appName, argoNS, project, ns, server string, source argoappv1.ApplicationSource) *argoappv1.Application {
+func makeApplication(appName, argoNS, project, ns, server string, source *argoappv1.ApplicationSource) *argoappv1.Application {
 	return &argoappv1.Application{
 		TypeMeta:   applicationTypeMeta,
 		ObjectMeta: meta.ObjectMeta(meta.NamespacedName(argoNS, appName)),
@@ -181,7 +189,7 @@ func makeApplication(appName, argoNS, project, ns, server string, source argoapp
 				Namespace: ns,
 				Server:    server,
 			},
-			Source:     source,
+			Source:     *source,
 			SyncPolicy: syncPolicy,
 		},
 	}

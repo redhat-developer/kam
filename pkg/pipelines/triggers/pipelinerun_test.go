@@ -28,7 +28,6 @@ func TestCreateDevCDPipelineRun(t *testing.T) {
 	if diff := cmp.Diff(validDevCDPipeline, template); diff != "" {
 		t.Fatalf("createDevCDPipelineRun failed:\n%s", diff)
 	}
-
 }
 
 func TestCreateDevCIPipelineRun(t *testing.T) {

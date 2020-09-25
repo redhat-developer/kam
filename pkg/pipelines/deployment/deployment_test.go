@@ -122,7 +122,6 @@ func TestPodTemplateCommand(t *testing.T) {
 	if diff := cmp.Diff(want, spec); diff != "" {
 		t.Fatalf("podTemplate diff: %s", diff)
 	}
-
 }
 
 func TestPodTemplateContainerPort(t *testing.T) {

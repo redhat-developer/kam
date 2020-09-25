@@ -15,11 +15,18 @@ var (
 )
 
 const (
-	GitRef           = "io.openshift.build.commit.ref"
-	GitCommitID      = "io.openshift.build.commit.id"
-	GitCommitAuthor  = "io.openshift.build.commit.author"
+	// GitRef is a label representing the source-ref for this build.
+	GitRef = "io.openshift.build.commit.ref"
+	// GitCommitID is a label representing the commit SHA for this build.
+	GitCommitID = "io.openshift.build.commit.id"
+	// GitCommitAuthor is a label representing the commit author for this build.
+	GitCommitAuthor = "io.openshift.build.commit.author"
+	// GitCommitMessage is a label representing the commit message for this
+	// build.
 	GitCommitMessage = "io.openshift.build.commit.message"
-	GitCommitDate    = "io.openshift.build.commit.date"
+	// GitCommitDate is a label representing the commit timestamp for this
+	// build.
+	GitCommitDate = "io.openshift.build.commit.date"
 )
 
 // GenerateTemplates will return a slice of trigger templates
@@ -69,7 +76,7 @@ func CreateDevCIBuildPRTemplate(ns, saName string) triggersv1.TriggerTemplate {
 				createTemplateParamSpec("gitrepositoryurl", "The git repository URL."),
 				createTemplateParamSpec("fullname", "The GitHub repository for this PullRequest."),
 				createTemplateParamSpec("imageRepo", "The repository to push built images to."),
-				createTemplateParamSpec("tlsVerify", "Enable image repostiory TLS certification verification."),
+				createTemplateParamSpec("tlsVerify", "Enable image repository TLS certification verification."),
 			},
 			ResourceTemplates: []triggersv1.TriggerResourceTemplate{
 				{
@@ -80,7 +87,6 @@ func CreateDevCIBuildPRTemplate(ns, saName string) triggersv1.TriggerTemplate {
 			},
 		},
 	}
-
 }
 
 // CreateCDPushTemplate returns TriggerTemplate for CD Push Request
@@ -130,7 +136,7 @@ func CreateCIDryRunTemplate(ns, saName string) triggersv1.TriggerTemplate {
 	}
 }
 
-func createTemplateParamSpecDefault(name string, description string, value string) triggersv1.ParamSpec {
+func createTemplateParamSpecDefault(name, description, value string) triggersv1.ParamSpec {
 	return triggersv1.ParamSpec{
 		Name:        name,
 		Description: description,
@@ -138,7 +144,7 @@ func createTemplateParamSpecDefault(name string, description string, value strin
 	}
 }
 
-func createTemplateParamSpec(name string, description string) triggersv1.ParamSpec {
+func createTemplateParamSpec(name, description string) triggersv1.ParamSpec {
 	return triggersv1.ParamSpec{
 		Name:        name,
 		Description: description,
