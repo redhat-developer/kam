@@ -55,7 +55,7 @@ func Build(fs afero.Fs, m *config.Manifest, saName string, o AppLinks) (res.Reso
 
 func (b *envBuilder) Application(env *config.Environment, app *config.Application) error {
 	appPath := filepath.Join(config.PathForApplication(env, app))
-	appFiles, err := filesForApplication(env, b.gitOpsRepoURL, appPath, app, b.appLinks)
+	appFiles, err := filesForApplication(env, appPath, app, b.appLinks)
 	if err != nil {
 		return err
 	}
@@ -65,7 +65,7 @@ func (b *envBuilder) Application(env *config.Environment, app *config.Applicatio
 
 func (b *envBuilder) Service(app *config.Application, env *config.Environment, svc *config.Service) error {
 	svcPath := config.PathForService(app, env, svc.Name)
-	svcFiles, err := filesForService(svcPath, svc)
+	svcFiles, err := filesForService(svcPath)
 	if err != nil {
 		return err
 	}
@@ -78,7 +78,7 @@ func (b *envBuilder) Service(app *config.Application, env *config.Environment, s
 	envBasePath := filepath.Join(config.PathForEnvironment(env), "env", "base")
 	envBindingPath := filepath.Join(envBasePath, fmt.Sprintf("%s-rolebinding.yaml", env.Name))
 	if _, ok := b.files[envBindingPath]; !ok {
-		b.files[envBindingPath] = createRoleBinding(env, envBasePath, b.pipelinesConfig.Name, b.saName)
+		b.files[envBindingPath] = createRoleBinding(env, b.pipelinesConfig.Name, b.saName)
 	}
 	return nil
 }
@@ -125,7 +125,7 @@ func filesForEnvironment(basePath string, env *config.Environment, gitOpsRepoURL
 	return envFiles
 }
 
-func filesForApplication(env *config.Environment, gitOpsRepoURL, appPath string, app *config.Application, o AppLinks) (res.Resources, error) {
+func filesForApplication(env *config.Environment, appPath string, app *config.Application, o AppLinks) (res.Resources, error) {
 	envPath := filepath.Join(config.PathForEnvironment(env), "env")
 	envBasePath := filepath.Join(envPath, "base")
 	envFiles := res.Resources{}
@@ -163,12 +163,12 @@ func filesForApplication(env *config.Environment, gitOpsRepoURL, appPath string,
 	return envFiles, nil
 }
 
-func createRoleBinding(env *config.Environment, basePath, cicdNS, saName string) *v1.RoleBinding {
+func createRoleBinding(env *config.Environment, cicdNS, saName string) *v1.RoleBinding {
 	sa := roles.CreateServiceAccount(meta.NamespacedName(cicdNS, saName))
 	return roles.CreateRoleBinding(meta.NamespacedName(env.Name, fmt.Sprintf("%s-rolebinding", env.Name)), sa, "ClusterRole", "edit")
 }
 
-func filesForService(svcPath string, app *config.Service) (res.Resources, error) {
+func filesForService(svcPath string) (res.Resources, error) {
 	envFiles := res.Resources{}
 	basePath := filepath.Join(svcPath, "base")
 	overlaysPath := filepath.Join(svcPath, "overlays")

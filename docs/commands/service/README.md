@@ -11,7 +11,7 @@ This command will create an application for the new service if the target applic
 **NOTE**: Service deployment resources are not generated.  They must be manually added to `environments/<env-new>/ services/<service-name>/base/config` and update the Kustomization file `environments/<env-new>/ services/<service-name>/base/kustomization.yaml`
 
 ```shell
-$ gitops service add
+$ kam service add
     --env-name
     --app-name
     --service-name

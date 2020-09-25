@@ -16,21 +16,21 @@ const KubernetesPartOfLabel = "app.kubernetes.io/part-of"
 
 // ServiceAccount is an option that configures the deployment's pods to execute
 // with the provided service account name.
-func ServiceAccount(sa string) podSpecFunc {
+func ServiceAccount(sa string) PodSpecFunc {
 	return func(c *corev1.PodSpec) {
 		c.ServiceAccountName = sa
 	}
 }
 
 // Env adds an environment to the first container in the PodSpec.
-func Env(env []corev1.EnvVar) podSpecFunc {
+func Env(env []corev1.EnvVar) PodSpecFunc {
 	return func(c *corev1.PodSpec) {
 		c.Containers[0].Env = env
 	}
 }
 
 // Command configures the command for the first container in the PodSpec.
-func Command(s []string) podSpecFunc {
+func Command(s []string) PodSpecFunc {
 	return func(c *corev1.PodSpec) {
 		c.Containers[0].Command = s
 	}
@@ -38,7 +38,7 @@ func Command(s []string) podSpecFunc {
 
 // ContainerPort configures a port for the first container as a ContainerPort
 // with the specified port number.
-func ContainerPort(p int32) podSpecFunc {
+func ContainerPort(p int32) PodSpecFunc {
 	return func(c *corev1.PodSpec) {
 		c.Containers[0].Ports = []corev1.ContainerPort{
 			{ContainerPort: p},
@@ -47,7 +47,7 @@ func ContainerPort(p int32) podSpecFunc {
 }
 
 // Create creates and returns a Deployment with the specified configuration.
-func Create(partOf, ns, name, image string, opts ...podSpecFunc) *appsv1.Deployment {
+func Create(partOf, ns, name, image string, opts ...PodSpecFunc) *appsv1.Deployment {
 	return &appsv1.Deployment{
 		TypeMeta: meta.TypeMeta("Deployment", "apps/v1"),
 		ObjectMeta: meta.ObjectMeta(meta.NamespacedName(ns, name), meta.AddLabels(
@@ -64,9 +64,11 @@ func Create(partOf, ns, name, image string, opts ...podSpecFunc) *appsv1.Deploym
 	}
 }
 
-type podSpecFunc func(t *corev1.PodSpec)
+// PodSpecFunc is an option-func type for changing the pods created by the
+// Create function.
+type PodSpecFunc func(t *corev1.PodSpec)
 
-func podTemplate(partOfLabel, name, image string, opts ...podSpecFunc) corev1.PodTemplateSpec {
+func podTemplate(partOfLabel, name, image string, opts ...PodSpecFunc) corev1.PodTemplateSpec {
 	podSpec := &corev1.PodSpec{
 		ServiceAccountName: "default",
 		Containers: []corev1.Container{
@@ -97,7 +99,7 @@ func ptr32(i int32) *int32 {
 	return &i
 }
 
-//LabelSelector used to create the labelSelector for the commit status tracker
+// LabelSelector used to create the labelSelector for the commit status tracker
 func LabelSelector(name, partOf string) *metav1.LabelSelector {
 	return &metav1.LabelSelector{
 		MatchLabels: map[string]string{

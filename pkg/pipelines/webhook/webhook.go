@@ -174,7 +174,7 @@ func getListenerURL(r *resources, cicdNamespace string) (string, error) {
 func buildURL(host string, hasTLS bool) string {
 	scheme := "http"
 	if hasTLS {
-		scheme = scheme + "s"
+		scheme += "s"
 	}
 
 	return scheme + "://" + host

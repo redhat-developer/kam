@@ -51,7 +51,7 @@ func TestValidateImageRepo(t *testing.T) {
 		expectedImageRepo          string
 	}{
 		{
-			"Valid image regsitry URL",
+			"Valid image registry URL",
 			"image-registry.openshift-image-registry.svc:5000",
 			"quay.io/sample-user/sample-repo",
 			"",
@@ -59,7 +59,7 @@ func TestValidateImageRepo(t *testing.T) {
 			"quay.io/sample-user/sample-repo",
 		},
 		{
-			"Valid image regsitry URL random registry",
+			"Valid image registry URL random registry",
 			"image-registry.openshift-image-registry.svc:5000",
 			"random.io/sample-user/sample-repo",
 			"",
@@ -67,7 +67,7 @@ func TestValidateImageRepo(t *testing.T) {
 			"random.io/sample-user/sample-repo",
 		},
 		{
-			"Valid image regsitry URL docker.io",
+			"Valid image registry URL docker.io",
 			"image-registry.openshift-image-registry.svc:5000",
 			"docker.io/sample-user/sample-repo",
 			"",
@@ -165,7 +165,7 @@ func TestValidateImageRepo(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.description, func(t *testing.T) {
-			isInternalRegistry, imageRepo, error := ValidateImageRepo(test.imageRepo,
+			isInternalRegistry, imageRepo, err := ValidateImageRepo(test.imageRepo,
 				test.internalRegistryHostname,
 			)
 			if diff := cmp.Diff(isInternalRegistry, test.expectedIsInternalRegistry); diff != "" {
@@ -174,11 +174,10 @@ func TestValidateImageRepo(t *testing.T) {
 			if diff := cmp.Diff(imageRepo, test.expectedImageRepo); diff != "" {
 				t.Errorf("validateImageRepo() failed:\n%s", diff)
 			}
-			errorString := ""
-			if error != nil {
-				errorString = error.Error()
+			if test.expectedError == "" && err == nil {
+				return
 			}
-			if diff := cmp.Diff(errorString, test.expectedError); diff != "" {
+			if diff := cmp.Diff(err.Error(), test.expectedError); diff != "" {
 				t.Errorf("validateImageRepo() failed:\n%s", diff)
 			}
 		})

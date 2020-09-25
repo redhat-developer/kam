@@ -27,7 +27,7 @@ func invalidRepoURLError(repoURL, reason string) error {
 	return fmt.Errorf("invalid repository URL %s: %s", repoURL, reason)
 }
 
-func createEventInterceptor(filter string, repoName string) *triggersv1.EventInterceptor {
+func createEventInterceptor(filter, repoName string) *triggersv1.EventInterceptor {
 	return &triggersv1.EventInterceptor{
 		CEL: &triggersv1.CELInterceptor{
 			Filter:   fmt.Sprintf(filter, repoName),
@@ -56,7 +56,7 @@ func createBindings(names []string) []*triggersv1.EventListenerBinding {
 	return bindings
 }
 
-func createBindingParam(name string, value string) triggersv1.Param {
+func createBindingParam(name, value string) triggersv1.Param {
 	return triggersv1.Param{
 		Name:  name,
 		Value: value,

@@ -12,7 +12,7 @@ func GenerateString(length int) (string, error) {
 	b := make([]byte, length)
 	_, err := rand.Read(b)
 	if err != nil {
-		return "", fmt.Errorf("Failed to generate secret of desired length %d", length)
+		return "", fmt.Errorf("failed to generate secret of desired length %d", length)
 	}
 	s := make([]byte, length)
 	for i, v := range b {

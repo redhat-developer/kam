@@ -80,7 +80,6 @@ func TestCreateStatusTrackerDeployment(t *testing.T) {
 }
 
 func TestResource(t *testing.T) {
-
 	ns := "my-test-ns"
 	generated, err := Resources(ns, testRepoURL, "")
 	if err != nil {

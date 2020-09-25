@@ -48,7 +48,7 @@ func (o *AddServiceOptions) Run() error {
 	if err != nil {
 		return err
 	}
-	log.Successf("Created Service %s sucessfully at environment %s.", o.ServiceName, o.EnvName)
+	log.Successf("Created Service %s successfully at environment %s.", o.ServiceName, o.EnvName)
 	return nil
 }
 

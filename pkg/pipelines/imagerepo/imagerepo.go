@@ -17,7 +17,7 @@ import (
 )
 
 // ValidateImageRepo validates the input image repo.  It determines if it is
-// for internal registry and prepend internal registry hostname if neccessary.
+// for internal registry and prepend internal registry hostname if necessary.
 func ValidateImageRepo(imageRepo, registryURL string) (bool, string, error) {
 	components := strings.Split(imageRepo, "/")
 
@@ -59,6 +59,8 @@ func imageRepoValidationErrors(imageRepo string) error {
 	return fmt.Errorf("failed to parse image repo:%s, expected image repository in the form <registry>/<username>/<repository> or <project>/<app> for internal registry", imageRepo)
 }
 
+// CreateInternalRegistryResources creates and returns a set of resources, along
+// with the filenames of those resources.
 func CreateInternalRegistryResources(cfg *config.PipelinesConfig, sa *corev1.ServiceAccount, imageRepo, gitOpsRepoURL string) ([]string, res.Resources, error) {
 	// Provide access to service account for using internal registry
 	namespace := strings.Split(imageRepo, "/")[1]

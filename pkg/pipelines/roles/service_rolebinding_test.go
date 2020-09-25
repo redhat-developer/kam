@@ -81,7 +81,6 @@ func TestRoleBinding(t *testing.T) {
 	if diff := cmp.Diff(want, roleBindingTask); diff != "" {
 		t.Errorf("TestRoleBinding() failed:\n%s", diff)
 	}
-
 }
 
 func TestRoleBindingForSubjects(t *testing.T) {
@@ -118,7 +117,6 @@ func TestRoleBindingForSubjects(t *testing.T) {
 	if diff := cmp.Diff(want, roleBinding); diff != "" {
 		t.Errorf("TestRoleBindingForSubjects() failed:\n%s", diff)
 	}
-
 }
 
 func TestCreateRole(t *testing.T) {

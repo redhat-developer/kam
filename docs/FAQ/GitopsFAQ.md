@@ -62,16 +62,6 @@ This requires an additional parameter:
             value: $(params.io.openshift.build.commit.id)
           - name: url
             value: $(params.gitrepositoryurl)
-      pipelineRef:
-        name: app-ci-pipeline
-      resources:
-      - name: source-repo
-        resourceSpec:
-          params:
-          - name: revision
-            value: $(params.io.openshift.build.commit.id)
-          - name: url
-            value: $(params.gitrepositoryurl)
           - name: sslVerify
             value: "false"
           type: git

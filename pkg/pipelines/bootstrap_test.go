@@ -35,13 +35,7 @@ func TestBootstrapManifest(t *testing.T) {
 		secrets.DefaultPublicKeyFunc = f
 	}(secrets.DefaultPublicKeyFunc)
 
-	secrets.DefaultPublicKeyFunc = func(service types.NamespacedName) (*rsa.PublicKey, error) {
-		key, err := rsa.GenerateKey(rand.Reader, 1024)
-		if err != nil {
-			t.Fatalf("failed to generate a private RSA key: %s", err)
-		}
-		return &key.PublicKey, nil
-	}
+	secrets.DefaultPublicKeyFunc = makeTestKey(t)
 
 	params := &BootstrapOptions{
 		Prefix:               "tst-",
@@ -188,13 +182,7 @@ func TestOverwriteFlag(t *testing.T) {
 		secrets.DefaultPublicKeyFunc = f
 	}(secrets.DefaultPublicKeyFunc)
 
-	secrets.DefaultPublicKeyFunc = func(service types.NamespacedName) (*rsa.PublicKey, error) {
-		key, err := rsa.GenerateKey(rand.Reader, 1024)
-		if err != nil {
-			t.Fatalf("failed to generate a private RSA key: %s", err)
-		}
-		return &key.PublicKey, nil
-	}
+	secrets.DefaultPublicKeyFunc = makeTestKey(t)
 	fakeFs := ioutils.NewMemoryFilesystem()
 	params := &BootstrapOptions{
 		Prefix:               "tst-",
@@ -212,7 +200,6 @@ func TestOverwriteFlag(t *testing.T) {
 	if diff := cmp.Diff(want, got.Error()); diff != "" {
 		t.Fatalf("overwrite failed:\n%s", diff)
 	}
-
 }
 
 func TestCreateManifest(t *testing.T) {
@@ -425,5 +412,15 @@ func fatalIfError(t *testing.T, err error) {
 	t.Helper()
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+func makeTestKey(t *testing.T) func(service types.NamespacedName) (*rsa.PublicKey, error) {
+	return func(service types.NamespacedName) (*rsa.PublicKey, error) {
+		key, err := rsa.GenerateKey(rand.Reader, 2048)
+		if err != nil {
+			t.Fatalf("failed to generate a private RSA key: %s", err)
+		}
+		return &key.PublicKey, nil
 	}
 }

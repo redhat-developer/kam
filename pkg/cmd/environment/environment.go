@@ -28,6 +28,5 @@ func NewCmdEnv(name, fullName string) *cobra.Command {
 	envCmd.AddCommand(addEnvCmd)
 
 	envCmd.Annotations = map[string]string{"command": "main"}
-	// envCmd.SetUsageTemplate(odoutil.CmdUsageTemplate)
 	return envCmd
 }

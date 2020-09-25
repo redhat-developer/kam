@@ -87,7 +87,7 @@ func TestCreateDevCIBuildPRTemplate(t *testing.T) {
 				},
 				{
 					Name:        "tlsVerify",
-					Description: "Enable image repostiory TLS certification verification.",
+					Description: "Enable image repository TLS certification verification.",
 				},
 			},
 			ResourceTemplates: []triggersv1.TriggerResourceTemplate{
@@ -172,7 +172,6 @@ func TestCreateCIDryRunTemplate(t *testing.T) {
 	if diff := cmp.Diff(validStageCIDryRunTemplate, template); diff != "" {
 		t.Fatalf("createCIdryrunptemplate failed:\n%s", diff)
 	}
-
 }
 
 func TestStatusTrackerAnnotations(t *testing.T) {
