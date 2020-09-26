@@ -7,8 +7,7 @@
   $ kam bootstrap --service-repo-url https://github.com/<username>/taxi.git \          
     --dockercfgjson ~/Downloads/<username>-gitops-auth.json \
     --gitops-repo-url https://github.com/<username>/gitops-example.git \
-    --image-repo quay.io/<username>/taxi --prefix demo --output <output directory> \
-    --sealed-secrets-svc sealed-secrets-controller --sealed-secrets-ns kube-system
+    --image-repo quay.io/<username>/taxi --prefix demo --output <output directory> 
 
   ```
 
@@ -21,8 +20,7 @@
   ```sh
   $ kam service add  --app-name app-taxi --env-name demo-dev \
     --pipelines-folder <bootstrapped gitops folder> \
-    --service-name bus --sealed-secrets-ns kube-system \
-    --sealed-secrets-svc sealed-secrets-controller \
+    --service-name bus \
     --git-repo-url https://github.com/<username>/bus.git
   ```
 
@@ -34,17 +32,13 @@
   ```sh
   $ kam service add  --app-name app-taxi --env-name demo-stage \
     --pipelines-folder <bootstrapped gitops folder> \
-    --service-name taxi --sealed-secrets-ns kube-system \
-    --sealed-secrets-svc sealed-secrets-controller
-
+    --service-name taxi 
   ```
 
   ```sh
   $ kam service add  --app-name app-taxi --env-name demo-stage \
     --pipelines-folder <bootstrapped gitops folder> \
-    --service-name bus --sealed-secrets-ns kube-system \
-    --sealed-secrets-svc sealed-secrets-controller
-
+    --service-name bus 
   ```
 
 - Copy `config` folder from both the services `taxi` and `bus` of `demo-dev` to `demo-stage`.
@@ -62,17 +56,14 @@
   ```sh
   $ kam service add  --app-name app-taxi --env-name demo-prod \
     --pipelines-folder <bootstrapped gitops folder> \
-    --service-name taxi --sealed-secrets-ns kube-system \
-    --sealed-secrets-svc sealed-secrets-controller
+    --service-name taxi 
 
   ```
 
   ```sh
   $ kam service add  --app-name app-taxi --env-name demo-prod \
     --pipelines-folder <bootstrapped gitops folder> \
-    --service-name bus --sealed-secrets-ns kube-system \
-    --sealed-secrets-svc sealed-secrets-controller
-
+    --service-name bus 
   ```
 
 - Copy `config` folder from both the services `taxi` and `bus` of `demo-dev` to `demo-prod`.
