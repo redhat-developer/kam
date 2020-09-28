@@ -114,7 +114,7 @@ func makeEnvironment(repoURL, driver string) []corev1.EnvVar {
 		},
 		{
 			Name:  "STATUS_TRACKER_SECRET",
-			Value: "git-host-access-token",
+			Value: CommitStatusTrackerSecret,
 		},
 	}
 	if host := hostFromURL(repoURL); driver != "" && host != "" {

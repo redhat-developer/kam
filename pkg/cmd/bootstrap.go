@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -13,9 +14,10 @@ import (
 	"github.com/redhat-developer/kam/pkg/cmd/utility"
 	"github.com/redhat-developer/kam/pkg/pipelines"
 	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
+	"github.com/redhat-developer/kam/pkg/pipelines/statustracker"
 	"github.com/spf13/cobra"
 
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	ktemplates "k8s.io/kubectl/pkg/util/templates"
 )
@@ -205,7 +207,7 @@ func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client,
 	if err == nil {
 		io.SealedSecretsService.Name = sealedSecretsController
 		io.SealedSecretsService.Namespace = sealedSecretsNS
-	} else if !errors.IsNotFound(err) {
+	} else if !apierrors.IsNotFound(err) {
 		return clusterErr(err.Error())
 	}
 
@@ -213,7 +215,7 @@ func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client,
 	err = client.CheckIfArgoCDExists(argoCDNS)
 	setSpinnerStatus(spinner, "Please install ArgoCD operator from OperatorHub, with an ArgoCD resource called 'argocd'", err)
 	if err != nil {
-		if !errors.IsNotFound(err) {
+		if !apierrors.IsNotFound(err) {
 			return clusterErr(err.Error())
 		}
 		errs = append(errs, err)
@@ -223,7 +225,7 @@ func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client,
 	err = client.CheckIfPipelinesExists(pipelinesOperatorNS)
 	setSpinnerStatus(spinner, "Please install OpenShift Pipelines operator from OperatorHub", err)
 	if err != nil {
-		if !errors.IsNotFound(err) {
+		if !apierrors.IsNotFound(err) {
 			return clusterErr(err.Error())
 		}
 		errs = append(errs, err)
@@ -237,7 +239,7 @@ func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client,
 
 func setSpinnerStatus(spinner status, warningMsg string, err error) {
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			spinner.WarningStatus(warningMsg)
 		}
 		spinner.End(false)
@@ -263,7 +265,9 @@ func (io *BootstrapParameters) Validate() error {
 			return fmt.Errorf("invalid driver type: %q", io.PrivateRepoDriver)
 		}
 	}
-
+	if io.CommitStatusTracker && io.GitHostAccessToken == "" {
+		return errors.New("--git-host-access-token is required if commit-status-tracker is enabled")
+	}
 	io.Prefix = utility.MaybeCompletePrefix(io.Prefix)
 	return nil
 }
@@ -301,7 +305,7 @@ func NewCmdBootstrap(name, fullName string) *cobra.Command {
 	bootstrapCmd.Flags().StringVar(&o.ImageRepo, "image-repo", "", "Image repository of the form <registry>/<username>/<repository> or <project>/<app> which is used to push newly built images")
 	bootstrapCmd.Flags().StringVar(&o.SealedSecretsService.Namespace, "sealed-secrets-ns", sealedSecretsNS, "Namespace in which the Sealed Secrets operator is installed, automatically generated secrets are encrypted with this operator")
 	bootstrapCmd.Flags().StringVar(&o.SealedSecretsService.Name, "sealed-secrets-svc", sealedSecretsController, "Name of the Sealed Secrets Services that encrypts secrets")
-	bootstrapCmd.Flags().StringVar(&o.GitHostAccessToken, "git-host-access-token", "", "Used to authenticate repository clones, and commit-status notifications (if enabled)")
+	bootstrapCmd.Flags().StringVar(&o.GitHostAccessToken, statustracker.CommitStatusTrackerSecret, "", "Used to authenticate repository clones, and commit-status notifications (if enabled)")
 	bootstrapCmd.Flags().BoolVar(&o.Overwrite, "overwrite", false, "Overwrites previously existing GitOps configuration (if any)")
 	bootstrapCmd.Flags().StringVar(&o.ServiceRepoURL, "service-repo-url", "", "Provide the URL for your Service repository e.g. https://github.com/organisation/service.git")
 	bootstrapCmd.Flags().StringVar(&o.ServiceWebhookSecret, "service-webhook-secret", "", "Provide a secret that we can use to authenticate incoming hooks from your Git hosting service for the Service repository. (if not provided, it will be auto-generated)")

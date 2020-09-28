@@ -92,6 +92,37 @@ func TestAddSuffixWithBootstrap(t *testing.T) {
 	}
 }
 
+func TestValidateCommitStatusTracker(t *testing.T) {
+	completeTests := []struct {
+		name                string
+		gitRepo             string
+		commitStatusTracker bool
+		gitAccessToken      string
+		wantErr             string
+	}{
+		{"statusTracker true/ GitAccessToken absent", "username1/testRepo1", true, "", "--git-host-access-token is required if commit-status-tracker is enabled"},
+		{"statusTracker true/ GitAccessToken present", "username2/testRepo2", true, "abc123", ""},
+		{"statusTracker false/ GitAccessToken present", "username3/testRepo3", false, "abc123", ""},
+		{"statusTracker false/ GitAccessToken present", "username3/testRepo3", false, "abc123", ""},
+	}
+
+	for _, tt := range completeTests {
+		o := BootstrapParameters{
+			&pipelines.BootstrapOptions{GitOpsRepoURL: tt.gitRepo, CommitStatusTracker: tt.commitStatusTracker, GitHostAccessToken: tt.gitAccessToken},
+		}
+
+		got := o.Validate()
+		gotErr := ""
+		if got != nil {
+			gotErr = got.Error()
+		}
+		if diff := cmp.Diff(tt.wantErr, gotErr); diff != "" {
+			t.Fatalf("Validate() for case %s didn't match: %s\n", tt.name, diff)
+		}
+	}
+
+}
+
 func TestValidateBootstrapParameter(t *testing.T) {
 	optionTests := []struct {
 		name    string
@@ -101,8 +132,7 @@ func TestValidateBootstrapParameter(t *testing.T) {
 	}{
 		{"invalid repo", "test", "", "repo must be org/repo"},
 		{"valid repo", "test/repo", "", ""},
-		{"invalid driver", "test/repo", "unknown", "invalid driver type"},
-		{"valid driver github", "test/repo", "github", ""},
+		{"invalid driver", "test/repo", "unknown", "invalid"},
 		{"valid driver gitlab", "test/repo", "gitlab", ""},
 	}
 
@@ -111,7 +141,8 @@ func TestValidateBootstrapParameter(t *testing.T) {
 			&pipelines.BootstrapOptions{
 				GitOpsRepoURL:     tt.gitRepo,
 				PrivateRepoDriver: tt.driver,
-				Prefix:            "test"},
+				Prefix:            "test",
+			},
 		}
 		err := o.Validate()
 
@@ -128,15 +159,17 @@ func TestValidateBootstrapParameter(t *testing.T) {
 
 func TestValidateMandatoryFlags(t *testing.T) {
 	optionTests := []struct {
-		name        string
-		gitRepo     string
-		serviceRepo string
-		imagerepo   string
-		errMsg      string
+		name                string
+		gitRepo             string
+		serviceRepo         string
+		imagerepo           string
+		commitStatusTracker bool
+		gitToken            string
+		errMsg              string
 	}{
-		{"missing gitops-repo-url", "", "https://github.com/example/repo.git", "registry/username/repo", missingFlagErr([]string{`"gitops-repo-url"`}).Error()},
-		{"missing service-repo-url", "https://github.com/example/repo.git", "", "registry/username/repo", missingFlagErr([]string{`"service-repo-url"`}).Error()},
-		{"missing image-repo", "https://github.com/example/repo.git", "https://github.com/example/repo.git", "", missingFlagErr([]string{`"image-repo"`}).Error()},
+		{"missing gitops-repo-url", "", "https://github.com/example/repo.git", "registry/username/repo", false, "", `required flag(s) "gitops-repo-url" not set`},
+		{"missing service-repo-url", "https://github.com/example/repo.git", "", "registry/username/repo", false, "", `required flag(s) "service-repo-url" not set`},
+		{"missing image-repo", "https://github.com/example/repo.git", "https://github.com/example/repo.git", "", false, "", `required flag(s) "image-repo" not set`},
 	}
 
 	for _, tt := range optionTests {
@@ -144,7 +177,8 @@ func TestValidateMandatoryFlags(t *testing.T) {
 			&pipelines.BootstrapOptions{
 				GitOpsRepoURL:  tt.gitRepo,
 				ServiceRepoURL: tt.serviceRepo,
-				ImageRepo:      tt.imagerepo},
+				ImageRepo:      tt.imagerepo,
+			},
 		}
 		err := nonInteractiveMode(&o, &utility.Client{})
 		if tt.errMsg != err.Error() {

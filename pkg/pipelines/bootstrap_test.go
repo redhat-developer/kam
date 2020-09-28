@@ -17,6 +17,7 @@ import (
 	"github.com/redhat-developer/kam/pkg/pipelines/roles"
 	"github.com/redhat-developer/kam/pkg/pipelines/scm"
 	"github.com/redhat-developer/kam/pkg/pipelines/secrets"
+	"github.com/redhat-developer/kam/pkg/pipelines/statustracker"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -307,7 +308,7 @@ func TestGenerateSecrets(t *testing.T) {
 		ObjectMeta: meta.ObjectMeta(
 			types.NamespacedName{Name: "test-sa", Namespace: "test-ns"},
 		),
-		Secrets: []corev1.ObjectReference{{Name: "git-host-access-token"}, {Name: "git-host-basic-auth-token"}},
+		Secrets: []corev1.ObjectReference{{Name: statustracker.CommitStatusTrackerSecret}, {Name: "git-host-basic-auth-token"}},
 	}
 	if diff := cmp.Diff(wantSA, outputs[serviceAccountPath]); diff != "" {
 		t.Fatalf("generatedSecrets failed to update the ServiceAccount:\n%s", diff)
@@ -338,12 +339,12 @@ func TestGenerateSecrets(t *testing.T) {
 	wantAuthSecret := &ssv1alpha1.SealedSecret{
 		TypeMeta: meta.TypeMeta("SealedSecret", "bitnami.com/v1alpha1"),
 		ObjectMeta: meta.ObjectMeta(
-			types.NamespacedName{Name: "git-host-access-token", Namespace: "test-ns"},
+			types.NamespacedName{Name: statustracker.CommitStatusTrackerSecret, Namespace: "test-ns"},
 		),
 		Spec: ssv1alpha1.SealedSecretSpec{
 			Template: ssv1alpha1.SecretTemplateSpec{
 				ObjectMeta: meta.ObjectMeta(
-					types.NamespacedName{Name: "git-host-access-token", Namespace: "test-ns"},
+					types.NamespacedName{Name: statustracker.CommitStatusTrackerSecret, Namespace: "test-ns"},
 				),
 				Type: corev1.SecretTypeOpaque,
 			},
