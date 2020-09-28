@@ -161,11 +161,11 @@ In the CI/CD Environment, a couple of resources are added or modified.
 
 Webhook secret resource is generated.
 
-* [`config/<prefix>-cicd/base/pipelines/03-secrets/webhook-secret-<env>-<service>.yaml`](output/config/tst-cicd/base/pipelines/03-secrets/webhook-secret-new-env-bus.yaml)
+* [`config/cicd/base/pipelines/03-secrets/webhook-secret-<env>-<service>.yaml`](output/config/tst-cicd/base/pipelines/03-secrets/webhook-secret-new-env-bus.yaml)
 
 The Event Listener is modified as below to add a `trigger` for the new Service's source repository to trigger continous integration.
 
-* [`config/<prefix>--cicd/base/pipelines/08-eventlisteners/cicd-event-listener.yaml`](output/config/tst-cicd/base/pipelines/08-eventlisteners/cicd-event-listener.yaml)
+* [`config/cicd/base/pipelines/08-eventlisteners/cicd-event-listener.yaml`](output/config/tst-cicd/base/pipelines/08-eventlisteners/cicd-event-listener.yaml)
 
 ```yaml
   - bindings:
@@ -191,7 +191,7 @@ The Event Listener is modified as below to add a `trigger` for the new Service's
 Now, run `oc apply` to apply the generated resources to the cluster.
 
 ```shell
-$ oc apply -k config/<prefix>-cicd/base
+$ oc apply -k config/cicd/base
 $ oc apply -k config/argocd/config/
 $ oc apply -k environments/new-env/env/base/
 ```
