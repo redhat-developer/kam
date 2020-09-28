@@ -1,6 +1,6 @@
 # KAM Bootstrap Command
 
-The `bootstrap` sub-command creates default environments for your initial application.
+The `bootstrap` command creates default environments for your initial application.
 
 It outputs resource files in YAML format, Kustomization files, and a pipelines configuration file.
 
@@ -10,6 +10,8 @@ The following resources are written to filesystem.
 * ArgoCD environment
 * Dev environment with an application/service
 * Stage environment
+
+## Flag mode
 
 ```shell
 $ kam bootstrap
@@ -29,6 +31,14 @@ $ kam bootstrap
   [--private-repo-driver]
   [--commit-status-tracker]
 ```
+
+## Interactive mode
+
+Running the bootstrap command without flags will trigger an interactive prompt
+
+[![asciicast](https://asciinema.org/a/P3hsAu34gvYrxp6DPsA3AgWyn.svg)](https://asciinema.org/a/P3hsAu34gvYrxp6DPsA3AgWyn)
+
+
 
 The directory layout generated is shown below.
 
