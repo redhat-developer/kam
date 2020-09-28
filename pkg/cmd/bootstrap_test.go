@@ -74,16 +74,13 @@ func TestAddSuffixWithBootstrap(t *testing.T) {
 
 	for _, test := range tt {
 		t.Run(test.name, func(rt *testing.T) {
-			o := BootstrapParameters{
+			o := &BootstrapParameters{
 				&pipelines.BootstrapOptions{
 					GitOpsRepoURL:  test.gitOpsURL,
 					ServiceRepoURL: test.appURL},
 			}
 
-			err := o.Validate()
-			if err != nil {
-				t.Errorf("Validate() %#v failed: ", err)
-			}
+			addGitURLSuffixIfNecessary(o)
 
 			if o.GitOpsRepoURL != test.validGitOpsURL {
 				rt.Fatalf("URL mismatch: got %s, want %s", o.GitOpsRepoURL, test.validAppURL)
