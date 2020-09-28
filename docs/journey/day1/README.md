@@ -35,7 +35,8 @@ $ kam bootstrap \
   --dockercfgjson ~/Downloads/<username>-auth.json \
   --output <path to write GitOps resources>
 ```
-Executing the above command will generate the GitOps directory and the required resources.
+The bootstrap command supports both [flag mode](../../commands/bootstrap#flag-mode) and [interactive mode](../../commands/bootstrap#interactive-mode). Executing the above command will generate the GitOps directory and the required resources.
+
 
 In the event of using a self-hosted _GitHub Enterprise_ or _GitLab Community/Enterprise Edition_ if the driver name isn't evident from the repository URL. Use the `--private-repo-driver` flag to select _github_ or _gitlab_.
 
