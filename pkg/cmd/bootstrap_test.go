@@ -103,10 +103,10 @@ func TestValidateCommitStatusTracker(t *testing.T) {
 		gitAccessToken      string
 		wantErr             string
 	}{
-		{"statusTracker true/ GitAccessToken present", "username1/testRepo1", true, "", "--git-host-access-token is required if commit-status-tracker is enabled"},
-		{"statusTracker true/ GitAccessToken absent", "username2/testRepo2", true, "abc123", ""},
-		{"statusTracker false/ GitAccessToken absent", "username3/testRepo3", false, "abc123", ""},
-		{"statusTracker false/ GitAccessToken absent", "username3/testRepo3", false, "abc123", ""},
+		{"statusTracker true/ GitAccessToken absent", "username1/testRepo1", true, "", "--git-host-access-token is required if commit-status-tracker is enabled"},
+		{"statusTracker true/ GitAccessToken present", "username2/testRepo2", true, "abc123", ""},
+		{"statusTracker false/ GitAccessToken present", "username3/testRepo3", false, "abc123", ""},
+		{"statusTracker false/ GitAccessToken present", "username3/testRepo3", false, "abc123", ""},
 	}
 
 	for _, tt := range completeTests {
