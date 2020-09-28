@@ -147,7 +147,7 @@ func validateSealedSecretService(input interface{}, sealedSecretService *types.N
 			return err
 		}
 		sealedSecretService.Namespace = s
-		sealedSecretService.Name = EnterSealedSecretService()
+		sealedSecretService.Name = enterSealedSecretService()
 		err = client.CheckIfSealedSecretsExists(*sealedSecretService)
 		if errors.IsNotFound(err) {
 			return fmt.Errorf("The service %s is not found in the namespace %s", sealedSecretService.Name, sealedSecretService.Namespace)
