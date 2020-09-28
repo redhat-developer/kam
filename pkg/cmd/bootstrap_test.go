@@ -119,7 +119,7 @@ func TestValidateCommitStatusTracker(t *testing.T) {
 		if got != nil {
 			gotErr = got.Error()
 		}
-		if diff := cmp.Diff(tt.want, gotErr); diff != "" {
+		if diff := cmp.Diff(tt.wantErr, gotErr); diff != "" {
 			t.Fatalf("Validate() for case %s didn't match: %s\n", tt.name, diff)
 		}
 	}
