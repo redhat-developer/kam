@@ -58,6 +58,15 @@ The name of the app and service are derived from the last component of your
 https://github.com/myorg/myproject.git` this would bootstrap an app called
 `app-myproject` and a service called `myproject`.
 
+## Prefixing namespaces
+
+By default, bootstrapping creates `cicd`, `dev`, and `stage` namespaces, these
+can be optionally prefixed by passing `--prefix` to the bootstrap command.
+
+This is useful if you're testing in a shared cluster, for example, with this
+option `--prefix tst`, the namespaces created will be `tst-cicd`, `tst-dev` and
+`tst-stage`.
+
 ## Environment configuration
 
 The `dev` environment is a very basic deployment
@@ -103,12 +112,12 @@ is opened.
 This is the default pipeline specification for the `dev` environment, you
 can find the definitions for these in these two files:
 
- * [`config/<prefix>-cicd/base/07-templates/app-ci-build-from-push-template.yaml`](output/config/cicd/base/07-templates/app-ci-build-from-push-template.yaml)
- * [`config/<prefix>-cicd/base/06-bindings/github-push-binding.yaml`](output/config/cicd/base/06-bindings/github-push-binding.yaml)
+ * [`config/cicd/base/07-templates/app-ci-build-from-push-template.yaml`](output/config/cicd/base/07-templates/app-ci-build-from-push-template.yaml)
+ * [`config/cicd/base/06-bindings/github-push-binding.yaml`](output/config/cicd/base/06-bindings/github-push-binding.yaml)
 
 By default this triggers a PipelineRun of this pipeline
 
- * [`config/<prefix>-cicd/base/05-pipelines/app-ci-pipeline.yaml`](output/config/cicd/base/05-pipelines/app-ci-pipeline.yaml)
+ * [`config/cicd/base/05-pipelines/app-ci-pipeline.yaml`](output/config/cicd/base/05-pipelines/app-ci-pipeline.yaml)
 
 These files are not managed directly by the manifest, you're free to change them
 for your own needs, by default they use [Buildah](https://github.com/containers/buildah)
@@ -139,7 +148,7 @@ The YAML above defines an app called `app-taxi`, which has a reference to servic
 The configuration for these is written out to:
 
  * [`environments/test-dev/services/taxi/base/config/`](output/environments/dev/apps/app-taxi/services/taxi/base/config)
- * [`environments/<prefix>-dev/apps/app-taxi/base/`](output/environments/dev/apps/app-taxi/base/)
+ * [`environments/dev/apps/app-taxi/base/`](output/environments/dev/apps/app-taxi/base/)
 
 The `app-taxi` app's configuration references the services configuration.
 
@@ -181,7 +190,7 @@ running [nginx](https://nginx.org/) and serving a page.
 
 ## Changing the initial deployment
 
-The bootstrap creates a `Deployment` in `environments/<prefix>-dev/apps/<app name>/services/<service name>/base/config/100-deployment.yaml` this should bring up nginx, this is purely for demo purposes, you'll need to change this to deploy your built image.
+The bootstrap creates a `Deployment` in `environments/dev/apps/<app name>/services/<service name>/base/config/100-deployment.yaml` this should bring up nginx, this is purely for demo purposes, you'll need to change this to deploy your built image.
 
 ```yaml
 spec:
@@ -251,7 +260,7 @@ The default CI pipeline we provide is defined in the manifest file:
 
 This template drives a Pipeline that is stored in this file:
 
- * [`config/<prefix>-cicd/base/05-pipelines/app-ci-pipeline.yaml`](output/config/cicd/base/05-pipelines/app-ci-pipeline.yaml)
+ * [`config/cicd/base/05-pipelines/app-ci-pipeline.yaml`](output/config/cicd/base/05-pipelines/app-ci-pipeline.yaml)
 
 An abridged version is shown below, it has a single task `build-image`, which
 executes the `buildah` task, which basically builds the source and generates an
@@ -279,7 +288,7 @@ application code.
 
 Write the following Task to this file:
 
- * `config/<prefix>-cicd/base/04-tasks/go-test-task.yaml`
+ * `config/cicd/base/04-tasks/go-test-task.yaml`
 
 ```yaml
 apiVersion: tekton.dev/v1beta1
@@ -303,11 +312,11 @@ This is a simple test task for a Go application, it just runs the tests.
 
 Append the newly added task to the existing kustomize file
 
-* [`config/<prefix>-cicd/base/kustomization.yaml`](output/config/cicd/base/kustomization.yaml)
+* [`config/cicd/base/kustomization.yaml`](output/config/cicd/base/kustomization.yaml)
 
 Update the pipeline in this file:
 
- * [`config/<prefix>-cicd/base/05-pipelines/app-ci-pipeline.yaml`](output/config/cicd/base/05-pipelines/app-ci-pipeline.yaml)
+ * [`config/cicd/base/05-pipelines/app-ci-pipeline.yaml`](output/config/cicd/base/05-pipelines/app-ci-pipeline.yaml)
 
 ```yaml
 apiVersion: tekton.dev/v1beta1
