@@ -101,7 +101,7 @@ func TestValidateCommitStatusTracker(t *testing.T) {
 		gitRepo             string
 		commitStatusTracker bool
 		gitAccessToken      string
-		want                string
+		wantErr             string
 	}{
 		{"statusTracker true/ GitAccessToken absent", "username1/testRepo1", true, "", "--git-host-access-token is required if commit-status-tracker is enabled"},
 		{"statusTracker true/ GitAccessToken absent", "username2/testRepo2", true, "abc123", ""},
