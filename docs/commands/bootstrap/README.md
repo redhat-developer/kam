@@ -1,6 +1,6 @@
 # KAM Bootstrap Command
 
-The `bootstrap` command creates default environments for your initial application.
+The `bootstrap` sub-command creates default environments for your initial application.
 
 It outputs resource files in YAML format, Kustomization files, and a pipelines configuration file.
 
@@ -34,11 +34,9 @@ $ kam bootstrap
 
 ## Interactive mode
 
-Running the bootstrap command without flags will trigger an interactive prompt
+Running the bootstrap command without flags will trigger an interactive prompt. Each question in the prompt is accompanied by details, thereby providing a brief explanation for that question. 
 
 [![asciicast](https://asciinema.org/a/P3hsAu34gvYrxp6DPsA3AgWyn.svg)](https://asciinema.org/a/P3hsAu34gvYrxp6DPsA3AgWyn)
-
-
 
 The directory layout generated is shown below.
 
