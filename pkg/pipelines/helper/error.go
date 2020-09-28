@@ -40,3 +40,11 @@ func ErrorMatch(t *testing.T, msg string, testErr error) bool {
 	}
 	return match
 }
+
+// AssertNoError fails if there's an error
+func AssertNoError(t *testing.T, err error) {
+	t.Helper()
+	if err != nil {
+		t.Fatal(err)
+	}
+}
