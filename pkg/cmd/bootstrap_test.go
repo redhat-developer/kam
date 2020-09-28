@@ -101,10 +101,12 @@ func TestValidateCommitStatusTracker(t *testing.T) {
 		gitRepo             string
 		commitStatusTracker bool
 		gitAccessToken      string
-		wantErr             string
+		want                string
 	}{
-		{"usrename/repo", "statusTracker true/ GitAccessToken absent", true, "", `--git-host-access-token is required if commit-status-tracker is enabled`},
-		{"username/repo", "statusTracker true/ GitAccessToken absent", true, "abc123", ``},
+		{"statusTracker true/ GitAccessToken absent", "username1/testRepo1", true, "", "--git-host-access-token is required if commit-status-tracker is enabled"},
+		{"statusTracker true/ GitAccessToken absent", "username2/testRepo2", true, "abc123", ""},
+		{"statusTracker false/ GitAccessToken absent", "username3/testRepo3", false, "abc123", ""},
+		{"statusTracker false/ GitAccessToken present", "username3/testRepo3", false, "abc123", ""},
 	}
 
 	for _, tt := range completeTests {
@@ -112,13 +114,16 @@ func TestValidateCommitStatusTracker(t *testing.T) {
 			&pipelines.BootstrapOptions{GitOpsRepoURL: tt.gitRepo, CommitStatusTracker: tt.commitStatusTracker, GitHostAccessToken: tt.gitAccessToken},
 		}
 
-		err := o.Validate()
-
-		if !matchError(t, tt.wantErr, err) {
-			t.Errorf("Validate() %#v failed to match error: got %s, want %s", tt.name, err, tt.wantErr)
+		got := o.Validate()
+		gotErr := ""
+		if got != nil {
+			gotErr = got.Error()
 		}
-
+		if diff := cmp.Diff(tt.want, gotErr); diff != "" {
+			t.Fatalf("Validate() for case %s didn't match: %s\n", tt.name, diff)
+		}
 	}
+
 }
 
 func TestValidateBootstrapParameter(t *testing.T) {
