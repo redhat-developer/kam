@@ -123,8 +123,7 @@ func nonInteractiveMode(io *BootstrapParameters, client *utility.Client) error {
 	if err := checkMandatoryFlags(mandatoryFlags); err != nil {
 		return err
 	}
-	err := checkBootstrapDependencies(io, client, log.NewStatus(os.Stdout))
-	if err != nil {
+	if err := checkBootstrapDependencies(io, client, log.NewStatus(os.Stdout)); err != nil {
 		return err
 	}
 	return nil
@@ -308,7 +307,7 @@ func NewCmdBootstrap(name, fullName string) *cobra.Command {
 	bootstrapCmd.Flags().StringVar(&o.ServiceRepoURL, "service-repo-url", "", "Provide the URL for your Service repository e.g. https://github.com/organisation/service.git")
 	bootstrapCmd.Flags().StringVar(&o.ServiceWebhookSecret, "service-webhook-secret", "", "Provide a secret that we can use to authenticate incoming hooks from your Git hosting service for the Service repository. (if not provided, it will be auto-generated)")
 	bootstrapCmd.Flags().StringVar(&o.PrivateRepoDriver, "private-repo-driver", "", "If your Git repositories are on a custom domain, please indicate which driver to use github or gitlab")
-	bootstrapCmd.Flags().BoolVar(&o.CommitStatusTracker, "commit-status-tracker", true, "Enable or disable the commit-status-tracker which reports the success/failure of your pipelineruns to GitHub/GitLab")
+	bootstrapCmd.Flags().BoolVar(&o.CommitStatusTracker, "commit-status-tracker", false, "Enable or disable the commit-status-tracker which reports the success/failure of your pipelineruns to GitHub/GitLab")
 	return bootstrapCmd
 }
 
