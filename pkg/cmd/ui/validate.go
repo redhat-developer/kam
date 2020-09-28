@@ -136,6 +136,9 @@ func validateAccessToken(input interface{}, serviceRepo string) error {
 func validateSealedSecretService(input interface{}, sealedSecretService *types.NamespacedName) error {
 	if s, ok := input.(string); ok {
 		client, err := utility.NewClient()
+		if err != nil {
+			return err
+		}
 		err = client.CheckIfNamespaceExists(s)
 		if errors.IsNotFound(err) {
 			return fmt.Errorf("The namespace %s is not found on the cluster", s)
@@ -144,7 +147,7 @@ func validateSealedSecretService(input interface{}, sealedSecretService *types.N
 			return err
 		}
 		sealedSecretService.Namespace = s
-		sealedSecretService.Name = EnterSealedSecretService(sealedSecretService)
+		sealedSecretService.Name = EnterSealedSecretService()
 		err = client.CheckIfSealedSecretsExists(*sealedSecretService)
 		if errors.IsNotFound(err) {
 			return fmt.Errorf("The service %s is not found in the namespace %s", sealedSecretService.Name, sealedSecretService.Namespace)

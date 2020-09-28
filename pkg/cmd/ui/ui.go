@@ -117,7 +117,7 @@ func EnterGitWebhookSecret() string {
 }
 
 // EnterSealedSecretService , if the secret isnt installed using the operator it is necessary to manually add the sealed-secrets-controller name through this UI prompt.
-func EnterSealedSecretService(sealedSecretService *types.NamespacedName) string {
+func EnterSealedSecretService() string {
 	var sealedSecret string
 	prompt := &survey.Input{
 		Message: "Name of the Sealed Secrets Service that encrypts secrets",
