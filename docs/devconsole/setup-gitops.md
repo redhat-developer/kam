@@ -7,7 +7,7 @@
   $ kam bootstrap --service-repo-url https://github.com/<username>/taxi.git \          
     --dockercfgjson ~/Downloads/<username>-gitops-auth.json \
     --gitops-repo-url https://github.com/<username>/gitops-example.git \
-    --image-repo quay.io/<username>/taxi --prefix demo --output <output directory> 
+    --image-repo quay.io/<username>/taxi --output <output directory> 
 
   ```
 
