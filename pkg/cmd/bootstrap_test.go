@@ -95,6 +95,32 @@ func TestAddSuffixWithBootstrap(t *testing.T) {
 	}
 }
 
+func TestValidateCommitStatusTracker(t *testing.T) {
+	completeTests := []struct {
+		name                string
+		gitRepo             string
+		commitStatusTracker bool
+		gitAccessToken      string
+		wantErr             string
+	}{
+		{"usrename/repo", "statusTracker true/ GitAccessToken absent", true, "", `--git-host-access-token is required if commit-status-tracker is enabled`},
+		{"username/repo", "statusTracker true/ GitAccessToken absent", true, "abc123", ``},
+	}
+
+	for _, tt := range completeTests {
+		o := BootstrapParameters{
+			&pipelines.BootstrapOptions{GitOpsRepoURL: tt.gitRepo, CommitStatusTracker: tt.commitStatusTracker, GitHostAccessToken: tt.gitAccessToken},
+		}
+
+		err := o.Validate()
+
+		if !matchError(t, tt.wantErr, err) {
+			t.Errorf("Validate() %#v failed to match error: got %s, want %s", tt.name, err, tt.wantErr)
+		}
+
+	}
+}
+
 func TestValidateBootstrapParameter(t *testing.T) {
 	optionTests := []struct {
 		name    string
@@ -104,8 +130,7 @@ func TestValidateBootstrapParameter(t *testing.T) {
 	}{
 		{"invalid repo", "test", "", "repo must be org/repo"},
 		{"valid repo", "test/repo", "", ""},
-		{"invalid driver", "test/repo", "unknown", "invalid driver type"},
-		{"valid driver github", "test/repo", "github", ""},
+		{"invalid driver", "test/repo", "unknown", "invalid"},
 		{"valid driver gitlab", "test/repo", "gitlab", ""},
 	}
 
@@ -114,7 +139,8 @@ func TestValidateBootstrapParameter(t *testing.T) {
 			&pipelines.BootstrapOptions{
 				GitOpsRepoURL:     tt.gitRepo,
 				PrivateRepoDriver: tt.driver,
-				Prefix:            "test"},
+				Prefix:            "test",
+			},
 		}
 		err := o.Validate()
 
@@ -142,17 +168,14 @@ func TestValidateMandatoryFlags(t *testing.T) {
 		{"missing gitops-repo-url", "", "https://github.com/example/repo.git", "registry/username/repo", false, "", `required flag(s) "gitops-repo-url" not set`},
 		{"missing service-repo-url", "https://github.com/example/repo.git", "", "registry/username/repo", false, "", `required flag(s) "service-repo-url" not set`},
 		{"missing image-repo", "https://github.com/example/repo.git", "https://github.com/example/repo.git", "", false, "", `required flag(s) "image-repo" not set`},
-		{"missing git-access-token", "https://github.com/example/repo.git", "https://github.com/example/repo.git", "registry/username/repo", true, "", `--git-host-access-token is required if commit-status-tracker is enabled`},
 	}
 
 	for _, tt := range optionTests {
 		o := BootstrapParameters{
 			&pipelines.BootstrapOptions{
-				GitOpsRepoURL:       tt.gitRepo,
-				ServiceRepoURL:      tt.serviceRepo,
-				ImageRepo:           tt.imagerepo,
-				CommitStatusTracker: tt.commitStatusTracker,
-				GitHostAccessToken:  tt.gitToken,
+				GitOpsRepoURL:  tt.gitRepo,
+				ServiceRepoURL: tt.serviceRepo,
+				ImageRepo:      tt.imagerepo,
 			},
 		}
 		err := nonInteractiveMode(&o, &utility.Client{})

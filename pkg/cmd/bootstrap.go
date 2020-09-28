@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -16,7 +17,6 @@ import (
 	"github.com/redhat-developer/kam/pkg/pipelines/statustracker"
 	"github.com/spf13/cobra"
 
-	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	ktemplates "k8s.io/kubectl/pkg/util/templates"
@@ -122,9 +122,6 @@ func nonInteractiveMode(io *BootstrapParameters, client *utility.Client) error {
 	mandatoryFlags := map[string]string{serviceRepoURLFlag: io.ServiceRepoURL, gitopsRepoURLFlag: io.GitOpsRepoURL, imageRepoFlag: io.ImageRepo}
 	if err := checkMandatoryFlags(mandatoryFlags); err != nil {
 		return err
-	}
-	if io.CommitStatusTracker && io.GitHostAccessToken == "" {
-		return errors.New("--git-host-access-token is required if commit-status-tracker is enabled")
 	}
 	err := checkBootstrapDependencies(io, client, log.NewStatus(os.Stdout))
 	if err != nil {
@@ -264,7 +261,9 @@ func (io *BootstrapParameters) Validate() error {
 			return fmt.Errorf("invalid driver type: %q", io.PrivateRepoDriver)
 		}
 	}
-
+	if io.CommitStatusTracker && io.GitHostAccessToken == "" {
+		return errors.New("--git-host-access-token is required if commit-status-tracker is enabled")
+	}
 	io.Prefix = utility.MaybeCompletePrefix(io.Prefix)
 	io.GitOpsRepoURL = utility.AddGitSuffixIfNecessary(io.GitOpsRepoURL)
 	io.ServiceRepoURL = utility.AddGitSuffixIfNecessary(io.ServiceRepoURL)
