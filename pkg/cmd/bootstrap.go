@@ -16,8 +16,8 @@ import (
 	"github.com/redhat-developer/kam/pkg/pipelines/statustracker"
 	"github.com/spf13/cobra"
 
-	err "github.com/pkg/errors"
-	"k8s.io/apimachinery/pkg/api/errors"
+	"github.com/pkg/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	ktemplates "k8s.io/kubectl/pkg/util/templates"
 )
@@ -124,7 +124,7 @@ func nonInteractiveMode(io *BootstrapParameters, client *utility.Client) error {
 		return err
 	}
 	if io.CommitStatusTracker && io.GitHostAccessToken == "" {
-		return err.New("--git-host-access-token is required if commit-status-tracker is enabled")
+		return errors.New("--git-host-access-token is required if commit-status-tracker is enabled")
 	}
 	err := checkBootstrapDependencies(io, client, log.NewStatus(os.Stdout))
 	if err != nil {
@@ -206,7 +206,7 @@ func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client,
 	if err == nil {
 		io.SealedSecretsService.Name = sealedSecretsController
 		io.SealedSecretsService.Namespace = sealedSecretsNS
-	} else if !errors.IsNotFound(err) {
+	} else if !apierrors.IsNotFound(err) {
 		return clusterErr(err.Error())
 	}
 
@@ -214,7 +214,7 @@ func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client,
 	err = client.CheckIfArgoCDExists(argoCDNS)
 	setSpinnerStatus(spinner, "Please install ArgoCD operator from OperatorHub, with an ArgoCD resource called 'argocd'", err)
 	if err != nil {
-		if !errors.IsNotFound(err) {
+		if !apierrors.IsNotFound(err) {
 			return clusterErr(err.Error())
 		}
 		errs = append(errs, err)
@@ -224,7 +224,7 @@ func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client,
 	err = client.CheckIfPipelinesExists(pipelinesOperatorNS)
 	setSpinnerStatus(spinner, "Please install OpenShift Pipelines operator from OperatorHub", err)
 	if err != nil {
-		if !errors.IsNotFound(err) {
+		if !apierrors.IsNotFound(err) {
 			return clusterErr(err.Error())
 		}
 		errs = append(errs, err)
@@ -238,7 +238,7 @@ func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client,
 
 func setSpinnerStatus(spinner status, warningMsg string, err error) {
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			spinner.WarningStatus(warningMsg)
 		}
 		spinner.End(false)
