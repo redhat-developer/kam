@@ -34,7 +34,7 @@ $ kam bootstrap
 
 ## Interactive mode
 
-Running the bootstrap command without flags will trigger an interactive prompt. Each question in the prompt is accompanied by details, thereby providing a brief explanation for that question. 
+Running the bootstrap command without flags will trigger an interactive prompt. Each question in the prompt is accompanied by help, providing a brief explanation for the question. 
 
 [![asciicast](https://asciinema.org/a/P3hsAu34gvYrxp6DPsA3AgWyn.svg)](https://asciinema.org/a/P3hsAu34gvYrxp6DPsA3AgWyn)
 
