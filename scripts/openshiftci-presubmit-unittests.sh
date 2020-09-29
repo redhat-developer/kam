@@ -21,10 +21,7 @@ make test
 
 # crosscompile and publish artifacts
 make all_platforms
-pwd
-ls -l
-ls -l $GOPATH/src/github.com/redhat-developer/kam
-#cp $GOPATH/src/github.com/redhat-developer/kam/kam_linux_amd64.exe $ARTIFACTS_DIR
-#cp $GOPATH/src/github.com/redhat-developer/kam/kam_darwin_amd64.exe $ARTIFACTS_DIR
-#cp $GOPATH/src/github.com/redhat-developer/kam/kam_windows_amd64.exe $ARTIFACTS_DIR
 
+cp kam_darwin_amd64 $CUSTOM_HOMEDIR
+cp kam_linux_amd64 $CUSTOM_HOMEDIR
+cp kam_windows_amd64.exe $CUSTOM_HOMEDIR
