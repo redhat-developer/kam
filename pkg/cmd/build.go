@@ -27,7 +27,7 @@ var (
 	buildShortDesc = `Build pipelines files`
 )
 
-// BuildParameters encapsulates the parameters for the odo pipelines build command.
+// BuildParameters encapsulates the parameters for the kam pipelines build command.
 type BuildParameters struct {
 	pipelinesFolderPath string
 	output              string // path to add Gitops resources

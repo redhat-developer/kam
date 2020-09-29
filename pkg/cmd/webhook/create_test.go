@@ -25,7 +25,7 @@ func TestMissingRequiredFlagsForCreate(t *testing.T) {
 	}
 	for i, tt := range testcases {
 		t.Run(fmt.Sprintf("Test %d", i), func(rt *testing.T) {
-			_, err := executeCommand(newCmdCreate("webhook", "odo pipelines webhook create"), tt.flags...)
+			_, err := executeCommand(newCmdCreate("webhook", "kam pipelines webhook create"), tt.flags...)
 
 			if err != nil {
 				if err.Error() != tt.wantErr {

@@ -39,7 +39,6 @@ replace (
 	github.com/docker/docker => github.com/docker/docker v17.12.0-ce-rc1.0.20200309214505-aa6a9891b09c+incompatible
 	github.com/h2non/gock => gopkg.in/h2non/gock.v1 v1.0.14
 	github.com/openshift/api => github.com/openshift/api v0.0.0-20200205133042-34f0ec8dab87
-	github.com/openshift/odo => github.com/openshift/odo v1.2.6
 	k8s.io/api => k8s.io/api v0.17.1
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.17.1
 	k8s.io/apimachinery => github.com/openshift/kubernetes-apimachinery v0.0.0-20191211181342-5a804e65bdc1

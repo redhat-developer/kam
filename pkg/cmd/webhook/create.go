@@ -25,7 +25,7 @@ type createOptions struct {
 	options
 }
 
-// Run contains the logic for the odo command
+// Run contains the logic for the kam command
 func (o *createOptions) Run() error {
 	id, err := backend.Create(o.accessToken, o.pipelinesFolderPath, o.getAppServiceNames(), o.isCICD)
 

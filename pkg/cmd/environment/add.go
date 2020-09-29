@@ -27,7 +27,7 @@ var (
 	addEnvShortDesc = `Add a new environment`
 )
 
-// AddEnvParameters encapsulates the parameters for the odo pipelines init command.
+// AddEnvParameters encapsulates the parameters for the kam pipelines init command.
 type AddEnvParameters struct {
 	envName         string
 	pipelinesFolder string

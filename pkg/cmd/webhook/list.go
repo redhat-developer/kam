@@ -24,9 +24,8 @@ type listOptions struct {
 	options
 }
 
-// Run contains the logic for the odo command
+// Run contains the logic for the kam command
 func (o *listOptions) Run() error {
-
 	ids, err := backend.List(o.accessToken, o.pipelinesFolderPath, o.getAppServiceNames(), o.isCICD)
 	if err != nil {
 		return fmt.Errorf("Unable to a get list of webhook IDs: %v", err)

@@ -60,7 +60,7 @@ func TestAddCommandWithMissingParams(t *testing.T) {
 	}
 	for _, tt := range cmdTests {
 		t.Run(tt.desc, func(t *testing.T) {
-			_, _, err := executeCommand(newCmdAdd("add", "odo pipelines service"), tt.flags...)
+			_, _, err := executeCommand(newCmdAdd("add", "kam pipelines service"), tt.flags...)
 			if err.Error() != tt.wantErr {
 				t.Errorf("got %s, want %s", err, tt.wantErr)
 			}

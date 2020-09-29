@@ -8,7 +8,7 @@ import (
 	"github.com/redhat-developer/kam/pkg/pipelines/meta"
 
 	// This is a hack because ArgoCD doesn't support a compatible (code-wise)
-	// version of k8s in common with odo.
+	// version of k8s in common with kam
 	argov1 "github.com/redhat-developer/kam/pkg/pipelines/argocd/operator/v1alpha1"
 	argoappv1 "github.com/redhat-developer/kam/pkg/pipelines/argocd/v1alpha1"
 	res "github.com/redhat-developer/kam/pkg/pipelines/resources"
