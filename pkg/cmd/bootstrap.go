@@ -103,11 +103,13 @@ func (io *BootstrapParameters) Complete(name string, cmd *cobra.Command, args []
 	// ask for sealed secrets only when default is absent
 	flagset := cmd.Flags()
 	if flagset.NFlag() == 0 {
-		err := checkBootstrapDependencies(io, client, log.NewStatus(os.Stdout))
-		if err != nil {
-			return err
+		missingDeps, err := checkBootstrapDependencies(io, client, log.NewStatus(os.Stdout))
+		if len(missingDeps) == 1 && contains(missingDeps, "Sealed Secrets Operator") {
+			err = initiateInteractiveMode(io, client)
+			if err != nil {
+				return err
+			}
 		}
-		err = initiateInteractiveMode(io, client)
 		if err != nil {
 			return err
 		}
@@ -132,7 +134,7 @@ func nonInteractiveMode(io *BootstrapParameters, client *utility.Client) error {
 	if err := checkMandatoryFlags(mandatoryFlags); err != nil {
 		return err
 	}
-	if err := checkBootstrapDependencies(io, client, log.NewStatus(os.Stdout)); err != nil {
+	if _, err := checkBootstrapDependencies(io, client, log.NewStatus(os.Stdout)); err != nil {
 		return err
 	}
 	return nil
@@ -200,7 +202,7 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client) er
 	return nil
 }
 
-func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client, spinner status) error {
+func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client, spinner status) ([]string, error) {
 	missingDeps := []string{}
 	log.Progressf("\nChecking dependencies\n")
 
@@ -208,7 +210,7 @@ func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client,
 	if err := client.CheckIfSealedSecretsExists(defaultSealedSecretsServiceName); err != nil {
 		warnIfNotFound(spinner, "Please install Sealed Secrets operator from OperatorHub", err)
 		if !apierrors.IsNotFound(err) {
-			return fmt.Errorf("failed to check for sealed secrets operator: %w", err)
+			return nil, fmt.Errorf("failed to check for sealed secrets operator: %w", err)
 		}
 		missingDeps = append(missingDeps, "Sealed Secrets Operator")
 	} else {
@@ -219,7 +221,7 @@ func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client,
 	if err := client.CheckIfArgoCDExists(argoCDNS); err != nil {
 		warnIfNotFound(spinner, "Please install ArgoCD operator from OperatorHub", err)
 		if !apierrors.IsNotFound(err) {
-			return fmt.Errorf("failed to check for ArgoCD operator: %w", err)
+			return nil, fmt.Errorf("failed to check for ArgoCD operator: %w", err)
 		}
 		missingDeps = append(missingDeps, "ArgoCD operator")
 	}
@@ -228,15 +230,15 @@ func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client,
 	if err := client.CheckIfPipelinesExists(pipelinesOperatorNS); err != nil {
 		warnIfNotFound(spinner, "Please install OpenShift Pipelines operator from OperatorHub", err)
 		if !apierrors.IsNotFound(err) {
-			return fmt.Errorf("failed to check for OpenShift Pipelines operator: %w", err)
+			return nil, fmt.Errorf("failed to check for OpenShift Pipelines operator: %w", err)
 		}
 		missingDeps = append(missingDeps, "OpenShift Pipelines Operator")
 	}
-
+	spinner.End(true)
 	if len(missingDeps) > 0 {
-		return fmt.Errorf("failed to satisfy the required dependencies: %s", strings.Join(missingDeps, ", "))
+		return nil, fmt.Errorf("failed to satisfy the required dependencies: %s", strings.Join(missingDeps, ", "))
 	}
-	return nil
+	return missingDeps, nil
 }
 
 func warnIfNotFound(spinner status, warningMsg string, err error) {
@@ -334,4 +336,14 @@ func hostFromURL(s string) (string, error) {
 		return "", err
 	}
 	return strings.ToLower(p.Host), nil
+}
+
+//Checks if the given element is present in the array
+func contains(arr []string, str string) bool {
+	for _, a := range arr {
+		if a == str {
+			return true
+		}
+	}
+	return false
 }

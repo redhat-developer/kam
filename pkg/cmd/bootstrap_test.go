@@ -233,7 +233,7 @@ Checking if OpenShift Pipelines Operator is installed with the default configura
 
 	buff := &bytes.Buffer{}
 	fakeSpinner := &mockSpinner{writer: buff}
-	err := checkBootstrapDependencies(&BootstrapParameters{&pipelines.BootstrapOptions{}}, fakeClient, fakeSpinner)
+	_, err := checkBootstrapDependencies(&BootstrapParameters{&pipelines.BootstrapOptions{}}, fakeClient, fakeSpinner)
 	wantErr := "failed to satisfy the required dependencies: Sealed Secrets Operator, ArgoCD operator, OpenShift Pipelines Operator"
 
 	assertError(t, err, wantErr)
@@ -251,7 +251,7 @@ Checking if OpenShift Pipelines Operator is installed with the default configura
 	buff := &bytes.Buffer{}
 	fakeSpinner := &mockSpinner{writer: buff}
 	wizardParams := &BootstrapParameters{&pipelines.BootstrapOptions{}}
-	err := checkBootstrapDependencies(wizardParams, fakeClient, fakeSpinner)
+	_, err := checkBootstrapDependencies(wizardParams, fakeClient, fakeSpinner)
 
 	assertError(t, err, "")
 	if wizardParams.SealedSecretsService.Name != sealedSecretsController && wizardParams.SealedSecretsService.Namespace != sealedSecretsNS {
@@ -271,7 +271,7 @@ Checking if OpenShift Pipelines Operator is installed with the default configura
 	buff := &bytes.Buffer{}
 	fakeSpinner := &mockSpinner{writer: buff}
 	wizardParams := &BootstrapParameters{&pipelines.BootstrapOptions{}}
-	err := checkBootstrapDependencies(wizardParams, fakeClient, fakeSpinner)
+	_, err := checkBootstrapDependencies(wizardParams, fakeClient, fakeSpinner)
 	wantErr := "failed to satisfy the required dependencies: ArgoCD operator"
 
 	assertError(t, err, wantErr)
@@ -289,7 +289,7 @@ Checking if OpenShift Pipelines Operator is installed with the default configura
 	buff := &bytes.Buffer{}
 	fakeSpinner := &mockSpinner{writer: buff}
 	wizardParams := &BootstrapParameters{&pipelines.BootstrapOptions{}}
-	err := checkBootstrapDependencies(wizardParams, fakeClient, fakeSpinner)
+	_, err := checkBootstrapDependencies(wizardParams, fakeClient, fakeSpinner)
 	wantErr := "failed to satisfy the required dependencies: OpenShift Pipelines Operator"
 
 	assertError(t, err, wantErr)

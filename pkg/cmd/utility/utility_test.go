@@ -97,19 +97,6 @@ func TestCheckIfSealedSecretsExists(t *testing.T) {
 	}
 }
 
-func TestCheckIfNamespaceExists(t *testing.T) {
-	fakeClientSet := fake.NewSimpleClientset(&v1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
-		},
-	})
-	fakeClient := Client{KubeClient: fakeClientSet}
-	err := fakeClient.CheckIfNamespaceExists("test")
-	if err != nil {
-		t.Fatalf("TestCheckIfNamespaceExists failed: got %v,want %v", err, nil)
-	}
-}
-
 func TestCheckIfArgoCDExists(t *testing.T) {
 	operatorClient := operatorsfake.NewSimpleClientset(&v1alpha1.ClusterServiceVersion{
 		ObjectMeta: metav1.ObjectMeta{
