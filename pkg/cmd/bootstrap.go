@@ -61,7 +61,7 @@ var (
 	bootstrapShortDesc = `Bootstrap pipelines with a starter configuration`
 )
 
-// BootstrapParameters encapsulates the parameters for the odo pipelines init command.
+// BootstrapParameters encapsulates the parameters for the kam pipelines init command.
 type BootstrapParameters struct {
 	*pipelines.BootstrapOptions
 }

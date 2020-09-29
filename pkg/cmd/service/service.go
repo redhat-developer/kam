@@ -29,6 +29,5 @@ func NewCmd(name, fullName string) *cobra.Command {
 	cmd.AddCommand(addCmd)
 
 	cmd.Annotations = map[string]string{"command": "main"}
-	// cmd.SetUsageTemplate(odoutil.CmdUsageTemplate)
 	return cmd
 }

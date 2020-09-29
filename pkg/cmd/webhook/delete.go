@@ -24,9 +24,8 @@ type deleteOptions struct {
 	options
 }
 
-// Run contains the logic for the odo command
+// Run contains the logic for the kam command
 func (o *deleteOptions) Run() error {
-
 	ids, err := backend.Delete(o.accessToken, o.pipelinesFolderPath, o.getAppServiceNames(), o.isCICD)
 
 	if len(ids) > 0 {
