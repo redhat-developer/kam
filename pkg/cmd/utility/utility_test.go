@@ -90,10 +90,10 @@ func TestCheckIfSealedSecretsExists(t *testing.T) {
 	if err != nil {
 		t.Fatalf("CheckIfSealedSecretsExists failed: got %v,want %v", err, nil)
 	}
-	wantErr := `services "unknown" not found`
 	err = fakeClient.CheckIfSealedSecretsExists(types.NamespacedName{Namespace: "unknown", Name: "unknown"})
+	wantErr := `services "unknown" not found`
 	if err == nil {
-		t.Fatalf("CheckIfSealedSecretsExists failed: got %v,want %v", err, wantErr)
+		t.Fatalf("CheckIfSealedSecretsExists failed: got %v,want %v", nil, wantErr)
 	}
 }
 

@@ -101,25 +101,15 @@ func (io *BootstrapParameters) Complete(name string, cmd *cobra.Command, args []
 		identifier := factory.NewDriverIdentifier(factory.Mapping(host, io.PrivateRepoDriver))
 		factory.DefaultIdentifier = identifier
 	}
-	err = checkBootstrapDependencies(io, client, log.NewStatus(os.Stdout))
-	if err != nil {
+	if err := checkBootstrapDependencies(io, client, log.NewStatus(os.Stdout)); err != nil {
 		return err
 	}
-	// ask for sealed secrets only when default is absent
-	flagset := cmd.Flags()
-	if flagset.NFlag() == 0 {
-		err = initiateInteractiveMode(io, client)
-		if err != nil {
-			return err
-		}
-	} else {
-		addGitURLSuffixIfNecessary(io)
-		err := nonInteractiveMode(io, client)
-		if err != nil {
-			return err
-		}
+
+	if cmd.Flags().NFlag() == 0 {
+		return initiateInteractiveMode(io, client)
 	}
-	return nil
+	addGitURLSuffixIfNecessary(io)
+	return nonInteractiveMode(io, client)
 }
 
 func addGitURLSuffixIfNecessary(io *BootstrapParameters) {
@@ -206,8 +196,10 @@ func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client,
 	if err := client.CheckIfSealedSecretsExists(defaultSealedSecretsServiceName); err != nil {
 		warnIfNotFound(spinner, "Please install Sealed Secrets Operator from OperatorHub", err)
 		if !apierrors.IsNotFound(err) {
-			return fmt.Errorf("failed to check for sealed secrets Operator: %w", err)
+			return fmt.Errorf("failed to check for Sealed Secrets Operator: %w", err)
 		}
+		// We do not add Sealed Secret Operator to missingDeps since we this dependency can be resolved
+		// by optional flags or interactive user inputs.
 	} else {
 		io.SealedSecretsService = defaultSealedSecretsServiceName
 	}
@@ -331,14 +323,4 @@ func hostFromURL(s string) (string, error) {
 		return "", err
 	}
 	return strings.ToLower(p.Host), nil
-}
-
-//Checks if the given element is present in the array
-func contains(arr []string, str string) bool {
-	for _, a := range arr {
-		if a == str {
-			return true
-		}
-	}
-	return false
 }

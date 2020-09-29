@@ -14,7 +14,6 @@ import (
 	"github.com/redhat-developer/kam/pkg/pipelines/namespaces"
 	"gopkg.in/AlecAivazis/survey.v1"
 	"gopkg.in/AlecAivazis/survey.v1/terminal"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/klog"
@@ -150,14 +149,7 @@ func validateSealedSecretService(input interface{}, sealedSecretService *types.N
 		}
 		sealedSecretService.Namespace = s
 		sealedSecretService.Name = enterSealedSecretService()
-		err = client.CheckIfSealedSecretsExists(*sealedSecretService)
-		if err != nil {
-			if errors.IsNotFound(err) {
-				return fmt.Errorf("The service %s is not found in the namespace %s", sealedSecretService.Name, sealedSecretService.Namespace)
-			}
-			return err
-		}
-		return nil
+		return client.CheckIfSealedSecretsExists(*sealedSecretService)
 	}
 	return nil
 }
