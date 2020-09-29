@@ -104,7 +104,7 @@ func (io *BootstrapParameters) Complete(name string, cmd *cobra.Command, args []
 	flagset := cmd.Flags()
 	if flagset.NFlag() == 0 {
 		missingDeps, err := checkBootstrapDependencies(io, client, log.NewStatus(os.Stdout))
-		if len(missingDeps) == 1 && contains(missingDeps, "Sealed Secrets Operator") {
+		if len(missingDeps) == 1 && contains(missingDeps, "Sealed Secrets Operator") || len(missingDeps) < 1 {
 			err = initiateInteractiveMode(io, client)
 			if err != nil {
 				return err
