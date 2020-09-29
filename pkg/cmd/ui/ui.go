@@ -128,8 +128,8 @@ func enterSealedSecretService() string {
 	return sealedSecret
 }
 
-// EnterSealedSecretNamespace , prompts the UI to ask for the sealed-secrets-namespaces
-func EnterSealedSecretNamespace(sealedSecretService *types.NamespacedName) string {
+// EnterSealedSecretService , prompts the UI to ask for the sealed-secrets-namespaces
+func EnterSealedSecretService(sealedSecretService *types.NamespacedName) string {
 	var sealedNs string
 	prompt := &survey.Input{
 		Message: "Provide a namespace in which the Sealed Secrets operator is installed, automatically generated secrets are encrypted with this operator?",

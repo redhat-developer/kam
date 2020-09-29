@@ -227,14 +227,14 @@ func TestDependenciesWithNothingInstalled(t *testing.T) {
 	fakeClient := newFakeClient(nil, nil)
 
 	wantMsg := `
-Checking if Sealed Secrets is installed with the default configuration [Please install Sealed Secrets operator from OperatorHub]
-Checking if ArgoCD Operator is installed with the default configuration [Please install ArgoCD operator from OperatorHub]
-Checking if OpenShift Pipelines Operator is installed with the default configuration [Please install OpenShift Pipelines operator from OperatorHub]`
+Checking if Sealed Secrets is installed with the default configuration [Please install Sealed Secrets Operator from OperatorHub]
+Checking if ArgoCD Operator is installed with the default configuration [Please install ArgoCD Operator from OperatorHub]
+Checking if OpenShift Pipelines Operator is installed with the default configuration [Please install OpenShift Pipelines Operator from OperatorHub]`
 
 	buff := &bytes.Buffer{}
 	fakeSpinner := &mockSpinner{writer: buff}
-	_, err := checkBootstrapDependencies(&BootstrapParameters{&pipelines.BootstrapOptions{}}, fakeClient, fakeSpinner)
-	wantErr := "failed to satisfy the required dependencies: Sealed Secrets Operator, ArgoCD operator, OpenShift Pipelines Operator"
+	err := checkBootstrapDependencies(&BootstrapParameters{&pipelines.BootstrapOptions{}}, fakeClient, fakeSpinner)
+	wantErr := fmt.Sprintf("failed to satisfy the required dependencies: %s, %s", argoCdOperatorName, pipelinesOperatorName)
 
 	assertError(t, err, wantErr)
 	assertMessage(t, buff.String(), wantMsg)
@@ -251,7 +251,7 @@ Checking if OpenShift Pipelines Operator is installed with the default configura
 	buff := &bytes.Buffer{}
 	fakeSpinner := &mockSpinner{writer: buff}
 	wizardParams := &BootstrapParameters{&pipelines.BootstrapOptions{}}
-	_, err := checkBootstrapDependencies(wizardParams, fakeClient, fakeSpinner)
+	err := checkBootstrapDependencies(wizardParams, fakeClient, fakeSpinner)
 
 	assertError(t, err, "")
 	if wizardParams.SealedSecretsService.Name != sealedSecretsController && wizardParams.SealedSecretsService.Namespace != sealedSecretsNS {
@@ -265,14 +265,14 @@ func TestDependenciesWithNoArgoCD(t *testing.T) {
 
 	wantMsg := `
 Checking if Sealed Secrets is installed with the default configuration
-Checking if ArgoCD Operator is installed with the default configuration [Please install ArgoCD operator from OperatorHub]
+Checking if ArgoCD Operator is installed with the default configuration [Please install ArgoCD Operator from OperatorHub]
 Checking if OpenShift Pipelines Operator is installed with the default configuration`
 
 	buff := &bytes.Buffer{}
 	fakeSpinner := &mockSpinner{writer: buff}
 	wizardParams := &BootstrapParameters{&pipelines.BootstrapOptions{}}
-	_, err := checkBootstrapDependencies(wizardParams, fakeClient, fakeSpinner)
-	wantErr := "failed to satisfy the required dependencies: ArgoCD operator"
+	err := checkBootstrapDependencies(wizardParams, fakeClient, fakeSpinner)
+	wantErr := fmt.Sprintf("failed to satisfy the required dependencies: %s", argoCdOperatorName)
 
 	assertError(t, err, wantErr)
 	assertMessage(t, buff.String(), wantMsg)
@@ -284,13 +284,13 @@ func TestDependenciesWithNoPipelines(t *testing.T) {
 	wantMsg := `
 Checking if Sealed Secrets is installed with the default configuration
 Checking if ArgoCD Operator is installed with the default configuration
-Checking if OpenShift Pipelines Operator is installed with the default configuration [Please install OpenShift Pipelines operator from OperatorHub]`
+Checking if OpenShift Pipelines Operator is installed with the default configuration [Please install OpenShift Pipelines Operator from OperatorHub]`
 
 	buff := &bytes.Buffer{}
 	fakeSpinner := &mockSpinner{writer: buff}
 	wizardParams := &BootstrapParameters{&pipelines.BootstrapOptions{}}
-	_, err := checkBootstrapDependencies(wizardParams, fakeClient, fakeSpinner)
-	wantErr := "failed to satisfy the required dependencies: OpenShift Pipelines Operator"
+	err := checkBootstrapDependencies(wizardParams, fakeClient, fakeSpinner)
+	wantErr := fmt.Sprintf("failed to satisfy the required dependencies: %s", pipelinesOperatorName)
 
 	assertError(t, err, wantErr)
 	assertMessage(t, buff.String(), wantMsg)

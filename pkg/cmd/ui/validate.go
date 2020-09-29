@@ -148,16 +148,13 @@ func validateSealedSecretService(input interface{}, sealedSecretService *types.N
 		if !exists {
 			return fmt.Errorf("The namespace %s is not found on the cluster", s)
 		}
-		if err != nil {
-			return err
-		}
 		sealedSecretService.Namespace = s
 		sealedSecretService.Name = enterSealedSecretService()
 		err = client.CheckIfSealedSecretsExists(*sealedSecretService)
-		if errors.IsNotFound(err) {
-			return fmt.Errorf("The service %s is not found in the namespace %s", sealedSecretService.Name, sealedSecretService.Namespace)
-		}
 		if err != nil {
+			if errors.IsNotFound(err) {
+				return fmt.Errorf("The service %s is not found in the namespace %s", sealedSecretService.Name, sealedSecretService.Namespace)
+			}
 			return err
 		}
 		return nil

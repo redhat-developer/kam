@@ -33,6 +33,8 @@ const (
 	gitopsRepoURLFlag       = "gitops-repo-url"
 	serviceRepoURLFlag      = "service-repo-url"
 	imageRepoFlag           = "image-repo"
+	argoCdOperatorName      = "ArgoCD Operator"
+	pipelinesOperatorName   = "OpenShift Pipelines Operator"
 )
 
 type drivers []string
@@ -99,17 +101,14 @@ func (io *BootstrapParameters) Complete(name string, cmd *cobra.Command, args []
 		identifier := factory.NewDriverIdentifier(factory.Mapping(host, io.PrivateRepoDriver))
 		factory.DefaultIdentifier = identifier
 	}
-
+	err = checkBootstrapDependencies(io, client, log.NewStatus(os.Stdout))
+	if err != nil {
+		return err
+	}
 	// ask for sealed secrets only when default is absent
 	flagset := cmd.Flags()
 	if flagset.NFlag() == 0 {
-		missingDeps, err := checkBootstrapDependencies(io, client, log.NewStatus(os.Stdout))
-		if len(missingDeps) == 1 && contains(missingDeps, "Sealed Secrets Operator") || len(missingDeps) < 1 {
-			err = initiateInteractiveMode(io, client)
-			if err != nil {
-				return err
-			}
-		}
+		err = initiateInteractiveMode(io, client)
 		if err != nil {
 			return err
 		}
@@ -132,9 +131,6 @@ func addGitURLSuffixIfNecessary(io *BootstrapParameters) {
 func nonInteractiveMode(io *BootstrapParameters, client *utility.Client) error {
 	mandatoryFlags := map[string]string{serviceRepoURLFlag: io.ServiceRepoURL, gitopsRepoURLFlag: io.GitOpsRepoURL, imageRepoFlag: io.ImageRepo}
 	if err := checkMandatoryFlags(mandatoryFlags); err != nil {
-		return err
-	}
-	if _, err := checkBootstrapDependencies(io, client, log.NewStatus(os.Stdout)); err != nil {
 		return err
 	}
 	return nil
@@ -163,7 +159,7 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client) er
 	log.Progressf("\nStarting interactive prompt\n")
 	// ask for sealed secrets only when default is absent
 	if client.CheckIfSealedSecretsExists(defaultSealedSecretsServiceName) != nil {
-		io.SealedSecretsService.Namespace = ui.EnterSealedSecretNamespace(&io.SealedSecretsService)
+		io.SealedSecretsService.Namespace = ui.EnterSealedSecretService(&io.SealedSecretsService)
 	}
 	io.GitOpsRepoURL = utility.AddGitSuffixIfNecessary(ui.EnterGitRepo())
 	if !isKnownDriver(io.GitOpsRepoURL) {
@@ -202,43 +198,42 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client) er
 	return nil
 }
 
-func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client, spinner status) ([]string, error) {
+func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client, spinner status) error {
 	missingDeps := []string{}
 	log.Progressf("\nChecking dependencies\n")
 
 	spinner.Start("Checking if Sealed Secrets is installed with the default configuration", false)
 	if err := client.CheckIfSealedSecretsExists(defaultSealedSecretsServiceName); err != nil {
-		warnIfNotFound(spinner, "Please install Sealed Secrets operator from OperatorHub", err)
+		warnIfNotFound(spinner, "Please install Sealed Secrets Operator from OperatorHub", err)
 		if !apierrors.IsNotFound(err) {
-			return nil, fmt.Errorf("failed to check for sealed secrets operator: %w", err)
+			return fmt.Errorf("failed to check for sealed secrets Operator: %w", err)
 		}
-		missingDeps = append(missingDeps, "Sealed Secrets Operator")
 	} else {
 		io.SealedSecretsService = defaultSealedSecretsServiceName
 	}
 
 	spinner.Start("Checking if ArgoCD Operator is installed with the default configuration", false)
 	if err := client.CheckIfArgoCDExists(argoCDNS); err != nil {
-		warnIfNotFound(spinner, "Please install ArgoCD operator from OperatorHub", err)
+		warnIfNotFound(spinner, "Please install ArgoCD Operator from OperatorHub", err)
 		if !apierrors.IsNotFound(err) {
-			return nil, fmt.Errorf("failed to check for ArgoCD operator: %w", err)
+			return fmt.Errorf("failed to check for ArgoCD Operator: %w", err)
 		}
-		missingDeps = append(missingDeps, "ArgoCD operator")
+		missingDeps = append(missingDeps, argoCdOperatorName)
 	}
 
 	spinner.Start("Checking if OpenShift Pipelines Operator is installed with the default configuration", false)
 	if err := client.CheckIfPipelinesExists(pipelinesOperatorNS); err != nil {
-		warnIfNotFound(spinner, "Please install OpenShift Pipelines operator from OperatorHub", err)
+		warnIfNotFound(spinner, "Please install OpenShift Pipelines Operator from OperatorHub", err)
 		if !apierrors.IsNotFound(err) {
-			return nil, fmt.Errorf("failed to check for OpenShift Pipelines operator: %w", err)
+			return fmt.Errorf("failed to check for OpenShift Pipelines Operator: %w", err)
 		}
-		missingDeps = append(missingDeps, "OpenShift Pipelines Operator")
+		missingDeps = append(missingDeps, pipelinesOperatorName)
 	}
 	spinner.End(true)
 	if len(missingDeps) > 0 {
-		return nil, fmt.Errorf("failed to satisfy the required dependencies: %s", strings.Join(missingDeps, ", "))
+		return fmt.Errorf("failed to satisfy the required dependencies: %s", strings.Join(missingDeps, ", "))
 	}
-	return missingDeps, nil
+	return nil
 }
 
 func warnIfNotFound(spinner status, warningMsg string, err error) {
