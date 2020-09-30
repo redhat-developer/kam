@@ -1,8 +1,8 @@
 # OpenShift Operator and Builddah ClusterTask
 
 There are two items to be installed
-* [OpenShift Pipelines Operator](#Install_OpenShift_Pipelines_Operator)
-* [Buildah ClusterTask](#Install_the_Buildah_ClusterTask)
+* [OpenShift Pipelines Operator](#Install-OpenShift-Pipelines-Operator)
+* [Buildah ClusterTask](#Install-the-Buildah-ClusterTask)
 
 ## Install OpenShift Pipelines Operator
 
