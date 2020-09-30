@@ -116,27 +116,27 @@ func EnterGitWebhookSecret() string {
 	return gitWebhookSecret
 }
 
-// EnterSealedSecretService , if the secret isnt installed using the operator it is necessary to manually add the sealed-secrets-controller name through this UI prompt.
-func EnterSealedSecretService(sealedSecretService *types.NamespacedName) string {
+// enterSealedSecretService , if the secret isnt installed using the operator it is necessary to manually add the sealed-secrets-controller name through this UI prompt.
+func enterSealedSecretService() string {
 	var sealedSecret string
 	prompt := &survey.Input{
 		Message: "Name of the Sealed Secrets Service that encrypts secrets",
 		Help:    "If you have a custom installation of the Sealed Secrets operator, we need to know where to communicate with it to seal your secrets.",
 	}
-	err := survey.AskOne(prompt, &sealedSecret, makeSealedSecretsService(sealedSecretService))
+	err := survey.AskOne(prompt, &sealedSecret, survey.Required)
 	handleError(err)
 	return sealedSecret
 }
 
-// EnterSealedSecretNamespace , if the secret isnt installed using the operator it is necessary to manually add the sealed-secrets-namepsace in which its installed through this UI prompt.
-func EnterSealedSecretNamespace() string {
+// EnterSealedSecretService , prompts the UI to ask for the sealed-secrets-namespaces
+func EnterSealedSecretService(sealedSecretService *types.NamespacedName) string {
 	var sealedNs string
 	prompt := &survey.Input{
 		Message: "Provide a namespace in which the Sealed Secrets operator is installed, automatically generated secrets are encrypted with this operator?",
 		Help:    "If you have a custom installation of the Sealed Secrets operator, we need to know how to communicate with it to seal your secrets",
 	}
 
-	err := survey.AskOne(prompt, &sealedNs, survey.Required)
+	err := survey.AskOne(prompt, &sealedNs, makeSealedSecretsService(sealedSecretService))
 	handleError(err)
 	return sealedNs
 }
