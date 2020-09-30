@@ -28,7 +28,7 @@ Otherwise, install OpenShift Pipelines Operator from OperatorHub.
 ## Install the Buildah ClusterTask
 
 ```shell
-$ oc replace -f https://raw.githubusercontent.com/redhat-developer/kam/master/docs/updates/buildah.yaml
+$ oc apply -f https://raw.githubusercontent.com/redhat-developer/kam/master/docs/updates/buildah.yaml
 ```
 
 
