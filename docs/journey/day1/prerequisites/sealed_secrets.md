@@ -1,15 +1,30 @@
-## Suggested approach
+# Suggested approach
 
-First, we need a cicd namespace:
+## First, we need a cicd namespace:
 
 ```shell
 $ oc create namespace cicd
 ```
 
-Install the Sealed Secrets from the Operator Hub.
+## Install the Sealed Secrets Operator from the Operator Hub in the `cicd` namespace.
 
-![Screenshot](img/sealed-secrets-operator.png)
+![Screenshot](img/ss-1.png)
 
-Then create a "SealedSecretController" instance in the "cicd" namespace.
+![Screenshot](img/ss-2.png)
 
-![Screenshot](img/sealed-secrets-controller-in-cicd.png)
+![Screenshot](img/ss-3.png)
+
+![Screenshot](img/ss-4.png)
+
+
+
+## Then create a `SealedSecretController` instance in the `cicd` namespace.
+
+![Screenshot](img/ss-5.png)
+
+![Screenshot](img/ss-6.png)
+
+![Screenshot](img/ss-7.png)
+
+
+
