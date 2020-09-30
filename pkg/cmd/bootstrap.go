@@ -62,8 +62,8 @@ var (
     %[1]s 
     `)
 
-	bootstrapLongDesc  = ktemplates.LongDesc(`Bootstrap GitOps CI/CD Manifest`)
-	bootstrapShortDesc = `Bootstrap pipelines with a starter configuration`
+	bootstrapLongDesc  = ktemplates.LongDesc(`Bootstrap GitOps CI/CD Manifests`)
+	bootstrapShortDesc = `Bootstrap GitOps CI/CD with a starter configuration`
 )
 
 // BootstrapParameters encapsulates the parameters for the kam pipelines init command.
