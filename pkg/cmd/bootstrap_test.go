@@ -195,16 +195,10 @@ func TestCheckSpinner(t *testing.T) {
 		wantMsg   string
 	}{
 		{
-			"No error",
-			nil,
-			true,
-			"\nChecking if abcd is installed",
-		},
-		{
 			"Resource not found error",
 			errors.NewNotFound(schema.GroupResource{}, "abcd"),
 			false,
-			"\nChecking if abcd is installed[Please install abcd]",
+			"\nChecking if abcd is installed [Please install abcd]",
 		},
 		{
 			"Random cluster error",
@@ -219,7 +213,7 @@ func TestCheckSpinner(t *testing.T) {
 
 			fakeSpinner := &mockSpinner{writer: buff}
 			fakeSpinner.Start("Checking if abcd is installed", false)
-			setSpinnerStatus(fakeSpinner, "Please install abcd", test.err)
+			warnIfNotFound(fakeSpinner, "Please install abcd", test.err)
 
 			if fakeSpinner.end != test.endStatus {
 				t.Errorf("Spinner status mismatch: got %v, want %v", fakeSpinner.end, test.endStatus)
@@ -233,14 +227,14 @@ func TestDependenciesWithNothingInstalled(t *testing.T) {
 	fakeClient := newFakeClient(nil, nil)
 
 	wantMsg := `
-Checking if Sealed Secrets is installed with the default configuration[Please install Sealed Secrets operator from OperatorHub]
-Checking if ArgoCD Operator is installed with the default configuration[Please install ArgoCD operator from OperatorHub, with an ArgoCD resource called 'argocd']
-Checking if OpenShift Pipelines Operator is installed with the default configuration[Please install OpenShift Pipelines operator from OperatorHub]`
+Checking if Sealed Secrets is installed with the default configuration [Please install Sealed Secrets Operator from OperatorHub]
+Checking if ArgoCD Operator is installed with the default configuration [Please install ArgoCD Operator from OperatorHub]
+Checking if OpenShift Pipelines Operator is installed with the default configuration [Please install OpenShift Pipelines Operator from OperatorHub]`
 
 	buff := &bytes.Buffer{}
 	fakeSpinner := &mockSpinner{writer: buff}
 	err := checkBootstrapDependencies(&BootstrapParameters{&pipelines.BootstrapOptions{}}, fakeClient, fakeSpinner)
-	wantErr := "Failed to satisfy the required dependencies"
+	wantErr := fmt.Sprintf("failed to satisfy the required dependencies: %s, %s", argoCdOperatorName, pipelinesOperatorName)
 
 	assertError(t, err, wantErr)
 	assertMessage(t, buff.String(), wantMsg)
@@ -271,14 +265,14 @@ func TestDependenciesWithNoArgoCD(t *testing.T) {
 
 	wantMsg := `
 Checking if Sealed Secrets is installed with the default configuration
-Checking if ArgoCD Operator is installed with the default configuration[Please install ArgoCD operator from OperatorHub, with an ArgoCD resource called 'argocd']
+Checking if ArgoCD Operator is installed with the default configuration [Please install ArgoCD Operator from OperatorHub]
 Checking if OpenShift Pipelines Operator is installed with the default configuration`
 
 	buff := &bytes.Buffer{}
 	fakeSpinner := &mockSpinner{writer: buff}
 	wizardParams := &BootstrapParameters{&pipelines.BootstrapOptions{}}
 	err := checkBootstrapDependencies(wizardParams, fakeClient, fakeSpinner)
-	wantErr := "Failed to satisfy the required dependencies"
+	wantErr := fmt.Sprintf("failed to satisfy the required dependencies: %s", argoCdOperatorName)
 
 	assertError(t, err, wantErr)
 	assertMessage(t, buff.String(), wantMsg)
@@ -290,13 +284,13 @@ func TestDependenciesWithNoPipelines(t *testing.T) {
 	wantMsg := `
 Checking if Sealed Secrets is installed with the default configuration
 Checking if ArgoCD Operator is installed with the default configuration
-Checking if OpenShift Pipelines Operator is installed with the default configuration[Please install OpenShift Pipelines operator from OperatorHub]`
+Checking if OpenShift Pipelines Operator is installed with the default configuration [Please install OpenShift Pipelines Operator from OperatorHub]`
 
 	buff := &bytes.Buffer{}
 	fakeSpinner := &mockSpinner{writer: buff}
 	wizardParams := &BootstrapParameters{&pipelines.BootstrapOptions{}}
 	err := checkBootstrapDependencies(wizardParams, fakeClient, fakeSpinner)
-	wantErr := "Failed to satisfy the required dependencies"
+	wantErr := fmt.Sprintf("failed to satisfy the required dependencies: %s", pipelinesOperatorName)
 
 	assertError(t, err, wantErr)
 	assertMessage(t, buff.String(), wantMsg)
@@ -364,7 +358,7 @@ func (m *mockSpinner) End(status bool) {
 }
 
 func (m *mockSpinner) WarningStatus(status string) {
-	fmt.Fprintf(m.writer, "[%s]", status)
+	fmt.Fprintf(m.writer, " [%s]", status)
 }
 
 func newFakeClient(k8sObjs []runtime.Object, clientObjs []runtime.Object) *utility.Client {

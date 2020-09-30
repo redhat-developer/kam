@@ -2,7 +2,6 @@ package ui
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -12,7 +11,7 @@ import (
 	"github.com/redhat-developer/kam/pkg/cmd/utility"
 	"github.com/redhat-developer/kam/pkg/pipelines/git"
 	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
-	"github.com/redhat-developer/kam/pkg/pipelines/secrets"
+	"github.com/redhat-developer/kam/pkg/pipelines/namespaces"
 	"gopkg.in/AlecAivazis/survey.v1"
 	"gopkg.in/AlecAivazis/survey.v1/terminal"
 	"k8s.io/apimachinery/pkg/types"
@@ -136,23 +135,23 @@ func validateAccessToken(input interface{}, serviceRepo string) error {
 // validateSealedSecretService validates to see if the sealed secret service is present in the correct namespace.
 func validateSealedSecretService(input interface{}, sealedSecretService *types.NamespacedName) error {
 	if s, ok := input.(string); ok {
-		sealedSecretService.Name = s
-		sealedSecretService.Namespace = EnterSealedSecretNamespace()
-		_, err := secrets.GetClusterPublicKey(*sealedSecretService)
+		client, err := utility.NewClient()
 		if err != nil {
-			if compareError(err, sealedSecretService.Name) {
-				return fmt.Errorf("The given service %q is not installed in the right namespace %q", sealedSecretService.Name, sealedSecretService.Namespace)
-			}
-			return errors.New("sealed secrets could not be configured successfully")
+			return err
 		}
-		return nil
+		clientSet, err := namespaces.GetClientSet()
+		if err != nil {
+			return err
+		}
+		exists, _ := namespaces.Exists(clientSet, s)
+		if !exists {
+			return fmt.Errorf("The namespace %s is not found on the cluster", s)
+		}
+		sealedSecretService.Namespace = s
+		sealedSecretService.Name = enterSealedSecretService()
+		return client.CheckIfSealedSecretsExists(*sealedSecretService)
 	}
 	return nil
-}
-
-func compareError(err error, sealedSecretService string) bool {
-	createdError := fmt.Errorf("cannot fetch certificate: services \"%s\" not found", sealedSecretService)
-	return err.Error() == createdError.Error()
 }
 
 func checkSecretLength(secret string) bool {
