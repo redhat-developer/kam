@@ -30,7 +30,7 @@ func (o *createOptions) Run() error {
 	id, err := backend.Create(o.accessToken, o.pipelinesFolderPath, o.getAppServiceNames(), o.isCICD)
 
 	if err != nil {
-		return fmt.Errorf("Unable to create webhook: %v", err)
+		return fmt.Errorf("unable to create webhook: %v", err)
 	}
 
 	if id != "" {
@@ -70,7 +70,7 @@ func outputSuccess(machineOutput interface{}) {
 
 	// If we error out... there's no way to output it (since we disable logging when using -o json)
 	if err != nil {
-		fmt.Fprintf(log.GetStderr(), "Unable to unmarshal JSON: %s\n", err.Error())
+		fmt.Fprintf(log.GetStderr(), "unable to unmarshal JSON: %s\n", err.Error())
 	} else {
 		fmt.Fprintf(log.GetStdout(), "%s\n", string(printableOutput))
 	}
