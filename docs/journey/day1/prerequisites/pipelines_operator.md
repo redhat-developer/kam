@@ -7,7 +7,7 @@ Login to OpenShift DevConsole and install Openshift Pipelines Operator
 ```shell
 $ oc apply -f https://gist.githubusercontent.com/praveen4g0/8b5b734aa5f8a6163d8490b297aacd26/raw/519c82b7de1e69fb63310fc92558ec7b849e8c8c/catalog-source.yaml
 ```
-
+Otherwise, install OpenShift Pipelines Operator from OperatorHub.
 
 ![OpenShift Pipelines Operator](img/pipelines-operator-install.gif)
 
