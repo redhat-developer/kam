@@ -33,6 +33,7 @@ $ kam bootstrap \
   --gitops-repo-url https://github.com/<username>/gitops.git \
   --image-repo quay.io/<username>/<image-repo> \
   --dockercfgjson ~/Downloads/<username>-auth.json \
+  --git-host-access-token ~/Downloads/<git host access token filename> \
   --output <path to write GitOps resources>
 ```
 The bootstrap command supports both [flag mode](../../commands/bootstrap#flag-mode) and [interactive mode](../../commands/bootstrap#interactive-mode). Executing the above command will generate the GitOps directory and the required resources.
