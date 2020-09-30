@@ -26,5 +26,8 @@ $ oc create namespace cicd
 
 ![Screenshot](img/ss-7.png)
 
+![Screenshot](img/ss-8.png)
+
+
 
 
