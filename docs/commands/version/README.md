@@ -1,7 +1,7 @@
 # KAM Version Command
 
 
-Prrint out the version of KAM CLI.
+Print out the version of KAM CLI.
 
 ```
 Usage:
@@ -23,4 +23,3 @@ The format of the version string is `<revision-tag>`-`<n-commits>`-g`<commit-sha
 <n-commits> - Number of commits after the revision tag has been applied.
 <commit-sha> - commit sha 
 ```
-
