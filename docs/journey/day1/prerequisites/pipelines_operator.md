@@ -1,3 +1,9 @@
+# OpenShift Operator and Builddah ClusterTask
+
+There are two items to be installed
+* [OpenShift Pipelines Operator](#Install_OpenShift_Pipelines_Operator)
+* [Buildah ClusterTask](#Install_the_Buildah_ClusterTask)
+
 ## Install OpenShift Pipelines Operator
 
 Login to OpenShift DevConsole and install Openshift Pipelines Operator
@@ -9,7 +15,14 @@ $ oc apply -f https://gist.githubusercontent.com/praveen4g0/8b5b734aa5f8a6163d84
 ```
 Otherwise, install OpenShift Pipelines Operator from OperatorHub.
 
-![OpenShift Pipelines Operator](img/pipelines-operator-install.gif)
+![screenshot](img/tekton-1.png)
+
+![screenshot](img/tekton-2.png)
+
+![screenshot](img/tekton-3.png)
+
+![screenshot](img/tekton-4.png)
+
 
 
 ## Install the Buildah ClusterTask
