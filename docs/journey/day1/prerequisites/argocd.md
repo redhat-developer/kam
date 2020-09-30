@@ -2,7 +2,7 @@
 
 There are three steps in this installation
 * [create `argocd` namespace ](#Create-argocd-namespace)
-* [nstall ArgoCD Operator](#nstall-ArgoCD-Operator)
+* [nstall ArgoCD Operator](#install-ArgoCD-Operator)
 * [Add Role Binding](#Add-Role-Binding)
 
 ## Create argocd namespace
