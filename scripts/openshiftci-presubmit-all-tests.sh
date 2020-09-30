@@ -12,16 +12,3 @@ export CUSTOM_HOMEDIR=$ARTIFACTS_DIR
 
 kam version
 
-if [ "${ARCH}" == "s390x" ]; then
-    # Integration tests
-
-    # E2e tests
-elif  [ "${ARCH}" == "ppc64le" ]; then
-    # Integration tests
-
-    # E2e tests
-else
-    # Integration tests
-
-    # E2e tests
-fi
