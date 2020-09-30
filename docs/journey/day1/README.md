@@ -198,7 +198,7 @@ spec:
   containers:
   - image: nginxinc/nginx-unprivileged:latest
     imagePullPolicy: Always
-    name: taxi-svc
+    name: taxi
 ```
 
 You'll want to replace this with the image for your application, once you've
@@ -214,7 +214,7 @@ to trigger pipeline runs automatically on pushes to your repositories.
 
 ```shell
 $ kam webhook create \
-    --access-token <github user access token> \
+    --access-token <git host access token> \
     --env-name dev \
     --service-name taxi
 ```
