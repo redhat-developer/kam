@@ -369,7 +369,7 @@ being executed.
 
 ![PipelineRun doing a dry run of the configuration](img/pipelinerun-dryrun.png)
 
-This validates that the YAML can be applied, by executing a `kubectl apply --dry-run`.
+This validates that the YAML can be applied, by executing a `oc apply -k --dry-run`.
 
 ## Visualize your applications on ArgoCD UI
 
