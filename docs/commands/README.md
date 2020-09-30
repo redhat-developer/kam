@@ -13,7 +13,7 @@ Usage:
 
 Available Commands:
   [bootstrap](bootstrap)   Bootstrap GitOps CI/CD with a starter configuration
-  [build](builid)       Build GitOps CI/CD Manifests files
+  [build](build)       Build GitOps CI/CD Manifests files
   [environment](environment) Manage an environment in GitOps
   help        Help about any command
   [service](service)     Manage services in an environment

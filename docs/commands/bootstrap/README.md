@@ -41,27 +41,6 @@ Flags:
   ```
 
 
-## Flag mode
-
-```shell
-$ kam bootstrap
-  --gitops-repo-url
-  --service-repo-url
-  --image-repo
-  --dockercfgjson
-  [--image-repo-internal-registry-hostname]
-  [--gitops-webhook-secret]
-  [--service-webhook-secret]
-  [--prefix]
-  [--output]
-  [--overwrite]
-  [--sealed-secrets-ns]
-  [--sealed-secrets-svc]
-  [--git-host-access-token]
-  [--private-repo-driver]
-  [--commit-status-tracker]
-```
-
 ## Interactive mode
 
 Running the bootstrap command without flags will trigger an interactive prompt. Each question in the prompt is accompanied by help, providing a brief explanation for the question. 
