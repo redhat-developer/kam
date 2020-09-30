@@ -31,13 +31,6 @@ Flags:
       --service-name string       Provide service name if the target Git repository is a service's source repository.
 ```
 
-```shell
-$ kam webhook create 
-    --access-token 
-    [--cicd] | [--env-name --service-name]
-    [--pipelines-folder]
-```
-
 ## Webhook delete
 
 The `webhook delete` sub-command deletes all webhooks from Git repository that contains the target EventListener address.
@@ -63,13 +56,6 @@ Flags:
       --service-name string       Provide service name if the target Git repository is a service's source repository.
 ```      
 
-```shell
-$ kam webhook delete
-    --access-token
-    [--cicd] | [--env-name --service-name]
-    [--pipelines-folder ]
-```
-
 ## Webhook list
 
 The `webhook list` sub-command displays webhook IDs from the Git repository that contain the target EventListener address.
@@ -93,11 +79,4 @@ Flags:
   -h, --help                      help for list
       --pipelines-folder string   Folder path to retrieve manifest, eg. /test where manifest exists at /test/pipelines.yaml (default ".")
       --service-name string       Provide service name if the target Git repository is a service's source repository.
-```
-
-```shell
-$ kam webhook list
-    --access-token
-    [--cicd] | [--env-name --service-name]
-    [--pipelines-folder ]
 ```

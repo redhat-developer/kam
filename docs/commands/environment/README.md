@@ -23,13 +23,6 @@ Flags:
       --pipelines-folder string   Folder path to retrieve manifest, eg. /test where manifest exists at /test/pipelines.yaml (default ".")
 ```
 
-```shell
-$ kam environment add
-  --env-name 
-  [--cluster]
-  [--pipelines-folder]
-```
-
 The directory layout generated is shown below.
 
 ```

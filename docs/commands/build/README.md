@@ -17,8 +17,4 @@ Flags:
       --output string             Folder path to add GitOps resources (default ".")
       --pipelines-folder string   Folder path to retrieve manifest, eg. /test where manifest exists at /test/pipelines.yaml (default ".")
 ```
-```shell
-$ kam build
-  [--pipelines-folder]
-  [--output]
-```
+
