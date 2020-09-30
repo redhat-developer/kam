@@ -19,7 +19,7 @@ You need to have the following installed in the OCP 4.x cluster.
 
 And, you will need this.
 
-* Create your [GitOps repository](prerequisites/gitops_repo.md)
+* Create your [GitOps repository](prerequisites/gitops_repo.md) and leave it unitialized.
 * Application Source repository ([taxi](prerequisites/service_repo.md) is used as an example in this document)
 * The external image repository secret to authenticate image pushes on sucessfull pipeline execution. To use quay.io, please follow [prerequisites/quay.md](prerequisites/quay.md)
 * Download official [kam](https://github.com/redhat-developer/kam/releases) binary
@@ -29,8 +29,8 @@ And, you will need this.
 
 ```shell
 $ kam bootstrap \
-  --service-repo-url https://github.com/<username>/taxi.git \
-  --gitops-repo-url https://github.com/<username>/gitops.git \
+  --service-repo-url https://github.com/<your organization>/taxi.git \
+  --gitops-repo-url https://github.com/<your organization>/gitops.git \
   --image-repo quay.io/<username>/<image-repo> \
   --dockercfgjson ~/Downloads/<username>-auth.json \
   --git-host-access-token ~/Downloads/<git host access token filename> \
@@ -91,7 +91,7 @@ environments:
           bindings:
           - dev-app-taxi-taxi-binding
           - gitlab-push-binding
-      source_url: https://github.com/rhd-gitops-example/taxi.git
+      source_url: https://github.com/<your organization>/taxi.git
       webhook:
         secret:
           name: webhook-secret-dev-taxi
@@ -103,7 +103,7 @@ environments:
       - gitlab-push-binding
       template: app-ci-template
 - name: stage
-gitops_url: https://github.com/<your organization>/<your repository>
+gitops_url: https://github.com/<your organization>/gitops.git
 version: 1
 ```
 
@@ -114,12 +114,12 @@ is opened.
 This is the default pipeline specification for the `dev` environment, you
 can find the definitions for these in these two files:
 
- * [`config/cicd/base/07-templates/app-ci-build-from-push-template.yaml`](output/config/cicd/base/07-templates/app-ci-build-from-push-template.yaml)
- * [`config/cicd/base/06-bindings/github-push-binding.yaml`](output/config/cicd/base/06-bindings/github-push-binding.yaml)
+ * `config/cicd/base/07-templates/app-ci-build-from-push-template.yaml`
+ * `config/cicd/base/06-bindings/github-push-binding.yaml`
 
 By default this triggers a PipelineRun of this pipeline
 
- * [`config/cicd/base/05-pipelines/app-ci-pipeline.yaml`](output/config/cicd/base/05-pipelines/app-ci-pipeline.yaml)
+ * `config/cicd/base/05-pipelines/app-ci-pipeline.yaml`
 
 These files are not managed directly by the manifest, you're free to change them
 for your own needs, by default they use [Buildah](https://github.com/containers/buildah)
@@ -138,7 +138,7 @@ of your repository.
           bindings:
           - dev-app-taxi-taxi-binding
           - gitlab-push-binding
-      source_url: https://github.com/rhd-gitops-example/taxi.git
+      source_url: https://github.com/<your organization>/taxi.git
       webhook:
         secret:
           name: webhook-secret-dev-taxi
@@ -149,8 +149,7 @@ The YAML above defines an app called `app-taxi`, which has a reference to servic
 
 The configuration for these is written out to:
 
- * [`environments/test-dev/services/taxi/base/config/`](output/environments/dev/apps/app-taxi/services/taxi/base/config)
- * [`environments/dev/apps/app-taxi/base/`](output/environments/dev/apps/app-taxi/base/)
+ * `environments/dev/apps/app-taxi/services/taxi/base/config/`
 
 The `app-taxi` app's configuration references the services configuration.
 
@@ -158,7 +157,7 @@ The `source_url` references the source code repository for the service.
 
 The `pipelines` field describes the templates and bindings used for this service.
 
-The`webhook.secret` is used to authenticate incoming hooks from GitHub.
+The`webhook.secret` is used to authenticate incoming hooks from Git host.
 
 ## Bringing the bootstrapped environment up
 
