@@ -34,7 +34,7 @@ func TestLoadManifestUpdatesDrivers(t *testing.T) {
 
 	m, err := LoadManifest(fs, "/manifest")
 	if err != nil {
-		t.Fatal("Failed to load manifest")
+		t.Fatal("failed to load manifest")
 	}
 	if diff := cmp.Diff(c, m); diff != "" {
 		t.Fatalf("diff in loading manifest:\n%s", diff)

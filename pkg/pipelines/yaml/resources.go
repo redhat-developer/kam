@@ -18,7 +18,7 @@ import (
 func WriteResources(fs afero.Fs, path string, files map[string]interface{}) ([]string, error) {
 	path, err := homedir.Expand(path)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to resolve path to file: %v", err)
+		return nil, fmt.Errorf("failed to resolve path to file: %v", err)
 	}
 	filenames := make([]string, 0)
 	for filename, item := range files {
