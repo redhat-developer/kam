@@ -28,7 +28,7 @@ type listOptions struct {
 func (o *listOptions) Run() error {
 	ids, err := backend.List(o.accessToken, o.pipelinesFolderPath, o.getAppServiceNames(), o.isCICD)
 	if err != nil {
-		return fmt.Errorf("Unable to a get list of webhook IDs: %v", err)
+		return fmt.Errorf("unable to a get list of webhook IDs: %v", err)
 	}
 
 	if ids != nil {

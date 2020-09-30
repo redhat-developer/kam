@@ -350,7 +350,7 @@ func (e errorReader) Read(p []byte) (int, error) {
 func TestParseKey(t *testing.T) {
 	key, err := parseKey(strings.NewReader(testCert))
 	if err != nil {
-		t.Fatalf("Failed to parse test key: %v", err)
+		t.Fatalf("failed to parse test key: %v", err)
 	}
 
 	if key.N.Cmp(testModulus) != 0 {
