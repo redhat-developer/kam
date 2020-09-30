@@ -20,6 +20,11 @@ import (
 	"github.com/redhat-developer/kam/pkg/pipelines/meta"
 )
 
+const (
+	SealedSecretsController = "sealedsecretcontroller-sealed-secrets"
+	SealedSecretsNS         = "cicd"
+)
+
 var (
 	secretTypeMeta       = meta.TypeMeta("Secret", "v1")
 	sealedSecretTypeMeta = meta.TypeMeta("SealedSecret", "bitnami.com/v1alpha1")

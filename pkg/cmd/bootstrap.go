@@ -13,6 +13,8 @@ import (
 	"github.com/redhat-developer/kam/pkg/cmd/ui"
 	"github.com/redhat-developer/kam/pkg/cmd/utility"
 	"github.com/redhat-developer/kam/pkg/pipelines"
+	"github.com/redhat-developer/kam/pkg/pipelines/secrets"
+
 	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
 	"github.com/redhat-developer/kam/pkg/pipelines/statustracker"
 	"github.com/spf13/cobra"
@@ -26,15 +28,13 @@ const (
 	// BootstrapRecommendedCommandName the recommended command name
 	BootstrapRecommendedCommandName = "bootstrap"
 
-	sealedSecretsController = "sealedsecretcontroller-sealed-secrets"
-	sealedSecretsNS         = "cicd"
-	argoCDNS                = "argocd"
-	pipelinesOperatorNS     = "openshift-operators"
-	gitopsRepoURLFlag       = "gitops-repo-url"
-	serviceRepoURLFlag      = "service-repo-url"
-	imageRepoFlag           = "image-repo"
-	argoCdOperatorName      = "ArgoCD Operator"
-	pipelinesOperatorName   = "OpenShift Pipelines Operator"
+	argoCDNS              = "argocd"
+	pipelinesOperatorNS   = "openshift-operators"
+	gitopsRepoURLFlag     = "gitops-repo-url"
+	serviceRepoURLFlag    = "service-repo-url"
+	imageRepoFlag         = "image-repo"
+	argoCdOperatorName    = "ArgoCD Operator"
+	pipelinesOperatorName = "OpenShift Pipelines Operator"
 )
 
 type drivers []string
@@ -44,7 +44,7 @@ var (
 		"github",
 		"gitlab",
 	}
-	defaultSealedSecretsServiceName = types.NamespacedName{Namespace: sealedSecretsNS, Name: sealedSecretsController}
+	defaultSealedSecretsServiceName = types.NamespacedName{Namespace: secrets.SealedSecretsNS, Name: secrets.SealedSecretsController}
 )
 
 func (d drivers) supported(s string) bool {
@@ -290,8 +290,8 @@ func NewCmdBootstrap(name, fullName string) *cobra.Command {
 	bootstrapCmd.Flags().StringVar(&o.DockerConfigJSONFilename, "dockercfgjson", "~/.docker/config.json", "Filepath to config.json which authenticates the image push to the desired image registry ")
 	bootstrapCmd.Flags().StringVar(&o.InternalRegistryHostname, "image-repo-internal-registry-hostname", "image-registry.openshift-image-registry.svc:5000", "Host-name for internal image registry e.g. docker-registry.default.svc.cluster.local:5000, used if you are pushing your images to the internal image registry")
 	bootstrapCmd.Flags().StringVar(&o.ImageRepo, "image-repo", "", "Image repository of the form <registry>/<username>/<repository> or <project>/<app> which is used to push newly built images")
-	bootstrapCmd.Flags().StringVar(&o.SealedSecretsService.Namespace, "sealed-secrets-ns", sealedSecretsNS, "Namespace in which the Sealed Secrets operator is installed, automatically generated secrets are encrypted with this operator")
-	bootstrapCmd.Flags().StringVar(&o.SealedSecretsService.Name, "sealed-secrets-svc", sealedSecretsController, "Name of the Sealed Secrets Services that encrypts secrets")
+	bootstrapCmd.Flags().StringVar(&o.SealedSecretsService.Namespace, "sealed-secrets-ns", secrets.SealedSecretsNS, "Namespace in which the Sealed Secrets operator is installed, automatically generated secrets are encrypted with this operator")
+	bootstrapCmd.Flags().StringVar(&o.SealedSecretsService.Name, "sealed-secrets-svc", secrets.SealedSecretsController, "Name of the Sealed Secrets Services that encrypts secrets")
 	bootstrapCmd.Flags().StringVar(&o.GitHostAccessToken, statustracker.CommitStatusTrackerSecret, "", "Used to authenticate repository clones, and commit-status notifications (if enabled)")
 	bootstrapCmd.Flags().BoolVar(&o.Overwrite, "overwrite", false, "Overwrites previously existing GitOps configuration (if any)")
 	bootstrapCmd.Flags().StringVar(&o.ServiceRepoURL, "service-repo-url", "", "Provide the URL for your Service repository e.g. https://github.com/organisation/service.git")

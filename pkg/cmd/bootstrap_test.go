@@ -14,6 +14,7 @@ import (
 	operatorsfake "github.com/operator-framework/operator-lifecycle-manager/pkg/api/client/clientset/versioned/fake"
 	"github.com/redhat-developer/kam/pkg/cmd/utility"
 	"github.com/redhat-developer/kam/pkg/pipelines"
+	"github.com/redhat-developer/kam/pkg/pipelines/secrets"
 	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -254,7 +255,7 @@ Checking if OpenShift Pipelines Operator is installed with the default configura
 	err := checkBootstrapDependencies(wizardParams, fakeClient, fakeSpinner)
 
 	assertError(t, err, "")
-	if wizardParams.SealedSecretsService.Name != sealedSecretsController && wizardParams.SealedSecretsService.Namespace != sealedSecretsNS {
+	if wizardParams.SealedSecretsService.Name != secrets.SealedSecretsController && wizardParams.SealedSecretsService.Namespace != secrets.SealedSecretsNS {
 		t.Fatalf("Expected sealed secrets to be set")
 	}
 	assertMessage(t, buff.String(), wantMsg)
@@ -319,8 +320,8 @@ func assertMessage(t *testing.T, got, want string) {
 func sealedSecretsService() *corev1.Service {
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      sealedSecretsController,
-			Namespace: sealedSecretsNS,
+			Name:      secrets.SealedSecretsController,
+			Namespace: secrets.SealedSecretsNS,
 		},
 	}
 }
