@@ -190,6 +190,8 @@ func initiateInteractiveMode(io *BootstrapParameters) error {
 		if io.GitHostAccessToken == "" {
 			io.GitHostAccessToken = ui.EnterGitHostAccessToken(io.ServiceRepoURL)
 		}
+	} else {
+		io.CommitStatusTracker = false
 	}
 	io.Prefix = ui.EnterPrefix()
 	io.OutputPath = ui.EnterOutputPath()
