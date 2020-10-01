@@ -35,7 +35,7 @@ func TestGenerateEventListener(t *testing.T) {
 							CEL: &triggersv1.CELInterceptor{
 								Filter: "(header.match('X-GitHub-Event', 'push') && body.repository.full_name == 'org/test')",
 								Overlays: []triggersv1.CELOverlay{
-									{Key: "ref", Expression: "split(body.ref,'/')[2]"},
+									{Key: "ref", Expression: "body.ref.split('/')[2]"},
 								},
 							},
 						},

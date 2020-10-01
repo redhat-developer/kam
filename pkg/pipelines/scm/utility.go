@@ -11,7 +11,7 @@ import (
 
 var (
 	branchRefOverlay = []triggersv1.CELOverlay{
-		{Key: "ref", Expression: "split(body.ref,'/')[2]"},
+		{Key: "ref", Expression: "body.ref.split('/')[2]"},
 	}
 )
 
