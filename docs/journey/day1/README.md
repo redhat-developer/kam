@@ -19,7 +19,7 @@ You need to have the following installed in the OCP 4.x cluster.
 
 And, you will need this.
 
-* Create your [GitOps repository](prerequisites/gitops_repo.md) and leave it unitialized.
+* Create your [GitOps repository](prerequisites/gitops_repo.md) and leave it uninitialized.
 * Application Source repository ([taxi](prerequisites/service_repo.md) is used as an example in this document)
 * The external image repository secret to authenticate image pushes on sucessfull pipeline execution. To use quay.io, please follow [prerequisites/quay.md](prerequisites/quay.md)
 * Download official [kam](https://github.com/redhat-developer/kam/releases) binary
