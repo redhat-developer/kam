@@ -9,8 +9,8 @@ The GitOps Application Manager provides command line interface to bootstrap GitO
 ## Getting Started
 
 ### GitOps Day 1 and Day 2 operations
-* [Day 1 Operations](journey/day1): Install the prerequisites and setup your GitOps pipeline.
-* [Day 2 Operations](journey/day2): Continue adding more applications.
+* [Day 1 Operations](docs/journey/day1): Install the prerequisites and setup your GitOps pipeline.
+* [Day 2 Operations](docs/journey/day2): Continue adding more applications.
   
 
 
