@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	kamLong  = "Kubernetes Application Managemer(KAM) is a CLI tool to scaffold your GitOps repository"
+	kamLong  = "Kubernetes Application Manager (KAM) is a CLI tool to scaffold your GitOps repository"
 	fullName = "kam"
 )
 

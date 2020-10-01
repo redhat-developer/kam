@@ -6,7 +6,7 @@ KAM binaries can be downloaded [https://github.com/redhat-developer/kam/releases
 
 
 <medium><pre>
-Kubernetes Application Managemer(KAM) is a CLI tool to scaffold your GitOps repository
+Kubernetes Application Manager (KAM) is a CLI tool to scaffold your GitOps repository
 
 Usage:
   kam [command]
