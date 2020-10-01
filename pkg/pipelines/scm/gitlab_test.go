@@ -70,7 +70,7 @@ func TestCreateCDTriggersForGitLab(t *testing.T) {
 		Bindings: []*triggersv1.EventListenerBinding{
 			{Name: "test-binding"},
 		},
-		Template: triggersv1.EventListenerTemplate{Name: "test-template"},
+		Template: &triggersv1.EventListenerTemplate{Name: "test-template"},
 		Interceptors: []*triggersv1.EventInterceptor{
 			{
 				GitLab: &triggersv1.GitLabInterceptor{

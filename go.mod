@@ -21,8 +21,8 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/afero v1.2.2
 	github.com/spf13/cobra v1.0.0
-	github.com/tektoncd/pipeline v0.15.2
-	github.com/tektoncd/triggers v0.5.0
+	github.com/tektoncd/pipeline v0.16.3
+	github.com/tektoncd/triggers v0.8.1
 	gopkg.in/AlecAivazis/survey.v1 v1.8.0
 	k8s.io/api v0.18.2
 	k8s.io/apimachinery v0.18.2

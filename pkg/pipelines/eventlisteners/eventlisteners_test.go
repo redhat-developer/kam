@@ -45,7 +45,7 @@ func TestGenerateEventListener(t *testing.T) {
 							Name: "github-push-binding",
 						},
 					},
-					Template: triggersv1.EventListenerTemplate{
+					Template: &triggersv1.EventListenerTemplate{
 						Name: "ci-dryrun-from-push-template",
 					},
 				},

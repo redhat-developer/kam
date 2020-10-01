@@ -36,8 +36,8 @@ func createEventInterceptor(filter, repoName string) *triggersv1.EventIntercepto
 	}
 }
 
-func createListenerTemplate(name string) triggersv1.EventListenerTemplate {
-	return triggersv1.EventListenerTemplate{
+func createListenerTemplate(name string) *triggersv1.EventListenerTemplate {
+	return &triggersv1.EventListenerTemplate{
 		Name: name,
 	}
 }

@@ -19,7 +19,7 @@ func TestCreateListenerBinding(t *testing.T) {
 }
 
 func TestCreateListenerTemplate(t *testing.T) {
-	validListenerTemplate := triggersv1.EventListenerTemplate{
+	validListenerTemplate := &triggersv1.EventListenerTemplate{
 		Name: "sample",
 	}
 	listenerTemplate := createListenerTemplate("sample")
