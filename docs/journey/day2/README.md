@@ -209,6 +209,7 @@ $ kam webhook create \
     --pipelines-folder <path to GitOps folder>
 ```
 
+Make some modifications to the new application source reposiotry and raise a PR.
 
 CD Pipeline is triggered and run successfully.
 ![cd-pipelines-success.png](img/pipeline-success.png)
