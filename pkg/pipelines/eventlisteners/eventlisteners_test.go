@@ -42,7 +42,7 @@ func TestGenerateEventListener(t *testing.T) {
 					},
 					Bindings: []*triggersv1.EventListenerBinding{
 						{
-							Name: "github-push-binding",
+							Ref: "github-push-binding",
 						},
 					},
 					Template: &triggersv1.EventListenerTemplate{

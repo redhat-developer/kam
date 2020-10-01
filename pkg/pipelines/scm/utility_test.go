@@ -10,7 +10,7 @@ import (
 
 func TestCreateListenerBinding(t *testing.T) {
 	validListenerBinding := triggersv1.EventListenerBinding{
-		Name: "sample",
+		Ref: "sample",
 	}
 	listenerBinding := createListenerBinding("sample")
 	if diff := cmp.Diff(validListenerBinding, *listenerBinding); diff != "" {
