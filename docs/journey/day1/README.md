@@ -255,13 +255,13 @@ The default CI pipeline we provide is defined in the manifest file:
   pipelines:
     integration:
       bindings:
-      - github-pr-binding
+      - github-push-binding
       template: app-ci-template
 ```
 
 This template drives a Pipeline that is stored in this file:
 
- * [`config/cicd/base/05-pipelines/app-ci-pipeline.yaml`](output/config/cicd/base/05-pipelines/app-ci-pipeline.yaml)
+ * `config/cicd/base/05-pipelines/app-ci-pipeline.yaml`
 
 An abridged version is shown below, it has a single task `build-image`, which
 executes the `buildah` task, which basically builds the source and generates an
@@ -313,11 +313,11 @@ This is a simple test task for a Go application, it just runs the tests.
 
 Append the newly added task to the existing kustomize file
 
-* [`config/cicd/base/kustomization.yaml`](output/config/cicd/base/kustomization.yaml)
+* `config/cicd/base/kustomization.yaml
 
 Update the pipeline in this file:
 
- * [`config/cicd/base/05-pipelines/app-ci-pipeline.yaml`](output/config/cicd/base/05-pipelines/app-ci-pipeline.yaml)
+ * `config/cicd/base/05-pipelines/app-ci-pipeline.yaml`
 
 ```yaml
 apiVersion: tekton.dev/v1beta1
