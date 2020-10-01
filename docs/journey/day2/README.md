@@ -39,8 +39,7 @@ environments:
 
 And, it generates the following yamls.  The new resources are namespace and role bindings.
 
-* [`environments/<env-name>/env/base/<env-name>-environment.yaml`](output/environments/new-env/env/base/new-env-environment.yaml)
-* [`environments/<env-name>/env/base/<env-name>-rolebinding.yaml`](output/environments/new-env/env/base/new-env-rolebinding.yaml)
+* `environments/<env-name>/env/base/<env-name>-environment.yaml`
 
 ## Create an Application/Service in the new Environment
 
@@ -51,7 +50,7 @@ $ kam service add \
   --env-name new-env \
   --app-name app-bus \
   --service-name bus \
-  --git-repo-url http://github.com/<user>/bus.git \
+  --git-repo-url http://github.com/<your organization>/bus.git \
   --pipelines-folder <path to GitOps file>
 ```
 
@@ -64,11 +63,11 @@ environments:
   - name: app-bus
     services:
     - name: bus
-      source_url: http://github.com/<user>/bus.git
+      source_url: http://github.com/<your organization>/bus.git
       webhook:
         secret:
           name: webhook-secret-new-env-bus
-          namespace: tst-cicd
+          namespace: cicd
   name: new-env
   pipelines:
     integration:
@@ -79,7 +78,7 @@ environments:
 
 In the Application's folder, a kustomization.yaml is generated to reference the new Service.
 
-* [`environments/new-env/apps/app-bus/base/kustomization.yaml`](output/environments/new-env/apps/app-bus/base/kustomization.yaml)
+* `environments/new-env/env/base/kustomization.yaml`
 
 In the Service's folder, an empty `config` folder is created.   This is the folder you will add `deployment yaml` files to specify how the Service should be deployed.
 

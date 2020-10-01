@@ -19,7 +19,7 @@ You need to have the following installed in the OCP 4.x cluster.
 
 And, you will need this.
 
-* Create your [GitOps repository](prerequisites/gitops_repo.md)
+* Create your [GitOps repository](prerequisites/gitops_repo.md) and leave it unitialized.
 * Application Source repository ([taxi](prerequisites/service_repo.md) is used as an example in this document)
 * The external image repository secret to authenticate image pushes on sucessfull pipeline execution. To use quay.io, please follow [prerequisites/quay.md](prerequisites/quay.md)
 * Download official [kam](https://github.com/redhat-developer/kam/releases) binary
@@ -29,10 +29,11 @@ And, you will need this.
 
 ```shell
 $ kam bootstrap \
-  --service-repo-url https://github.com/<username>/taxi.git \
-  --gitops-repo-url https://github.com/<username>/gitops.git \
+  --service-repo-url https://github.com/<your organization>/taxi.git \
+  --gitops-repo-url https://github.com/<your organization>/gitops.git \
   --image-repo quay.io/<username>/<image-repo> \
   --dockercfgjson ~/Downloads/<username>-auth.json \
+  --git-host-access-token ~/Downloads/<git host access token filename> \
   --output <path to write GitOps resources>
 ```
 The bootstrap command supports both [flag mode](../../commands/bootstrap#flag-mode) and [interactive mode](../../commands/bootstrap#interactive-mode). Executing the above command will generate the GitOps directory and the required resources.
@@ -90,7 +91,7 @@ environments:
           bindings:
           - dev-app-taxi-taxi-binding
           - gitlab-push-binding
-      source_url: https://github.com/rhd-gitops-example/taxi.git
+      source_url: https://github.com/<your organization>/taxi.git
       webhook:
         secret:
           name: webhook-secret-dev-taxi
@@ -102,7 +103,7 @@ environments:
       - gitlab-push-binding
       template: app-ci-template
 - name: stage
-gitops_url: https://github.com/<your organization>/<your repository>
+gitops_url: https://github.com/<your organization>/gitops.git
 version: 1
 ```
 
@@ -113,12 +114,12 @@ is opened.
 This is the default pipeline specification for the `dev` environment, you
 can find the definitions for these in these two files:
 
- * [`config/cicd/base/07-templates/app-ci-build-from-push-template.yaml`](output/config/cicd/base/07-templates/app-ci-build-from-push-template.yaml)
- * [`config/cicd/base/06-bindings/github-push-binding.yaml`](output/config/cicd/base/06-bindings/github-push-binding.yaml)
+ * `config/cicd/base/07-templates/app-ci-build-from-push-template.yaml`
+ * `config/cicd/base/06-bindings/github-push-binding.yaml`
 
 By default this triggers a PipelineRun of this pipeline
 
- * [`config/cicd/base/05-pipelines/app-ci-pipeline.yaml`](output/config/cicd/base/05-pipelines/app-ci-pipeline.yaml)
+ * `config/cicd/base/05-pipelines/app-ci-pipeline.yaml`
 
 These files are not managed directly by the manifest, you're free to change them
 for your own needs, by default they use [Buildah](https://github.com/containers/buildah)
@@ -137,7 +138,7 @@ of your repository.
           bindings:
           - dev-app-taxi-taxi-binding
           - gitlab-push-binding
-      source_url: https://github.com/rhd-gitops-example/taxi.git
+      source_url: https://github.com/<your organization>/taxi.git
       webhook:
         secret:
           name: webhook-secret-dev-taxi
@@ -148,8 +149,7 @@ The YAML above defines an app called `app-taxi`, which has a reference to servic
 
 The configuration for these is written out to:
 
- * [`environments/test-dev/services/taxi/base/config/`](output/environments/dev/apps/app-taxi/services/taxi/base/config)
- * [`environments/dev/apps/app-taxi/base/`](output/environments/dev/apps/app-taxi/base/)
+ * `environments/dev/apps/app-taxi/services/taxi/base/config/`
 
 The `app-taxi` app's configuration references the services configuration.
 
@@ -157,7 +157,7 @@ The `source_url` references the source code repository for the service.
 
 The `pipelines` field describes the templates and bindings used for this service.
 
-The`webhook.secret` is used to authenticate incoming hooks from GitHub.
+The`webhook.secret` is used to authenticate incoming hooks from Git host.
 
 ## Bringing the bootstrapped environment up
 
@@ -198,7 +198,7 @@ spec:
   containers:
   - image: nginxinc/nginx-unprivileged:latest
     imagePullPolicy: Always
-    name: taxi-svc
+    name: taxi
 ```
 
 You'll want to replace this with the image for your application, once you've
@@ -214,7 +214,7 @@ to trigger pipeline runs automatically on pushes to your repositories.
 
 ```shell
 $ kam webhook create \
-    --access-token <github user access token> \
+    --access-token <git host access token> \
     --env-name dev \
     --service-name taxi
 ```
@@ -255,13 +255,13 @@ The default CI pipeline we provide is defined in the manifest file:
   pipelines:
     integration:
       bindings:
-      - github-pr-binding
+      - github-push-binding
       template: app-ci-template
 ```
 
 This template drives a Pipeline that is stored in this file:
 
- * [`config/cicd/base/05-pipelines/app-ci-pipeline.yaml`](output/config/cicd/base/05-pipelines/app-ci-pipeline.yaml)
+ * `config/cicd/base/05-pipelines/app-ci-pipeline.yaml`
 
 An abridged version is shown below, it has a single task `build-image`, which
 executes the `buildah` task, which basically builds the source and generates an
@@ -313,11 +313,11 @@ This is a simple test task for a Go application, it just runs the tests.
 
 Append the newly added task to the existing kustomize file
 
-* [`config/cicd/base/kustomization.yaml`](output/config/cicd/base/kustomization.yaml)
+* `config/cicd/base/kustomization.yaml
 
 Update the pipeline in this file:
 
- * [`config/cicd/base/05-pipelines/app-ci-pipeline.yaml`](output/config/cicd/base/05-pipelines/app-ci-pipeline.yaml)
+ * `config/cicd/base/05-pipelines/app-ci-pipeline.yaml`
 
 ```yaml
 apiVersion: tekton.dev/v1beta1
@@ -369,7 +369,7 @@ being executed.
 
 ![PipelineRun doing a dry run of the configuration](img/pipelinerun-dryrun.png)
 
-This validates that the YAML can be applied, by executing a `kubectl apply --dry-run`.
+This validates that the YAML can be applied, by executing a `oc apply -k --dry-run`.
 
 ## Visualize your applications on ArgoCD UI
 
