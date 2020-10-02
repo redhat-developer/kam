@@ -78,11 +78,11 @@ environments:
 
 In the Application's folder, a kustomization.yaml is generated to reference the new Service.
 
-* `environments/new-env/env/base/kustomization.yaml`
+* `environments/new-env/apps/app-bus/services/bus/base/kustomization.yaml`
 
-In the Service's folder, an empty `config` folder is created.   This is the folder you will add `deployment yaml` files to specify how the Service should be deployed.
+In the Service's base folder, an empty `config` folder is created.   (Please create `config` if it does not exist.)  This is the folder you will add `deployment yaml` files to specify how the Service should be deployed.
 
-* [`environments/new-env/services/bus/base`](output/environments/new-env/services/bus/base)
+* `environments/new-env/apps/app-bus/services/bus/base/config`
 
 Similar to the Day 1 example, we will just deploy a dummy nginxinc image.  The following files should be added to `config` folder.
 
@@ -93,7 +93,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   creationTimestamp: null
-  name: taxi
+  name: bus
   namespace: new-env
 spec:
   replicas: 1
@@ -130,7 +130,7 @@ metadata:
     app.kubernetes.io/name: bus
     app.kubernetes.io/part-of: app-bus
   name: bus
-  namespace: tst-dev
+  namespace: dev
 spec:
   ports:
   - name: http
@@ -154,17 +154,17 @@ resources:
 
 The new Service/Application will be deployed by ArgoCD.   An ArgoCD application yaml is generated in the ArgoCD environment.
 
-* [`config/argocd/config/<env>-<app>-app.yaml`](output/config/argocd/config/new-env-app-bus-app.yaml)
+* `config/argocd/<env>-<app>-app.yaml`
 
 In the CI/CD Environment, a couple of resources are added or modified.
 
 Webhook secret resource is generated.
 
-* [`config/cicd/base/pipelines/03-secrets/webhook-secret-<env>-<service>.yaml`](output/config/tst-cicd/base/pipelines/03-secrets/webhook-secret-new-env-bus.yaml)
+* `config/cicd/base/03-secrets/webhook-secret-<env>-<service>.yaml`
 
 The Event Listener is modified as below to add a `trigger` for the new Service's source repository to trigger continous integration.
 
-* [`config/cicd/base/pipelines/08-eventlisteners/cicd-event-listener.yaml`](output/config/tst-cicd/base/pipelines/08-eventlisteners/cicd-event-listener.yaml)
+* `config/cicd/base/08-eventlisteners/cicd-event-listener.yaml`
 
 ```yaml
   - bindings:
@@ -185,15 +185,17 @@ The Event Listener is modified as below to add a `trigger` for the new Service's
     template:
       name: app-ci-template
 ```
-## OC Apply Resources
+## Commit and Push configuration to GitOps repoository
 
-Now, run `oc apply` to apply the generated resources to the cluster.
+Now, you can push changes to your gitops repository. 
 
 ```shell
-$ oc apply -k config/cicd/base
-$ oc apply -k config/argocd/config/
-$ oc apply -k environments/new-env/env/base/
+$ git add .
+$ git commit -m "Add new service"
+$ git push origin master
 ```
+ ArgoCD will automatically applies changes to the cluster and deploys your new service.   Pretty neat!
+![screenshot](img/argocd-refresh.png)
 
 ## Create Webhook
 
@@ -207,15 +209,7 @@ $ kam webhook create \
     --pipelines-folder <path to GitOps folder>
 ```
 
-## Commit and Push configuration to GitOps repoository
-
-Next, we push all the new resources and configurations to GitOps Git repository.
-
-```shell
-$ git add .
-$ git commit -m "Add new service"
-$ git push origin master
-```
+Make some modifications to the new application source reposiotry and raise a PR.
 
 CD Pipeline is triggered and run successfully.
 ![cd-pipelines-success.png](img/pipeline-success.png)
