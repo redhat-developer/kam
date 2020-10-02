@@ -2,14 +2,11 @@
 > Uncomment only one ` /kind` line, and delete the rest.
 > For example, `> /kind bug` would simply become: `/kind bug`
 
-> /kind api-change
 > /kind bug
 > /kind cleanup
-> /kind deprecation
-> /kind design
 > /kind failing-test
-> /kind feature
-> /kind flake
+> /kind enhancement
+> /kind documentation
 > /kind code-refactoring
 
 
