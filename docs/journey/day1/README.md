@@ -33,13 +33,13 @@ $ kam bootstrap \
   --gitops-repo-url https://github.com/<your organization>/gitops.git \
   --image-repo quay.io/<username>/<image-repo> \
   --dockercfgjson ~/Downloads/<username>-auth.json \
-  --git-host-access-token ~/Downloads/<git host access token filename> \
+  --git-host-access-token <your git access token> \
   --output <path to write GitOps resources>
 ```
 The bootstrap command supports both [flag mode](../../commands/bootstrap#flag-mode) and [interactive mode](../../commands/bootstrap#interactive-mode). Executing the above command will generate the GitOps directory and the required resources.
 
 
-In the event of using a self-hosted _GitHub Enterprise_ or _GitLab Community/Enterprise Edition_ if the driver name isn't evident from the repository URL. Use the `--private-repo-driver` flag to select _github_ or _gitlab_.
+In the event of using a self-hosted _GitHub Enterprise_ or _GitLab Community/Enterprise Edition_ if the driver name isn't evident from the repository URL, use the `--private-repo-driver` flag to select _github_ or _gitlab_.
 
 For more details see the [ArgoCD documentation](https://argoproj.github.io/argo-cd/user-guide/private-repositories).
 
@@ -189,6 +189,29 @@ $ oc apply -k config/argocd/
 You should now be able to create a route to your new service, it should be
 running [nginx](https://nginx.org/) and serving a page.
 
+At this point, the apps in ArgoCD should be synced and healthy. You may need to manually ["sync apps"](https://github.com/argoproj/argo-cd/blob/master/docs/getting_started.md#7-sync-deploy-the-application) from the ArgoCD web UI if some of the apps are out-of-sync. Instructions on how to access the ArgoCD web UI is provided in the next section.  
+
+
+## Visualize your applications on ArgoCD UI
+
+Open the ArgoCD web UI from `argocd-server` route
+
+![ArgoCDPods](img/ArgoCD_Pods.png)
+
+Get your login credentials from the cluster
+
+```shell
+$ kubectl get secret argocd-cluster -n argocd -ojsonpath='{.data.admin\.password}' | base64 --decode
+```
+
+You can now login with username as `admin` and password fetched in the previous step:
+
+![ArgoCDLogin](img/ArgoCD_Login.png)
+
+The deployed applications should be healthy and in-sync
+
+![ArgoCDUI](img/ArgoCD_UI.png)
+
 ## Changing the initial deployment
 
 The bootstrap creates a `Deployment` in `environments/dev/apps/<app name>/services/<service name>/base/config/100-deployment.yaml` this should bring up nginx, this is purely for demo purposes, you'll need to change this to deploy your built image.
@@ -218,6 +241,8 @@ $ kam webhook create \
     --env-name dev \
     --service-name taxi
 ```
+
+Note: If the webhook creation fails with _gitops-webhook-event-listener-route_ route not being present, login to ArgoCD web UI to verify if the apps have been created and synced successfully (instructions on how to access the ArgoCD web UI is at the bottom of this guide)
 
 Make a change to your application source, the `taxi` repo from the example, it
 can be as simple as editing the `README.md` and propose a change as a
@@ -296,13 +321,12 @@ apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: go-test
-  namespace: cicd
+  namespace: default
 spec:
-  inputs:
-    resources:
-    - name: source
-      description: the git source to execute on
-      type: git
+  resources:
+    inputs:
+      - name: source
+        type: git
   steps:
     - name: go-test
       image: golang:latest
@@ -313,7 +337,7 @@ This is a simple test task for a Go application, it just runs the tests.
 
 Append the newly added task to the existing kustomize file
 
-* `config/cicd/base/kustomization.yaml
+* `config/cicd/base/kustomization.yaml`
 
 Update the pipeline in this file:
 
@@ -370,23 +394,3 @@ being executed.
 ![PipelineRun doing a dry run of the configuration](img/pipelinerun-dryrun.png)
 
 This validates that the YAML can be applied, by executing a `oc apply -k --dry-run`.
-
-## Visualize your applications on ArgoCD UI
-
-Open the ArgoCD web UI from `argocd-server` route
-
-![ArgoCDPods](img/ArgoCD_Pods.png)
-
-Get your login credentials from the cluster
-
-```shell
-$ kubectl get secret argocd-cluster -n argocd -ojsonpath='{.data.admin\.password}' | base64 --decode
-```
-
-You can now login with username as `admin` and password fetched in the previous step:
-
-![ArgoCDLogin](img/ArgoCD_Login.png)
-
-The deployed applications should be healthy and in-sync
-
-![ArgoCDUI](img/ArgoCD_UI.png)
