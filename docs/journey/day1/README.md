@@ -33,13 +33,13 @@ $ kam bootstrap \
   --gitops-repo-url https://github.com/<your organization>/gitops.git \
   --image-repo quay.io/<username>/<image-repo> \
   --dockercfgjson ~/Downloads/<username>-auth.json \
-  --git-host-access-token ~/Downloads/<git host access token filename> \
+  --git-host-access-token <your git access token> \
   --output <path to write GitOps resources>
 ```
 The bootstrap command supports both [flag mode](../../commands/bootstrap#flag-mode) and [interactive mode](../../commands/bootstrap#interactive-mode). Executing the above command will generate the GitOps directory and the required resources.
 
 
-In the event of using a self-hosted _GitHub Enterprise_ or _GitLab Community/Enterprise Edition_ if the driver name isn't evident from the repository URL. Use the `--private-repo-driver` flag to select _github_ or _gitlab_.
+In the event of using a self-hosted _GitHub Enterprise_ or _GitLab Community/Enterprise Edition_ if the driver name isn't evident from the repository URL, use the `--private-repo-driver` flag to select _github_ or _gitlab_.
 
 For more details see the [ArgoCD documentation](https://argoproj.github.io/argo-cd/user-guide/private-repositories).
 
@@ -219,6 +219,8 @@ $ kam webhook create \
     --service-name taxi
 ```
 
+Note: If the webhook creation fails with _gitops-webhook-event-listener-route_ route not being present, login to ArgoCD web UI to verify if the apps have been created and synced successfully (instructions on how to access the ArgoCD web UI is at the bottom of this guide)
+
 Make a change to your application source, the `taxi` repo from the example, it
 can be as simple as editing the `README.md` and propose a change as a
 Pull Request.
@@ -296,13 +298,12 @@ apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: go-test
-  namespace: cicd
+  namespace: default
 spec:
-  inputs:
-    resources:
-    - name: source
-      description: the git source to execute on
-      type: git
+  resources:
+    inputs:
+      - name: source
+        type: git
   steps:
     - name: go-test
       image: golang:latest
@@ -313,7 +314,7 @@ This is a simple test task for a Go application, it just runs the tests.
 
 Append the newly added task to the existing kustomize file
 
-* `config/cicd/base/kustomization.yaml
+* `config/cicd/base/kustomization.yaml`
 
 Update the pipeline in this file:
 

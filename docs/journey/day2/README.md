@@ -203,7 +203,7 @@ Create a webhook for the new source repository.   This will allow webhook on the
 
 ```shell
 $ kam webhook create \
-    --access-token \
+    --access-token <git host access token> \
     --env-name new-env \
     --service-name bus \
     --pipelines-folder <path to GitOps folder>
