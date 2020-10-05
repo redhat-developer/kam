@@ -44,60 +44,63 @@ do
 done
 echo "Completes sealed secrets operator installation"
 
-# create_sealed_secrets_operator_instance(){
-#   oc create -f - <<EOF
-#   apiVersion: bitnami.com/v1alpha1
-#   kind: SealedSecretController
-#   metadata: 
-#     finalizers: 
-#       - uninstall-helm-release
-#     managedFields: 
-#       - 
-#         apiVersion: bitnami.com/v1alpha1
-#         manager: oc
-#         operation: Update
-#       - 
-#         apiVersion: bitnami.com/v1alpha1
-#         manager: helm-operator
-#         operation: Update
-#     name: sealedsecretsontroller
-#     namespace: cicd
-#   spec: 
-#     affinity: {}
-#     controller: 
-#       create: true
-#     crd: 
-#       create: true
-#       keep: true
-#     image: 
-#       pullPolicy: IfNotPresent
-#       repository: "quay.io/bitnami/sealed-secrets-controller@sha256:8e9a37bb2e1a6f3a8bee949e3af0e9dab0d7dca618f1a63048dc541b5d554985"
-#     ingress: 
-#       annotations: {}
-#       enabled: false
-#       hosts: 
-#         - chart-example.local
-#       path: /v1/cert.pem
-#       tls: []
-#     networkPolicy: false
-#     nodeSelector: {}
-#     podAnnotations: {}
-#     podLabels: {}
-#     priorityClassName: ""
-#     rbac: 
-#       create: true
-#       pspEnabled: false
-#     resources: {}
-#     secretName: sealed-secrets-key
-#     securityContext: 
-#       fsGroup: ""
-#       runAsUser: ""
-#     serviceAccount: 
-#       create: true
-#       name: ""
-#     tolerations: []
-# EOF
-# }
+echo "Starting sealed secrets operator instance creation"
+create_sealed_secrets_operator_instance(){
+  oc create -f - <<EOF
+  apiVersion: bitnami.com/v1alpha1
+  kind: SealedSecretController
+  metadata: 
+    finalizers: 
+      - uninstall-helm-release
+    managedFields: 
+      - 
+        apiVersion: bitnami.com/v1alpha1
+        manager: oc
+        operation: Update
+      - 
+        apiVersion: bitnami.com/v1alpha1
+        manager: helm-operator
+        operation: Update
+    name: sealedsecretsontroller
+    namespace: cicd
+  spec: 
+    affinity: {}
+    controller: 
+      create: true
+    crd: 
+      create: true
+      keep: true
+    image: 
+      pullPolicy: IfNotPresent
+      repository: "quay.io/bitnami/sealed-secrets-controller@sha256:8e9a37bb2e1a6f3a8bee949e3af0e9dab0d7dca618f1a63048dc541b5d554985"
+    ingress: 
+      annotations: {}
+      enabled: false
+      hosts: 
+        - chart-example.local
+      path: /v1/cert.pem
+      tls: []
+    networkPolicy: false
+    nodeSelector: {}
+    podAnnotations: {}
+    podLabels: {}
+    priorityClassName: ""
+    rbac: 
+      create: true
+      pspEnabled: false
+    resources: {}
+    secretName: sealed-secrets-key
+    securityContext: 
+      fsGroup: ""
+      runAsUser: ""
+    serviceAccount: 
+      create: true
+      name: ""
+    tolerations: []
+EOF
+}
+create_sealed_secrets_operator_instance
+echo "Completes sealed secrets operator instance creation"
 
 echo "Starting openshift pipelines operator installation"
 install_openshift_pipelines_operator() {
