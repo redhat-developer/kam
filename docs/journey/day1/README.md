@@ -189,6 +189,29 @@ $ oc apply -k config/argocd/
 You should now be able to create a route to your new service, it should be
 running [nginx](https://nginx.org/) and serving a page.
 
+At this point, the apps in ArgoCD should be synced and healthy. You may need to manually ["sync apps"](https://github.com/argoproj/argo-cd/blob/master/docs/getting_started.md#7-sync-deploy-the-application) from the ArgoCD web UI if some of the apps are out-of-sync. Instructions on how to access the ArgoCD web UI is provided in the next section.  
+
+
+## Visualize your applications on ArgoCD UI
+
+Open the ArgoCD web UI from `argocd-server` route
+
+![ArgoCDPods](img/ArgoCD_Pods.png)
+
+Get your login credentials from the cluster
+
+```shell
+$ kubectl get secret argocd-cluster -n argocd -ojsonpath='{.data.admin\.password}' | base64 --decode
+```
+
+You can now login with username as `admin` and password fetched in the previous step:
+
+![ArgoCDLogin](img/ArgoCD_Login.png)
+
+The deployed applications should be healthy and in-sync
+
+![ArgoCDUI](img/ArgoCD_UI.png)
+
 ## Changing the initial deployment
 
 The bootstrap creates a `Deployment` in `environments/dev/apps/<app name>/services/<service name>/base/config/100-deployment.yaml` this should bring up nginx, this is purely for demo purposes, you'll need to change this to deploy your built image.
@@ -371,23 +394,3 @@ being executed.
 ![PipelineRun doing a dry run of the configuration](img/pipelinerun-dryrun.png)
 
 This validates that the YAML can be applied, by executing a `oc apply -k --dry-run`.
-
-## Visualize your applications on ArgoCD UI
-
-Open the ArgoCD web UI from `argocd-server` route
-
-![ArgoCDPods](img/ArgoCD_Pods.png)
-
-Get your login credentials from the cluster
-
-```shell
-$ kubectl get secret argocd-cluster -n argocd -ojsonpath='{.data.admin\.password}' | base64 --decode
-```
-
-You can now login with username as `admin` and password fetched in the previous step:
-
-![ArgoCDLogin](img/ArgoCD_Login.png)
-
-The deployed applications should be healthy and in-sync
-
-![ArgoCDUI](img/ArgoCD_UI.png)
