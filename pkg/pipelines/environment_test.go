@@ -237,6 +237,20 @@ func assertFileExists(t *testing.T, testFs afero.Fs, path string) {
 	}
 }
 
+func assertDirExists(t *testing.T, testFs afero.Fs, path string) {
+	t.Helper()
+	exists, err := afero.Exists(testFs, path)
+	assertNoError(t, err)
+	if !exists {
+		t.Fatalf("unable to find directory %q", path)
+	}
+	isDir, err := afero.DirExists(testFs, path)
+	assertNoError(t, err)
+	if !isDir {
+		t.Fatalf("%q is not a directory", path)
+	}
+}
+
 func mustReadFileAsMap(t *testing.T, fs afero.Fs, filename string) map[string]interface{} {
 	t.Helper()
 	b, err := afero.ReadFile(fs, filename)
