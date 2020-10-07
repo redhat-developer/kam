@@ -80,7 +80,7 @@ In the Application's folder, a kustomization.yaml is generated to reference the 
 
 * `environments/new-env/apps/app-bus/services/bus/base/kustomization.yaml`
 
-In the Service's base folder, an empty `config` folder is created.   (Please create `config` if it does not exist.)  This is the folder you will add `deployment yaml` files to specify how the Service should be deployed.
+In the Service's base folder, an empty `config` folder is created. This is the folder in which you will add `deployment yaml` files to specify how the Service should be deployed.
 
 * `environments/new-env/apps/app-bus/services/bus/base/config`
 
