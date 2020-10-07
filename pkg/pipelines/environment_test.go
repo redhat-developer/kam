@@ -35,7 +35,11 @@ func TestAddEnv(t *testing.T) {
 	}
 	for _, path := range wantedPaths {
 		t.Run(fmt.Sprintf("checking path %s already exists", path), func(rt *testing.T) {
-			assertFileExists(rt, fakeFs, filepath.Join(gitopsPath, path))
+			// The inmemory version of Afero doesn't return errors
+			exists, _ := fakeFs.Exists(filepath.Join(gitopsPath, path))
+			if !exists {
+				t.Fatalf("The file is not present at path : %v", path)
+			}
 		})
 	}
 
@@ -74,7 +78,12 @@ func TestAddEnvWithClusterProvided(t *testing.T) {
 	}
 	for _, path := range wantedPaths {
 		t.Run(fmt.Sprintf("checking path %s already exists", path), func(rt *testing.T) {
-			assertFileExists(rt, fakeFs, filepath.Join(gitopsPath, path))
+			// The inmemory version of Afero doesn't return errors
+			exists, _ := fakeFs.Exists(filepath.Join(gitopsPath, path))
+			if !exists {
+				t.Fatalf("The file is not present at path : %v", path)
+			}
+
 		})
 	}
 
@@ -220,20 +229,6 @@ func assertNoError(t *testing.T, err error) {
 	t.Helper()
 	if err != nil {
 		t.Fatal(err)
-	}
-}
-
-func assertFileExists(t *testing.T, testFs afero.Fs, path string) {
-	t.Helper()
-	exists, err := afero.Exists(testFs, path)
-	assertNoError(t, err)
-	if !exists {
-		t.Fatalf("unable to find file %q", path)
-	}
-	isDir, err := afero.DirExists(testFs, path)
-	assertNoError(t, err)
-	if isDir {
-		t.Fatalf("%q is a directory", path)
 	}
 }
 

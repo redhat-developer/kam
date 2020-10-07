@@ -259,7 +259,7 @@ func TestAddServiceWithoutApp(t *testing.T) {
 	}
 }
 
-func TestAddService(t *testing.T) {
+func TestAddServiceFilePaths(t *testing.T) {
 	defer stubDefaultPublicKeyFunc(t)()
 
 	fakeFs := ioutils.NewMemoryFilesystem()
@@ -294,7 +294,45 @@ func TestAddService(t *testing.T) {
 	assertNoError(t, err)
 	for _, path := range wantedPaths {
 		t.Run(fmt.Sprintf("checking path %s already exists", path), func(rt *testing.T) {
-			assertFileExists(rt, fakeFs, filepath.Join(outputPath, path))
+			// The inmemory version of Afero doesn't return errors
+			exists, _ := fakeFs.Exists(filepath.Join(outputPath, path))
+			if !exists {
+				t.Fatalf("The file is not present at : %v", path)
+			}
+		})
+	}
+}
+
+func TestAddServiceFolderPaths(t *testing.T) {
+	defer stubDefaultPublicKeyFunc(t)()
+
+	fakeFs := ioutils.NewMemoryFilesystem()
+	outputPath := afero.GetTempDir(fakeFs, "test")
+	pipelinesPath := filepath.Join(outputPath, pipelinesFile)
+	m := buildManifest(true, true)
+	b, err := yaml.Marshal(m)
+	assertNoError(t, err)
+	err = afero.WriteFile(fakeFs, pipelinesPath, b, 0644)
+	assertNoError(t, err)
+	wantedPaths := []string{
+		"environments/test-dev/apps/new-app/services/test/base/config",
+	}
+	err = AddService(&AddServiceOptions{
+		AppName:             "new-app",
+		EnvName:             "test-dev",
+		GitRepoURL:          "http://github.com/org/test",
+		PipelinesFolderPath: outputPath,
+		WebhookSecret:       "123",
+		ServiceName:         "test",
+	}, fakeFs)
+	assertNoError(t, err)
+	for _, path := range wantedPaths {
+		t.Run(fmt.Sprintf("checking path %s already exists", path), func(rt *testing.T) {
+			// The inmemory version of Afero doesn't return errors
+			exists, _ := fakeFs.DirExists(filepath.Join(outputPath, path))
+			if !exists {
+				t.Fatalf("The directory does not exist at path : %v", path)
+			}
 		})
 	}
 }
