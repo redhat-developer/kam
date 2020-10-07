@@ -294,7 +294,10 @@ func TestAddServiceFilePaths(t *testing.T) {
 	assertNoError(t, err)
 	for _, path := range wantedPaths {
 		t.Run(fmt.Sprintf("checking path %s already exists", path), func(rt *testing.T) {
-			assertFileExists(rt, fakeFs, filepath.Join(outputPath, path))
+			exists, _ := fakeFs.Exists(filepath.Join(outputPath, path))
+			if !exists {
+				t.Fatalf("The file is not present at : %v", path)
+			}
 		})
 	}
 }
@@ -324,7 +327,10 @@ func TestAddServiceFolderPaths(t *testing.T) {
 	assertNoError(t, err)
 	for _, path := range wantedPaths {
 		t.Run(fmt.Sprintf("checking path %s already exists", path), func(rt *testing.T) {
-			assertDirExists(rt, fakeFs, filepath.Join(outputPath, path))
+			exists, _ := fakeFs.DirExists(filepath.Join(outputPath, path))
+			if !exists {
+				t.Fatalf("The directory does not exist at path : %v", path)
+			}
 		})
 	}
 }

@@ -8,13 +8,13 @@ import (
 )
 
 // NewFilesystem returns a local filesystem based afero FS implementation.
-func NewFilesystem() afero.Fs {
-	return afero.NewOsFs()
+func NewFilesystem() afero.Afero {
+	return afero.Afero{Fs: afero.NewOsFs()}
 }
 
 // NewMemoryFilesystem returns an in-memory afero FS implementation.
-func NewMemoryFilesystem() afero.Fs {
-	return afero.NewMemMapFs()
+func NewMemoryFilesystem() afero.Afero {
+	return afero.Afero{Fs: afero.NewMemMapFs()}
 }
 
 // IsExisting returns bool whether path exists

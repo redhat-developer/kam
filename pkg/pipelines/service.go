@@ -204,7 +204,7 @@ func createSvcImageBinding(cfg *config.PipelinesConfig, env *config.Environment,
 func createConfigFolder(m *config.Manifest, appFs afero.Fs, o *AddServiceOptions) error {
 	basePath, err := homedir.Expand(o.PipelinesFolderPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("Cannot expand the pipelines.yaml path : %s", o.PipelinesFolderPath)
 	}
 	env := m.GetEnvironment(o.EnvName)
 	app := m.GetApplication(o.EnvName, o.AppName)
