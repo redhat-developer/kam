@@ -35,6 +35,7 @@ func TestAddEnv(t *testing.T) {
 	}
 	for _, path := range wantedPaths {
 		t.Run(fmt.Sprintf("checking path %s already exists", path), func(rt *testing.T) {
+			// The inmemory version of Afero doesn't return errors
 			exists, _ := fakeFs.Exists(filepath.Join(gitopsPath, path))
 			if !exists {
 				t.Fatalf("The file is not present at path : %v", path)
@@ -77,6 +78,7 @@ func TestAddEnvWithClusterProvided(t *testing.T) {
 	}
 	for _, path := range wantedPaths {
 		t.Run(fmt.Sprintf("checking path %s already exists", path), func(rt *testing.T) {
+			// The inmemory version of Afero doesn't return errors
 			exists, _ := fakeFs.Exists(filepath.Join(gitopsPath, path))
 			if !exists {
 				t.Fatalf("The file is not present at path : %v", path)
