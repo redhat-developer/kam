@@ -54,7 +54,7 @@ jobs:
         then
           echo "not well formatted sources are found"
           exit 1
-        fi        
+        fi
     - name: Generate coverage report
       run: |
         go test `go list ./... | grep -v examples` -coverprofile=coverage.txt -covermode=atomic

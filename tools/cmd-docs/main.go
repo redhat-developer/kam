@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	err := doc.GenMarkdownTree(cmd.MakeRootCmd(), "./docs/commands/kam")
+	err := doc.GenMarkdownTree(cmd.MakeRootCmd(), "./docs/commands")
 	if err != nil {
 		log.Fatal(err)
 	}
