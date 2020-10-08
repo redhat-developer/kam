@@ -36,7 +36,7 @@ $ kam bootstrap \
   --git-host-access-token <your git access token> \
   --output <path to write GitOps resources>
 ```
-The `kam bootstrap` [command](../../commands/kam_bootstrap.md) also provides an interactive mode, and will generate the GitOps directory and the required resources.
+The `kam bootstrap` [command](../../commands/kam_bootstrap.md) also provides an interactive mode, which is triggered by running without any parameters, and will generate the GitOps directory and the required resources.
 
 In the event of using a self-hosted _GitHub Enterprise_ or _GitLab Community/Enterprise Edition_ if the driver name isn't evident from the repository URL, use the `--private-repo-driver` flag to select _github_ or _gitlab_.
 
@@ -58,6 +58,10 @@ The name of the app and service is derived from the last component of your
 `service-repo-url` e.g. if you bootstrap with `--service-repo-url
 https://github.com/myorg/myproject.git` this would bootstrap an app called
 `app-myproject` and a service called `myproject`.
+
+Finally, the GitOps repository is created automatically if credentials are
+provided, this will create a private repository for pushing your generated
+resources to.
 
 ## Prefixing namespaces
 

@@ -147,6 +147,30 @@ func TestBootstrapManifest(t *testing.T) {
 	}
 }
 
+func TestBootstrapCreatesRepository(t *testing.T) {
+	defer func(f secrets.PublicKeyFunc) {
+		secrets.DefaultPublicKeyFunc = f
+	}(secrets.DefaultPublicKeyFunc)
+
+	secrets.DefaultPublicKeyFunc = makeTestKey(t)
+	fakeGitData := stubOutGitClientFactory(t, "test-token")
+
+	params := &BootstrapOptions{
+		Prefix:               "tst-",
+		GitOpsRepoURL:        testGitOpsRepo,
+		ImageRepo:            "image/repo",
+		GitOpsWebhookSecret:  "123",
+		GitHostAccessToken:   "test-token",
+		ServiceRepoURL:       testSvcRepo,
+		ServiceWebhookSecret: "456",
+		CommitStatusTracker:  true,
+	}
+	err := Bootstrap(params, ioutils.NewMemoryFilesystem())
+	fatalIfError(t, err)
+
+	assertRepositoryCreated(t, fakeGitData, "my-org", "gitops")
+}
+
 func TestOrgRepoFromURL(t *testing.T) {
 	want := "my-org/gitops"
 	got, err := orgRepoFromURL(testGitOpsRepo)
@@ -182,6 +206,7 @@ func TestOverwriteFlag(t *testing.T) {
 	defer func(f secrets.PublicKeyFunc) {
 		secrets.DefaultPublicKeyFunc = f
 	}(secrets.DefaultPublicKeyFunc)
+	_ = stubOutGitClientFactory(t, "test-token")
 
 	secrets.DefaultPublicKeyFunc = makeTestKey(t)
 	fakeFs := ioutils.NewMemoryFilesystem()
@@ -190,6 +215,7 @@ func TestOverwriteFlag(t *testing.T) {
 		GitOpsRepoURL:        testGitOpsRepo,
 		ImageRepo:            "image/repo",
 		GitOpsWebhookSecret:  "123",
+		GitHostAccessToken:   "test-token",
 		ServiceRepoURL:       testSvcRepo,
 		ServiceWebhookSecret: "456",
 	}

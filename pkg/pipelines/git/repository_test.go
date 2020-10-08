@@ -147,7 +147,7 @@ func TestCreateWebHook(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if diff := cmp.Diff("1", created); diff != "" {
-		t.Errorf("deleted mismatch got\n%s", diff)
+	if created != "1" {
+		t.Errorf("failed to create webhook, got %q, want %q", created, "1")
 	}
 }

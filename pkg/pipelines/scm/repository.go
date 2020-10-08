@@ -61,6 +61,16 @@ func (r *repository) CreatePushTrigger(name, secretName, secretNS, template stri
 		r.spec.eventInterceptor(secretNS, secretName))
 }
 
+// URL implements the Repository interface.
+func (r *repository) URL() string {
+	return r.url
+}
+
+// PushBindingName returns the name of the push binding.
+func (r *repository) PushBindingName() string {
+	return r.spec.pushBindingName()
+}
+
 func (r *repository) createTrigger(name, filters, template string, bindings []string, interceptor *triggersv1.EventInterceptor) triggersv1.EventListenerTrigger {
 	return triggersv1.EventListenerTrigger{
 		Name: name,
@@ -71,13 +81,4 @@ func (r *repository) createTrigger(name, filters, template string, bindings []st
 		Bindings: createBindings(bindings),
 		Template: createListenerTemplate(template),
 	}
-}
-
-func (r *repository) PushBindingName() string {
-	return r.spec.pushBindingName()
-}
-
-// URL implements the Repository interface.
-func (r *repository) URL() string {
-	return r.url
 }
