@@ -30,12 +30,20 @@ jobs:
           echo "Go mod state is not clean"
           exit 1
         fi
+    - name: Check command-documentation up-to-date
+      run: |
+        make cmd-docs
+        if [[ ! -z $(git status -s) ]]
+        then
+          echo "command-documentation out of date"
+          exit 1
+        fi
     - name: Build Binary
       run: |
         pwd
         ls -l
         make bin
-    
+
     - name: Run Go Tests
       run: make test
 

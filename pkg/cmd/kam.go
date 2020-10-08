@@ -16,7 +16,8 @@ var (
 	fullName = "kam"
 )
 
-func makeRootCmd() *cobra.Command {
+// MakeRootCmd creates and returns the root command for the kam commands.
+func MakeRootCmd() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "kam",
 		Short: "kam",
@@ -32,13 +33,12 @@ func makeRootCmd() *cobra.Command {
 		webhook.NewCmdWebhook(webhook.RecommendedCommandName, utility.GetFullName(fullName, webhook.RecommendedCommandName)),
 		NewCmdBuild(BuildRecommendedCommandName, utility.GetFullName(fullName, BuildRecommendedCommandName)),
 	)
-
 	return rootCmd
 }
 
 // Execute is the main entry point into this component.
 func Execute() {
-	if err := makeRootCmd().Execute(); err != nil {
+	if err := MakeRootCmd().Execute(); err != nil {
 		log.Fatal(err)
 	}
 }
