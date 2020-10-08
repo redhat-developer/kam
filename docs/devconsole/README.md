@@ -3,34 +3,34 @@
 Visualize your GitOps environment stages and applications on DevConsole in OpenShift 4.6
 
 
-1. Follow the [Day 1 Operations](../journey/day1) and make sure your ArgoCD applications are in sync 
+1. Follow the [Day 1 Operations](../journey/day1) and make sure your ArgoCD applications are in sync.
 
 ![Applications](../journey/day1/img/ArgoCD_UI.png)
 
-2. Install the GitOps Service operator from OperatorHub in all-namespaces
+2. Install the GitOps Service operator from OperatorHub in all-namespaces.
 
 ![Operator](./img/GitOps_Operator.jpg)
 
 ![Installation](./img/GitOps_Installation.jpg)
 
-3. The operator will install the GitOps backend service in `openshift-pipelines-app-delivery` namespace. `Application Stages` nav-item should now be visible (feature-flagged on the availability of the operator)
+3. The operator will install the GitOps backend service in `openshift-pipelines-app-delivery` namespace. `Application Stages` nav-item will be visible on the availability of the operator.
 
 ![Service](./img/GitOps_Service.jpg)
 
-4. Create a namespace by following the naming conventions 
+4. Create a namespace by following the naming conventions.
 ```shell
 $ kubectl create namespace pipelines-{console_username}-github
 ```
-5. Create a secret for your git access token in the above namespace
+5. Create a secret for your git access token in the above namespace.
 ```shell
 $ kubectl create secret -n pipelines-{console_username}-github generic {console_username}-github-token --from-literal=token={user-token}
 ```
 
-6. Application Stages should now be populated with the list of applications
+6. Application Stages should now be populated with the list of applications.
 
 ![Application_List](./img/GitOps_Applications.jpg)
 
-7. Clicking on an application will take you to the application details page
+7. Clicking on an application will take you to the application details page.
 
 ![GitOps_Dashboard](./img/GitOps_Dashboard.jpg)
 
