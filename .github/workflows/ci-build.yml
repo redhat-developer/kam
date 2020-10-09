@@ -49,9 +49,7 @@ jobs:
 
     - name: Check format
       run: |
-        make gofmt
-        if [[ ! -z $(git status -s) ]]
-        then
+        if [[ $(go fmt ./...) ]]; then
           echo "not well formatted sources are found"
           exit 1
         fi
@@ -64,4 +62,4 @@ jobs:
       with:
         file: ./coverage.txt
         flags: unittests
-        name: codecov-umbrella           
+        name: codecov-umbrella
