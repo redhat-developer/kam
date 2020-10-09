@@ -19,9 +19,10 @@ var (
 // MakeRootCmd creates and returns the root command for the kam commands.
 func MakeRootCmd() *cobra.Command {
 	rootCmd := &cobra.Command{
-		Use:   "kam",
-		Short: "kam",
-		Long:  kamLong,
+		Use:               "kam",
+		Short:             "kam",
+		Long:              kamLong,
+		DisableAutoGenTag: true,
 	}
 
 	// Add all subcommands to base command
