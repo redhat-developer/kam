@@ -1,26 +1,25 @@
-# KAM Service Command
+## kam service add
 
-## Service add
+Add a new service
 
-The `service add` sub-command adds a new service to an existing environment.
+### Synopsis
 
-Services are logically grouped by applications.
-
-This command will create an application for the new service if the target application does not exist.  It outputs resources YAML files, Kustomization files, and updated Manifest to filesystem.
-
-**NOTE**: Service deployment resources are not generated.  They must be manually added to `environments/<env-new>/ services/<service-name>/base/config` and update the Kustomization file `environments/<env-new>/ services/<service-name>/base/kustomization.yaml`
-
-```
 Add a Service to an environment in GitOps
 
-Usage:
-  kam service add [flags]
+```
+kam service add [flags]
+```
 
-Examples:
+### Examples
+
+```
   Add a Service to an environment in GitOps
   kam service add
+```
 
-Flags:
+### Options
+
+```
       --app-name string                                Name of the application where the service will be added
       --env-name string                                Name of the environment where the service will be added
       --git-repo-url string                            GitOps repository e.g. https://github.com/organisation/repository
@@ -34,28 +33,7 @@ Flags:
       --webhook-secret string                          Source Git repository webhook secret (if not provided, it will be auto-generated)
 ```
 
-The directory layout generated is shown below.
-```
-.
-├── apps
-│   └── app-bus
-│       ├── base
-│       │   └── kustomization.yaml
-│       ├── kustomization.yaml
-│       ├── overlays
-│       │   └── kustomization.yaml
-│       └── services
-│           └── bus
-│               ├── base
-│               │   └── kustomization.yaml
-│               ├── kustomization.yaml
-│               └── overlays
-│                   └── kustomization.yaml
-└── env
-    ├── base
-    │   ├── kustomization.yaml
-    │   ├── new-env-environment.yaml
-    │   └── new-env-rolebinding.yaml
-    └── overlays
-        └── kustomization.yaml
-```
+### SEE ALSO
+
+* [kam service](kam_service.md)	 - Manage services in an environment
+

@@ -61,3 +61,6 @@ clean:
 openshiftci-presubmit-unittests:
 	./scripts/openshiftci-presubmit-unittests.sh
 
+.PHONY: cmd-docs
+cmd-docs:
+	go run tools/cmd-docs/main.go

@@ -1,20 +1,31 @@
-# KAM build Command
+## kam build
 
-The `build` sub-command (re-)generates pipelines resources from a pipelines.yaml file.
+Build pipelines files
 
-```
+### Synopsis
+
 Build GitOps pipelines files
 
-Usage:
-  kam build [flags]
+```
+kam build [flags]
+```
 
-Examples:
+### Examples
+
+```
   # Build files from pipelines
   kam build
+```
 
-Flags:
+### Options
+
+```
   -h, --help                      help for build
       --output string             Folder path to add GitOps resources (default ".")
       --pipelines-folder string   Folder path to retrieve manifest, eg. /test where manifest exists at /test/pipelines.yaml (default ".")
 ```
+
+### SEE ALSO
+
+* [kam](kam.md)	 - kam
 

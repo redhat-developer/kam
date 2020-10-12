@@ -30,23 +30,29 @@ jobs:
           echo "Go mod state is not clean"
           exit 1
         fi
+    - name: Check cobra command documentation is up-to-date
+      run: |
+        make cmd-docs
+        if [[ ! -z $(git status -s) ]]
+        then
+          echo "command-documentation is out of date (run make cmd-docs)."
+          exit 1
+        fi
     - name: Build Binary
       run: |
         pwd
         ls -l
         make bin
-    
+
     - name: Run Go Tests
       run: make test
 
     - name: Check format
       run: |
-        make gofmt
-        if [[ ! -z $(git status -s) ]]
-        then
+        if [[ $(go fmt ./...) ]]; then
           echo "not well formatted sources are found"
           exit 1
-        fi        
+        fi
     - name: Generate coverage report
       run: |
         go test `go list ./... | grep -v examples` -coverprofile=coverage.txt -covermode=atomic
@@ -56,4 +62,4 @@ jobs:
       with:
         file: ./coverage.txt
         flags: unittests
-        name: codecov-umbrella           
+        name: codecov-umbrella
