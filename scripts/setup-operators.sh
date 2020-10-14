@@ -3,20 +3,27 @@ set -x
 echo "Starting sealed secrets operator installation"
 install_sealed_secrets_operator(){
 oc create -f - <<EOF
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  generateName: cicd-
+  namespace: cicd
+spec:
+  targetNamespaces:
+  - cicd
+EOF
+
+oc create -f - <<EOF
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
-metadata: 
-  labels: 
-    operators.coreos.com/sealed-secrets-operator-helm.cicd: ""
+metadata:
   name: sealed-secrets-operator-helm
   namespace: cicd
-spec: 
+spec:
   channel: alpha
-  installPlanApproval: Automatic
   name: sealed-secrets-operator-helm
   source: community-operators
   sourceNamespace: openshift-marketplace
-  startingCSV: sealed-secrets-operator-helm.v0.0.2
 EOF
 }
 
@@ -87,18 +94,14 @@ install_openshift_pipelines_operator() {
 oc create -f - <<EOF
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
-metadata: 
-  labels: 
-    operators.coreos.com/openshift-pipelines-operator-rh.openshift-operators: ""
+metadata:
   name: openshift-pipelines-operator-rh
   namespace: openshift-operators
-spec: 
+spec:
   channel: ocp-4.5
-  installPlanApproval: Automatic
   name: openshift-pipelines-operator-rh
-  source: praveen-operators
+  source: redhat-operators
   sourceNamespace: openshift-marketplace
-  startingCSV: openshift-pipelines-operator.v1.0.1
 EOF
 }
 
@@ -120,6 +123,17 @@ echo "Completes openshift pipelines operator installation"
 echo "Starting argocd operator installation"
 install_argocd_operator(){
 oc create -f - <<EOF
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  generateName: argocd-
+  namespace: argocd
+spec:
+  targetNamespaces:
+  - argocd
+EOF
+
+oc create -f - <<EOF
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata: 
@@ -129,7 +143,6 @@ metadata:
   namespace: argocd
 spec: 
   channel: alpha
-  installPlanApproval: Automatic
   name: argocd-operator
   source: community-operators
   sourceNamespace: openshift-marketplace
