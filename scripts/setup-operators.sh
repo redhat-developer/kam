@@ -120,6 +120,9 @@ do
 done
 echo "Completes openshift pipelines operator installation"
 
+echo "Install the Buildah ClusterTask"
+oc replace -f https://raw.githubusercontent.com/redhat-developer/kam/master/docs/updates/buildah.yaml
+
 echo "Starting argocd operator installation"
 install_argocd_operator(){
 oc create -f - <<EOF
@@ -164,3 +167,9 @@ do
     fi
 done
 echo "Completes argocd operator installation"
+
+# Due to an open issue https://github.com/argoproj-labs/argocd-operator/issues/107
+# the operator may not create enough privileges to manage multiple namespaces.
+# In order to solve this apply:
+echo "Add Role Binding"
+oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:argocd:argocd-application-controller
