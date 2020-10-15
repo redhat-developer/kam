@@ -9,7 +9,7 @@ toc::[]
 
 Requires *Go 1.14*
 
-Testing happens with the above version. Developers are advised to stick to this version.
+KAM code compile, build and testing happens with the above link:https://github.com/redhat-developer/kam/blob/master/go.mod#L3[`version`]. Developers are advised to stick to this version or above if they can otherwise using the lesser go version `1.13.*` causes link:https://github.com/redhat-developer/kam/issues/22[`issue`]
 
 Unit test does not require any precondition, run `make test` to validate unit tests.   
 
