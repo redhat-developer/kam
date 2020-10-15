@@ -1,6 +1,6 @@
 #!/bin/bash
 set -x
-# Setup to find nessasary data from cluster setup
+# Setup to find necessary data from cluster setup
 # Constants
 HTPASSWD_FILE="./htpass"
 USERPASS="developer"
