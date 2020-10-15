@@ -1,6 +1,6 @@
 #!/bin/bash
 set -x
-echo "Starting sealed secrets operator installation"
+echo "Starting sealed-secrets operator installation"
 install_sealed_secrets_operator(){
 oc create -f - <<EOF
 apiVersion: operators.coreos.com/v1
@@ -40,9 +40,9 @@ do
         sleep 10
     fi
 done
-echo "Completes sealed secrets operator installation"
+echo "Completed sealed-secrets operator installation"
 
-echo "Starting sealed secrets operator instance creation"
+echo "Starting sealed-secrets operator instance creation"
 create_sealed_secrets_operator_instance(){
 oc create -f - <<EOF
 apiVersion: bitnami.com/v1alpha1
@@ -87,9 +87,9 @@ spec:
 EOF
 }
 create_sealed_secrets_operator_instance
-echo "Completes sealed secrets operator instance creation"
+echo "Completed sealed-secrets operator instance creation"
 
-echo "Starting openshift pipelines operator installation"
+echo "Starting openshift-pipelines operator installation"
 install_openshift_pipelines_operator() {
 oc create -f - <<EOF
 apiVersion: operators.coreos.com/v1alpha1
@@ -118,7 +118,7 @@ do
         sleep 10
     fi
 done
-echo "Completes openshift pipelines operator installation"
+echo "Completed openshift-pipelines operator installation"
 
 echo "Install the Buildah ClusterTask"
 oc replace -f https://raw.githubusercontent.com/redhat-developer/kam/master/docs/updates/buildah.yaml
@@ -166,7 +166,7 @@ do
         sleep 10
     fi
 done
-echo "Completes argocd operator installation"
+echo "Completed argocd operator installation"
 
 # Due to an open issue https://github.com/argoproj-labs/argocd-operator/issues/107
 # the operator may not create enough privileges to manage multiple namespaces.
