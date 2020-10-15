@@ -2,6 +2,10 @@
 set -x
 echo "Starting sealed-secrets operator installation"
 install_sealed_secrets_operator(){
+# If the Operator uses the SingleNamespace mode for example cicd namespace
+# and you do not already have an appropriate OperatorGroup in place,
+# you must create one.
+# Check for details - https://docs.openshift.com/container-platform/4.5/operators/admin/olm-adding-operators-to-cluster.html#olm-installing-operator-from-operatorhub-using-cli_olm-adding-operators-to-a-cluster
 oc create -f - <<EOF
 apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
@@ -13,6 +17,7 @@ spec:
   - cicd
 EOF
 
+# Apply the sealed-secrets operator subscription
 oc create -f - <<EOF
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
@@ -28,7 +33,7 @@ EOF
 }
 
 install_sealed_secrets_operator
-# sealed secrets operator status check
+# sealed-secrets operator status check
 count=0
 while [ "$count" -lt "5" ];
 do
@@ -125,6 +130,10 @@ oc replace -f https://raw.githubusercontent.com/redhat-developer/kam/master/docs
 
 echo "Starting argocd operator installation"
 install_argocd_operator(){
+# If the Operator uses the SingleNamespace mode for example argocd namespace
+# and you do not already have an appropriate OperatorGroup in place,
+# you must create one.
+# Check for details - https://docs.openshift.com/container-platform/4.5/operators/admin/olm-adding-operators-to-cluster.html#olm-installing-operator-from-operatorhub-using-cli_olm-adding-operators-to-a-cluster
 oc create -f - <<EOF
 apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
@@ -136,6 +145,7 @@ spec:
   - argocd
 EOF
 
+# Apply the argocd operator subscription
 oc create -f - <<EOF
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
@@ -149,7 +159,6 @@ spec:
   name: argocd-operator
   source: community-operators
   sourceNamespace: openshift-marketplace
-  startingCSV: argocd-operator.v0.0.13
 EOF
 }
 
