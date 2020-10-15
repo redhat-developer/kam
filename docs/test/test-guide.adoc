@@ -7,13 +7,13 @@ toc::[]
 
 == Setting up test environment
 
-Requires *Go 1.14*
-
-KAM code compile, build and testing happens with the above link:https://github.com/redhat-developer/kam/blob/master/go.mod#L3[`version`]. Developers are advised to stick to this version or above if they can otherwise using the lesser go version `1.13.*` causes link:https://github.com/redhat-developer/kam/issues/22[`issue`]
-
-Unit test does not require any precondition, run `make test` to validate unit tests.   
+The minimum version of Go required is in the link:https://github.com/redhat-developer/kam/blob/master/go.mod#L3[`go.mod`] file.
 
 == Tests
+
+*Unit tests:*
+
+Unit test does not require any cluster configuration, run `make test` to validate unit tests.
 
 *Prerequisites for OpenShift cluster:*
 
