@@ -69,12 +69,8 @@ HTPASSWD_CREATED=" -c "
 htpasswd -b $HTPASSWD_CREATED $HTPASSWD_FILE developer $USERPASS
 HTPASSWD_CREATED=""
 
-# Create secret in cluster, removing if it already exists
-oc get secret $HTPASSWD_SECRET -n openshift-config &> /dev/null
-if [ $? -eq 0 ]; then
-    oc delete secret $HTPASSWD_SECRET -n openshift-config &> /dev/null
-fi
-oc create secret generic ${HTPASSWD_SECRET} --from-file=htpasswd=${HTPASSWD_FILE} -n openshift-config
+# Create secret in cluster and replace
+oc create secret generic ${HTPASSWD_SECRET} --from-file=htpasswd=${HTPASSWD_FILE} -n openshift-config --dry-run=client -o yaml | oc replace -f -
 
 # Upload htpasswd as new login config
 oc apply -f - <<EOF
