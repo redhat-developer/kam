@@ -80,7 +80,7 @@ type BootstrapOptions struct {
 	OutputPath               string               // Where to write the bootstrapped files to?
 	SealedSecretsService     types.NamespacedName // SealedSecrets Services name
 	GitHostAccessToken       string               // The auth token to use to send commit-status notifications, and access private repositories.
-	Overwrite                bool                 // This allows to overwrite if there is an exixting gitops repository
+	Overwrite                bool                 // This allows to overwrite if there is an existing gitops repository
 	ServiceRepoURL           string               // This is the full URL to your GitHub repository for your app source.
 	ServiceWebhookSecret     string               // This is the secret for authenticating hooks from your app source.
 	PrivateRepoDriver        string               // Records the type of the GitOpsRepoURL driver if not a well-known host.
