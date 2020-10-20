@@ -63,7 +63,7 @@ openshiftci-presubmit-unittests:
 
 .PHONY: cmd-docs
 cmd-docs:
-	go run tools/cmd-docs/main.go
+	go run -mod=readonly tools/cmd-docs/main.go
 
 .PHONY: prepare-test-cluster
 prepare-test-cluster:
