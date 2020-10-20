@@ -304,7 +304,7 @@ func NewCmdBootstrap(name, fullName string) *cobra.Command {
 }
 
 func nextSteps() {
-	log.Success("Bootstrapped OpenShift resources sucessfully\n\n",
+	log.Success("Bootstrapped OpenShift resources successfully\n\n",
 		"Next Steps:\n",
 		"Please refer to https://github.com/redhat-developer/kam/tree/master/docs to get started.",
 	)
