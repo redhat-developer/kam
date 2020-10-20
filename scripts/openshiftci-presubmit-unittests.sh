@@ -16,8 +16,15 @@ git describe --always --long --dirty
 go version
 go env
 make gomod_tidy
-make bin
 make test
+make cmd-docs
+if [[ ! -z $(git status -s) ]]
+then
+    echo "command-documentation is out of date (run make cmd-docs)."
+    exit 1
+else
+    echo "command-documentation is up-to-date."
+fi
 
 # crosscompile and publish artifacts
 make all_platforms
