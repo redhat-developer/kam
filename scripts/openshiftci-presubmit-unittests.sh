@@ -26,8 +26,6 @@ else
     echo "command-documentation is up-to-date."
 fi
 
-make bin
-
 # crosscompile and publish artifacts
 make all_platforms
 
