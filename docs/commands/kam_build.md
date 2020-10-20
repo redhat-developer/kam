@@ -4,7 +4,7 @@ Build pipelines files
 
 ### Synopsis
 
-Build GitOps pipelines files
+Build GitOps pipelines files, generating the ArgoCD applications and OpenShift Pipelines EventListener
 
 ```
 kam build [flags]

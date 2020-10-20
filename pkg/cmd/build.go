@@ -23,7 +23,7 @@ var (
 	%[1]s 
 	`)
 
-	buildLongDesc  = ktemplates.LongDesc(`Build GitOps pipelines files`)
+	buildLongDesc  = ktemplates.LongDesc(`Build GitOps pipelines files, generating the ArgoCD applications and OpenShift Pipelines EventListener`)
 	buildShortDesc = `Build pipelines files`
 )
 
