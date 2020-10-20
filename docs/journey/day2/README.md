@@ -5,9 +5,9 @@ Day 2 Operations are actions that users take to change a GitOps system.
 Currently, the following gitops commands are available to allow users to add new
 Evnrionments and Applications/Services.
 
-* [kam environment](../../commands/environment)
-* [kam service](../../commands/service)
-* [kam webhook](../../commands/webhook)
+* [kam environment](../../commands/kam_environment.md)
+* [kam service](../../commands/kam_service.md)
+* [kam webhook](../../commands/kam_webhook.md)
 
 ## Prerequisites
 

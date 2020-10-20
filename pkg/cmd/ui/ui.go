@@ -11,7 +11,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-// EnterGitRepo allows the user to specify the git repository in a prompt
+// EnterGitRepo allows the user to specify the git repository in a prompt.
 func EnterGitRepo() string {
 	var gitOpsURL string
 	prompt := &survey.Input{
@@ -42,12 +42,13 @@ func EnterInternalRegistry() string {
 	return internalRegistry
 }
 
-// EnterImageRepoInternalRegistry allows the user to specify the Internal image repository in a UI prompt.
+// EnterImageRepoInternalRegistry allows the user to specify the internal image
+// registry in a UI prompt.
 func EnterImageRepoInternalRegistry() string {
 	var imageRepo string
 	prompt := &survey.Input{
-		Message: "Image repository of the form <project>/<app> which is used to push newly built images.",
-		Help:    "By default images are built from source, whenever there is a push to the repository for your service source code and this image will be pushed to the image repository specified in this parameter, if the value is of the form <registry>/<username>/<repository>, then it assumed that it is an upstream image repository e.g. Quay, if its of the form <project>/<app> the internal registry present on the current cluster will be used as the image repository.",
+		Message: "Image registry of the form <project>/<app> which is used to push newly built images.",
+		Help:    "By default images are built from source, whenever there is a push to the repository for your service source code and this image will be pushed to the image registry specified in this parameter, if the value is of the form <registry>/<username>/<image name>, then it assumed that it is an upstream image registry e.g. Quay, if it's of the form <project>/<app> the internal registry present on the current cluster will be used as the image registry.",
 	}
 
 	err := survey.AskOne(prompt, &imageRepo, survey.Required)
@@ -55,12 +56,13 @@ func EnterImageRepoInternalRegistry() string {
 	return imageRepo
 }
 
-// EnterDockercfg allows the user to specify the path to the docker config json file for external image repository authentication in a UI prompt.
+// EnterDockercfg allows the user to specify the path to the docker config json
+// file for external image registry authentication in a UI prompt.
 func EnterDockercfg() string {
 	var dockerCfg string
 	prompt := &survey.Input{
 		Message: "Path to config.json which authenticates image pushes to the desired image registry",
-		Help:    "The secret present in the file path generates a secure secret that authenticates the push of the image built when the app-ci pipeline is run. The image along with the necessary labels will be present on the upstream image repository of choice.",
+		Help:    "The secret present in the file path generates a secure secret that authenticates the push of the image built when the app-ci pipeline is run. The image along with the necessary labels will be present on the upstream image registry of choice.",
 		Default: "~/.docker/config.json",
 	}
 
@@ -69,12 +71,13 @@ func EnterDockercfg() string {
 	return dockerCfg
 }
 
-// EnterImageRepoExternalRepository allows the user to specify the type of image repository they wish to use in a UI prompt.
+// EnterImageRepoExternalRepository allows the user to specify the type of image
+// registry they wish to use in a UI prompt.
 func EnterImageRepoExternalRepository() string {
 	var imageRepoExt string
 	prompt := &survey.Input{
-		Message: "Image repository of the form <registry>/<username>/<repository> which is used to push newly built images.",
-		Help:    "By default images are built from source, whenever there is a push to the repository for your service source code and this image will be pushed to the image repository specified in this parameter, if the value is of the form <registry>/<username>/<repository>, then it assumed that it is an upstream image repository e.g. Quay, if its of the form <project>/<app> the internal registry present on the current cluster will be used as the image repository.",
+		Message: "Image registry of the form <registry>/<username>/<image name> which is used to push newly built images.",
+		Help:    "By default images are built from source whenever there is a push to the repository for your service source code and this image will be pushed to the image registry specified in this parameter, if the value is of the form <registry>/<username>/<image name>, then it assumed that it is an upstream image registry e.g. Quay, if its of the form <project>/<app> the internal registry present on the current cluster will be used as the image registry.",
 	}
 
 	err := survey.AskOne(prompt, &imageRepoExt, survey.Required)
@@ -103,7 +106,8 @@ func EnterOutputPath() string {
 	return outputPath
 }
 
-// EnterGitWebhookSecret allows the user to specify the webhook secret string they wish to authenticate push/pull to GitOps repo in a UI prompt.
+// EnterGitWebhookSecret allows the user to specify the webhook secret string
+// they wish to authenticate push/pull to GitOps repo in a UI prompt.
 func EnterGitWebhookSecret() string {
 	var gitWebhookSecret string
 	prompt := &survey.Input{
@@ -201,9 +205,9 @@ func EnterServiceWebhookSecret() string {
 func SelectOptionImageRepository() string {
 	var optionImageRegistry string
 	prompt := &survey.Select{
-		Message: "Select type of image repository",
-		Options: []string{"Openshift Internal repository", "External Registry"},
-		Default: "Openshift Internal repository",
+		Message: "Select type of image registry",
+		Options: []string{"Openshift Internal registry", "External Registry"},
+		Default: "Openshift Internal registry",
 	}
 
 	err := survey.AskOne(prompt, &optionImageRegistry, survey.Required)

@@ -5,7 +5,7 @@ configuration.
 
 Bootstrapping GitOps can be done with this command:
 
-* [kam bootstrap](../../commands/bootstrap)
+* [kam bootstrap](../../commands/kam_bootstrap.md)
 
 The `kam bootstrap` command generates a functional GitOps setup including your first application.
 
@@ -36,8 +36,7 @@ $ kam bootstrap \
   --git-host-access-token <your git access token> \
   --output <path to write GitOps resources>
 ```
-The `kam bootstrap` command supports both [flag mode](../../commands/bootstrap#flag-mode) and [interactive mode](../../commands/bootstrap#interactive-mode). Executing the above command will generate the GitOps directory and the required resources.
-
+The `kam bootstrap` [command](../../commands/kam_bootstrap.md) also provides an interactive mode, and will generate the GitOps directory and the required resources.
 
 In the event of using a self-hosted _GitHub Enterprise_ or _GitLab Community/Enterprise Edition_ if the driver name isn't evident from the repository URL, use the `--private-repo-driver` flag to select _github_ or _gitlab_.
 
