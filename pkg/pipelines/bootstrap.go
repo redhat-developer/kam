@@ -130,6 +130,35 @@ func Bootstrap(o *BootstrapOptions, appFs afero.Fs) error {
 	if err != nil {
 		return err
 	}
+	err = maybeMakeHookSecrets(o)
+	if err != nil {
+		return err
+	}
+
+	bootstrapped, err := bootstrapResources(o, appFs)
+	if err != nil {
+		return fmt.Errorf("failed to bootstrap resources: %v", err)
+	}
+
+	m := bootstrapped[pipelinesFile].(*config.Manifest)
+	built, err := buildResources(appFs, m)
+	if err != nil {
+		return fmt.Errorf("failed to build resources: %v", err)
+	}
+
+	bootstrapped = res.Merge(built, bootstrapped)
+	log.Successf("Created dev, stage and CICD environments")
+	_, err = yaml.WriteResources(appFs, o.OutputPath, bootstrapped)
+
+	err = BootstrapRepository(o)
+	if err != nil {
+		return fmt.Errorf("failed to create the gitops repository: %q: %w", o.GitOpsRepoURL, err)
+	}
+	log.Successf("Created repository")
+	return nil
+}
+
+func maybeMakeHookSecrets(o *BootstrapOptions) error {
 	if o.GitOpsWebhookSecret == "" {
 		gitopsSecret, err := secrets.GenerateString(webhookSecretLength)
 		if err != nil {
@@ -144,20 +173,7 @@ func Bootstrap(o *BootstrapOptions, appFs afero.Fs) error {
 		}
 		o.ServiceWebhookSecret = appSecret
 	}
-	bootstrapped, err := bootstrapResources(o, appFs)
-	if err != nil {
-		return fmt.Errorf("failed to bootstrap resources: %v", err)
-	}
-
-	m := bootstrapped[pipelinesFile].(*config.Manifest)
-	built, err := buildResources(appFs, m)
-	if err != nil {
-		return fmt.Errorf("failed to build resources: %v", err)
-	}
-	log.Successf("Created dev, stage and CICD environments")
-	bootstrapped = res.Merge(built, bootstrapped)
-	_, err = yaml.WriteResources(appFs, o.OutputPath, bootstrapped)
-	return err
+	return nil
 }
 
 func bootstrapResources(o *BootstrapOptions, appFs afero.Fs) (res.Resources, error) {
