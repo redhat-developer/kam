@@ -8,7 +8,7 @@ set -x
 export CI="prow"
 make prepare-test-cluster
 make bin
-export PATH="$PATH:$(pwd)"
+export PATH="$PATH:$(pwd)/dist"
 export ARTIFACTS_DIR="/tmp/artifacts"
 export CUSTOM_HOMEDIR=$ARTIFACTS_DIR
 
