@@ -57,10 +57,6 @@ test:
 clean:
 	@rm -f $(WINDOWS) $(LINUX) $(DARWIN) ${EXECUTABLE} 
 	
-.PHONY: openshiftci-presubmit-unittests
-openshiftci-presubmit-unittests:
-	./scripts/openshiftci-presubmit-unittests.sh
-
 .PHONY: cmd-docs
 cmd-docs:
 	go run -mod=readonly tools/cmd-docs/main.go
