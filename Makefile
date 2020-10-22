@@ -56,7 +56,7 @@ test:
 
 .PHONY: clean
 clean:
-	@rm -f $(DIST_DIR)/$(WINDOWS) $(DIST_DIR)/$(LINUX) $(DIST_DIR)/$(DARWIN) $(DIST_DIR)/${EXECUTABLE} 
+	@rm -f $(DIST_DIR)/*
 	
 .PHONY: openshiftci-presubmit-unittests
 openshiftci-presubmit-unittests:
