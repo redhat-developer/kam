@@ -1,4 +1,6 @@
 
+
+BIN_DIR=bin
 DIST_DIR=dist
 EXECUTABLE=kam
 WINDOWS=$(EXECUTABLE)_windows_amd64.exe
@@ -44,7 +46,7 @@ gofmt:
 
 .PHONY: bin
 bin:
-	go build  ${CFLAGS} -o $(DIST_DIR)/$(EXECUTABLE) -ldflags=$(LD_FLAGS) cmd/kam/kam.go 
+	go build  ${CFLAGS} -o $(BIN_DIR)/$(EXECUTABLE) -ldflags=$(LD_FLAGS) cmd/kam/kam.go 
 
 .PHONY: install
 install:
@@ -56,7 +58,7 @@ test:
 
 .PHONY: clean
 clean:
-	@rm -f $(DIST_DIR)/*
+	@rm -f $(DIST_DIR)/* $(BIN_DIR)/*
 	
 .PHONY: openshiftci-presubmit-unittests
 openshiftci-presubmit-unittests:

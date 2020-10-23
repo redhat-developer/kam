@@ -16,3 +16,4 @@
 
 # Ignore binary
 dist/
+bin/
