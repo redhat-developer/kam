@@ -16,6 +16,3 @@
 
 # Ignore binary
 dist/
-kam_windows_amd64.exe
-kam_linux_amd64
-kam_darwin_amd64
