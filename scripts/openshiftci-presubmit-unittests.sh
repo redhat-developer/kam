@@ -29,6 +29,6 @@ fi
 # crosscompile and publish artifacts
 make all_platforms
 
-cp kam_darwin_amd64 $CUSTOM_HOMEDIR
-cp kam_linux_amd64 $CUSTOM_HOMEDIR
-cp kam_windows_amd64.exe $CUSTOM_HOMEDIR
+cp dist/kam_darwin_amd64 $CUSTOM_HOMEDIR
+cp dist/kam_linux_amd64 $CUSTOM_HOMEDIR
+cp dist/kam_windows_amd64.exe $CUSTOM_HOMEDIR

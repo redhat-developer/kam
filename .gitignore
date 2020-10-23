@@ -15,7 +15,5 @@
 # vendor/
 
 # Ignore binary
-./kam
-kam_windows_amd64.exe
-kam_linux_amd64
-kam_darwin_amd64
+dist/
+bin/
