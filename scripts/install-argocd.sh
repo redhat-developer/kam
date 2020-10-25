@@ -12,4 +12,4 @@ echo $PLATFORM
 curl -sSL -o bin/argocd https://github.com/argoproj/argo-cd/releases/download/$VERSION/argocd-$PLATFORM-amd64
 
 # Make the argocd CLI executable
-chmod +x argocd
+chmod +x bin/argocd
