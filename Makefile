@@ -1,4 +1,7 @@
 
+
+BIN_DIR=bin
+DIST_DIR=dist
 EXECUTABLE=kam
 WINDOWS=$(EXECUTABLE)_windows_amd64.exe
 LINUX=$(EXECUTABLE)_linux_amd64
@@ -20,13 +23,13 @@ linux: $(LINUX)
 darwin: $(DARWIN) 
 
 $(WINDOWS):
-	env GOOS=windows GOARCH=amd64 go build ${CFLAGS} -o $(WINDOWS)  -ldflags=$(LD_FLAGS)  cmd/kam/kam.go
+	env GOOS=windows GOARCH=amd64 go build ${CFLAGS} -o $(DIST_DIR)/$(WINDOWS)  -ldflags=$(LD_FLAGS)  cmd/kam/kam.go
 
 $(LINUX):
-	env GOOS=linux GOARCH=amd64 go build  ${CFLAGS} -o $(LINUX)  -ldflags=$(LD_FLAGS) cmd/kam/kam.go
+	env GOOS=linux GOARCH=amd64 go build  ${CFLAGS} -o $(DIST_DIR)/$(LINUX)  -ldflags=$(LD_FLAGS) cmd/kam/kam.go
 
 $(DARWIN):
-	env GOOS=darwin GOARCH=amd64 go build  ${CFLAGS} -o $(DARWIN) -ldflags=$(LD_FLAGS) cmd/kam/kam.go	
+	env GOOS=darwin GOARCH=amd64 go build  ${CFLAGS} -o $(DIST_DIR)/$(DARWIN) -ldflags=$(LD_FLAGS) cmd/kam/kam.go	
 
 default: bin
 
@@ -43,7 +46,7 @@ gofmt:
 
 .PHONY: bin
 bin:
-	go build  ${CFLAGS} -o $(EXECUTABLE) -ldflags=$(LD_FLAGS) cmd/kam/kam.go 
+	go build  ${CFLAGS} -o $(BIN_DIR)/$(EXECUTABLE) -ldflags=$(LD_FLAGS) cmd/kam/kam.go 
 
 .PHONY: install
 install:
@@ -55,7 +58,7 @@ test:
 
 .PHONY: clean
 clean:
-	@rm -f $(WINDOWS) $(LINUX) $(DARWIN) ${EXECUTABLE} 
+	@rm -f $(DIST_DIR)/* $(BIN_DIR)/*
 	
 .PHONY: cmd-docs
 cmd-docs:
