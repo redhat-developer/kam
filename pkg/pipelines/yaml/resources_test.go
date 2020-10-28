@@ -35,7 +35,7 @@ func TestWriteResources(t *testing.T) {
 	}{
 		{"Path with ~", "~/manifest", ""},
 		{"Path without ~", filepath.Join(path, "manifest/gitops"), ""},
-		{"Path without permission", "/", "failed to MkDirAll for /test/myfile.yaml: mkdir /test: permission denied"},
+		{"Path without permission", "/", "failed to MkDirAll for /test/myfile.yaml"},
 	}
 
 	for _, test := range tests {
