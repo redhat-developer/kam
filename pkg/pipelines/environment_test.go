@@ -10,8 +10,8 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"github.com/redhat-developer/kam/pkg/pipelines/config"
-	"github.com/redhat-developer/kam/pkg/pipelines/helper"
 	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
+	"github.com/redhat-developer/kam/test"
 )
 
 func TestAddEnv(t *testing.T) {
@@ -215,7 +215,7 @@ func TestNewEnvironment(t *testing.T) {
 		t.Run(fmt.Sprintf("Test_%d", i), func(rt *testing.T) {
 			got, err := newEnvironment(tt.m, tt.name)
 
-			if !helper.ErrorMatch(rt, tt.errMsg, err) {
+			if !test.ErrorMatch(rt, tt.errMsg, err) {
 				rt.Errorf("err mismatch want: %s got: %s: \n", tt.errMsg, err)
 			}
 			if diff := cmp.Diff(tt.want, got); diff != "" {

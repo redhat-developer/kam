@@ -35,6 +35,7 @@ $ kam bootstrap \
   --dockercfgjson ~/Downloads/<username>-auth.json \
   --git-host-access-token <your git access token> \
   --output <path to write GitOps resources>
+  --push-to-git=true
 ```
 The `kam bootstrap` [command](../../commands/kam_bootstrap.md) also provides an interactive mode, which is triggered by running without any parameters, and will generate the GitOps directory and the required resources.
 
@@ -61,7 +62,7 @@ https://github.com/myorg/myproject.git` this would bootstrap an app called
 
 Finally, the GitOps repository is created automatically if credentials are
 provided, this will create a private repository for pushing your generated
-resources to.
+resources, and the resources will be pushed to your git hosting service.
 
 ## Prefixing namespaces
 

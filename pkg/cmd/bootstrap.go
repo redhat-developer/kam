@@ -9,19 +9,18 @@ import (
 
 	"github.com/jenkins-x/go-scm/scm/factory"
 	"github.com/openshift/odo/pkg/log"
+	"github.com/spf13/cobra"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
+	ktemplates "k8s.io/kubectl/pkg/util/templates"
+
 	"github.com/redhat-developer/kam/pkg/cmd/genericclioptions"
 	"github.com/redhat-developer/kam/pkg/cmd/ui"
 	"github.com/redhat-developer/kam/pkg/cmd/utility"
 	"github.com/redhat-developer/kam/pkg/pipelines"
-	"github.com/redhat-developer/kam/pkg/pipelines/secrets"
-
 	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
+	"github.com/redhat-developer/kam/pkg/pipelines/secrets"
 	"github.com/redhat-developer/kam/pkg/pipelines/statustracker"
-	"github.com/spf13/cobra"
-
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/types"
-	ktemplates "k8s.io/kubectl/pkg/util/templates"
 )
 
 const (
@@ -69,6 +68,7 @@ var (
 // BootstrapParameters encapsulates the parameters for the kam pipelines init command.
 type BootstrapParameters struct {
 	*pipelines.BootstrapOptions
+	PushToGit bool // records whether or not the repository should be pushed to git.
 }
 
 type status interface {
@@ -181,11 +181,13 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client) er
 		if io.GitHostAccessToken == "" {
 			io.GitHostAccessToken = ui.EnterGitHostAccessToken(io.ServiceRepoURL)
 		}
-	} else {
-		io.CommitStatusTracker = false
 	}
 	io.Prefix = ui.EnterPrefix()
 	io.OutputPath = ui.EnterOutputPath()
+	io.PushToGit = ui.SelectOptionPushToGit()
+	if io.PushToGit && io.GitHostAccessToken == "" {
+		io.GitHostAccessToken = ui.EnterGitHostAccessToken(io.ServiceRepoURL)
+	}
 	io.Overwrite = true
 	return nil
 }
@@ -268,6 +270,13 @@ func (io *BootstrapParameters) Run() error {
 	if err != nil {
 		return err
 	}
+	if io.PushToGit {
+		err = pipelines.BootstrapRepository(io.BootstrapOptions, factory.FromRepoURL, pipelines.NewCmdExecutor())
+		if err != nil {
+			return fmt.Errorf("failed to create the gitops repository: %q: %w", io.GitOpsRepoURL, err)
+		}
+		log.Successf("Created repository")
+	}
 	nextSteps()
 	return nil
 }
@@ -300,6 +309,7 @@ func NewCmdBootstrap(name, fullName string) *cobra.Command {
 	bootstrapCmd.Flags().StringVar(&o.ServiceWebhookSecret, "service-webhook-secret", "", "Provide a secret that we can use to authenticate incoming hooks from your Git hosting service for the Service repository. (if not provided, it will be auto-generated)")
 	bootstrapCmd.Flags().StringVar(&o.PrivateRepoDriver, "private-repo-driver", "", "If your Git repositories are on a custom domain, please indicate which driver to use github or gitlab")
 	bootstrapCmd.Flags().BoolVar(&o.CommitStatusTracker, "commit-status-tracker", true, "Enable or disable the commit-status-tracker which reports the success/failure of your pipelineruns to GitHub/GitLab")
+	bootstrapCmd.Flags().BoolVar(&o.PushToGit, "push-to-git", false, "If true, automatically creates and populates the gitops-repo-url with the generated resources")
 	return bootstrapCmd
 }
 
