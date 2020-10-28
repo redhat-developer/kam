@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"os/exec"
 	"strings"
 
 	"github.com/jenkins-x/go-scm/scm"
@@ -11,8 +12,13 @@ import (
 )
 
 var defaultClientFactory = factory.FromRepoURL
+var defaultExecutor executor = cmdExecutor{}
 
 const defaultRepoDescription = "Bootstrapped GitOps Repository"
+
+type executor interface {
+	execute(baseDir, command string, args ...string) ([]byte, error)
+}
 
 // BootstrapRepository creates a new empty Git repository in the upstream git
 // hosting service from the GitOpsRepoURL.
@@ -49,11 +55,36 @@ func BootstrapRepository(o *BootstrapOptions) error {
 		Namespace:   org,
 		Name:        repoName,
 	}
-	_, _, err = client.Repositories.Create(context.Background(), ri)
+	created, _, err := client.Repositories.Create(context.Background(), ri)
 	if err != nil {
 		return fmt.Errorf("failed to create repository %q in namespace %q: %w", repoName, org, err)
 	}
+	if err := pushRepository(o, created.CloneSSH); err != nil {
+		return fmt.Errorf("failed to push bootstrapped resources: %s", err)
+	}
 	return err
+}
+
+func pushRepository(o *BootstrapOptions, remote string) error {
+	if out, err := defaultExecutor.execute(o.OutputPath, "git", "init", "."); err != nil {
+		return fmt.Errorf("failed to initialize git repository in %q %q: %s", o.OutputPath, string(out), err)
+	}
+	if out, err := defaultExecutor.execute(o.OutputPath, "git", "add", "."); err != nil {
+		return fmt.Errorf("failed to add files to repository in %q %q: %s", o.OutputPath, string(out), err)
+	}
+	if out, err := defaultExecutor.execute(o.OutputPath, "git", "commit", "-m", "Bootstrapped commit"); err != nil {
+		return fmt.Errorf("failed to commit files to repository in %q %q: %s", o.OutputPath, string(out), err)
+	}
+	if out, err := defaultExecutor.execute(o.OutputPath, "git", "branch", "-m", "main"); err != nil {
+		return fmt.Errorf("failed to switch to branch 'main' in repository in %q %q: %s", o.OutputPath, string(out), err)
+	}
+	if out, err := defaultExecutor.execute(o.OutputPath, "git", "remote", "add", "origin", remote); err != nil {
+		return fmt.Errorf("failed add remote 'origin' %q to repository in %q %q: %s", remote, o.OutputPath, string(out), err)
+	}
+	if out, err := defaultExecutor.execute(o.OutputPath, "git", "push", "-u", "origin", "main"); err != nil {
+		return fmt.Errorf("failed push remote to repository %q %q: %s", remote, string(out), err)
+	}
+	return nil
 }
 
 func repoURL(u string) (string, error) {
@@ -64,4 +95,13 @@ func repoURL(u string) (string, error) {
 	parsed.Path = ""
 	parsed.User = nil
 	return parsed.String(), nil
+}
+
+type cmdExecutor struct {
+}
+
+func (e cmdExecutor) execute(baseDir, command string, args ...string) ([]byte, error) {
+	c := exec.Command(command, args...)
+	c.Dir = baseDir
+	return c.CombinedOutput()
 }

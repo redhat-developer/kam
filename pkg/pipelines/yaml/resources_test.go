@@ -8,9 +8,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/redhat-developer/kam/pkg/pipelines/helper"
 	"github.com/redhat-developer/kam/pkg/pipelines/namespaces"
 	res "github.com/redhat-developer/kam/pkg/pipelines/resources"
+	"github.com/redhat-developer/kam/test"
 	"github.com/spf13/afero"
 	"sigs.k8s.io/yaml"
 )
@@ -41,7 +41,7 @@ func TestWriteResources(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			_, err := WriteResources(fs, test.path, r)
-			if !helper.ErrorMatch(t, test.errMsg, err) {
+			if !test.ErrorMatch(t, test.errMsg, err) {
 				t.Fatalf("error mismatch: got %v, want %v", err, test.errMsg)
 			}
 			if test.path[0] == '~' {

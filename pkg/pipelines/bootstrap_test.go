@@ -154,6 +154,7 @@ func TestBootstrapCreatesRepository(t *testing.T) {
 
 	secrets.DefaultPublicKeyFunc = makeTestKey(t)
 	fakeGitData := stubOutGitClientFactory(t, "test-token")
+	executor := stubOutCmdExecution(t)
 
 	params := &BootstrapOptions{
 		Prefix:               "tst-",
@@ -169,6 +170,10 @@ func TestBootstrapCreatesRepository(t *testing.T) {
 	fatalIfError(t, err)
 
 	assertRepositoryCreated(t, fakeGitData, "my-org", "gitops")
+	assertRepositoryPushed(t, executor)
+}
+
+func assertRepositoryPushed(t *testing.T, e *mockExecutor) {
 }
 
 func TestOrgRepoFromURL(t *testing.T) {
@@ -207,6 +212,7 @@ func TestOverwriteFlag(t *testing.T) {
 		secrets.DefaultPublicKeyFunc = f
 	}(secrets.DefaultPublicKeyFunc)
 	_ = stubOutGitClientFactory(t, "test-token")
+	_ = stubOutCmdExecution(t)
 
 	secrets.DefaultPublicKeyFunc = makeTestKey(t)
 	fakeFs := ioutils.NewMemoryFilesystem()

@@ -1,7 +1,10 @@
 package pipelines
 
 import (
+	"bytes"
+	"errors"
 	"net/url"
+	"sync"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -71,6 +74,98 @@ func TestRepoURL(t *testing.T) {
 	}
 }
 
+func TestPushRepository(t *testing.T) {
+	repo := "git@github.com:testing/testing.git"
+	opts := &BootstrapOptions{
+		OutputPath: "/tmp",
+	}
+	outputs := [][]byte{
+		[]byte("Initialized empty Git repository in /tmp/.git/"),
+		[]byte(""),
+	}
+	e := stubOutCmdExecution(t, outputs...)
+
+	err := pushRepository(opts, repo)
+	assertNoError(t, err)
+
+	want := []execution{
+		{
+			BaseDir: opts.OutputPath,
+			Command: "git",
+			Args:    []string{"init", "."},
+		},
+		{
+			BaseDir: opts.OutputPath,
+			Command: "git",
+			Args:    []string{"add", "."},
+		},
+		{
+			BaseDir: opts.OutputPath,
+			Command: "git",
+			Args:    []string{"commit", "-m", "Bootstrapped commit"},
+		},
+		{
+			BaseDir: opts.OutputPath,
+			Command: "git",
+			Args:    []string{"branch", "-m", "main"},
+		},
+		{
+			BaseDir: opts.OutputPath,
+			Command: "git",
+			Args:    []string{"remote", "add", "origin", repo},
+		},
+		{
+			BaseDir: opts.OutputPath,
+			Command: "git",
+			Args:    []string{"push", "-u", "origin", "main"},
+		},
+	}
+	if diff := cmp.Diff(want, e.executions()); diff != "" {
+		t.Fatalf("failed to push the repository:\n%s", diff)
+	}
+}
+
+func TestPushRepository_handling_errors(t *testing.T) {
+	repo := "git@github.com:testing/testing.git"
+	opts := &BootstrapOptions{
+		OutputPath: "/tmp",
+	}
+	outputs := [][]byte{
+		[]byte("failed to create /tmp/.git/"),
+	}
+	testErr := errors.New("test error")
+	e := stubOutCmdExecution(t, outputs...)
+	e.errors.push(nil)
+	e.errors.push(testErr)
+
+	err := pushRepository(opts, repo)
+	if !errors.Is(err, testErr) {
+		t.Fatalf("got error %v, want %v", err, testErr)
+	}
+
+	want := []execution{
+		{
+			BaseDir: opts.OutputPath,
+			Command: "git",
+			Args:    []string{"init", "."},
+		},
+	}
+	if diff := cmp.Diff(want, e.executions()); diff != "" {
+		t.Fatalf("failed to push the repository:\n%s", diff)
+	}
+}
+
+func TestCmdExecutor(t *testing.T) {
+	var e executor = cmdExecutor{}
+	out, err := e.execute(".", "git status", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.HasPrefix(out, []byte("On branch")) {
+		t.Fatalf("didn't get git output: %s", out)
+	}
+}
+
 func stubOutGitClientFactory(t *testing.T, authToken string) *fake.Data {
 	t.Helper()
 	f := defaultClientFactory
@@ -92,6 +187,92 @@ func stubOutGitClientFactory(t *testing.T, authToken string) *fake.Data {
 		return client, nil
 	}
 	return data
+}
+
+func stubOutCmdExecution(t *testing.T, outputs ...[]byte) *mockExecutor {
+	t.Helper()
+	f := defaultExecutor
+	t.Cleanup(func() {
+		defaultExecutor = f
+	})
+	e := &mockExecutor{
+		outputs:  newOutputs(outputs...),
+		errors:   newErrors(),
+		executed: []execution{},
+	}
+	defaultExecutor = e
+	return e
+}
+
+type mockExecutor struct {
+	outputs  *outputStack
+	errors   *errorStack
+	executed []execution
+}
+
+type execution struct {
+	BaseDir string
+	Command string
+	Args    []string
+}
+
+func (m *mockExecutor) execute(basedir, command string, args ...string) ([]byte, error) {
+	m.executed = append(m.executed, execution{BaseDir: basedir, Command: command, Args: args})
+	return m.outputs.pop(), m.errors.pop()
+}
+
+func (m *mockExecutor) executions() []execution {
+	return m.executed
+}
+
+type errorStack struct {
+	errors []error
+	sync.Mutex
+}
+
+func newErrors() *errorStack {
+	return &errorStack{
+		errors: []error{},
+	}
+}
+
+func (s *errorStack) push(err error) {
+	s.Lock()
+	defer s.Unlock()
+	s.errors = append(s.errors, err)
+}
+
+func (s *errorStack) pop() error {
+	s.Lock()
+	defer s.Unlock()
+	if len(s.errors) == 0 {
+		return nil
+	}
+	err := s.errors[len(s.errors)-1]
+	s.errors = s.errors[0 : len(s.errors)-1]
+	return err
+}
+
+type outputStack struct {
+	outputs [][]byte
+	sync.Mutex
+}
+
+func newOutputs(o ...[]byte) *outputStack {
+	return &outputStack{
+		outputs: o,
+	}
+}
+
+func (s *outputStack) pop() []byte {
+	s.Lock()
+	defer s.Unlock()
+	if len(s.outputs) == 0 {
+		return []byte("")
+	}
+	o := s.outputs[len(s.outputs)-1]
+	s.outputs = s.outputs[0 : len(s.outputs)-1]
+	return o
 }
 
 func assertRepositoryCreated(t *testing.T, data *fake.Data, org, name string) {
