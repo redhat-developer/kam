@@ -1,23 +1,31 @@
 package pipelines
 
 import (
+	"bytes"
+	"errors"
 	"net/url"
+	"sync"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/jenkins-x/go-scm/scm"
 	"github.com/jenkins-x/go-scm/scm/driver/fake"
+	"github.com/redhat-developer/kam/test"
 )
 
 func TestBootstrapRepository_with_personal_account(t *testing.T) {
 	token := "this-is-a-test-token"
-	fakeData := stubOutGitClientFactory(t, token)
+	factory, fakeData := newMockClientFactory(t, token)
 	fakeData.CurrentUser = scm.User{Login: "testing"}
 
-	err := BootstrapRepository(&BootstrapOptions{
-		GitOpsRepoURL:      "https://example.com/testing/test-repo.git",
-		GitHostAccessToken: token,
-	})
+	err := BootstrapRepository(
+		&BootstrapOptions{
+			GitOpsRepoURL:      "https://example.com/testing/test-repo.git",
+			GitHostAccessToken: token,
+		},
+		factory,
+		newMockExecutor(),
+	)
 	assertNoError(t, err)
 
 	assertRepositoryCreated(t, fakeData, "", "test-repo")
@@ -25,27 +33,121 @@ func TestBootstrapRepository_with_personal_account(t *testing.T) {
 
 func TestBootstrapRepository_with_org(t *testing.T) {
 	token := "this-is-a-test-token"
-	fakeData := stubOutGitClientFactory(t, token)
+	factory, fakeData := newMockClientFactory(t, token)
 	fakeData.CurrentUser = scm.User{Login: "test-user"}
 
-	err := BootstrapRepository(&BootstrapOptions{
-		GitOpsRepoURL:      "https://example.com/testing/test-repo.git",
-		GitHostAccessToken: token,
-	})
+	err := BootstrapRepository(
+		&BootstrapOptions{
+			GitOpsRepoURL:      "https://example.com/testing/test-repo.git",
+			GitHostAccessToken: token,
+		},
+		factory,
+		newMockExecutor(),
+	)
 	assertNoError(t, err)
 	assertRepositoryCreated(t, fakeData, "testing", "test-repo")
 }
 
 func TestBootstrapRepository_with_no_access_token(t *testing.T) {
 	token := "this-is-a-test-token"
-	fakeData := stubOutGitClientFactory(t, token)
+	factory, fakeData := newMockClientFactory(t, token)
 	fakeData.CurrentUser = scm.User{Login: "test-user"}
 
-	err := BootstrapRepository(&BootstrapOptions{
-		GitOpsRepoURL: "https://example.com/testing/test-repo.git",
-	})
+	err := BootstrapRepository(
+		&BootstrapOptions{
+			GitOpsRepoURL: "https://example.com/testing/test-repo.git",
+		},
+		factory,
+		newMockExecutor(),
+	)
 	assertNoError(t, err)
 	refuteRepositoryCreated(t, fakeData)
+}
+
+func TestPushRepository(t *testing.T) {
+	repo := "git@github.com:testing/testing.git"
+	opts := &BootstrapOptions{
+		OutputPath: "/tmp",
+	}
+	outputs := [][]byte{
+		[]byte("Initialized empty Git repository in /tmp/.git/"),
+		[]byte(""),
+	}
+	e := newMockExecutor(outputs...)
+
+	err := pushRepository(opts, repo, e)
+	assertNoError(t, err)
+
+	want := []execution{
+		{
+			BaseDir: opts.OutputPath,
+			Command: "git",
+			Args:    []string{"init", "."},
+		},
+		{
+			BaseDir: opts.OutputPath,
+			Command: "git",
+			Args:    []string{"add", "."},
+		},
+		{
+			BaseDir: opts.OutputPath,
+			Command: "git",
+			Args:    []string{"commit", "-m", "Bootstrapped commit"},
+		},
+		{
+			BaseDir: opts.OutputPath,
+			Command: "git",
+			Args:    []string{"branch", "-m", "main"},
+		},
+		{
+			BaseDir: opts.OutputPath,
+			Command: "git",
+			Args:    []string{"remote", "add", "origin", repo},
+		},
+		{
+			BaseDir: opts.OutputPath,
+			Command: "git",
+			Args:    []string{"push", "-u", "origin", "main"},
+		},
+	}
+	e.assertCommandsExecuted(t, want)
+}
+
+func TestPushRepository_handling_errors(t *testing.T) {
+	repo := "git@github.com:testing/testing.git"
+	opts := &BootstrapOptions{
+		OutputPath: "/tmp",
+	}
+	outputs := [][]byte{
+		[]byte("failed to create /tmp/.git/"),
+	}
+	testErr := errors.New("test error")
+	e := newMockExecutor(outputs...)
+	e.errors.push(nil)
+	e.errors.push(testErr)
+
+	err := pushRepository(opts, repo, e)
+	test.AssertErrorMatch(t, "test error", err)
+
+	want := []execution{
+		{
+			BaseDir: opts.OutputPath,
+			Command: "git",
+			Args:    []string{"init", "."},
+		},
+	}
+	e.assertCommandsExecuted(t, want)
+}
+
+func TestCmdExecutor(t *testing.T) {
+	var e executor = cmdExecutor{}
+	out, err := e.execute(".", "echo", "hello")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.HasPrefix(out, []byte("hello")) {
+		t.Fatalf("didn't get git output: %s", out)
+	}
 }
 
 func TestRepoURL(t *testing.T) {
@@ -71,15 +173,9 @@ func TestRepoURL(t *testing.T) {
 	}
 }
 
-func stubOutGitClientFactory(t *testing.T, authToken string) *fake.Data {
-	t.Helper()
-	f := defaultClientFactory
-	t.Cleanup(func() {
-		defaultClientFactory = f
-	})
-
+func newMockClientFactory(t *testing.T, authToken string) (clientFactory, *fake.Data) {
 	client, data := fake.NewDefault()
-	defaultClientFactory = func(repoURL string) (*scm.Client, error) {
+	f := func(repoURL string) (*scm.Client, error) {
 		t.Helper()
 		u, err := url.Parse(repoURL)
 		if err != nil {
@@ -91,7 +187,88 @@ func stubOutGitClientFactory(t *testing.T, authToken string) *fake.Data {
 		}
 		return client, nil
 	}
-	return data
+	return f, data
+}
+
+func newMockExecutor(outputs ...[]byte) *mockExecutor {
+	return &mockExecutor{
+		outputs:  newOutputs(outputs...),
+		errors:   newErrors(),
+		executed: []execution{},
+	}
+}
+
+type mockExecutor struct {
+	outputs  *outputStack
+	errors   *errorStack
+	executed []execution
+}
+
+type execution struct {
+	BaseDir string
+	Command string
+	Args    []string
+}
+
+func (m *mockExecutor) execute(basedir, command string, args ...string) ([]byte, error) {
+	m.executed = append(m.executed, execution{BaseDir: basedir, Command: command, Args: args})
+	return m.outputs.pop(), m.errors.pop()
+}
+
+func (m *mockExecutor) assertCommandsExecuted(t *testing.T, want []execution) {
+	if diff := cmp.Diff(want, m.executed); diff != "" {
+		t.Fatalf("failed to push the repository:\n%s", diff)
+	}
+}
+
+type errorStack struct {
+	errors []error
+	sync.Mutex
+}
+
+func newErrors() *errorStack {
+	return &errorStack{
+		errors: []error{},
+	}
+}
+
+func (s *errorStack) push(err error) {
+	s.Lock()
+	defer s.Unlock()
+	s.errors = append(s.errors, err)
+}
+
+func (s *errorStack) pop() error {
+	s.Lock()
+	defer s.Unlock()
+	if len(s.errors) == 0 {
+		return nil
+	}
+	err := s.errors[len(s.errors)-1]
+	s.errors = s.errors[0 : len(s.errors)-1]
+	return err
+}
+
+type outputStack struct {
+	outputs [][]byte
+	sync.Mutex
+}
+
+func newOutputs(o ...[]byte) *outputStack {
+	return &outputStack{
+		outputs: o,
+	}
+}
+
+func (s *outputStack) pop() []byte {
+	s.Lock()
+	defer s.Unlock()
+	if len(s.outputs) == 0 {
+		return []byte("")
+	}
+	o := s.outputs[len(s.outputs)-1]
+	s.outputs = s.outputs[0 : len(s.outputs)-1]
+	return o
 }
 
 func assertRepositoryCreated(t *testing.T, data *fake.Data, org, name string) {

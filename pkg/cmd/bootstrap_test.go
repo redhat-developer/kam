@@ -44,7 +44,9 @@ func TestValidatePrefix(t *testing.T) {
 
 	for _, tt := range completeTests {
 		o := BootstrapParameters{
-			&pipelines.BootstrapOptions{Prefix: tt.prefix, GitOpsRepoURL: tt.gitRepo, ServiceRepoURL: tt.serviceRepo, ImageRepo: ""},
+			BootstrapOptions: &pipelines.BootstrapOptions{
+				Prefix: tt.prefix, GitOpsRepoURL: tt.gitRepo,
+				ServiceRepoURL: tt.serviceRepo, ImageRepo: ""},
 		}
 
 		err := o.Validate()
@@ -76,7 +78,7 @@ func TestAddSuffixWithBootstrap(t *testing.T) {
 	for _, test := range tt {
 		t.Run(test.name, func(rt *testing.T) {
 			o := &BootstrapParameters{
-				&pipelines.BootstrapOptions{
+				BootstrapOptions: &pipelines.BootstrapOptions{
 					GitOpsRepoURL:  test.gitOpsURL,
 					ServiceRepoURL: test.appURL},
 			}
@@ -109,7 +111,11 @@ func TestValidateCommitStatusTracker(t *testing.T) {
 
 	for _, tt := range completeTests {
 		o := BootstrapParameters{
-			&pipelines.BootstrapOptions{GitOpsRepoURL: tt.gitRepo, CommitStatusTracker: tt.commitStatusTracker, GitHostAccessToken: tt.gitAccessToken},
+			BootstrapOptions: &pipelines.BootstrapOptions{
+				GitOpsRepoURL:       tt.gitRepo,
+				CommitStatusTracker: tt.commitStatusTracker,
+				GitHostAccessToken:  tt.gitAccessToken,
+			},
 		}
 
 		got := o.Validate()
@@ -139,7 +145,7 @@ func TestValidateBootstrapParameter(t *testing.T) {
 
 	for _, tt := range optionTests {
 		o := BootstrapParameters{
-			&pipelines.BootstrapOptions{
+			BootstrapOptions: &pipelines.BootstrapOptions{
 				GitOpsRepoURL:     tt.gitRepo,
 				PrivateRepoDriver: tt.driver,
 				Prefix:            "test",
@@ -175,7 +181,7 @@ func TestValidateMandatoryFlags(t *testing.T) {
 
 	for _, tt := range optionTests {
 		o := BootstrapParameters{
-			&pipelines.BootstrapOptions{
+			BootstrapOptions: &pipelines.BootstrapOptions{
 				GitOpsRepoURL:  tt.gitRepo,
 				ServiceRepoURL: tt.serviceRepo,
 				ImageRepo:      tt.imagerepo,
@@ -234,7 +240,9 @@ Checking if OpenShift Pipelines Operator is installed with the default configura
 
 	buff := &bytes.Buffer{}
 	fakeSpinner := &mockSpinner{writer: buff}
-	err := checkBootstrapDependencies(&BootstrapParameters{&pipelines.BootstrapOptions{}}, fakeClient, fakeSpinner)
+	err := checkBootstrapDependencies(
+		&BootstrapParameters{BootstrapOptions: &pipelines.BootstrapOptions{}},
+		fakeClient, fakeSpinner)
 	wantErr := fmt.Sprintf("failed to satisfy the required dependencies: %s, %s", argoCdOperatorName, pipelinesOperatorName)
 
 	assertError(t, err, wantErr)
@@ -251,7 +259,7 @@ Checking if OpenShift Pipelines Operator is installed with the default configura
 
 	buff := &bytes.Buffer{}
 	fakeSpinner := &mockSpinner{writer: buff}
-	wizardParams := &BootstrapParameters{&pipelines.BootstrapOptions{}}
+	wizardParams := &BootstrapParameters{BootstrapOptions: &pipelines.BootstrapOptions{}}
 	err := checkBootstrapDependencies(wizardParams, fakeClient, fakeSpinner)
 
 	assertError(t, err, "")
@@ -271,7 +279,9 @@ Checking if OpenShift Pipelines Operator is installed with the default configura
 
 	buff := &bytes.Buffer{}
 	fakeSpinner := &mockSpinner{writer: buff}
-	wizardParams := &BootstrapParameters{&pipelines.BootstrapOptions{}}
+	wizardParams := &BootstrapParameters{
+		BootstrapOptions: &pipelines.BootstrapOptions{},
+	}
 	err := checkBootstrapDependencies(wizardParams, fakeClient, fakeSpinner)
 	wantErr := fmt.Sprintf("failed to satisfy the required dependencies: %s", argoCdOperatorName)
 
@@ -289,7 +299,7 @@ Checking if OpenShift Pipelines Operator is installed with the default configura
 
 	buff := &bytes.Buffer{}
 	fakeSpinner := &mockSpinner{writer: buff}
-	wizardParams := &BootstrapParameters{&pipelines.BootstrapOptions{}}
+	wizardParams := &BootstrapParameters{BootstrapOptions: &pipelines.BootstrapOptions{}}
 	err := checkBootstrapDependencies(wizardParams, fakeClient, fakeSpinner)
 	wantErr := fmt.Sprintf("failed to satisfy the required dependencies: %s", pipelinesOperatorName)
 
