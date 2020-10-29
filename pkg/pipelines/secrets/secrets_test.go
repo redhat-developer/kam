@@ -17,7 +17,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/redhat-developer/kam/pkg/pipelines/helper"
+	"github.com/redhat-developer/kam/test"
 )
 
 func init() {
@@ -283,7 +283,7 @@ func TestCreateOpaqueSecret(t *testing.T) {
 func TestCreateDockerConfigSecretWithErrorReading(t *testing.T) {
 	testErr := errors.New("test failure")
 	_, err := createDockerConfigSecret(meta.NamespacedName("cici", "github-auth"), errorReader{testErr})
-	helper.AssertErrorMatch(t, "failed to read .* test failure", err)
+	test.AssertErrorMatch(t, "failed to read .* test failure", err)
 }
 
 func TestCreateDockerConfigSecret(t *testing.T) {

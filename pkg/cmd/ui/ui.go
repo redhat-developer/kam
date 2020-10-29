@@ -268,3 +268,17 @@ func IsPrivateRepo() bool {
 	handleError(err)
 	return response == "yes"
 }
+
+// SelectOptionPushToGit allows users the option to select if they
+// want to incorporate the feature of the commit status tracker through the UI prompt.
+func SelectOptionPushToGit() bool {
+	var optionPushToGit string
+	prompt := &survey.Select{
+		Message: "Do you want to create and push the resources to your gitops repository?",
+		Help:    "This will create a private repository, commit and push the generated resources and requires an auth token with the correct privileges",
+		Options: []string{"yes", "no"},
+	}
+	err := survey.AskOne(prompt, &optionPushToGit, survey.Required)
+	handleError(err)
+	return optionPushToGit == "yes"
+}

@@ -8,9 +8,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/redhat-developer/kam/pkg/pipelines/helper"
 	"github.com/redhat-developer/kam/pkg/pipelines/namespaces"
 	res "github.com/redhat-developer/kam/pkg/pipelines/resources"
+	"github.com/redhat-developer/kam/test"
 	"github.com/spf13/afero"
 	"sigs.k8s.io/yaml"
 )
@@ -35,20 +35,20 @@ func TestWriteResources(t *testing.T) {
 	}{
 		{"Path with ~", "~/manifest", ""},
 		{"Path without ~", filepath.Join(path, "manifest/gitops"), ""},
-		{"Path without permission", "/", "failed to MkDirAll for /test/myfile.yaml: mkdir /test: permission denied"},
+		{"Path without permission", "/", "failed to MkDirAll for /test/myfile.yaml"},
 	}
 
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			_, err := WriteResources(fs, test.path, r)
-			if !helper.ErrorMatch(t, test.errMsg, err) {
-				t.Fatalf("error mismatch: got %v, want %v", err, test.errMsg)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := WriteResources(fs, tt.path, r)
+			if !test.ErrorMatch(t, tt.errMsg, err) {
+				t.Fatalf("error mismatch: got %v, want %v", err, tt.errMsg)
 			}
-			if test.path[0] == '~' {
-				test.path = filepath.Join(path, strings.Split(test.path, "~")[1])
+			if tt.path[0] == '~' {
+				tt.path = filepath.Join(path, strings.Split(tt.path, "~")[1])
 			}
 			if err == nil {
-				assertResourceExists(t, filepath.Join(test.path, "test/myfile.yaml"), sampleYAML)
+				assertResourceExists(t, filepath.Join(tt.path, "test/myfile.yaml"), sampleYAML)
 			}
 		})
 	}
@@ -57,19 +57,19 @@ func TestWriteResources(t *testing.T) {
 func makeTempDir(t *testing.T) (string, func()) {
 	t.Helper()
 	dir, err := ioutil.TempDir(os.TempDir(), "manifest")
-	helper.AssertNoError(t, err)
+	test.AssertNoError(t, err)
 	return dir, func() {
 		err := os.RemoveAll(dir)
-		helper.AssertNoError(t, err)
+		test.AssertNoError(t, err)
 	}
 }
 
 func assertResourceExists(t *testing.T, path string, resource interface{}) {
 	t.Helper()
 	want, err := yaml.Marshal(resource)
-	helper.AssertNoError(t, err)
+	test.AssertNoError(t, err)
 	got, err := ioutil.ReadFile(path)
-	helper.AssertNoError(t, err)
+	test.AssertNoError(t, err)
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Fatalf("files not written to correct location: %s", diff)
 	}
