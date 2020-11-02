@@ -223,14 +223,8 @@ func TestKeyRingSet(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Non Interactive mode failed with error: %v", err)
 		}
-		gitopsToken, err := keyring.Get("kam", tt.gitRepo)
-		if err != nil {
-			t.Fatal(err)
-		}
-		serviceToken, err := keyring.Get("kam", tt.serviceRepo)
-		if err != nil {
-			t.Fatal(err)
-		}
+		gitopsToken, _ := keyring.Get("kam", tt.gitRepo)
+		serviceToken, _ := keyring.Get("kam", tt.serviceRepo)
 		if tt.expectedToken != gitopsToken && tt.expectedToken != serviceToken {
 			t.Fatalf("TestKeyRingSet() Failed since expected token %v did not match %v", tt.expectedToken, gitopsToken)
 		}
