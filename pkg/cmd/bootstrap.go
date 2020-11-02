@@ -182,8 +182,7 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client) er
 		identifier := factory.NewDriverIdentifier(factory.Mapping(host, io.PrivateRepoDriver))
 		factory.DefaultIdentifier = identifier
 	}
-	option := ui.SelectOptionImageRepository()
-	if option == "Openshift Internal repository" {
+	if ui.SelectOptionImageRepository() {
 		io.InternalRegistryHostname = ui.EnterInternalRegistry()
 		io.ImageRepo = ui.EnterImageRepoInternalRegistry()
 	} else {
@@ -196,19 +195,23 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client) er
 		io.GitHostAccessToken = ui.EnterGitHostAccessToken(io.ServiceRepoURL)
 	}
 	io.ServiceWebhookSecret = ui.EnterServiceWebhookSecret()
-	commitStatusTrackerCheck := ui.SelectOptionCommitStatusTracker()
-	if commitStatusTrackerCheck == "yes" {
-		io.CommitStatusTracker = true
-		if io.GitHostAccessToken == "" {
-			io.GitHostAccessToken = ui.EnterGitHostAccessToken(io.ServiceRepoURL)
+	if ui.SelectOptionAccessToken() {
+		io.GitHostAccessToken = ui.EnterGitHostAccessToken(io.ServiceRepoURL)
+		if io.GitHostAccessToken != ""{
+			err := setSecretIfNotSet(io.GitOpsRepoURL, io.GitHostAccessToken)
+			if err != nil {
+				return err
+			}
+			err = setSecretIfNotSet(io.ServiceRepoURL, io.GitHostAccessToken)
+			if err != nil {
+				return err
+			}
+			io.CommitStatusTracker = ui.SelectOptionCommitStatusTracker()
+			io.PushToGit = ui.SelectOptionPushToGit()
 		}
 	}
 	io.Prefix = ui.EnterPrefix()
 	io.OutputPath = ui.EnterOutputPath()
-	io.PushToGit = ui.SelectOptionPushToGit()
-	if io.PushToGit && io.GitHostAccessToken == "" {
-		io.GitHostAccessToken = ui.EnterGitHostAccessToken(io.ServiceRepoURL)
-	}
 	io.Overwrite = true
 	return nil
 }

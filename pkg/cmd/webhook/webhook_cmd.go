@@ -46,7 +46,6 @@ func (o *options) setFlags(command *cobra.Command) {
 
 	// access-token option
 	command.Flags().StringVar(&o.accessToken, "access-token", "", "Access token to be used to create Git repository webhook")
-	// _ = command.MarkFlagRequired("access-token")
 
 	// cicd option
 	command.Flags().BoolVar(&o.isCICD, "cicd", false, "Provide this flag if the target Git repository is a CI/CD configuration repository")

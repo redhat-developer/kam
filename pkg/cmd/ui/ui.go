@@ -202,7 +202,7 @@ func EnterServiceWebhookSecret() string {
 }
 
 // SelectOptionImageRepository , allows users an option between the Internal image registry and the external image registry through the UI prompt.
-func SelectOptionImageRepository() string {
+func SelectOptionImageRepository() bool {
 	var optionImageRegistry string
 	prompt := &survey.Select{
 		Message: "Select type of image registry",
@@ -212,7 +212,7 @@ func SelectOptionImageRepository() string {
 
 	err := survey.AskOne(prompt, &optionImageRegistry, survey.Required)
 	handleError(err)
-	return optionImageRegistry
+	return optionImageRegistry == "Openshift Internal registry"
 }
 
 // SelectOptionOverwrite allows users the option to overwrite the current gitops configuration locally through the UI prompt.
@@ -230,7 +230,7 @@ func SelectOptionOverwrite(path string) string {
 
 // SelectOptionCommitStatusTracker allows users the option to select if they
 // want to incorporate the feature of the commit status tracker through the UI prompt.
-func SelectOptionCommitStatusTracker() string {
+func SelectOptionCommitStatusTracker() bool {
 	var optionCommitStatusTracker string
 	prompt := &survey.Select{
 		Message: "Do you want to enable commit-status-tracker?",
@@ -239,7 +239,7 @@ func SelectOptionCommitStatusTracker() string {
 	}
 	err := survey.AskOne(prompt, &optionCommitStatusTracker, survey.Required)
 	handleError(err)
-	return optionCommitStatusTracker
+	return optionCommitStatusTracker == "yes"
 }
 
 // SelectPrivateRepoDriver lets users choose the driver for their git hosting
@@ -281,4 +281,17 @@ func SelectOptionPushToGit() bool {
 	err := survey.AskOne(prompt, &optionPushToGit, survey.Required)
 	handleError(err)
 	return optionPushToGit == "yes"
+}
+
+// SelectOptionAccessToken allows users the option to pass the access token to set up automated pushes and also commit-status-tracker
+func SelectOptionAccessToken() bool{
+	var tokenOption string
+	prompt := &survey.Select{
+		Message: "Do you possess a git personal access token?",
+		Help:    "To create an Access token follow this link https://github.com/settings/tokens/new?scopes=repo, required for commit status tracker/automated create and push to git Repo",
+		Options: []string{"yes", "no"},
+	}
+	err := survey.AskOne(prompt, &tokenOption, survey.Required)
+	handleError(err)
+	return tokenOption == "yes"
 }
