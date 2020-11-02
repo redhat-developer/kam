@@ -3,6 +3,9 @@ package webhook
 import (
 	"errors"
 	"fmt"
+	"net/url"
+	"os"
+	"strings"
 
 	"github.com/redhat-developer/kam/pkg/pipelines/config"
 	"github.com/redhat-developer/kam/pkg/pipelines/eventlisteners"
@@ -10,6 +13,7 @@ import (
 	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
 	"github.com/redhat-developer/kam/pkg/pipelines/routes"
 	"github.com/redhat-developer/kam/pkg/pipelines/secrets"
+	"github.com/zalando/go-keyring"
 )
 
 type webhookInfo struct {
@@ -106,8 +110,35 @@ func newWebhookInfo(accessToken, pipelinesFile string, serviceName *QualifiedSer
 	if err != nil {
 		return nil, fmt.Errorf("failed to get event listener URL: %v", err)
 	}
-
+	if accessToken == "" {
+		accessToken, err = getAccessToken(gitRepoURL)
+		if err != nil {
+			return nil, err
+		}
+	}
 	return &webhookInfo{clusterResources, repository, gitRepoURL, cicdNamepace, listenerURL, accessToken, serviceName, isCICD}, nil
+}
+
+func getAccessToken(gitRepoURL string) (string, error) {
+	accessToken, _ := keyring.Get("kam", gitRepoURL)
+	if accessToken == "" {
+		parsed, err := url.Parse(gitRepoURL)
+		if err != nil {
+			return "", fmt.Errorf("failed to parse repository URL %q: %w", gitRepoURL, err)
+		}
+		repoNameExt, err := git.GetRepoName(parsed)
+		if err != nil {
+			return "", err
+		}
+		repoName := strings.Split(repoNameExt, "/")[1]
+		envVar := strings.ToLower(repoName) + "GitToken"
+		accessToken := os.Getenv(envVar)
+		if accessToken == "" {
+			return "", fmt.Errorf("unable to retrieve the accessToken from the keyring/envVar")
+		}
+		return accessToken, nil
+	}
+	return accessToken, nil
 }
 
 func (w *webhookInfo) exists() (bool, error) {

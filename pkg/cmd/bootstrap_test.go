@@ -15,6 +15,7 @@ import (
 	"github.com/redhat-developer/kam/pkg/cmd/utility"
 	"github.com/redhat-developer/kam/pkg/pipelines"
 	"github.com/redhat-developer/kam/pkg/pipelines/secrets"
+	"github.com/zalando/go-keyring"
 	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -190,6 +191,48 @@ func TestValidateMandatoryFlags(t *testing.T) {
 		err := nonInteractiveMode(&o, &utility.Client{})
 		if tt.errMsg != err.Error() {
 			t.Fatalf("nonInteractiveMode() %#v failed to match error: got %s, want %s", tt.name, err, tt.errMsg)
+		}
+	}
+}
+
+func TestKeyRingSet(t *testing.T) {
+	keyring.MockInit()
+	optionTests := []struct {
+		name          string
+		gitRepo       string
+		serviceRepo   string
+		imagerepo     string
+		gitToken      string
+		expectedToken string
+	}{
+		{"exclude gitToken to execute as exepected", "https://github.com/example/gitRepo.git", "https://github.com/example/serviceRepo.git", "registry/username/repo", "", ""},
+		{"add git accessToken", "https://github.com/example/gitRepo.git", "https://github.com/example/service.git", "registry/username/repo", "abc123", "abc123"},
+		{"overwrite gitops repo access token", "https://github.com/example/gitRepo.git", "https://github.com/example/service.git", "registry/username/repo", "xyz123", "xyz123"},
+	}
+
+	for _, tt := range optionTests {
+		o := BootstrapParameters{
+			BootstrapOptions: &pipelines.BootstrapOptions{
+				GitOpsRepoURL:      tt.gitRepo,
+				ServiceRepoURL:     tt.serviceRepo,
+				ImageRepo:          tt.imagerepo,
+				GitHostAccessToken: tt.gitToken,
+			},
+		}
+		err := nonInteractiveMode(&o, &utility.Client{})
+		if err != nil {
+			t.Fatalf("Non Interactive mode failed with error: %v", err)
+		}
+		gitopsToken, err := keyring.Get("kam", tt.gitRepo)
+		if err != nil {
+			t.Fatal(err)
+		}
+		serviceToken, err := keyring.Get("kam", tt.serviceRepo)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if tt.expectedToken != gitopsToken && tt.expectedToken != serviceToken {
+			t.Fatalf("TestKeyRingSet() Failed since expected token %v did not match %v", tt.expectedToken, gitopsToken)
 		}
 	}
 }

@@ -2,10 +2,12 @@ package webhook
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/redhat-developer/kam/pkg/pipelines/config"
+	"github.com/zalando/go-keyring"
 )
 
 func TestBuildURL(t *testing.T) {
@@ -125,5 +127,39 @@ func TestGetGitRepoURL(t *testing.T) {
 				t.Errorf("result mismatch got\n%s", diff)
 			}
 		})
+	}
+}
+
+func TestGetAccessToken(t *testing.T) {
+	keyring.MockInit()
+	optionTests := []struct {
+		name             string
+		gitRepo          string
+		envVarPresent    bool
+		tokenRingPresent bool
+		expectedToken    string
+	}{
+		{"GitToken not present in keyring/env-var", "https://github.com/example/test.git", false, false, ""},
+		{"GitToken present in env-var", "https://github.com/example/test.git", true, false, "abc123"},
+		{"GitToken present in keyring", "https://github.com/example/test.git", false, true, "xyz123"},
+		{"GitToken defaults to keyring although env-var present", "https://github.com/example/test.git", true, true, "xyz123"},
+	}
+
+	for _, tt := range optionTests {
+		if tt.envVarPresent {
+			os.Setenv("testGitToken", "abc123")
+		}
+		if tt.tokenRingPresent {
+			err := keyring.Set("kam", tt.gitRepo, "xyz123")
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+		token, _ := getAccessToken(tt.gitRepo)
+
+		if token != tt.expectedToken {
+			t.Fatalf("getAcessToken returned %v, expected %v", token, tt.expectedToken)
+		}
+		os.Unsetenv("testGitToken")
 	}
 }

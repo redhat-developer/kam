@@ -21,6 +21,7 @@ import (
 	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
 	"github.com/redhat-developer/kam/pkg/pipelines/secrets"
 	"github.com/redhat-developer/kam/pkg/pipelines/statustracker"
+	"github.com/zalando/go-keyring"
 )
 
 const (
@@ -123,9 +124,29 @@ func nonInteractiveMode(io *BootstrapParameters, client *utility.Client) error {
 	if err := checkMandatoryFlags(mandatoryFlags); err != nil {
 		return err
 	}
+	if io.GitHostAccessToken != "" {
+		err := setSecretIfNotSet(io.GitOpsRepoURL, io.GitHostAccessToken)
+		if err != nil {
+			return err
+		}
+		err = setSecretIfNotSet(io.ServiceRepoURL, io.GitHostAccessToken)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
+func setSecretIfNotSet(repoURL, accessToken string) error {
+	secret, _ := keyring.Get("kam", repoURL)
+	if secret != accessToken {
+		err := keyring.Set("kam", repoURL, accessToken)
+		if err != nil {
+			return fmt.Errorf("Unable to link access Token to keyring for repo:%v", repoURL)
+		}
+	}
+	return nil
+}
 func checkMandatoryFlags(flags map[string]string) error {
 	missingFlags := []string{}
 	mandatoryFlags := []string{serviceRepoURLFlag, gitopsRepoURLFlag, imageRepoFlag}
