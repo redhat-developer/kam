@@ -137,20 +137,25 @@ func TestGetAccessToken(t *testing.T) {
 		gitRepo          string
 		envVarPresent    bool
 		tokenRingPresent bool
+		hostName         string
 		expectedToken    string
 	}{
-		{"GitToken not present in keyring/env-var", "https://github.com/example/test.git", false, false, ""},
-		{"GitToken present in env-var", "https://github.com/example/test.git", true, false, "abc123"},
-		{"GitToken present in keyring", "https://github.com/example/test.git", false, true, "xyz123"},
-		{"GitToken defaults to keyring although env-var present", "https://github.com/example/test.git", true, true, "xyz123"},
+		{"Github Token not present in keyring/env-var", "https://github.com/example/test.git", false, false, "github.com", ""},
+		{"Github Token present in env-var", "https://github.com/example/test.git", true, false, "github.com", "abc123"},
+		{"Github Token present in keyring", "https://github.com/example/test.git", false, true, "github.com", "xyz123"},
+		{"Github Token defaults to keyring although env-var present", "https://github.com/example/test.git", true, true, "github.com", "xyz123"},
+		{"Gitlab Token not present in keyring/env-var", "https://gitlab.com/example/test.git", false, false, "gitlab.com", ""},
+		{"Gitlab Token present in env-var", "https://gitlab.com/example/test.git", true, false, "gitlab.com", "abc123"},
+		{"Gitlab Token present in keyring", "https://gitlab.com/example/test.git", false, true, "gitlab.com", "xyz123"},
+		{"Gitlab Token defaults to keyring although env-var present", "https://gitlab.com/example/test.git", true, true, "gitlab.com", "xyz123"},
 	}
 
 	for _, tt := range optionTests {
 		if tt.envVarPresent {
-			os.Setenv("testGitToken", "abc123")
+			os.Setenv("TESTGITTOKEN", "abc123")
 		}
 		if tt.tokenRingPresent {
-			err := keyring.Set("kam", tt.gitRepo, "xyz123")
+			err := keyring.Set("kam", tt.hostName, "xyz123")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -160,6 +165,6 @@ func TestGetAccessToken(t *testing.T) {
 		if token != tt.expectedToken {
 			t.Fatalf("getAcessToken returned %v, expected %v", token, tt.expectedToken)
 		}
-		os.Unsetenv("testGitToken")
+		os.Unsetenv("TESTGITTOKEN")
 	}
 }

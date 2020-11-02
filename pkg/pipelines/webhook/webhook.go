@@ -120,7 +120,11 @@ func newWebhookInfo(accessToken, pipelinesFile string, serviceName *QualifiedSer
 }
 
 func getAccessToken(gitRepoURL string) (string, error) {
-	accessToken, _ := keyring.Get("kam", gitRepoURL)
+	hostName, err := HostFromURL(gitRepoURL)
+	if err != nil {
+		return "", err
+	}
+	accessToken, _ := keyring.Get("kam", hostName)
 	if accessToken == "" {
 		parsed, err := url.Parse(gitRepoURL)
 		if err != nil {
@@ -131,7 +135,7 @@ func getAccessToken(gitRepoURL string) (string, error) {
 			return "", err
 		}
 		repoName := strings.Split(repoNameExt, "/")[1]
-		envVar := strings.ToLower(repoName) + "GitToken"
+		envVar := strings.ToUpper(repoName) + "GITTOKEN"
 		accessToken := os.Getenv(envVar)
 		if accessToken == "" {
 			return "", fmt.Errorf("unable to retrieve the accessToken from the keyring/envVar")
@@ -221,4 +225,13 @@ func getWebhookSecret(r *resources, namespace string, isCICD bool, service *Qual
 		secretName = secrets.MakeServiceWebhookSecretName(service.EnvironmentName, service.ServiceName)
 	}
 	return r.getWebhookSecret(namespace, secretName, eventlisteners.WebhookSecretKey)
+}
+
+// HostFromURL extracts the hostname from the url passed
+func HostFromURL(s string) (string, error) {
+	p, err := url.Parse(s)
+	if err != nil {
+		return "", err
+	}
+	return strings.ToLower(p.Host), nil
 }

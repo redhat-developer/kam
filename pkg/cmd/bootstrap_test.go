@@ -203,11 +203,14 @@ func TestKeyRingSet(t *testing.T) {
 		serviceRepo   string
 		imagerepo     string
 		gitToken      string
+		expectedKey   string
 		expectedToken string
 	}{
-		{"exclude gitToken to execute as exepected", "https://github.com/example/gitRepo.git", "https://github.com/example/serviceRepo.git", "registry/username/repo", "", ""},
-		{"add git accessToken", "https://github.com/example/gitRepo.git", "https://github.com/example/service.git", "registry/username/repo", "abc123", "abc123"},
-		{"overwrite gitops repo access token", "https://github.com/example/gitRepo.git", "https://github.com/example/service.git", "registry/username/repo", "xyz123", "xyz123"},
+		{"exclude gitToken to execute as exepected", "https://github.com/example/gitRepo.git", "https://github.com/example/serviceRepo.git", "registry/username/repo", "", "github.com", ""},
+		{"set the github access token in keyring", "https://github.com/example/gitRepo.git", "https://github.com/example/service.git", "registry/username/repo", "abc123", "github.com", "abc123"},
+		{"overwrite github access token in keyring", "https://github.com/example/gitRepo.git", "https://github.com/example/service.git", "registry/username/repo", "xyz123", "github.com", "xyz123"},
+		{"set the gitlab access Token in keyring", "https://gitlab.com/example/gitRepo.git", "https://gitlan.com/example/service.git", "registry/username/repo", "test123", "gitlab.com", "test123"},
+		{"overwrite gitlab access token in keyring", "https://gitlab.com/example/gitRepo.git", "https://gitlab.com/example/service.git", "registry/username/repo", "test345", "gitlab.com", "test345"},
 	}
 
 	for _, tt := range optionTests {
@@ -223,8 +226,8 @@ func TestKeyRingSet(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Non Interactive mode failed with error: %v", err)
 		}
-		gitopsToken, _ := keyring.Get("kam", tt.gitRepo)
-		serviceToken, _ := keyring.Get("kam", tt.serviceRepo)
+		gitopsToken, _ := keyring.Get("kam", tt.expectedKey)
+		serviceToken, _ := keyring.Get("kam", tt.expectedKey)
 		if tt.expectedToken != gitopsToken && tt.expectedToken != serviceToken {
 			t.Fatalf("TestKeyRingSet() Failed since expected token %v did not match %v", tt.expectedToken, gitopsToken)
 		}

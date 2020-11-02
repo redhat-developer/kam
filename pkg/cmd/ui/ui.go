@@ -288,7 +288,7 @@ func SelectOptionAccessToken() bool{
 	var tokenOption string
 	prompt := &survey.Select{
 		Message: "Do you possess a git personal access token?",
-		Help:    "To create an Access token follow this link https://github.com/settings/tokens/new?scopes=repo, required for commit status tracker/automated create and push to git Repo",
+		Help:    "How to create a token? follow this link for github[https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token]/gitlab[https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html], token is required for commit status tracker/automated create and push to git Repo",
 		Options: []string{"yes", "no"},
 	}
 	err := survey.AskOne(prompt, &tokenOption, survey.Required)

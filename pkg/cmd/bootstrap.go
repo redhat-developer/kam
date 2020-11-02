@@ -21,6 +21,7 @@ import (
 	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
 	"github.com/redhat-developer/kam/pkg/pipelines/secrets"
 	"github.com/redhat-developer/kam/pkg/pipelines/statustracker"
+	"github.com/redhat-developer/kam/pkg/pipelines/webhook"
 	"github.com/zalando/go-keyring"
 )
 
@@ -95,7 +96,7 @@ func (io *BootstrapParameters) Complete(name string, cmd *cobra.Command, args []
 	}
 
 	if io.PrivateRepoDriver != "" {
-		host, err := hostFromURL(io.GitOpsRepoURL)
+		host, err := webhook.HostFromURL(io.GitOpsRepoURL)
 		if err != nil {
 			return err
 		}
@@ -138,15 +139,23 @@ func nonInteractiveMode(io *BootstrapParameters, client *utility.Client) error {
 }
 
 func setSecretIfNotSet(repoURL, accessToken string) error {
-	secret, _ := keyring.Get("kam", repoURL)
-	if secret != accessToken {
-		err := keyring.Set("kam", repoURL, accessToken)
+	hostName, err := webhook.HostFromURL(repoURL)
+	if err != nil {
+		return err
+	}
+	secret, err := keyring.Get("kam", hostName)
+	if err != nil && err != keyring.ErrNotFound {
+		return err
+	}
+	if accessToken != secret {
+		err := keyring.Set("kam", hostName, accessToken)
 		if err != nil {
-			return fmt.Errorf("Unable to link access Token to keyring for repo:%v", repoURL)
+			return fmt.Errorf("Unable to set access Token to keyring for repo: %q", repoURL)
 		}
 	}
 	return nil
 }
+
 func checkMandatoryFlags(flags map[string]string) error {
 	missingFlags := []string{}
 	mandatoryFlags := []string{serviceRepoURLFlag, gitopsRepoURLFlag, imageRepoFlag}
@@ -175,7 +184,7 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client) er
 	io.GitOpsRepoURL = utility.AddGitSuffixIfNecessary(ui.EnterGitRepo())
 	if !isKnownDriver(io.GitOpsRepoURL) {
 		io.PrivateRepoDriver = ui.SelectPrivateRepoDriver()
-		host, err := hostFromURL(io.GitOpsRepoURL)
+		host, err := webhook.HostFromURL(io.GitOpsRepoURL)
 		if err != nil {
 			return fmt.Errorf("failed to parse the gitops url: %w", err)
 		}
@@ -197,7 +206,7 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client) er
 	io.ServiceWebhookSecret = ui.EnterServiceWebhookSecret()
 	if ui.SelectOptionAccessToken() {
 		io.GitHostAccessToken = ui.EnterGitHostAccessToken(io.ServiceRepoURL)
-		if io.GitHostAccessToken != ""{
+		if io.GitHostAccessToken != "" {
 			err := setSecretIfNotSet(io.GitOpsRepoURL, io.GitHostAccessToken)
 			if err != nil {
 				return err
@@ -332,7 +341,7 @@ func NewCmdBootstrap(name, fullName string) *cobra.Command {
 	bootstrapCmd.Flags().StringVar(&o.ServiceRepoURL, "service-repo-url", "", "Provide the URL for your Service repository e.g. https://github.com/organisation/service.git")
 	bootstrapCmd.Flags().StringVar(&o.ServiceWebhookSecret, "service-webhook-secret", "", "Provide a secret that we can use to authenticate incoming hooks from your Git hosting service for the Service repository. (if not provided, it will be auto-generated)")
 	bootstrapCmd.Flags().StringVar(&o.PrivateRepoDriver, "private-repo-driver", "", "If your Git repositories are on a custom domain, please indicate which driver to use github or gitlab")
-	bootstrapCmd.Flags().BoolVar(&o.CommitStatusTracker, "commit-status-tracker",false, "Enable or disable the commit-status-tracker which reports the success/failure of your pipelineruns to GitHub/GitLab")
+	bootstrapCmd.Flags().BoolVar(&o.CommitStatusTracker, "commit-status-tracker", false, "Enable or disable the commit-status-tracker which reports the success/failure of your pipelineruns to GitHub/GitLab")
 	bootstrapCmd.Flags().BoolVar(&o.PushToGit, "push-to-git", false, "If true, automatically creates and populates the gitops-repo-url with the generated resources")
 	return bootstrapCmd
 }
@@ -345,18 +354,10 @@ func nextSteps() {
 }
 
 func isKnownDriver(repoURL string) bool {
-	host, err := hostFromURL(repoURL)
+	host, err := webhook.HostFromURL(repoURL)
 	if err != nil {
 		return false
 	}
 	_, err = factory.DefaultIdentifier.Identify(host)
 	return err == nil
-}
-
-func hostFromURL(s string) (string, error) {
-	p, err := url.Parse(s)
-	if err != nil {
-		return "", err
-	}
-	return strings.ToLower(p.Host), nil
 }
