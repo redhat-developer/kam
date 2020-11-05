@@ -106,7 +106,7 @@ func (b *argocdBuilder) Application(env *config.Environment, app *config.Applica
 	filename := filepath.Join(basePath, env.Name+"-"+app.Name+"-app.yaml")
 
 	argoFiles[filename] = makeApplication(env.Name+"-"+app.Name, b.argoNS,
-		defaultProject,
+		app.Name,
 		env.Name,
 		clusterForEnv(env),
 		makeSource(env, app, b.repoURL))
