@@ -11,7 +11,7 @@ import (
 
 var (
 	branchRefOverlay = []triggersv1.CELOverlay{
-		{Key: "ref", Expression: "split(body.ref,'/')[2]"},
+		{Key: "ref", Expression: "body.ref.split('/')[2]"},
 	}
 )
 
@@ -36,15 +36,15 @@ func createEventInterceptor(filter, repoName string) *triggersv1.EventIntercepto
 	}
 }
 
-func createListenerTemplate(name string) triggersv1.EventListenerTemplate {
-	return triggersv1.EventListenerTemplate{
+func createListenerTemplate(name string) *triggersv1.EventListenerTemplate {
+	return &triggersv1.EventListenerTemplate{
 		Name: name,
 	}
 }
 
 func createListenerBinding(name string) *triggersv1.EventListenerBinding {
 	return &triggersv1.EventListenerBinding{
-		Name: name,
+		Ref: name,
 	}
 }
 

@@ -35,17 +35,17 @@ func TestGenerateEventListener(t *testing.T) {
 							CEL: &triggersv1.CELInterceptor{
 								Filter: "(header.match('X-GitHub-Event', 'push') && body.repository.full_name == 'org/test')",
 								Overlays: []triggersv1.CELOverlay{
-									{Key: "ref", Expression: "split(body.ref,'/')[2]"},
+									{Key: "ref", Expression: "body.ref.split('/')[2]"},
 								},
 							},
 						},
 					},
 					Bindings: []*triggersv1.EventListenerBinding{
 						{
-							Name: "github-push-binding",
+							Ref: "github-push-binding",
 						},
 					},
-					Template: triggersv1.EventListenerTemplate{
+					Template: &triggersv1.EventListenerTemplate{
 						Name: "ci-dryrun-from-push-template",
 					},
 				},

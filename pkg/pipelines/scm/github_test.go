@@ -67,9 +67,9 @@ func TestCreateCDTriggersForGithub(t *testing.T) {
 	want := triggersv1.EventListenerTrigger{
 		Name: "test",
 		Bindings: []*triggersv1.EventListenerBinding{
-			{Name: "test-binding"},
+			{Ref: "test-binding"},
 		},
-		Template: triggersv1.EventListenerTemplate{Name: "test-template"},
+		Template: &triggersv1.EventListenerTemplate{Name: "test-template"},
 		Interceptors: []*triggersv1.EventInterceptor{
 			{
 				GitHub: &triggersv1.GitHubInterceptor{
