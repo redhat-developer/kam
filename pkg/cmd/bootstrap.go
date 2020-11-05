@@ -150,7 +150,7 @@ func setSecretIfNotSet(repoURL, accessToken string) error {
 	if accessToken != secret {
 		err := keyring.Set("kam", hostName, accessToken)
 		if err != nil {
-			return fmt.Errorf("Unable to set access Token to keyring for repo: %q", repoURL)
+			return fmt.Errorf("unable to set access token for repo %q using keyring: %w", repoURL, err)
 		}
 	}
 	return nil

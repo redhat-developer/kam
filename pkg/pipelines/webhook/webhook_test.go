@@ -152,18 +152,22 @@ func TestGetAccessToken(t *testing.T) {
 
 	for _, tt := range optionTests {
 		if tt.envVarPresent {
-			os.Setenv("TESTGITTOKEN", "abc123")
+			err := os.Setenv("TESTGITTOKEN", "abc123")
+			if err != nil {
+				t.Errorf("Error in setting the environment variable")
+			}
+			defer os.Unsetenv("TESTGITTOKEN")
 		}
 		if tt.tokenRingPresent {
 			err := keyring.Set("kam", tt.hostName, "xyz123")
 			if err != nil {
-				t.Fatal(err)
+				t.Error(err)
 			}
 		}
 		token, _ := getAccessToken(tt.gitRepo)
 
 		if token != tt.expectedToken {
-			t.Fatalf("getAcessToken returned %v, expected %v", token, tt.expectedToken)
+			t.Errorf("%v : getAcessToken returned %v, expected %v", tt.name, token, tt.expectedToken)
 		}
 		os.Unsetenv("TESTGITTOKEN")
 	}
