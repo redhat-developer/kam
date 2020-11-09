@@ -150,25 +150,26 @@ func TestGetAccessToken(t *testing.T) {
 		{"Gitlab Token defaults to keyring although env-var present", "https://gitlab.com/example/test.git", true, true, "gitlab.com", "xyz123"},
 	}
 
-	for _, tt := range optionTests {
-		if tt.envVarPresent {
-			err := os.Setenv("TESTGITTOKEN", "abc123")
-			if err != nil {
-				t.Errorf("Error in setting the environment variable")
-			}
+	for i, tt := range optionTests {
+		t.Run(fmt.Sprintf("Test %d", i), func(t *testing.T) {
 			defer os.Unsetenv("TESTGITTOKEN")
-		}
-		if tt.tokenRingPresent {
-			err := keyring.Set("kam", tt.hostName, "xyz123")
-			if err != nil {
-				t.Error(err)
+			if tt.envVarPresent {
+				err := os.Setenv("TESTGITTOKEN", "abc123")
+				if err != nil {
+					t.Errorf("Error in setting the environment variable")
+				}
 			}
-		}
-		token, _ := getAccessToken(tt.gitRepo)
+			if tt.tokenRingPresent {
+				err := keyring.Set("kam", tt.hostName, "xyz123")
+				if err != nil {
+					t.Error(err)
+				}
+			}
+			token, _ := getAccessToken(tt.gitRepo)
 
-		if token != tt.expectedToken {
-			t.Errorf("%v : getAcessToken returned %v, expected %v", tt.name, token, tt.expectedToken)
-		}
-		os.Unsetenv("TESTGITTOKEN")
+			if token != tt.expectedToken {
+				t.Errorf("%v : getAcessToken returned %v, expected %v", tt.name, token, tt.expectedToken)
+			}
+		})
 	}
 }

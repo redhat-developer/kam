@@ -191,7 +191,7 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client) er
 		identifier := factory.NewDriverIdentifier(factory.Mapping(host, io.PrivateRepoDriver))
 		factory.DefaultIdentifier = identifier
 	}
-	if ui.SelectOptionImageRepository() {
+	if ui.UseInternalRegistry() {
 		io.InternalRegistryHostname = ui.EnterInternalRegistry()
 		io.ImageRepo = ui.EnterImageRepoInternalRegistry()
 	} else {
@@ -204,7 +204,7 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client) er
 		io.GitHostAccessToken = ui.EnterGitHostAccessToken(io.ServiceRepoURL)
 	}
 	io.ServiceWebhookSecret = ui.EnterServiceWebhookSecret()
-	if ui.SelectOptionAccessToken() {
+	if ui.UsePersonalAccessToken() {
 		io.GitHostAccessToken = ui.EnterGitHostAccessToken(io.ServiceRepoURL)
 		if io.GitHostAccessToken != "" {
 			err := setSecretIfNotSet(io.GitOpsRepoURL, io.GitHostAccessToken)
@@ -215,7 +215,7 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client) er
 			if err != nil {
 				return err
 			}
-			io.CommitStatusTracker = ui.SelectOptionCommitStatusTracker()
+			io.CommitStatusTracker = ui.SetupCommitStatusTracker()
 			io.PushToGit = ui.SelectOptionPushToGit()
 		}
 	}

@@ -201,8 +201,8 @@ func EnterServiceWebhookSecret() string {
 	return serviceWebhookSecret
 }
 
-// SelectOptionImageRepository , allows users an option between the Internal image registry and the external image registry through the UI prompt.
-func SelectOptionImageRepository() bool {
+// UseInternalRegistry , allows users an option between the Internal image registry and the external image registry through the UI prompt.
+func UseInternalRegistry() bool {
 	var optionImageRegistry string
 	prompt := &survey.Select{
 		Message: "Select type of image registry",
@@ -228,9 +228,9 @@ func SelectOptionOverwrite(path string) string {
 	return overwrite
 }
 
-// SelectOptionCommitStatusTracker allows users the option to select if they
+// SetupCommitStatusTracker allows users the option to select if they
 // want to incorporate the feature of the commit status tracker through the UI prompt.
-func SelectOptionCommitStatusTracker() bool {
+func SetupCommitStatusTracker() bool {
 	var optionCommitStatusTracker string
 	prompt := &survey.Select{
 		Message: "Do you want to enable commit-status-tracker?",
@@ -283,8 +283,8 @@ func SelectOptionPushToGit() bool {
 	return optionPushToGit == "yes"
 }
 
-// SelectOptionAccessToken allows users the option to pass the access token to set up automated pushes and also commit-status-tracker
-func SelectOptionAccessToken() bool{
+// UsePersonalAccessToken allows users the option to pass the access token to set up automated pushes and also commit-status-tracker
+func UsePersonalAccessToken() bool {
 	var tokenOption string
 	prompt := &survey.Select{
 		Message: "Do you possess a git personal access token?",
