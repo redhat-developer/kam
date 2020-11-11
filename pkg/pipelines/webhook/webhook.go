@@ -27,6 +27,9 @@ type webhookInfo struct {
 	isCICD          bool
 }
 
+// KeyringServiceName refers to service name used to set the accesstoken in the keyring
+const KeyringServiceName = "kam"
+
 // QualifiedServiceName represents three part name of a service (Environment, Application, and Service)
 type QualifiedServiceName struct {
 	EnvironmentName string
@@ -101,11 +104,6 @@ func newWebhookInfo(accessToken, pipelinesFile string, serviceName *QualifiedSer
 		return nil, err
 	}
 
-	repository, err := git.NewRepository(gitRepoURL, accessToken)
-	if err != nil {
-		return nil, err
-	}
-
 	listenerURL, err := getListenerURL(clusterResources, cicdNamepace)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get event listener URL: %v", err)
@@ -116,6 +114,10 @@ func newWebhookInfo(accessToken, pipelinesFile string, serviceName *QualifiedSer
 			return nil, err
 		}
 	}
+	repository, err := git.NewRepository(gitRepoURL, accessToken)
+	if err != nil {
+		return nil, err
+	}
 	return &webhookInfo{clusterResources, repository, gitRepoURL, cicdNamepace, listenerURL, accessToken, serviceName, isCICD}, nil
 }
 
@@ -124,8 +126,11 @@ func getAccessToken(gitRepoURL string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	accessToken, _ := keyring.Get("kam", hostName)
-	if accessToken == "" {
+	accessToken, err := keyring.Get(KeyringServiceName, hostName)
+	if err != nil && err != keyring.ErrNotFound {
+		return "", err
+	}
+	if err != nil && err == keyring.ErrNotFound {
 		parsed, err := url.Parse(gitRepoURL)
 		if err != nil {
 			return "", fmt.Errorf("failed to parse repository URL %q: %w", gitRepoURL, err)

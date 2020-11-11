@@ -15,6 +15,7 @@ import (
 	"github.com/redhat-developer/kam/pkg/cmd/utility"
 	"github.com/redhat-developer/kam/pkg/pipelines"
 	"github.com/redhat-developer/kam/pkg/pipelines/secrets"
+	"github.com/redhat-developer/kam/pkg/pipelines/webhook"
 	"github.com/zalando/go-keyring"
 	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -226,8 +227,8 @@ func TestKeyRingSet(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Non Interactive mode failed with error: %v", err)
 		}
-		gitopsToken, _ := keyring.Get("kam", tt.expectedKey)
-		serviceToken, _ := keyring.Get("kam", tt.expectedKey)
+		gitopsToken, _ := keyring.Get(webhook.KeyringServiceName, tt.expectedKey)
+		serviceToken, _ := keyring.Get(webhook.KeyringServiceName, tt.expectedKey)
 		if tt.expectedToken != gitopsToken && tt.expectedToken != serviceToken {
 			t.Fatalf("TestKeyRingSet() Failed since expected token %v did not match %v", tt.expectedToken, gitopsToken)
 		}

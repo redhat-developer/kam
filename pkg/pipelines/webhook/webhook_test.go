@@ -160,7 +160,7 @@ func TestGetAccessToken(t *testing.T) {
 				}
 			}
 			if tt.tokenRingPresent {
-				err := keyring.Set("kam", tt.hostName, "xyz123")
+				err := keyring.Set(KeyringServiceName, tt.hostName, "xyz123")
 				if err != nil {
 					t.Error(err)
 				}

@@ -256,19 +256,6 @@ func SelectPrivateRepoDriver() string {
 	return driver
 }
 
-// IsPrivateRepo lets the user choose between a private / public repository.
-func IsPrivateRepo() bool {
-	var response string
-	prompt := &survey.Select{
-		Message: "Is this repository a private repository?",
-		Options: []string{"yes", "no"},
-	}
-
-	err := survey.AskOne(prompt, &response, survey.Required)
-	handleError(err)
-	return response == "yes"
-}
-
 // SelectOptionPushToGit allows users the option to select if they
 // want to incorporate the feature of the commit status tracker through the UI prompt.
 func SelectOptionPushToGit() bool {
@@ -281,17 +268,4 @@ func SelectOptionPushToGit() bool {
 	err := survey.AskOne(prompt, &optionPushToGit, survey.Required)
 	handleError(err)
 	return optionPushToGit == "yes"
-}
-
-// UsePersonalAccessToken allows users the option to pass the access token to set up automated pushes and also commit-status-tracker
-func UsePersonalAccessToken() bool {
-	var tokenOption string
-	prompt := &survey.Select{
-		Message: "Do you possess a git personal access token?",
-		Help:    "How to create a token? follow this link for github[https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token]/gitlab[https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html], token is required for commit status tracker/automated create and push to git Repo",
-		Options: []string{"yes", "no"},
-	}
-	err := survey.AskOne(prompt, &tokenOption, survey.Required)
-	handleError(err)
-	return tokenOption == "yes"
 }

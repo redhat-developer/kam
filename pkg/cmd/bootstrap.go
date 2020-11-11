@@ -126,11 +126,11 @@ func nonInteractiveMode(io *BootstrapParameters, client *utility.Client) error {
 		return err
 	}
 	if io.GitHostAccessToken != "" {
-		err := setSecretIfNotSet(io.GitOpsRepoURL, io.GitHostAccessToken)
+		err := setSecret(io.GitOpsRepoURL, io.GitHostAccessToken)
 		if err != nil {
 			return err
 		}
-		err = setSecretIfNotSet(io.ServiceRepoURL, io.GitHostAccessToken)
+		err = setSecret(io.ServiceRepoURL, io.GitHostAccessToken)
 		if err != nil {
 			return err
 		}
@@ -138,22 +138,30 @@ func nonInteractiveMode(io *BootstrapParameters, client *utility.Client) error {
 	return nil
 }
 
-func setSecretIfNotSet(repoURL, accessToken string) error {
-	hostName, err := webhook.HostFromURL(repoURL)
-	if err != nil {
-		return err
-	}
-	secret, err := keyring.Get("kam", hostName)
+func setSecret(repoURL, accessToken string) error {
+	secret, hostName, err := getSecretFromRepoURL(repoURL)
 	if err != nil && err != keyring.ErrNotFound {
 		return err
 	}
 	if accessToken != secret {
-		err := keyring.Set("kam", hostName, accessToken)
+		err := keyring.Set(webhook.KeyringServiceName, hostName, accessToken)
 		if err != nil {
 			return fmt.Errorf("unable to set access token for repo %q using keyring: %w", repoURL, err)
 		}
 	}
 	return nil
+}
+
+func getSecretFromRepoURL(repoURL string) (string, string, error) {
+	hostName, err := webhook.HostFromURL(repoURL)
+	if err != nil {
+		return "", "", err
+	}
+	secret, err := keyring.Get(webhook.KeyringServiceName, hostName)
+	if err != nil && err != keyring.ErrNotFound {
+		return "", "", err
+	}
+	return secret, hostName, err
 }
 
 func checkMandatoryFlags(flags map[string]string) error {
@@ -200,25 +208,28 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client) er
 	}
 	io.GitOpsWebhookSecret = ui.EnterGitWebhookSecret()
 	io.ServiceRepoURL = utility.AddGitSuffixIfNecessary(ui.EnterServiceRepoURL())
-	if ui.IsPrivateRepo() {
-		io.GitHostAccessToken = ui.EnterGitHostAccessToken(io.ServiceRepoURL)
-	}
 	io.ServiceWebhookSecret = ui.EnterServiceWebhookSecret()
-	if ui.UsePersonalAccessToken() {
+	secret, _, err := getSecretFromRepoURL(io.ServiceRepoURL)
+	if err != nil && err != keyring.ErrNotFound {
+		return err
+	}
+	if err == keyring.ErrNotFound {
 		io.GitHostAccessToken = ui.EnterGitHostAccessToken(io.ServiceRepoURL)
 		if io.GitHostAccessToken != "" {
-			err := setSecretIfNotSet(io.GitOpsRepoURL, io.GitHostAccessToken)
+			err := setSecret(io.GitOpsRepoURL, io.GitHostAccessToken)
 			if err != nil {
 				return err
 			}
-			err = setSecretIfNotSet(io.ServiceRepoURL, io.GitHostAccessToken)
+			err = setSecret(io.ServiceRepoURL, io.GitHostAccessToken)
 			if err != nil {
 				return err
 			}
-			io.CommitStatusTracker = ui.SetupCommitStatusTracker()
-			io.PushToGit = ui.SelectOptionPushToGit()
 		}
+	} else {
+		io.GitHostAccessToken = secret
 	}
+	io.CommitStatusTracker = ui.SetupCommitStatusTracker()
+	io.PushToGit = ui.SelectOptionPushToGit()
 	io.Prefix = ui.EnterPrefix()
 	io.OutputPath = ui.EnterOutputPath()
 	io.Overwrite = true
@@ -341,7 +352,7 @@ func NewCmdBootstrap(name, fullName string) *cobra.Command {
 	bootstrapCmd.Flags().StringVar(&o.ServiceRepoURL, "service-repo-url", "", "Provide the URL for your Service repository e.g. https://github.com/organisation/service.git")
 	bootstrapCmd.Flags().StringVar(&o.ServiceWebhookSecret, "service-webhook-secret", "", "Provide a secret that we can use to authenticate incoming hooks from your Git hosting service for the Service repository. (if not provided, it will be auto-generated)")
 	bootstrapCmd.Flags().StringVar(&o.PrivateRepoDriver, "private-repo-driver", "", "If your Git repositories are on a custom domain, please indicate which driver to use github or gitlab")
-	bootstrapCmd.Flags().BoolVar(&o.CommitStatusTracker, "commit-status-tracker", false, "Enable or disable the commit-status-tracker which reports the success/failure of your pipelineruns to GitHub/GitLab")
+	bootstrapCmd.Flags().BoolVar(&o.CommitStatusTracker, "commit-status-tracker", true, "Enable or disable the commit-status-tracker which reports the success/failure of your pipelineruns to GitHub/GitLab")
 	bootstrapCmd.Flags().BoolVar(&o.PushToGit, "push-to-git", false, "If true, automatically creates and populates the gitops-repo-url with the generated resources")
 	return bootstrapCmd
 }
