@@ -8,6 +8,7 @@ import (
 	ssv1alpha1 "github.com/bitnami-labs/sealed-secrets/pkg/apis/sealed-secrets/v1alpha1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/redhat-developer/kam/pkg/cmd/utility"
 	"github.com/redhat-developer/kam/pkg/pipelines/config"
 	"github.com/redhat-developer/kam/pkg/pipelines/deployment"
 	"github.com/redhat-developer/kam/pkg/pipelines/eventlisteners"
@@ -19,7 +20,10 @@ import (
 	"github.com/redhat-developer/kam/pkg/pipelines/secrets"
 	"github.com/redhat-developer/kam/pkg/pipelines/statustracker"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/kubernetes/fake"
 )
 
 const (
@@ -445,5 +449,33 @@ func makeTestKey(t *testing.T) func(service types.NamespacedName) (*rsa.PublicKe
 			t.Fatalf("failed to generate a private RSA key: %s", err)
 		}
 		return &key.PublicKey, nil
+	}
+}
+
+func TestAppendPrefixConfigMap(t *testing.T) {
+	fakeClientset := fake.NewSimpleClientset(&v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "gitops-config",
+			Namespace: "openshift-operators",
+		},
+		Data: map[string]string{},
+	})
+	fakeClient := &utility.Client{KubeClient: fakeClientset}
+	want := &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "gitops-config",
+			Namespace: "openshift-operators",
+		},
+		Data: map[string]string{
+			"username-repo-gitops-prefix": "prefix",
+		},
+	}
+	err := createPrefixConfigMap("prefix", "https://github.com/username/repo.git", fakeClient)
+	if err != nil {
+		t.Error(err)
+	}
+	got, _ := fakeClient.KubeClient.CoreV1().ConfigMaps("openshift-operators").Get("gitops-config", metav1.GetOptions{})
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("message comparison failed:\n%s", diff)
 	}
 }

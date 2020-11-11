@@ -14,9 +14,11 @@ import (
 	"github.com/spf13/afero"
 	corev1 "k8s.io/api/core/v1"
 	v1rbac "k8s.io/api/rbac/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
+	"github.com/redhat-developer/kam/pkg/cmd/utility"
 	"github.com/redhat-developer/kam/pkg/pipelines/config"
 	"github.com/redhat-developer/kam/pkg/pipelines/deployment"
 	"github.com/redhat-developer/kam/pkg/pipelines/dryrun"
@@ -68,6 +70,13 @@ const (
 	appCITemplateName = "app-ci-template"
 	version           = 1
 )
+
+// patchStringValue specifies a patch operation for a uint32.
+type patchUInt32Value struct {
+	Op    string `json:"op"`
+	Path  string `json:"path"`
+	Value uint32 `json:"value"`
+}
 
 // BootstrapOptions is a struct that provides the optional flags
 type BootstrapOptions struct {
@@ -152,7 +161,14 @@ func Bootstrap(o *BootstrapOptions, appFs afero.Fs) error {
 	if err != nil {
 		return fmt.Errorf("failed to write resources: %w", err)
 	}
-
+	client, err := utility.NewClient()
+	if err != nil {
+		return err
+	}
+	err = createPrefixConfigMap(o.Prefix, o.GitOpsRepoURL, client)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -587,5 +603,30 @@ func generateSecrets(outputs res.Resources, sa *corev1.ServiceAccount, ns string
 	}
 	outputs[basicAuthTokenPath] = basicAuthSecret
 	outputs[serviceAccountPath] = roles.AddSecretToSA(sa, basicAuthSecret.Name)
+	return nil
+}
+
+func createPrefixConfigMap(prefix, gitopsRepo string, client *utility.Client) error {
+	if prefix != "" {
+		cm, err := client.KubeClient.CoreV1().ConfigMaps("openshift-operators").Get("gitops-config", metav1.GetOptions{})
+		if err != nil {
+			return err
+		}
+		username, err := orgRepoFromURL(gitopsRepo)
+		if err != nil {
+			return err
+		}
+		fmt.Println("this is username", username)
+		repoName, err := repoFromURL(gitopsRepo)
+		if err != nil {
+			return err
+		}
+		fmt.Println("This is the repoName", repoName)
+		cm.Data[username+"-"+repoName+"-gitops-prefix"] = prefix
+		_, err = client.KubeClient.CoreV1().ConfigMaps("openshift-operators").Update(cm)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
