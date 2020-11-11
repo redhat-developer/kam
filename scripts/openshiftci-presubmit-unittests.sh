@@ -15,7 +15,16 @@ export GOLANGCI_LINT_CACHE="/tmp/.cache"
 git describe --always --long --dirty
 go version
 go env
+if [[ $(go fmt ./...) ]]; then
+    echo "not well formatted sources are found"
+    exit 1
+fi
 make gomod_tidy
+if [[ ! -z $(git status -s) ]]
+then
+    echo "Go mod state is not clean."
+    exit 1
+fi
 make test
 make cmd-docs
 if [[ ! -z $(git status -s) ]]
