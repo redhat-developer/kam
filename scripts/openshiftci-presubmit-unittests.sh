@@ -16,6 +16,11 @@ git describe --always --long --dirty
 go version
 go env
 make gomod_tidy
+if [[ ! -z $(git status -s) ]]
+then
+    echo "Go mod state is not clean."
+    exit 1
+fi
 make test
 make cmd-docs
 if [[ ! -z $(git status -s) ]]
