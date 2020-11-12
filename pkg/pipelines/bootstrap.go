@@ -75,13 +75,6 @@ const (
 	configMapPrefixKey = "gitops-prefixes"
 )
 
-// patchStringValue specifies a patch operation for a uint32.
-type patchUInt32Value struct {
-	Op    string `json:"op"`
-	Path  string `json:"path"`
-	Value uint32 `json:"value"`
-}
-
 // BootstrapOptions is a struct that provides the optional flags
 type BootstrapOptions struct {
 	GitOpsRepoURL            string // This is where the pipelines and configuration are.
