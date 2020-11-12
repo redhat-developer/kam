@@ -41,6 +41,8 @@ The `kam bootstrap` [command](../../commands/kam_bootstrap.md) also provides an 
 
 In the event of using a self-hosted _GitHub Enterprise_ or _GitLab Community/Enterprise Edition_ if the driver name isn't evident from the repository URL, use the `--private-repo-driver` flag to select _github_ or _gitlab_.
 
+The personal access token `--git-host-acccess-token` passed in the bootstrap command will be stored in a secure manner in the keyring on your local file system, if the secret with the same host-name  `Eg. github.com` is present in the keyring, the flag will overwrite the current value present in the keyring with the updated git-host-access-token.
+
 For more details see the [ArgoCD documentation](https://argoproj.github.io/argo-cd/user-guide/private-repositories).
 
 The bootstrap process generates a fairly large number of files, including a
