@@ -166,9 +166,6 @@ func Bootstrap(o *BootstrapOptions, appFs afero.Fs) error {
 	if apierrors.IsNotFound(err) {
 		log.Errorf("The config map: %s cannot be found. Check if the gitops operator has been installed", configMapName)
 	}
-	if err != nil && !apierrors.IsNotFound(err) {
-		return err
-	}
 	return nil
 }
 
