@@ -453,29 +453,76 @@ func makeTestKey(t *testing.T) func(service types.NamespacedName) (*rsa.PublicKe
 }
 
 func TestAppendPrefixConfigMap(t *testing.T) {
-	fakeClientset := fake.NewSimpleClientset(&v1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "gitops-config",
-			Namespace: "openshift-operators",
+	tests := []struct {
+		description      string
+		currentConfigMap *corev1.ConfigMap
+		prefix           string
+		wantedConfigMap  *corev1.ConfigMap
+	}{
+		{
+			description:      "Case-1: A prefix is not present",
+			currentConfigMap: createConfigMap(""),
+			prefix:           "prefix-1",
+			wantedConfigMap:  createConfigMap("prefix-1"),
 		},
-		Data: map[string]string{},
-	})
-	fakeClient := &utility.Client{KubeClient: fakeClientset}
-	want := &v1.ConfigMap{
+		{
+			description:      "Case-2: Adding a new prefix to the current comma-seperated values",
+			currentConfigMap: createConfigMap("prefix-1,prefix-2"),
+			prefix:           "new-prefix",
+			wantedConfigMap:  createConfigMap("new-prefix,prefix-1,prefix-2"),
+		},
+		{
+			description:      "Case-3: The prefix already exists",
+			currentConfigMap: createConfigMap("prefix-1,prefix-2"),
+			prefix:           "prefix-1",
+			wantedConfigMap:  createConfigMap("prefix-1,prefix-2"),
+		},
+		{
+			description: "Case-4: The gitops-prefixes data value is not present",
+			currentConfigMap: &v1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      configMapName,
+					Namespace: configMapNs,
+				},
+				Data: map[string]string{},
+			},
+			prefix:          "prefix-1",
+			wantedConfigMap: createConfigMap("prefix-1"),
+		},
+		{
+			description:      "Case-4: The hyphen is present in the prefix",
+			currentConfigMap: createConfigMap("prefix-1,prefix-2"),
+			prefix:           "test-prefix-",
+			wantedConfigMap:  createConfigMap("test-prefix,prefix-1,prefix-2"),
+		},
+	}
+	for _, tt := range tests {
+		fakeClientset := fake.NewSimpleClientset(tt.currentConfigMap)
+		fakeClient := &utility.Client{KubeClient: fakeClientset}
+		err := createPrefixConfigMap(tt.prefix, fakeClient)
+		if err != nil {
+			t.Error(err)
+		}
+		want := tt.wantedConfigMap
+		got, err := fakeClient.KubeClient.CoreV1().ConfigMaps(configMapNs).Get(configMapName, metav1.GetOptions{})
+		if err != nil {
+			t.Error(err)
+		}
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Fatalf("%v message comparison failed:\n%s", tt.description, diff)
+		}
+
+	}
+}
+
+func createConfigMap(dataValue string) *corev1.ConfigMap {
+	return &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "gitops-config",
 			Namespace: "openshift-operators",
 		},
 		Data: map[string]string{
-			"username-repo-gitops-prefix": "prefix",
+			"gitops-prefixes": dataValue,
 		},
-	}
-	err := createPrefixConfigMap("prefix", "https://github.com/username/repo.git", fakeClient)
-	if err != nil {
-		t.Error(err)
-	}
-	got, _ := fakeClient.KubeClient.CoreV1().ConfigMaps("openshift-operators").Get("gitops-config", metav1.GetOptions{})
-	if diff := cmp.Diff(want, got); diff != "" {
-		t.Fatalf("message comparison failed:\n%s", diff)
 	}
 }

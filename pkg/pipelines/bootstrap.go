@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/afero"
 	corev1 "k8s.io/api/core/v1"
 	v1rbac "k8s.io/api/rbac/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -65,10 +66,13 @@ const (
 	roleBindingName     = "pipelines-service-role-binding"
 	webhookSecretLength = 20
 
-	pipelinesFile     = "pipelines.yaml"
-	bootstrapImage    = "nginxinc/nginx-unprivileged:latest"
-	appCITemplateName = "app-ci-template"
-	version           = 1
+	pipelinesFile      = "pipelines.yaml"
+	bootstrapImage     = "nginxinc/nginx-unprivileged:latest"
+	appCITemplateName  = "app-ci-template"
+	version            = 1
+	configMapName      = "gitops-config"
+	configMapNs        = "openshift-operators"
+	configMapPrefixKey = "gitops-prefixes"
 )
 
 // patchStringValue specifies a patch operation for a uint32.
@@ -165,8 +169,11 @@ func Bootstrap(o *BootstrapOptions, appFs afero.Fs) error {
 	if err != nil {
 		return err
 	}
-	err = createPrefixConfigMap(o.Prefix, o.GitOpsRepoURL, client)
-	if err != nil {
+	err = createPrefixConfigMap(o.Prefix, client)
+	if apierrors.IsNotFound(err) {
+		log.Errorf("The config map: %s cannot be found. Check if the gitops operator has been installed", configMapName)
+	}
+	if err != nil && !apierrors.IsNotFound(err) {
 		return err
 	}
 	return nil
@@ -606,27 +613,37 @@ func generateSecrets(outputs res.Resources, sa *corev1.ServiceAccount, ns string
 	return nil
 }
 
-func createPrefixConfigMap(prefix, gitopsRepo string, client *utility.Client) error {
+// adds a prefix to the data field `gitops-prefixes` in the configmap called gitops-config.
+func createPrefixConfigMap(prefix string, client *utility.Client) error {
+	prefix = strings.TrimSuffix(prefix, "-")
 	if prefix != "" {
-		cm, err := client.KubeClient.CoreV1().ConfigMaps("openshift-operators").Get("gitops-config", metav1.GetOptions{})
+		cm, err := client.KubeClient.CoreV1().ConfigMaps(configMapNs).Get(configMapName, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
-		username, err := orgRepoFromURL(gitopsRepo)
-		if err != nil {
-			return err
+		exists := checkPrefixExists(prefix, cm)
+		if exists {
+			return nil
 		}
-		fmt.Println("this is username", username)
-		repoName, err := repoFromURL(gitopsRepo)
-		if err != nil {
-			return err
+		prefixes := []string{prefix}
+		if cm.Data[configMapPrefixKey] != "" {
+			prefixes = append(prefixes, strings.Split(cm.Data[configMapPrefixKey], ",")...)
 		}
-		fmt.Println("This is the repoName", repoName)
-		cm.Data[username+"-"+repoName+"-gitops-prefix"] = prefix
-		_, err = client.KubeClient.CoreV1().ConfigMaps("openshift-operators").Update(cm)
+		newPrefixes := strings.Join(prefixes, ",")
+		cm.Data[configMapPrefixKey] = newPrefixes
+		_, err = client.KubeClient.CoreV1().ConfigMaps(configMapNs).Update(cm)
 		if err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func checkPrefixExists(prefix string, cm *corev1.ConfigMap) bool {
+	for _, s := range strings.Split(cm.Data[configMapPrefixKey], ",") {
+		if prefix == s {
+			return true
+		}
+	}
+	return false
 }
