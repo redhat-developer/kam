@@ -139,8 +139,12 @@ func nonInteractiveMode(io *BootstrapParameters, client *utility.Client) error {
 }
 
 func setSecret(repoURL, accessToken string) error {
-	secret, hostName, err := getSecretFromRepoURL(repoURL)
-	if err != nil && err != keyring.ErrNotFound {
+	hostName, err := webhook.HostFromURL(repoURL)
+	if err != nil {
+		return err
+	}
+	secret, err := getSecret(hostName)
+	if err != nil {
 		return err
 	}
 	if accessToken != secret {
@@ -152,16 +156,12 @@ func setSecret(repoURL, accessToken string) error {
 	return nil
 }
 
-func getSecretFromRepoURL(repoURL string) (string, string, error) {
-	hostName, err := webhook.HostFromURL(repoURL)
-	if err != nil {
-		return "", "", err
-	}
+func getSecret(hostName string) (string, error) {
 	secret, err := keyring.Get(webhook.KeyringServiceName, hostName)
 	if err != nil && err != keyring.ErrNotFound {
-		return "", "", err
+		return "", err
 	}
-	return secret, hostName, err
+	return secret, nil
 }
 
 func checkMandatoryFlags(flags map[string]string) error {
@@ -209,8 +209,8 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client) er
 	io.GitOpsWebhookSecret = ui.EnterGitWebhookSecret()
 	io.ServiceRepoURL = utility.AddGitSuffixIfNecessary(ui.EnterServiceRepoURL())
 	io.ServiceWebhookSecret = ui.EnterServiceWebhookSecret()
-	secret, _, err := getSecretFromRepoURL(io.ServiceRepoURL)
-	if err != nil && err != keyring.ErrNotFound {
+	secret, err := getSecret(io.ServiceRepoURL)
+	if err != nil {
 		return err
 	}
 	if err == keyring.ErrNotFound {
