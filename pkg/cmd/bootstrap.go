@@ -124,15 +124,13 @@ func nonInteractiveMode(io *BootstrapParameters, client *utility.Client) error {
 	if err := checkMandatoryFlags(mandatoryFlags); err != nil {
 		return err
 	}
-	if io.GitHostAccessToken != "" {
-		err := webhook.SetSecret(io.GitOpsRepoURL, io.GitHostAccessToken)
-		if err != nil {
-			return err
-		}
-		err = webhook.SetSecret(io.ServiceRepoURL, io.GitHostAccessToken)
-		if err != nil {
-			return err
-		}
+	err := checkGitAccessToken(io)
+	if err != nil {
+		return err
+	}
+	err = ui.ValidateAccessToken(io.GitHostAccessToken, io.ServiceRepoURL)
+	if err != nil {
+		return fmt.Errorf("please enter a valid access token: %v", err)
 	}
 	return nil
 }
@@ -342,4 +340,27 @@ func isKnownDriver(repoURL string) bool {
 	}
 	_, err = factory.DefaultIdentifier.Identify(host)
 	return err == nil
+}
+
+func checkGitAccessToken(io *BootstrapParameters) error {
+	if io.GitHostAccessToken != "" {
+		err := webhook.SetSecret(io.GitOpsRepoURL, io.GitHostAccessToken)
+		if err != nil {
+			return err
+		}
+		err = webhook.SetSecret(io.ServiceRepoURL, io.GitHostAccessToken)
+		if err != nil {
+			return err
+		}
+	} else {
+		secret, err := webhook.GetAccessToken(io.ServiceRepoURL)
+		if err != nil {
+			return err
+		}
+		if secret == "" && err == nil {
+			return errors.New("unable to retrieve the access token from the keyring/env-var: kindly pass the --git-host-access-token")
+		}
+		io.GitHostAccessToken = secret
+	}
+	return nil
 }
