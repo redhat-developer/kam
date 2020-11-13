@@ -188,15 +188,13 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client) er
 	}
 	if err == nil && secret == "" {
 		io.GitHostAccessToken = ui.EnterGitHostAccessToken(io.ServiceRepoURL)
-		if io.GitHostAccessToken != "" {
-			err := webhook.SetSecret(io.GitOpsRepoURL, io.GitHostAccessToken)
-			if err != nil {
-				return err
-			}
-			err = webhook.SetSecret(io.ServiceRepoURL, io.GitHostAccessToken)
-			if err != nil {
-				return err
-			}
+		err := webhook.SetSecret(io.GitOpsRepoURL, io.GitHostAccessToken)
+		if err != nil {
+			return err
+		}
+		err = webhook.SetSecret(io.ServiceRepoURL, io.GitHostAccessToken)
+		if err != nil {
+			return err
 		}
 	} else {
 		io.GitHostAccessToken = secret
