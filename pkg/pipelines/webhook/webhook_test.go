@@ -5,6 +5,8 @@ import (
 	"os"
 	"testing"
 
+	"strings"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/redhat-developer/kam/pkg/pipelines/config"
 	"github.com/zalando/go-keyring"
@@ -152,9 +154,15 @@ func TestGetAccessToken(t *testing.T) {
 
 	for i, tt := range optionTests {
 		t.Run(fmt.Sprintf("Test %d", i), func(t *testing.T) {
-			defer os.Unsetenv("TESTGITTOKEN")
+			hostName, err := HostFromURL(tt.gitRepo)
+			if err != nil {
+				t.Error("Failed to get host name from access token")
+			}
+			h := strings.ReplaceAll(hostName, ".", "_")
+			envVar := strings.ToUpper(h) + "_TOKEN"
+			defer os.Unsetenv(envVar)
 			if tt.envVarPresent {
-				err := os.Setenv("TESTGITTOKEN", "abc123")
+				err := os.Setenv(envVar, "abc123")
 				if err != nil {
 					t.Errorf("Error in setting the environment variable")
 				}
@@ -165,10 +173,10 @@ func TestGetAccessToken(t *testing.T) {
 					t.Error(err)
 				}
 			}
-			token, _ := getAccessToken(tt.gitRepo)
+			token, _ := GetAccessToken(tt.gitRepo)
 
 			if token != tt.expectedToken {
-				t.Errorf("%v : getAcessToken returned %v, expected %v", tt.name, token, tt.expectedToken)
+				t.Errorf("%v : GetAcessToken returned %v, expected %v", tt.name, token, tt.expectedToken)
 			}
 		})
 	}

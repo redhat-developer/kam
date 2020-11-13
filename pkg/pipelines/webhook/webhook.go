@@ -109,10 +109,19 @@ func newWebhookInfo(accessToken, pipelinesFile string, serviceName *QualifiedSer
 		return nil, fmt.Errorf("failed to get event listener URL: %v", err)
 	}
 	if accessToken == "" {
-		accessToken, err = getAccessToken(gitRepoURL)
+		accessToken, err = GetAccessToken(gitRepoURL)
 		if err != nil {
 			return nil, err
 		}
+		if accessToken == "" && err == nil {
+			return nil, errors.New("unable to retrieve access-token from keyring/environment variables")
+		}
+	} else {
+		err := SetSecret(gitRepoURL, accessToken)
+		if err != nil {
+			return nil, err
+		}
+
 	}
 	repository, err := git.NewRepository(gitRepoURL, accessToken)
 	if err != nil {
@@ -121,7 +130,8 @@ func newWebhookInfo(accessToken, pipelinesFile string, serviceName *QualifiedSer
 	return &webhookInfo{clusterResources, repository, gitRepoURL, cicdNamepace, listenerURL, accessToken, serviceName, isCICD}, nil
 }
 
-func getAccessToken(gitRepoURL string) (string, error) {
+// GetAccessToken returns the token from either that is stored in the keyring or the environment variable in this order.
+func GetAccessToken(gitRepoURL string) (string, error) {
 	hostName, err := HostFromURL(gitRepoURL)
 	if err != nil {
 		return "", err
@@ -131,21 +141,12 @@ func getAccessToken(gitRepoURL string) (string, error) {
 		return "", err
 	}
 	if err != nil && err == keyring.ErrNotFound {
-		parsed, err := url.Parse(gitRepoURL)
-		if err != nil {
-			return "", fmt.Errorf("failed to parse repository URL %q: %w", gitRepoURL, err)
-		}
-		repoNameExt, err := git.GetRepoName(parsed)
-		if err != nil {
-			return "", err
-		}
-		repoName := strings.Split(repoNameExt, "/")[1]
-		envVar := strings.ToUpper(repoName) + "GITTOKEN"
-		accessToken := os.Getenv(envVar)
+		hN := strings.ReplaceAll(hostName, ".", "_")
+		envVar := strings.ToUpper(hN) + "_TOKEN"
+		accessToken = os.Getenv(envVar)
 		if accessToken == "" {
-			return "", fmt.Errorf("unable to retrieve the accessToken from the keyring/envVar")
+			return "", nil
 		}
-		return accessToken, nil
 	}
 	return accessToken, nil
 }
@@ -239,4 +240,31 @@ func HostFromURL(s string) (string, error) {
 		return "", err
 	}
 	return strings.ToLower(p.Host), nil
+}
+
+//SetSecret sets the secret in the keyring
+func SetSecret(repoURL, accessToken string) error {
+	hostName, err := HostFromURL(repoURL)
+	if err != nil {
+		return err
+	}
+	secret, err := getSecret(hostName)
+	if err != nil {
+		return err
+	}
+	if accessToken != secret {
+		err := keyring.Set(KeyringServiceName, hostName, accessToken)
+		if err != nil {
+			return fmt.Errorf("unable to set access token for repo %q using keyring: %w", repoURL, err)
+		}
+	}
+	return nil
+}
+
+func getSecret(hostName string) (string, error) {
+	secret, err := keyring.Get(KeyringServiceName, hostName)
+	if err != nil && err != keyring.ErrNotFound {
+		return "", err
+	}
+	return secret, nil
 }

@@ -22,7 +22,6 @@ import (
 	"github.com/redhat-developer/kam/pkg/pipelines/secrets"
 	"github.com/redhat-developer/kam/pkg/pipelines/statustracker"
 	"github.com/redhat-developer/kam/pkg/pipelines/webhook"
-	"github.com/zalando/go-keyring"
 )
 
 const (
@@ -126,42 +125,16 @@ func nonInteractiveMode(io *BootstrapParameters, client *utility.Client) error {
 		return err
 	}
 	if io.GitHostAccessToken != "" {
-		err := setSecret(io.GitOpsRepoURL, io.GitHostAccessToken)
+		err := webhook.SetSecret(io.GitOpsRepoURL, io.GitHostAccessToken)
 		if err != nil {
 			return err
 		}
-		err = setSecret(io.ServiceRepoURL, io.GitHostAccessToken)
+		err = webhook.SetSecret(io.ServiceRepoURL, io.GitHostAccessToken)
 		if err != nil {
 			return err
 		}
 	}
 	return nil
-}
-
-func setSecret(repoURL, accessToken string) error {
-	hostName, err := webhook.HostFromURL(repoURL)
-	if err != nil {
-		return err
-	}
-	secret, err := getSecret(hostName)
-	if err != nil {
-		return err
-	}
-	if accessToken != secret {
-		err := keyring.Set(webhook.KeyringServiceName, hostName, accessToken)
-		if err != nil {
-			return fmt.Errorf("unable to set access token for repo %q using keyring: %w", repoURL, err)
-		}
-	}
-	return nil
-}
-
-func getSecret(hostName string) (string, error) {
-	secret, err := keyring.Get(webhook.KeyringServiceName, hostName)
-	if err != nil && err != keyring.ErrNotFound {
-		return "", err
-	}
-	return secret, nil
 }
 
 func checkMandatoryFlags(flags map[string]string) error {
@@ -209,18 +182,18 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client) er
 	io.GitOpsWebhookSecret = ui.EnterGitWebhookSecret()
 	io.ServiceRepoURL = utility.AddGitSuffixIfNecessary(ui.EnterServiceRepoURL())
 	io.ServiceWebhookSecret = ui.EnterServiceWebhookSecret()
-	secret, err := getSecret(io.ServiceRepoURL)
+	secret, err := webhook.GetAccessToken(io.ServiceRepoURL)
 	if err != nil {
 		return err
 	}
-	if err == keyring.ErrNotFound {
+	if err == nil && secret == "" {
 		io.GitHostAccessToken = ui.EnterGitHostAccessToken(io.ServiceRepoURL)
 		if io.GitHostAccessToken != "" {
-			err := setSecret(io.GitOpsRepoURL, io.GitHostAccessToken)
+			err := webhook.SetSecret(io.GitOpsRepoURL, io.GitHostAccessToken)
 			if err != nil {
 				return err
 			}
-			err = setSecret(io.ServiceRepoURL, io.GitHostAccessToken)
+			err = webhook.SetSecret(io.ServiceRepoURL, io.GitHostAccessToken)
 			if err != nil {
 				return err
 			}
