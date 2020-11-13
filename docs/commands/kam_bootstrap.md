@@ -22,7 +22,7 @@ kam bootstrap [flags]
 ```
       --commit-status-tracker                          Enable or disable the commit-status-tracker which reports the success/failure of your pipelineruns to GitHub/GitLab (default true)
       --dockercfgjson string                           Filepath to config.json which authenticates the image push to the desired image registry  (default "~/.docker/config.json")
-      --git-host-access-token string                   Used to authenticate repository clones, and commit-status notifications (if enabled). Will update the token in the keyring if present.
+      --git-host-access-token string                   Used to authenticate repository clones, and commit-status notifications (if enabled). Access token will be updated in the keyring
       --gitops-repo-url string                         Provide the URL for your GitOps repository e.g. https://github.com/organisation/repository.git
       --gitops-webhook-secret string                   Provide a secret that we can use to authenticate incoming hooks from your Git hosting service for the GitOps repository. (if not provided, it will be auto-generated)
   -h, --help                                           help for bootstrap
