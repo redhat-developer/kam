@@ -41,11 +41,13 @@ The `kam bootstrap` [command](../../commands/kam_bootstrap.md) also provides an 
 
 In the event of using a self-hosted _GitHub Enterprise_ or _GitLab Community/Enterprise Edition_ if the driver name isn't evident from the repository URL, use the `--private-repo-driver` flag to select _github_ or _gitlab_.
 
-* When a token is provided in command flag `--git-host-access-token`, the token will be stored securely in keyring. The hostname of the URL (e.g. github.com) will be used to stored the token by keyring. The provided token will be used.
+* When a token is provided in command flag `--git-host-access-token`, the token will be stored securely in keyring. The hostname of the URL (e.g. github.com) will be used to store the token by keyring. The provided token will be used.
 
-* When a token is not provided in command flag `--git-host-access-token`, the token is retrieved by keyring using the hostname of the URL. If no token is not found, a token is retrieved from env var. What is the format of the env var? If no token is not found in the env var, the command will fail.
+* When a token is not provided in command flag `--git-host-access-token`, the token is retrieved by keyring using the `hostname of the URL` as the username and service name `kam`. If no token is not found in the keyring, a token is retrieved from environment variable as described in the step below.
 
-* When a token is not provided in command flag and the token is not present in the keyring, the webhook cmd will look for the access token in an environment variable with the syntax HOSTNAME_TOKEN (e.g. GITHUB_COM_TOKEN).
+* When a token is not provided in command flag and the token is not present in the keyring, the webhook cmd will look for the access token in an environment variable with the syntax HOSTNAME_TOKEN (e.g. GITHUB_COM_TOKEN). The environment variable name is assigned as follows, the hostname (e.g. github.com) is extracted from the value passed to the repository URL (e.g. https://github.com/username/repo.git),  where the `.` in the hostname is replaced by `_` and concatenated with `_TOKEN`. Considering the previous examples, the environment varaible name will be `GITHUB_COM_TOKEN`.
+
+Assuming the token is not passed in the command, if the token is not found in the keyring or the environment variable with the specified name. The command will fail.
 
 For more details see the [ArgoCD documentation](https://argoproj.github.io/argo-cd/user-guide/private-repositories).
 

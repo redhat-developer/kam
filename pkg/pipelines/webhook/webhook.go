@@ -141,8 +141,8 @@ func GetAccessToken(gitRepoURL string) (string, error) {
 		return "", err
 	}
 	if err != nil && err == keyring.ErrNotFound {
-		hN := strings.ReplaceAll(hostName, ".", "_")
-		envVar := strings.ToUpper(hN) + "_TOKEN"
+		FmtHostName := strings.ReplaceAll(hostName, ".", "_")
+		envVar := strings.ToUpper(FmtHostName) + "_TOKEN"
 		accessToken = os.Getenv(envVar)
 		if accessToken == "" {
 			return "", nil

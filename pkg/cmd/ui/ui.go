@@ -151,7 +151,7 @@ func EnterGitHostAccessToken(serviceRepo string) string {
 	var accessToken string
 	prompt := &survey.Password{
 		Message: fmt.Sprintf("Please provide a token used to authenticate requests to %q", serviceRepo),
-		Help:    "commit-status-tracker reports the completion status of OpenShift pipeline runs to your Git hosting status on success or failure, this token will be encrypted as a secret in your cluster.\nIf you are using Github, please see here for how to generate a token https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token\nIf you are using GitLab, please see here for how to generate a token https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html",
+		Help:    "Tokens are required to enable commit status tracker (completion status of OpenShift pipeline on your version control system UI) and automated creation/push of gitops resources, this token will be encrypted as a secret in your cluster.\nIf you are using Github, please see here for how to generate a token https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token\nIf you are using GitLab, please see here for how to generate a token https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html",
 	}
 	err := survey.AskOne(prompt, &accessToken, makeAccessTokenCheck(serviceRepo))
 	handleError(err)
