@@ -20,7 +20,7 @@ kam webhook delete [flags]
 ### Options
 
 ```
-      --access-token string       Access token to be used to create Git repository webhook
+      --access-token string       Access token to be used to create Git repository webhook (will update the token in the keyring if present)
       --cicd                      Provide this flag if the target Git repository is a CI/CD configuration repository
       --env-name string           Provide environment name if the target Git repository is a service's source repository.
   -h, --help                      help for delete

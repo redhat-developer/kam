@@ -320,7 +320,7 @@ func NewCmdBootstrap(name, fullName string) *cobra.Command {
 	bootstrapCmd.Flags().StringVar(&o.ImageRepo, "image-repo", "", "Image repository of the form <registry>/<username>/<repository> or <project>/<app> which is used to push newly built images")
 	bootstrapCmd.Flags().StringVar(&o.SealedSecretsService.Namespace, "sealed-secrets-ns", secrets.SealedSecretsNS, "Namespace in which the Sealed Secrets operator is installed, automatically generated secrets are encrypted with this operator")
 	bootstrapCmd.Flags().StringVar(&o.SealedSecretsService.Name, "sealed-secrets-svc", secrets.SealedSecretsController, "Name of the Sealed Secrets Services that encrypts secrets")
-	bootstrapCmd.Flags().StringVar(&o.GitHostAccessToken, statustracker.CommitStatusTrackerSecret, "", "Used to authenticate repository clones, and commit-status notifications (if enabled)")
+	bootstrapCmd.Flags().StringVar(&o.GitHostAccessToken, statustracker.CommitStatusTrackerSecret, "", "Used to authenticate repository clones, and commit-status notifications (if enabled). Will update the token in the keyring if present.")
 	bootstrapCmd.Flags().BoolVar(&o.Overwrite, "overwrite", false, "Overwrites previously existing GitOps configuration (if any)")
 	bootstrapCmd.Flags().StringVar(&o.ServiceRepoURL, "service-repo-url", "", "Provide the URL for your Service repository e.g. https://github.com/organisation/service.git")
 	bootstrapCmd.Flags().StringVar(&o.ServiceWebhookSecret, "service-webhook-secret", "", "Provide a secret that we can use to authenticate incoming hooks from your Git hosting service for the Service repository. (if not provided, it will be auto-generated)")
