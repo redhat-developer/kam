@@ -4,7 +4,7 @@ The GitOps Application Manager provides command line interface to bootstrap GitO
 
 ## CLI Reference
 
-[Comand Line Reference](./docs/commands/README.md)
+[Command Line Reference](./docs/commands/README.md)
 
 ## Getting Started
 
