@@ -72,6 +72,16 @@ Finally, the GitOps repository is created automatically if credentials are
 provided, this will create a private repository for pushing your generated
 resources, and the resources will be pushed to your git hosting service.
 
+## Access Tokens
+
+* The token is stored securely on the local file-system using key-ring. The key-ring requires a user-name and service-name to store the secret, the KAM tool stores the secret with the service-name `Kam` and the user-name being the `host name` of the pertaining URL (e.g. --gitops-repo-url).
+
+* If the token is set within the keyring, the keyring will not be prompted for in sucessive attempts of the `Bootstrap` and `Webhook` commands. The token can however be updated in the key-ring by passing the relevant flag (e.g. --git-host-access-token) using non-interactive mode.
+
+* When a token is not provided in the command flag, an attempt is made to retrieve the token from the keyring. If unsuccessful, the cmd will look for the access token in an environment variable whose variable naming convention is as follows, the hostname (e.g. github.com) is extracted from the value passed to the repository URL (e.g. https://github.com/username/repo.git),  where the `.` in the hostname is replaced by `_` and concatenated with `_TOKEN`. In this case, the environment varaible name will be `GITHUB_COM_TOKEN`.
+
+* In the event a token is not passed in the command, if the token is not found in the keyring or the environment variable with the specified name. The command will fail.
+
 ## Prefixing namespaces
 
 By default, bootstrapping creates `cicd`, `dev`, and `stage` namespaces, these

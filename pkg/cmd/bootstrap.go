@@ -18,10 +18,10 @@ import (
 	"github.com/redhat-developer/kam/pkg/cmd/ui"
 	"github.com/redhat-developer/kam/pkg/cmd/utility"
 	"github.com/redhat-developer/kam/pkg/pipelines"
+	"github.com/redhat-developer/kam/pkg/pipelines/accesstoken"
 	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
 	"github.com/redhat-developer/kam/pkg/pipelines/secrets"
 	"github.com/redhat-developer/kam/pkg/pipelines/statustracker"
-	"github.com/redhat-developer/kam/pkg/pipelines/webhook"
 )
 
 const (
@@ -95,7 +95,7 @@ func (io *BootstrapParameters) Complete(name string, cmd *cobra.Command, args []
 	}
 
 	if io.PrivateRepoDriver != "" {
-		host, err := webhook.HostFromURL(io.GitOpsRepoURL)
+		host, err := accesstoken.HostFromURL(io.GitOpsRepoURL)
 		if err != nil {
 			return err
 		}
@@ -130,7 +130,7 @@ func nonInteractiveMode(io *BootstrapParameters, client *utility.Client) error {
 	}
 	err = ui.ValidateAccessToken(io.GitHostAccessToken, io.ServiceRepoURL)
 	if err != nil {
-		return fmt.Errorf("please enter a valid access token: %v", err)
+		return fmt.Errorf("Please enter a valid access token: %v", err)
 	}
 	return nil
 }
@@ -163,7 +163,7 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client) er
 	io.GitOpsRepoURL = utility.AddGitSuffixIfNecessary(ui.EnterGitRepo())
 	if !isKnownDriver(io.GitOpsRepoURL) {
 		io.PrivateRepoDriver = ui.SelectPrivateRepoDriver()
-		host, err := webhook.HostFromURL(io.GitOpsRepoURL)
+		host, err := accesstoken.HostFromURL(io.GitOpsRepoURL)
 		if err != nil {
 			return fmt.Errorf("failed to parse the gitops url: %w", err)
 		}
@@ -177,20 +177,20 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client) er
 		io.ImageRepo = ui.EnterImageRepoExternalRepository()
 		io.DockerConfigJSONFilename = ui.EnterDockercfg()
 	}
-	io.GitOpsWebhookSecret = ui.EnterGitWebhookSecret()
+	io.GitOpsWebhookSecret = ui.EnterGitWebhookSecret(io.GitOpsRepoURL)
 	io.ServiceRepoURL = utility.AddGitSuffixIfNecessary(ui.EnterServiceRepoURL())
-	io.ServiceWebhookSecret = ui.EnterServiceWebhookSecret()
-	secret, err := webhook.GetAccessToken(io.ServiceRepoURL)
+	io.ServiceWebhookSecret = ui.EnterGitWebhookSecret(io.ServiceRepoURL)
+	secret, err := accesstoken.GetAccessToken(io.ServiceRepoURL)
 	if err != nil {
 		return err
 	}
 	if err == nil && secret == "" {
 		io.GitHostAccessToken = ui.EnterGitHostAccessToken(io.ServiceRepoURL)
-		err := webhook.SetSecret(io.GitOpsRepoURL, io.GitHostAccessToken)
+		err := accesstoken.SetSecret(io.GitOpsRepoURL, io.GitHostAccessToken)
 		if err != nil {
 			return err
 		}
-		err = webhook.SetSecret(io.ServiceRepoURL, io.GitHostAccessToken)
+		err = accesstoken.SetSecret(io.ServiceRepoURL, io.GitHostAccessToken)
 		if err != nil {
 			return err
 		}
@@ -316,7 +316,7 @@ func NewCmdBootstrap(name, fullName string) *cobra.Command {
 	bootstrapCmd.Flags().StringVar(&o.ImageRepo, "image-repo", "", "Image repository of the form <registry>/<username>/<repository> or <project>/<app> which is used to push newly built images")
 	bootstrapCmd.Flags().StringVar(&o.SealedSecretsService.Namespace, "sealed-secrets-ns", secrets.SealedSecretsNS, "Namespace in which the Sealed Secrets operator is installed, automatically generated secrets are encrypted with this operator")
 	bootstrapCmd.Flags().StringVar(&o.SealedSecretsService.Name, "sealed-secrets-svc", secrets.SealedSecretsController, "Name of the Sealed Secrets Services that encrypts secrets")
-	bootstrapCmd.Flags().StringVar(&o.GitHostAccessToken, statustracker.CommitStatusTrackerSecret, "", "Used to authenticate repository clones, and commit-status notifications (if enabled). Access token will be updated in the keyring")
+	bootstrapCmd.Flags().StringVar(&o.GitHostAccessToken, statustracker.CommitStatusTrackerSecret, "", "Used to authenticate repository clones, and commit-status notifications (if enabled). Access token is encrypted and stored on local file system by keyring, will be updated/reused.")
 	bootstrapCmd.Flags().BoolVar(&o.Overwrite, "overwrite", false, "Overwrites previously existing GitOps configuration (if any)")
 	bootstrapCmd.Flags().StringVar(&o.ServiceRepoURL, "service-repo-url", "", "Provide the URL for your Service repository e.g. https://github.com/organisation/service.git")
 	bootstrapCmd.Flags().StringVar(&o.ServiceWebhookSecret, "service-webhook-secret", "", "Provide a secret that we can use to authenticate incoming hooks from your Git hosting service for the Service repository. (if not provided, it will be auto-generated)")
@@ -334,7 +334,7 @@ func nextSteps() {
 }
 
 func isKnownDriver(repoURL string) bool {
-	host, err := webhook.HostFromURL(repoURL)
+	host, err := accesstoken.HostFromURL(repoURL)
 	if err != nil {
 		return false
 	}
@@ -344,16 +344,16 @@ func isKnownDriver(repoURL string) bool {
 
 func checkGitAccessToken(io *BootstrapParameters) error {
 	if io.GitHostAccessToken != "" {
-		err := webhook.SetSecret(io.GitOpsRepoURL, io.GitHostAccessToken)
+		err := accesstoken.SetSecret(io.GitOpsRepoURL, io.GitHostAccessToken)
 		if err != nil {
 			return err
 		}
-		err = webhook.SetSecret(io.ServiceRepoURL, io.GitHostAccessToken)
+		err = accesstoken.SetSecret(io.ServiceRepoURL, io.GitHostAccessToken)
 		if err != nil {
 			return err
 		}
 	} else {
-		secret, err := webhook.GetAccessToken(io.ServiceRepoURL)
+		secret, err := accesstoken.GetAccessToken(io.ServiceRepoURL)
 		if err != nil {
 			return err
 		}

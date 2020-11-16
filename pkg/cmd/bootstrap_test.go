@@ -6,8 +6,9 @@ import (
 	"io"
 	"os"
 	"regexp"
-	"strings"
 	"testing"
+
+	"github.com/redhat-developer/kam/pkg/pipelines/accesstoken"
 
 	"k8s.io/apimachinery/pkg/runtime"
 
@@ -17,7 +18,6 @@ import (
 	"github.com/redhat-developer/kam/pkg/cmd/utility"
 	"github.com/redhat-developer/kam/pkg/pipelines"
 	"github.com/redhat-developer/kam/pkg/pipelines/secrets"
-	"github.com/redhat-developer/kam/pkg/pipelines/webhook"
 	"github.com/zalando/go-keyring"
 	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -228,8 +228,8 @@ func TestKeyRingFlagSet(t *testing.T) {
 		if err != nil {
 			t.Errorf("checkGitAccessToken() mode failed with error: %v", err)
 		}
-		gitopsToken, _ := keyring.Get(webhook.KeyringServiceName, tt.expectedKey)
-		serviceToken, _ := keyring.Get(webhook.KeyringServiceName, tt.expectedKey)
+		gitopsToken, _ := keyring.Get(accesstoken.KeyringServiceName, tt.expectedKey)
+		serviceToken, _ := keyring.Get(accesstoken.KeyringServiceName, tt.expectedKey)
 		if tt.expectedToken != gitopsToken && tt.expectedToken != serviceToken {
 			t.Errorf("TestKeyRingFlagSet() Failed since expected token %v did not match %v", tt.expectedToken, gitopsToken)
 		}
@@ -256,12 +256,11 @@ func TestKeyRingFlagNotSet(t *testing.T) {
 
 	for i, tt := range optionTests {
 		t.Run(fmt.Sprintf("Test %d", i), func(t *testing.T) {
-			hostName, err := webhook.HostFromURL(tt.gitRepo)
+			hostName, err := accesstoken.HostFromURL(tt.gitRepo)
 			if err != nil {
 				t.Error("Failed to get host name from access token")
 			}
-			h := strings.ReplaceAll(hostName, ".", "_")
-			envVar := strings.ToUpper(h) + "_TOKEN"
+			envVar := accesstoken.GetEnvVarName(hostName)
 			defer os.Unsetenv(envVar)
 			if tt.envVarPresent {
 				err := os.Setenv(envVar, "abc123")

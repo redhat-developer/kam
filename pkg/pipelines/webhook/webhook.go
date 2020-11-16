@@ -3,17 +3,14 @@ package webhook
 import (
 	"errors"
 	"fmt"
-	"net/url"
-	"os"
-	"strings"
 
+	"github.com/redhat-developer/kam/pkg/pipelines/accesstoken"
 	"github.com/redhat-developer/kam/pkg/pipelines/config"
 	"github.com/redhat-developer/kam/pkg/pipelines/eventlisteners"
 	"github.com/redhat-developer/kam/pkg/pipelines/git"
 	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
 	"github.com/redhat-developer/kam/pkg/pipelines/routes"
 	"github.com/redhat-developer/kam/pkg/pipelines/secrets"
-	"github.com/zalando/go-keyring"
 )
 
 type webhookInfo struct {
@@ -26,9 +23,6 @@ type webhookInfo struct {
 	serviceName     *QualifiedServiceName
 	isCICD          bool
 }
-
-// KeyringServiceName refers to service name used to set the accesstoken in the keyring
-const KeyringServiceName = "kam"
 
 // QualifiedServiceName represents three part name of a service (Environment, Application, and Service)
 type QualifiedServiceName struct {
@@ -109,7 +103,7 @@ func newWebhookInfo(accessToken, pipelinesFile string, serviceName *QualifiedSer
 		return nil, fmt.Errorf("failed to get event listener URL: %v", err)
 	}
 	if accessToken == "" {
-		accessToken, err = GetAccessToken(gitRepoURL)
+		accessToken, err = accesstoken.GetAccessToken(gitRepoURL)
 		if err != nil {
 			return nil, err
 		}
@@ -117,7 +111,7 @@ func newWebhookInfo(accessToken, pipelinesFile string, serviceName *QualifiedSer
 			return nil, errors.New("unable to retrieve access-token from keyring/environment variables")
 		}
 	} else {
-		err := SetSecret(gitRepoURL, accessToken)
+		err := accesstoken.SetSecret(gitRepoURL, accessToken)
 		if err != nil {
 			return nil, err
 		}
@@ -128,27 +122,6 @@ func newWebhookInfo(accessToken, pipelinesFile string, serviceName *QualifiedSer
 		return nil, err
 	}
 	return &webhookInfo{clusterResources, repository, gitRepoURL, cicdNamepace, listenerURL, accessToken, serviceName, isCICD}, nil
-}
-
-// GetAccessToken returns the token from either that is stored in the keyring or the environment variable in this order.
-func GetAccessToken(gitRepoURL string) (string, error) {
-	hostName, err := HostFromURL(gitRepoURL)
-	if err != nil {
-		return "", err
-	}
-	accessToken, err := keyring.Get(KeyringServiceName, hostName)
-	if err != nil && err != keyring.ErrNotFound {
-		return "", err
-	}
-	if err != nil && err == keyring.ErrNotFound {
-		FmtHostName := strings.ReplaceAll(hostName, ".", "_")
-		envVar := strings.ToUpper(FmtHostName) + "_TOKEN"
-		accessToken = os.Getenv(envVar)
-		if accessToken == "" {
-			return "", nil
-		}
-	}
-	return accessToken, nil
 }
 
 func (w *webhookInfo) exists() (bool, error) {
@@ -231,40 +204,4 @@ func getWebhookSecret(r *resources, namespace string, isCICD bool, service *Qual
 		secretName = secrets.MakeServiceWebhookSecretName(service.EnvironmentName, service.ServiceName)
 	}
 	return r.getWebhookSecret(namespace, secretName, eventlisteners.WebhookSecretKey)
-}
-
-// HostFromURL extracts the hostname from the url passed
-func HostFromURL(s string) (string, error) {
-	p, err := url.Parse(s)
-	if err != nil {
-		return "", err
-	}
-	return strings.ToLower(p.Host), nil
-}
-
-//SetSecret sets the secret in the keyring
-func SetSecret(repoURL, accessToken string) error {
-	hostName, err := HostFromURL(repoURL)
-	if err != nil {
-		return err
-	}
-	secret, err := getSecret(hostName)
-	if err != nil {
-		return err
-	}
-	if accessToken != secret {
-		err := keyring.Set(KeyringServiceName, hostName, accessToken)
-		if err != nil {
-			return fmt.Errorf("unable to set access token for repo %q using keyring: %w", repoURL, err)
-		}
-	}
-	return nil
-}
-
-func getSecret(hostName string) (string, error) {
-	secret, err := keyring.Get(KeyringServiceName, hostName)
-	if err != nil && err != keyring.ErrNotFound {
-		return "", err
-	}
-	return secret, nil
 }
