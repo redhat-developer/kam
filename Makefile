@@ -5,6 +5,7 @@ WINDOWS=$(EXECUTABLE)_windows_amd64.exe
 LINUX=$(EXECUTABLE)_linux_amd64
 DARWIN=$(EXECUTABLE)_darwin_amd64
 PKGS := $(shell go list  ./... | grep -v test/e2e | grep -v vendor)
+FMTPKGS := $(shell go list  ./... | grep -v vendor)
 VERSION=$(shell git describe --tags --always --long --dirty)
 LD_FLAGS="-s -w -X github.com/redhat-developer/kam/pkg/cmd/version.Version=$(VERSION)"
 CFLAGS=-mod=readonly -i -v
@@ -41,7 +42,7 @@ gomod_tidy:
 
 .PHONY: gofmt
 gofmt:
-	go fmt $(PKGS)
+	go fmt $(FMTPKGS)
 
 .PHONY: bin
 bin:
