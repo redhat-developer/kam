@@ -1,11 +1,10 @@
-
-
 BIN_DIR=bin
 DIST_DIR=dist
 EXECUTABLE=kam
 WINDOWS=$(EXECUTABLE)_windows_amd64.exe
 LINUX=$(EXECUTABLE)_linux_amd64
 DARWIN=$(EXECUTABLE)_darwin_amd64
+PKGS := $(shell go list  ./... | grep -v test/e2e)
 VERSION=$(shell git describe --tags --always --long --dirty)
 LD_FLAGS="-s -w -X github.com/redhat-developer/kam/pkg/cmd/version.Version=$(VERSION)"
 CFLAGS=-mod=readonly -i -v
@@ -54,7 +53,7 @@ install:
 
 .PHONY: test
 test:
-	 go test -mod=readonly ./...
+	 go test -mod=readonly $(PKGS)
 
 .PHONY: clean
 clean:
