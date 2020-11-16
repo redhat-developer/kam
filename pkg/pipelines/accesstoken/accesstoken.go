@@ -1,6 +1,7 @@
 package accesstoken
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -30,6 +31,25 @@ func GetAccessToken(gitRepoURL string) (string, error) {
 		}
 	}
 	return accessToken, nil
+}
+
+//CheckGitAccessToken sets the acceesstoken in the keyring if access-token is present, else it tries to retrieve it from the keyring/env-var
+func CheckGitAccessToken(accessToken, repoURL string) (string, error) {
+	if accessToken != "" {
+		err := SetSecret(repoURL, accessToken)
+		if err == nil {
+			return accessToken, nil
+		}
+		return "", err
+	}
+	secret, err := GetAccessToken(repoURL)
+	if err != nil {
+		return "", err
+	}
+	if secret == "" && err == nil {
+		return "", errors.New("unable to retrieve the access token from the keyring/env-var: kindly pass the --git-host-access-token")
+	}
+	return secret, nil
 }
 
 // HostFromURL extracts the hostname from the url passed

@@ -124,10 +124,11 @@ func nonInteractiveMode(io *BootstrapParameters, client *utility.Client) error {
 	if err := checkMandatoryFlags(mandatoryFlags); err != nil {
 		return err
 	}
-	err := checkGitAccessToken(io)
+	secret, err := accesstoken.CheckGitAccessToken(io.GitHostAccessToken, io.ServiceRepoURL)
 	if err != nil {
 		return err
 	}
+	io.GitHostAccessToken = secret
 	err = ui.ValidateAccessToken(io.GitHostAccessToken, io.ServiceRepoURL)
 	if err != nil {
 		return fmt.Errorf("Please enter a valid access token: %v", err)
@@ -340,27 +341,4 @@ func isKnownDriver(repoURL string) bool {
 	}
 	_, err = factory.DefaultIdentifier.Identify(host)
 	return err == nil
-}
-
-func checkGitAccessToken(io *BootstrapParameters) error {
-	if io.GitHostAccessToken != "" {
-		err := accesstoken.SetSecret(io.GitOpsRepoURL, io.GitHostAccessToken)
-		if err != nil {
-			return err
-		}
-		err = accesstoken.SetSecret(io.ServiceRepoURL, io.GitHostAccessToken)
-		if err != nil {
-			return err
-		}
-	} else {
-		secret, err := accesstoken.GetAccessToken(io.ServiceRepoURL)
-		if err != nil {
-			return err
-		}
-		if secret == "" && err == nil {
-			return errors.New("unable to retrieve the access token from the keyring/env-var: kindly pass the --git-host-access-token")
-		}
-		io.GitHostAccessToken = secret
-	}
-	return nil
 }

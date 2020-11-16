@@ -4,11 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"os"
 	"regexp"
 	"testing"
-
-	"github.com/redhat-developer/kam/pkg/pipelines/accesstoken"
 
 	"k8s.io/apimachinery/pkg/runtime"
 
@@ -18,7 +15,6 @@ import (
 	"github.com/redhat-developer/kam/pkg/cmd/utility"
 	"github.com/redhat-developer/kam/pkg/pipelines"
 	"github.com/redhat-developer/kam/pkg/pipelines/secrets"
-	"github.com/zalando/go-keyring"
 	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -197,96 +193,6 @@ func TestValidateMandatoryFlags(t *testing.T) {
 		}
 	}
 }
-
-func TestKeyRingFlagSet(t *testing.T) {
-	keyring.MockInit()
-	optionTests := []struct {
-		name          string
-		gitRepo       string
-		serviceRepo   string
-		imagerepo     string
-		gitToken      string
-		expectedKey   string
-		expectedToken string
-	}{
-		{"set the github access token in keyring", "https://github.com/example/gitRepo.git", "https://github.com/example/service.git", "registry/username/repo", "abc123", "github.com", "abc123"},
-		{"overwrite github access token in keyring", "https://github.com/example/gitRepo.git", "https://github.com/example/service.git", "registry/username/repo", "xyz123", "github.com", "xyz123"},
-		{"set the gitlab access Token in keyring", "https://gitlab.com/example/gitRepo.git", "https://gitlan.com/example/service.git", "registry/username/repo", "test123", "gitlab.com", "test123"},
-		{"overwrite gitlab access token in keyring", "https://gitlab.com/example/gitRepo.git", "https://gitlab.com/example/service.git", "registry/username/repo", "test345", "gitlab.com", "test345"},
-	}
-
-	for _, tt := range optionTests {
-		o := BootstrapParameters{
-			BootstrapOptions: &pipelines.BootstrapOptions{
-				GitOpsRepoURL:      tt.gitRepo,
-				ServiceRepoURL:     tt.serviceRepo,
-				ImageRepo:          tt.imagerepo,
-				GitHostAccessToken: tt.gitToken,
-			},
-		}
-		err := checkGitAccessToken(&o)
-		if err != nil {
-			t.Errorf("checkGitAccessToken() mode failed with error: %v", err)
-		}
-		gitopsToken, _ := keyring.Get(accesstoken.KeyringServiceName, tt.expectedKey)
-		serviceToken, _ := keyring.Get(accesstoken.KeyringServiceName, tt.expectedKey)
-		if tt.expectedToken != gitopsToken && tt.expectedToken != serviceToken {
-			t.Errorf("TestKeyRingFlagSet() Failed since expected token %v did not match %v", tt.expectedToken, gitopsToken)
-		}
-	}
-}
-
-func TestKeyRingFlagNotSet(t *testing.T) {
-	keyring.MockInit()
-	optionTests := []struct {
-		name          string
-		gitRepo       string
-		serviceRepo   string
-		imagerepo     string
-		gitToken      string
-		envVarPresent bool
-		keyRing       bool
-		expectedToken string
-	}{
-		{"with token in keyring present(github)", "https://github.com/example/gitRepo.git", "https://github.com/example/service.git", "registry/username/repo", "abc123", true, false, "abc123"},
-		{"with token in environment variable(github)", "https://github.com/example/gitRepo.git", "https://github.com/example/service.git", "registry/username/repo", "xyz123", false, true, "xyz123"},
-		{"with token in keyring present(gitlab)", "https://gitlab.com/example/gitRepo.git", "https://gitlab.com/example/service.git", "registry/username/repo", "xyz123", true, false, "xyz123"},
-		{"with token in environment variable(github)", "https://gitlab.com/example/gitRepo.git", "https://gitlab.com/example/service.git", "registry/username/repo", "xyz123", false, true, "xyz123"},
-	}
-
-	for i, tt := range optionTests {
-		t.Run(fmt.Sprintf("Test %d", i), func(t *testing.T) {
-			hostName, err := accesstoken.HostFromURL(tt.gitRepo)
-			if err != nil {
-				t.Error("Failed to get host name from access token")
-			}
-			envVar := accesstoken.GetEnvVarName(hostName)
-			defer os.Unsetenv(envVar)
-			if tt.envVarPresent {
-				err := os.Setenv(envVar, "abc123")
-				if err != nil {
-					t.Errorf("Error in setting the environment variable")
-				}
-			}
-			o := BootstrapParameters{
-				BootstrapOptions: &pipelines.BootstrapOptions{
-					GitOpsRepoURL:      tt.gitRepo,
-					ServiceRepoURL:     tt.serviceRepo,
-					ImageRepo:          tt.imagerepo,
-					GitHostAccessToken: tt.gitToken,
-				},
-			}
-			err = checkGitAccessToken(&o)
-			if err != nil {
-				t.Errorf("checkGitAccessToken() mode failed with error: %v", err)
-			}
-			if tt.expectedToken != o.GitHostAccessToken {
-				t.Fatalf("TestKeyRingFlagNotSet() Failed since expected token %v did not match %v", tt.expectedToken, o.GitHostAccessToken)
-			}
-		})
-	}
-}
-
 func TestCheckSpinner(t *testing.T) {
 	tests := []struct {
 		name      string
