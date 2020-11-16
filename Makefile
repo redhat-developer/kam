@@ -41,7 +41,7 @@ gomod_tidy:
 
 .PHONY: gofmt
 gofmt:
-	go fmt -x ./...
+	go fmt $(PKGS)
 
 .PHONY: bin
 bin:
