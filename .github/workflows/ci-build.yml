@@ -55,6 +55,7 @@ jobs:
         fi
     - name: Generate coverage report
       run: |
+        go env
         go test `go list ./... | grep -v test/e2e` -coverprofile=coverage.txt -covermode=atomic
 
     - name: Upload coverage report
