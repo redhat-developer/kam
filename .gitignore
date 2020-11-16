@@ -17,3 +17,6 @@
 # Ignore binary
 dist/
 bin/
+
+# Ignore test result
+test/e2e/out/

@@ -67,3 +67,10 @@ cmd-docs:
 .PHONY: prepare-test-cluster
 prepare-test-cluster:
 	. ./scripts/prepare-test-cluster.sh
+
+.PHONY: e2e
+e2e:
+GODOG_OPTS = --godog.tags=$(go env goos)
+
+e2e:
+	@go test --timeout=180m ./test/e2e -v $(GODOG_OPTS)

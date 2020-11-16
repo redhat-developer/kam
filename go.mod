@@ -5,6 +5,9 @@ go 1.14
 require (
 	github.com/Netflix/go-expect v0.0.0-20200312175327-da48e75238e2 // indirect
 	github.com/bitnami-labs/sealed-secrets v0.12.5
+	github.com/code-ready/clicumber v0.0.0-20200728062640-1203dda97f67
+	github.com/cucumber/godog v0.9.0
+	github.com/cucumber/messages-go/v10 v10.0.3
 	github.com/docker/docker v17.12.0-ce-rc1.0.20200309214505-aa6a9891b09c+incompatible // indirect
 	github.com/elazarl/goproxy v0.0.0-20190911111923-ecfe977594f1 // indirect
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32 // indirect
