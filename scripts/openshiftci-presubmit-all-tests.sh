@@ -39,4 +39,8 @@ else
     exit 1
 fi
 
+# kam version check
 kam version
+
+# Providing github.com login instance
+gh auth login --with-token < $KAM_GITHUB_TOKEN
