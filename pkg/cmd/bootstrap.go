@@ -129,10 +129,6 @@ func nonInteractiveMode(io *BootstrapParameters, client *utility.Client) error {
 		return err
 	}
 	io.GitHostAccessToken = secret
-	err = ui.ValidateAccessToken(io.GitHostAccessToken, io.ServiceRepoURL)
-	if err != nil {
-		return fmt.Errorf("Please enter a valid access token: %v", err)
-	}
 	return nil
 }
 

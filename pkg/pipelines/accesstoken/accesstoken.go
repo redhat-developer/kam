@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/redhat-developer/kam/pkg/cmd/ui"
 	"github.com/zalando/go-keyring"
 )
 
@@ -33,10 +34,14 @@ func GetAccessToken(gitRepoURL string) (string, error) {
 	return accessToken, nil
 }
 
-//CheckGitAccessToken sets the acceesstoken in the keyring if access-token is present, else it tries to retrieve it from the keyring/env-var
+//CheckGitAccessToken sets the access-token in the keyring if access-token is present, else it tries to retrieve it from the keyring/env-var
 func CheckGitAccessToken(accessToken, repoURL string) (string, error) {
 	if accessToken != "" {
-		err := SetSecret(repoURL, accessToken)
+		err := ui.ValidateAccessToken(accessToken, repoURL)
+		if err != nil {
+			return "", fmt.Errorf("Please enter a valid access token: %v", err)
+		}
+		err = SetSecret(repoURL, accessToken)
 		if err == nil {
 			return accessToken, nil
 		}

@@ -102,7 +102,7 @@ func newWebhookInfo(accessToken, pipelinesFile string, serviceName *QualifiedSer
 	if err != nil {
 		return nil, fmt.Errorf("failed to get event listener URL: %v", err)
 	}
-	accessToken, err = accesstoken.CheckGitAccessToken(gitRepoURL, accessToken)
+	accessToken, err = accesstoken.CheckGitAccessToken(accessToken, gitRepoURL)
 	if err != nil {
 		return nil, err
 	}

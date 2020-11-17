@@ -74,7 +74,7 @@ func TestKeyRingFlagSet(t *testing.T) {
 	}
 
 	for _, tt := range optionTests {
-		_, err := CheckGitAccessToken(tt.gitToken, tt.gitRepo)
+		err := SetSecret(tt.gitRepo, tt.gitToken)
 		if err != nil {
 			t.Errorf("checkGitAccessToken() mode failed with error: %v", err)
 		}
@@ -127,6 +127,36 @@ func TestKeyRingFlagNotSet(t *testing.T) {
 			}
 			if tt.expectedToken != secret {
 				t.Fatalf("TestKeyRingFlagNotSet() Failed since expected token %v did not match %v", tt.expectedToken, secret)
+			}
+		})
+	}
+}
+
+func TestAccessToken(t *testing.T) {
+	keyring.MockInit()
+	cmdTests := []struct {
+		desc      string
+		testToken string
+		testURL   string
+		wantErr   string
+	}{
+		{"Access Token is incorrect",
+			"test123",
+			"https://github.com/user/repo.git",
+			"Please enter a valid access token: The token passed is incorrect for repository user/repo",
+		},
+		{"Unable to retrieve token from keyring/env-var",
+			"",
+			"https://github.com/user/repo.git",
+			"unable to retrieve the access token from the keyring/env-var: kindly pass the --git-host-access-token",
+		},
+	}
+
+	for _, tt := range cmdTests {
+		t.Run(tt.desc, func(t *testing.T) {
+			_, err := CheckGitAccessToken(tt.testToken, tt.testURL)
+			if err.Error() != tt.wantErr {
+				t.Errorf("got %s, want %s", err, tt.wantErr)
 			}
 		})
 	}
