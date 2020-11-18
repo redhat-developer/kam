@@ -47,7 +47,7 @@ func makeSealedSecretsService(sealedSecretService *types.NamespacedName) survey.
 
 func makeAccessTokenCheck(serviceRepo string) survey.Validator {
 	return func(input interface{}) error {
-		return validateAccessToken(input, serviceRepo)
+		return ValidateAccessToken(input, serviceRepo)
 	}
 }
 
@@ -108,8 +108,8 @@ func validateOverwriteOption(input interface{}, path string) error {
 
 }
 
-// validateAccessToken validates if the access token is correct for a particular service repo
-func validateAccessToken(input interface{}, serviceRepo string) error {
+// ValidateAccessToken validates if the access token is correct for a particular service repo
+func ValidateAccessToken(input interface{}, serviceRepo string) error {
 	if s, ok := input.(string); ok {
 		repo, err := git.NewRepository(serviceRepo, s)
 		if err != nil {

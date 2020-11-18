@@ -5,33 +5,6 @@ import (
 	"testing"
 )
 
-func TestMissingRequiredFlagsForList(t *testing.T) {
-	testcases := []struct {
-		flags   []keyValuePair
-		wantErr string
-	}{
-		{[]keyValuePair{flag("cicd", "true")},
-			`required flag(s) "access-token" not set`,
-		},
-	}
-
-	for i, tt := range testcases {
-		t.Run(fmt.Sprintf("Test %d", i), func(rt *testing.T) {
-			_, err := executeCommand(newCmdList("webhook", "kam pipelines webhook create"), tt.flags...)
-
-			if err != nil {
-				if err.Error() != tt.wantErr {
-					rt.Errorf("got %s, want %s", err, tt.wantErr)
-				}
-			} else {
-				if tt.wantErr != "" {
-					rt.Errorf("got %s, want %s", "", tt.wantErr)
-				}
-			}
-		})
-	}
-}
-
 func TestValidateForList(t *testing.T) {
 	testcases := []struct {
 		options *listOptions

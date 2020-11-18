@@ -108,10 +108,10 @@ func EnterOutputPath() string {
 
 // EnterGitWebhookSecret allows the user to specify the webhook secret string
 // they wish to authenticate push/pull to GitOps repo in a UI prompt.
-func EnterGitWebhookSecret() string {
+func EnterGitWebhookSecret(repoURL string) string {
 	var gitWebhookSecret string
-	prompt := &survey.Input{
-		Message: "Provide a secret (minimum 16 characters) that we can use to authenticate incoming hooks from your Git hosting service for the Service repository. (if not provided, it will be auto-generated)",
+	prompt := &survey.Password{
+		Message: fmt.Sprintf("Provide a secret (minimum 16 characters) that we can use to authenticate incoming hooks from your Git hosting service for repository: %s. (if not provided, it will be auto-generated)", repoURL),
 		Help:    "You can provide a string that is used as a shared secret to authenticate the origin of hook notifications from your git host.",
 	}
 
@@ -151,7 +151,7 @@ func EnterGitHostAccessToken(serviceRepo string) string {
 	var accessToken string
 	prompt := &survey.Password{
 		Message: fmt.Sprintf("Please provide a token used to authenticate requests to %q", serviceRepo),
-		Help:    "commit-status-tracker reports the completion status of OpenShift pipeline runs to your Git hosting status on success or failure, this token will be encrypted as a secret in your cluster.\nIf you are using Github, please see here for how to generate a token https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token\nIf you are using GitLab, please see here for how to generate a token https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html",
+		Help:    "Tokens are required to authenticate to git provider various operations on git repository (e.g. enable automated creation/push to git-repo).",
 	}
 	err := survey.AskOne(prompt, &accessToken, makeAccessTokenCheck(serviceRepo))
 	handleError(err)
@@ -201,8 +201,8 @@ func EnterServiceWebhookSecret() string {
 	return serviceWebhookSecret
 }
 
-// SelectOptionImageRepository , allows users an option between the Internal image registry and the external image registry through the UI prompt.
-func SelectOptionImageRepository() string {
+// UseInternalRegistry , allows users an option between the Internal image registry and the external image registry through the UI prompt.
+func UseInternalRegistry() bool {
 	var optionImageRegistry string
 	prompt := &survey.Select{
 		Message: "Select type of image registry",
@@ -212,7 +212,7 @@ func SelectOptionImageRepository() string {
 
 	err := survey.AskOne(prompt, &optionImageRegistry, survey.Required)
 	handleError(err)
-	return optionImageRegistry
+	return optionImageRegistry == "Openshift Internal registry"
 }
 
 // SelectOptionOverwrite allows users the option to overwrite the current gitops configuration locally through the UI prompt.
@@ -228,9 +228,9 @@ func SelectOptionOverwrite(path string) string {
 	return overwrite
 }
 
-// SelectOptionCommitStatusTracker allows users the option to select if they
+// SetupCommitStatusTracker allows users the option to select if they
 // want to incorporate the feature of the commit status tracker through the UI prompt.
-func SelectOptionCommitStatusTracker() string {
+func SetupCommitStatusTracker() bool {
 	var optionCommitStatusTracker string
 	prompt := &survey.Select{
 		Message: "Do you want to enable commit-status-tracker?",
@@ -239,7 +239,7 @@ func SelectOptionCommitStatusTracker() string {
 	}
 	err := survey.AskOne(prompt, &optionCommitStatusTracker, survey.Required)
 	handleError(err)
-	return optionCommitStatusTracker
+	return optionCommitStatusTracker == "yes"
 }
 
 // SelectPrivateRepoDriver lets users choose the driver for their git hosting
@@ -256,19 +256,6 @@ func SelectPrivateRepoDriver() string {
 	return driver
 }
 
-// IsPrivateRepo lets the user choose between a private / public repository.
-func IsPrivateRepo() bool {
-	var response string
-	prompt := &survey.Select{
-		Message: "Is this repository a private repository?",
-		Options: []string{"yes", "no"},
-	}
-
-	err := survey.AskOne(prompt, &response, survey.Required)
-	handleError(err)
-	return response == "yes"
-}
-
 // SelectOptionPushToGit allows users the option to select if they
 // want to incorporate the feature of the commit status tracker through the UI prompt.
 func SelectOptionPushToGit() bool {
@@ -281,4 +268,18 @@ func SelectOptionPushToGit() bool {
 	err := survey.AskOne(prompt, &optionPushToGit, survey.Required)
 	handleError(err)
 	return optionPushToGit == "yes"
+}
+
+// UseKeyringRingSvc , allows users an option between the Internal image registry and the external image registry through the UI prompt.
+func UseKeyringRingSvc() bool {
+	var optionImageRegistry string
+	prompt := &survey.Select{
+		Message: "Do you wish to securely store the git-host-access-token in the keyring on your local machine?",
+		Help:    "The token will be stored securely in the keyring of your local mahine. It will be reused by kam commands(bootstrap/webhoook), further iteration of these commands will not prompt for the access-token",
+		Options: []string{"Yes", "No"},
+	}
+
+	err := survey.AskOne(prompt, &optionImageRegistry, survey.Required)
+	handleError(err)
+	return optionImageRegistry == "Yes"
 }

@@ -82,6 +82,7 @@ type BootstrapOptions struct {
 	GitHostAccessToken       string               // The auth token to use to send commit-status notifications, and access private repositories.
 	Overwrite                bool                 // This allows to overwrite if there is an existing gitops repository
 	ServiceRepoURL           string               // This is the full URL to your GitHub repository for your app source.
+	SaveTokenKeyRing         bool                 // If true, the access-token will be saved in the keyring
 	ServiceWebhookSecret     string               // This is the secret for authenticating hooks from your app source.
 	PrivateRepoDriver        string               // Records the type of the GitOpsRepoURL driver if not a well-known host.
 	CommitStatusTracker      bool                 // If true, this is a "private repository", i.e. requires authentication to clone the repository.

@@ -29,6 +29,11 @@ type mockSpinner struct {
 	end    bool
 }
 
+const (
+	gitOpsURL  = "https://github.com/org/gitops"
+	serviceURL = "https://github.com/org/app"
+)
+
 func TestValidatePrefix(t *testing.T) {
 	completeTests := []struct {
 		name        string
@@ -62,8 +67,6 @@ func TestValidatePrefix(t *testing.T) {
 }
 
 func TestAddSuffixWithBootstrap(t *testing.T) {
-	gitOpsURL := "https://github.com/org/gitops"
-	appURL := "https://github.com/org/app"
 	tt := []struct {
 		name           string
 		gitOpsURL      string
@@ -71,8 +74,8 @@ func TestAddSuffixWithBootstrap(t *testing.T) {
 		validGitOpsURL string
 		validAppURL    string
 	}{
-		{"suffix already exists", gitOpsURL + ".git", appURL + ".git", gitOpsURL + ".git", appURL + ".git"},
-		{"misssing suffix", gitOpsURL, appURL, gitOpsURL + ".git", appURL + ".git"},
+		{"suffix already exists", gitOpsURL + ".git", serviceURL + ".git", gitOpsURL + ".git", serviceURL + ".git"},
+		{"misssing suffix", gitOpsURL, serviceURL, gitOpsURL + ".git", serviceURL + ".git"},
 	}
 
 	for _, test := range tt {
@@ -164,6 +167,44 @@ func TestValidateBootstrapParameter(t *testing.T) {
 	}
 }
 
+func TestValidatePairFlags(t *testing.T) {
+	optionTests := []struct {
+		name          string
+		token         string
+		statustracker bool
+		keyring       bool
+		errMsg        string
+	}{
+		{"--save-token-keyring set and --git-host-access-token missing", "", false, true, "--git-host-access-token is required if --save-token-keyring is enabled"},
+		{"--commit-status-tracker set and --git-host-access-token missing", "", true, false, "--git-host-access-token is required if commit-status-tracker is enabled"},
+		{"--commit-status-tracker/--save-token-keyring set and --git-host-access-token present", "abc123", true, true, ""},
+		{"--commit-status-tracker/--save-token-keyring not-set and --git-host-access-token absent", "", false, false, ""},
+	}
+
+	for _, tt := range optionTests {
+		o := BootstrapParameters{
+			BootstrapOptions: &pipelines.BootstrapOptions{
+				GitOpsRepoURL:       gitOpsURL,
+				ServiceRepoURL:      serviceURL,
+				ImageRepo:           "io/test/repo",
+				GitHostAccessToken:  tt.token,
+				CommitStatusTracker: tt.statustracker,
+				SaveTokenKeyRing:    tt.keyring,
+			},
+		}
+		err := o.Validate()
+
+		if err != nil && tt.errMsg == "" {
+			t.Errorf("Validate() %#v got an unexpected error: %s", tt.name, err)
+			continue
+		}
+
+		if !matchError(t, tt.errMsg, err) {
+			t.Errorf("Validate() %#v failed to match error: got %s, want %s", tt.name, err, tt.errMsg)
+		}
+	}
+}
+
 func TestValidateMandatoryFlags(t *testing.T) {
 	optionTests := []struct {
 		name                string
@@ -193,7 +234,6 @@ func TestValidateMandatoryFlags(t *testing.T) {
 		}
 	}
 }
-
 func TestCheckSpinner(t *testing.T) {
 	tests := []struct {
 		name      string

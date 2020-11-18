@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/redhat-developer/kam/pkg/pipelines/accesstoken"
 	"github.com/redhat-developer/kam/pkg/pipelines/config"
 	"github.com/redhat-developer/kam/pkg/pipelines/eventlisteners"
 	"github.com/redhat-developer/kam/pkg/pipelines/git"
@@ -97,16 +98,20 @@ func newWebhookInfo(accessToken, pipelinesFile string, serviceName *QualifiedSer
 		return nil, err
 	}
 
-	repository, err := git.NewRepository(gitRepoURL, accessToken)
-	if err != nil {
-		return nil, err
-	}
-
 	listenerURL, err := getListenerURL(clusterResources, cicdNamepace)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get event listener URL: %v", err)
 	}
-
+	if accessToken == "" {
+		accessToken, err = accesstoken.GetAccessToken(gitRepoURL)
+		if err != nil {
+			return nil, fmt.Errorf("unable to use access-token from keyring/env-var: %v, please pass a valid token to --save-token-keyring", err)
+		}
+	}
+	repository, err := git.NewRepository(gitRepoURL, accessToken)
+	if err != nil {
+		return nil, err
+	}
 	return &webhookInfo{clusterResources, repository, gitRepoURL, cicdNamepace, listenerURL, accessToken, serviceName, isCICD}, nil
 }
 

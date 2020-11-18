@@ -23,6 +23,7 @@ require (
 	github.com/spf13/cobra v1.0.0
 	github.com/tektoncd/pipeline v0.16.3
 	github.com/tektoncd/triggers v0.8.1
+	github.com/zalando/go-keyring v0.1.0
 	gopkg.in/AlecAivazis/survey.v1 v1.8.0
 	k8s.io/api v0.18.2
 	k8s.io/apimachinery v0.18.2

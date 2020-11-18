@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/zalando/go-keyring"
+
 	"github.com/jenkins-x/go-scm/scm/factory"
 	"github.com/openshift/odo/pkg/log"
 	"github.com/spf13/cobra"
@@ -18,6 +20,7 @@ import (
 	"github.com/redhat-developer/kam/pkg/cmd/ui"
 	"github.com/redhat-developer/kam/pkg/cmd/utility"
 	"github.com/redhat-developer/kam/pkg/pipelines"
+	"github.com/redhat-developer/kam/pkg/pipelines/accesstoken"
 	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
 	"github.com/redhat-developer/kam/pkg/pipelines/secrets"
 	"github.com/redhat-developer/kam/pkg/pipelines/statustracker"
@@ -94,7 +97,7 @@ func (io *BootstrapParameters) Complete(name string, cmd *cobra.Command, args []
 	}
 
 	if io.PrivateRepoDriver != "" {
-		host, err := hostFromURL(io.GitOpsRepoURL)
+		host, err := accesstoken.HostFromURL(io.GitOpsRepoURL)
 		if err != nil {
 			return err
 		}
@@ -121,6 +124,10 @@ func addGitURLSuffixIfNecessary(io *BootstrapParameters) {
 func nonInteractiveMode(io *BootstrapParameters, client *utility.Client) error {
 	mandatoryFlags := map[string]string{serviceRepoURLFlag: io.ServiceRepoURL, gitopsRepoURLFlag: io.GitOpsRepoURL, imageRepoFlag: io.ImageRepo}
 	if err := checkMandatoryFlags(mandatoryFlags); err != nil {
+		return err
+	}
+	err := setAccessToken(io)
+	if err != nil {
 		return err
 	}
 	return nil
@@ -154,41 +161,62 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client) er
 	io.GitOpsRepoURL = utility.AddGitSuffixIfNecessary(ui.EnterGitRepo())
 	if !isKnownDriver(io.GitOpsRepoURL) {
 		io.PrivateRepoDriver = ui.SelectPrivateRepoDriver()
-		host, err := hostFromURL(io.GitOpsRepoURL)
+		host, err := accesstoken.HostFromURL(io.GitOpsRepoURL)
 		if err != nil {
 			return fmt.Errorf("failed to parse the gitops url: %w", err)
 		}
 		identifier := factory.NewDriverIdentifier(factory.Mapping(host, io.PrivateRepoDriver))
 		factory.DefaultIdentifier = identifier
 	}
-	option := ui.SelectOptionImageRepository()
-	if option == "Openshift Internal repository" {
+	if ui.UseInternalRegistry() {
 		io.InternalRegistryHostname = ui.EnterInternalRegistry()
 		io.ImageRepo = ui.EnterImageRepoInternalRegistry()
 	} else {
 		io.ImageRepo = ui.EnterImageRepoExternalRepository()
 		io.DockerConfigJSONFilename = ui.EnterDockercfg()
 	}
-	io.GitOpsWebhookSecret = ui.EnterGitWebhookSecret()
+	io.GitOpsWebhookSecret = ui.EnterGitWebhookSecret(io.GitOpsRepoURL)
 	io.ServiceRepoURL = utility.AddGitSuffixIfNecessary(ui.EnterServiceRepoURL())
-	if ui.IsPrivateRepo() {
+	io.ServiceWebhookSecret = ui.EnterGitWebhookSecret(io.ServiceRepoURL)
+	secret, err := accesstoken.GetAccessToken(io.ServiceRepoURL)
+	if err != nil && err != keyring.ErrNotFound {
+		return err
+	}
+	if secret == "" {
 		io.GitHostAccessToken = ui.EnterGitHostAccessToken(io.ServiceRepoURL)
+		io.SaveTokenKeyRing = ui.UseKeyringRingSvc()
+		setAccessToken(io)
+	} else {
+		io.GitHostAccessToken = secret
 	}
-	io.ServiceWebhookSecret = ui.EnterServiceWebhookSecret()
-	commitStatusTrackerCheck := ui.SelectOptionCommitStatusTracker()
-	if commitStatusTrackerCheck == "yes" {
-		io.CommitStatusTracker = true
-		if io.GitHostAccessToken == "" {
-			io.GitHostAccessToken = ui.EnterGitHostAccessToken(io.ServiceRepoURL)
-		}
-	}
+	io.CommitStatusTracker = ui.SetupCommitStatusTracker()
+	io.PushToGit = ui.SelectOptionPushToGit()
 	io.Prefix = ui.EnterPrefix()
 	io.OutputPath = ui.EnterOutputPath()
-	io.PushToGit = ui.SelectOptionPushToGit()
-	if io.PushToGit && io.GitHostAccessToken == "" {
-		io.GitHostAccessToken = ui.EnterGitHostAccessToken(io.ServiceRepoURL)
-	}
 	io.Overwrite = true
+	return nil
+}
+
+func setAccessToken(io *BootstrapParameters) error {
+	if io.GitHostAccessToken != "" {
+		err := ui.ValidateAccessToken(io.GitHostAccessToken, io.ServiceRepoURL)
+		if err != nil {
+			return fmt.Errorf("Please enter a valid access token for --save-token-keyring: %v", err)
+		}
+	}
+	if io.SaveTokenKeyRing {
+		err := accesstoken.SetAccessToken(io.ServiceRepoURL, io.GitHostAccessToken)
+		if err != nil {
+			return err
+		}
+	}
+	if io.GitHostAccessToken == "" {
+		secret, err := accesstoken.GetAccessToken(io.ServiceRepoURL)
+		if err != nil {
+			return fmt.Errorf("unable to use access-token from keyring/env-var: %v, please pass a valid token to --git-host-access-token", err)
+		}
+		io.GitHostAccessToken = secret
+	}
 	return nil
 }
 
@@ -259,6 +287,9 @@ func (io *BootstrapParameters) Validate() error {
 	if io.CommitStatusTracker && io.GitHostAccessToken == "" {
 		return errors.New("--git-host-access-token is required if commit-status-tracker is enabled")
 	}
+	if io.SaveTokenKeyRing && io.GitHostAccessToken == "" {
+		return errors.New("--git-host-access-token is required if --save-token-keyring is enabled")
+	}
 	io.Prefix = utility.MaybeCompletePrefix(io.Prefix)
 	return nil
 }
@@ -303,10 +334,11 @@ func NewCmdBootstrap(name, fullName string) *cobra.Command {
 	bootstrapCmd.Flags().StringVar(&o.ImageRepo, "image-repo", "", "Image repository of the form <registry>/<username>/<repository> or <project>/<app> which is used to push newly built images")
 	bootstrapCmd.Flags().StringVar(&o.SealedSecretsService.Namespace, "sealed-secrets-ns", secrets.SealedSecretsNS, "Namespace in which the Sealed Secrets operator is installed, automatically generated secrets are encrypted with this operator")
 	bootstrapCmd.Flags().StringVar(&o.SealedSecretsService.Name, "sealed-secrets-svc", secrets.SealedSecretsController, "Name of the Sealed Secrets Services that encrypts secrets")
-	bootstrapCmd.Flags().StringVar(&o.GitHostAccessToken, statustracker.CommitStatusTrackerSecret, "", "Used to authenticate repository clones, and commit-status notifications (if enabled)")
+	bootstrapCmd.Flags().StringVar(&o.GitHostAccessToken, statustracker.CommitStatusTrackerSecret, "", "Used to authenticate repository clones, and commit-status notifications (if enabled). Access token is encrypted and stored on local file system by keyring, will be updated/reused.")
 	bootstrapCmd.Flags().BoolVar(&o.Overwrite, "overwrite", false, "Overwrites previously existing GitOps configuration (if any)")
 	bootstrapCmd.Flags().StringVar(&o.ServiceRepoURL, "service-repo-url", "", "Provide the URL for your Service repository e.g. https://github.com/organisation/service.git")
 	bootstrapCmd.Flags().StringVar(&o.ServiceWebhookSecret, "service-webhook-secret", "", "Provide a secret that we can use to authenticate incoming hooks from your Git hosting service for the Service repository. (if not provided, it will be auto-generated)")
+	bootstrapCmd.Flags().BoolVar(&o.SaveTokenKeyRing, "SaveTokenKeyring", false, "Explicitely pass this flag to update the git-host-access-token in the keyring on your local file system")
 	bootstrapCmd.Flags().StringVar(&o.PrivateRepoDriver, "private-repo-driver", "", "If your Git repositories are on a custom domain, please indicate which driver to use github or gitlab")
 	bootstrapCmd.Flags().BoolVar(&o.CommitStatusTracker, "commit-status-tracker", true, "Enable or disable the commit-status-tracker which reports the success/failure of your pipelineruns to GitHub/GitLab")
 	bootstrapCmd.Flags().BoolVar(&o.PushToGit, "push-to-git", false, "If true, automatically creates and populates the gitops-repo-url with the generated resources")
@@ -321,18 +353,10 @@ func nextSteps() {
 }
 
 func isKnownDriver(repoURL string) bool {
-	host, err := hostFromURL(repoURL)
+	host, err := accesstoken.HostFromURL(repoURL)
 	if err != nil {
 		return false
 	}
 	_, err = factory.DefaultIdentifier.Identify(host)
 	return err == nil
-}
-
-func hostFromURL(s string) (string, error) {
-	p, err := url.Parse(s)
-	if err != nil {
-		return "", err
-	}
-	return strings.ToLower(p.Host), nil
 }
