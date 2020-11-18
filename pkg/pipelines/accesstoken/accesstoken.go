@@ -1,13 +1,11 @@
 package accesstoken
 
 import (
-	"errors"
 	"fmt"
 	"net/url"
 	"os"
 	"strings"
 
-	"github.com/redhat-developer/kam/pkg/cmd/ui"
 	"github.com/zalando/go-keyring"
 )
 
@@ -20,41 +18,15 @@ func GetAccessToken(gitRepoURL string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	accessToken, err := keyring.Get(KeyringServiceName, hostName)
-	if err != nil && err != keyring.ErrNotFound {
-		return "", err
-	}
-	if err != nil && err == keyring.ErrNotFound {
-		envVarName := GetEnvVarName(hostName)
-		accessToken = os.Getenv(envVarName)
-		if accessToken == "" {
-			return "", nil
+	envVarName := GetEnvVarName(hostName)
+	accessToken := os.Getenv(envVarName)
+	if accessToken == "" {
+		accessToken, err = keyring.Get(KeyringServiceName, hostName)
+		if err != nil {
+			return "", err
 		}
 	}
 	return accessToken, nil
-}
-
-//CheckGitAccessToken sets the access-token in the keyring if access-token is present, else it tries to retrieve it from the keyring/env-var
-func CheckGitAccessToken(accessToken, repoURL string) (string, error) {
-	if accessToken != "" {
-		err := ui.ValidateAccessToken(accessToken, repoURL)
-		if err != nil {
-			return "", fmt.Errorf("Please enter a valid access token: %v", err)
-		}
-		err = SetSecret(repoURL, accessToken)
-		if err == nil {
-			return accessToken, nil
-		}
-		return "", err
-	}
-	secret, err := GetAccessToken(repoURL)
-	if err != nil {
-		return "", err
-	}
-	if secret == "" && err == nil {
-		return "", errors.New("unable to retrieve the access token from the keyring/env-var: kindly pass the --git-host-access-token")
-	}
-	return secret, nil
 }
 
 // HostFromURL extracts the hostname from the url passed
@@ -67,7 +39,7 @@ func HostFromURL(s string) (string, error) {
 }
 
 //SetSecret sets the secret in the keyring
-func SetSecret(repoURL, accessToken string) error {
+func SetAccessToken(repoURL, accessToken string) error {
 	hostName, err := HostFromURL(repoURL)
 	if err != nil {
 		return err

@@ -102,9 +102,11 @@ func newWebhookInfo(accessToken, pipelinesFile string, serviceName *QualifiedSer
 	if err != nil {
 		return nil, fmt.Errorf("failed to get event listener URL: %v", err)
 	}
-	accessToken, err = accesstoken.CheckGitAccessToken(accessToken, gitRepoURL)
-	if err != nil {
-		return nil, err
+	if accessToken == "" {
+		accessToken, err = accesstoken.GetAccessToken(gitRepoURL)
+		if err != nil {
+			return nil, fmt.Errorf("unable to use access-token from keyring/env-var: %v, please pass a valid token to --save-token-keyring", err)
+		}
 	}
 	repository, err := git.NewRepository(gitRepoURL, accessToken)
 	if err != nil {

@@ -269,3 +269,17 @@ func SelectOptionPushToGit() bool {
 	handleError(err)
 	return optionPushToGit == "yes"
 }
+
+// UseKeyringRingSvc , allows users an option between the Internal image registry and the external image registry through the UI prompt.
+func UseKeyringRingSvc() bool {
+	var optionImageRegistry string
+	prompt := &survey.Select{
+		Message: "Do you wish to securely store the git-host-access-token in the keyring on your local machine?",
+		Help:    "The token will be stored securely in the keyring of your local mahine. It will be reused by kam commands(bootstrap/webhoook), further iteration of these commands will not prompt for the access-token",
+		Options: []string{"Yes", "No"},
+	}
+
+	err := survey.AskOne(prompt, &optionImageRegistry, survey.Required)
+	handleError(err)
+	return optionImageRegistry == "Yes"
+}

@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/zalando/go-keyring"
+
 	"github.com/jenkins-x/go-scm/scm/factory"
 	"github.com/openshift/odo/pkg/log"
 	"github.com/spf13/cobra"
@@ -124,11 +126,37 @@ func nonInteractiveMode(io *BootstrapParameters, client *utility.Client) error {
 	if err := checkMandatoryFlags(mandatoryFlags); err != nil {
 		return err
 	}
-	secret, err := accesstoken.CheckGitAccessToken(io.GitHostAccessToken, io.ServiceRepoURL)
+	err := setAccessTokenNonInteractive(io)
 	if err != nil {
 		return err
 	}
-	io.GitHostAccessToken = secret
+	return nil
+}
+
+func setAccessTokenNonInteractive(io *BootstrapParameters) error {
+	if io.GitHostAccessToken != "" {
+		err := ui.ValidateAccessToken(io.GitHostAccessToken, io.ServiceRepoURL)
+		if err != nil {
+			return fmt.Errorf("Please enter a valid access token for --save-token-keyring: %v", err)
+		}
+	}
+	if io.SaveTokenKeyRing != "" {
+		err := ui.ValidateAccessToken(io.SaveTokenKeyRing, io.ServiceRepoURL)
+		if err != nil {
+			return fmt.Errorf("Please enter a valid access token for --save-token-keyring: %v", err)
+		}
+		err = accesstoken.SetAccessToken(io.ServiceRepoURL, io.SaveTokenKeyRing)
+		if err != nil {
+			return err
+		}
+	}
+	if io.GitHostAccessToken == "" {
+		secret, err := accesstoken.GetAccessToken(io.ServiceRepoURL)
+		if err != nil {
+			return fmt.Errorf("unable to use access-token from keyring/env-var: %v, please pass a valid token to --git-host-access-token", err)
+		}
+		io.GitHostAccessToken = secret
+	}
 	return nil
 }
 
@@ -178,18 +206,17 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client) er
 	io.ServiceRepoURL = utility.AddGitSuffixIfNecessary(ui.EnterServiceRepoURL())
 	io.ServiceWebhookSecret = ui.EnterGitWebhookSecret(io.ServiceRepoURL)
 	secret, err := accesstoken.GetAccessToken(io.ServiceRepoURL)
-	if err != nil {
+	if err != nil && err != keyring.ErrNotFound {
 		return err
 	}
-	if err == nil && secret == "" {
+	if secret == "" {
 		io.GitHostAccessToken = ui.EnterGitHostAccessToken(io.ServiceRepoURL)
-		err := accesstoken.SetSecret(io.GitOpsRepoURL, io.GitHostAccessToken)
-		if err != nil {
-			return err
-		}
-		err = accesstoken.SetSecret(io.ServiceRepoURL, io.GitHostAccessToken)
-		if err != nil {
-			return err
+		keyringOption := ui.UseKeyringRingSvc()
+		if keyringOption {
+			err := accesstoken.SetAccessToken(io.ServiceRepoURL, io.GitHostAccessToken)
+			if err != nil {
+				return err
+			}
 		}
 	} else {
 		io.GitHostAccessToken = secret
@@ -317,6 +344,7 @@ func NewCmdBootstrap(name, fullName string) *cobra.Command {
 	bootstrapCmd.Flags().BoolVar(&o.Overwrite, "overwrite", false, "Overwrites previously existing GitOps configuration (if any)")
 	bootstrapCmd.Flags().StringVar(&o.ServiceRepoURL, "service-repo-url", "", "Provide the URL for your Service repository e.g. https://github.com/organisation/service.git")
 	bootstrapCmd.Flags().StringVar(&o.ServiceWebhookSecret, "service-webhook-secret", "", "Provide a secret that we can use to authenticate incoming hooks from your Git hosting service for the Service repository. (if not provided, it will be auto-generated)")
+	bootstrapCmd.Flags().StringVar(&o.SaveTokenKeyRing, "save-token-keyring", "", "Explicitely pass this flag to update the git-host-access-token in the keyring on your local file system")
 	bootstrapCmd.Flags().StringVar(&o.PrivateRepoDriver, "private-repo-driver", "", "If your Git repositories are on a custom domain, please indicate which driver to use github or gitlab")
 	bootstrapCmd.Flags().BoolVar(&o.CommitStatusTracker, "commit-status-tracker", true, "Enable or disable the commit-status-tracker which reports the success/failure of your pipelineruns to GitHub/GitLab")
 	bootstrapCmd.Flags().BoolVar(&o.PushToGit, "push-to-git", false, "If true, automatically creates and populates the gitops-repo-url with the generated resources")
