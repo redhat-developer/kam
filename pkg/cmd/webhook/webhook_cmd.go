@@ -45,7 +45,7 @@ func (o *options) setFlags(command *cobra.Command) {
 	command.Flags().StringVar(&o.pipelinesFolderPath, "pipelines-folder", ".", "Folder path to retrieve manifest, eg. /test where manifest exists at /test/pipelines.yaml")
 
 	// access-token option
-	command.Flags().StringVar(&o.accessToken, "access-token", "", "Access token to be used to create Git repository webhook. Access token is encrypted and stored on local file system by keyring, will be updated/reused.")
+	command.Flags().StringVar(&o.accessToken, "git-host-access-token", "", "Access token to be used to create Git repository webhook. Access token is encrypted and stored on local file system by keyring, will be updated/reused.")
 
 	// cicd option
 	command.Flags().BoolVar(&o.isCICD, "cicd", false, "Provide this flag if the target Git repository is a CI/CD configuration repository")
@@ -57,7 +57,6 @@ func (o *options) setFlags(command *cobra.Command) {
 }
 
 func (o *options) getAppServiceNames() *backend.QualifiedServiceName {
-
 	return &backend.QualifiedServiceName{
 		EnvironmentName: o.envName,
 		ServiceName:     o.serviceName,
