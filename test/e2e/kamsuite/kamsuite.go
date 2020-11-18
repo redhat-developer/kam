@@ -2,6 +2,7 @@ package kamsuite
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/cucumber/godog"
 	"github.com/cucumber/messages-go/v10"
@@ -14,6 +15,9 @@ func FeatureContext(s *godog.Suite) {
 
 	s.BeforeSuite(func() {
 		fmt.Println("Before suite")
+		if !envVariableCheck() {
+			os.Exit(1)
+		}
 	})
 
 	s.AfterSuite(func() {
@@ -27,4 +31,27 @@ func FeatureContext(s *godog.Suite) {
 	s.AfterFeature(func(this *messages.GherkinDocument) {
 		fmt.Println("After feature")
 	})
+}
+
+func envVariableCheck() bool {
+	envVars := []string{"SERVICE_REPO_URL", "GITOPS_REPO_URL", "IMAGE_REPO", "DOCKERCONFIGJSON_PATH", "GIT_HOST_ACCESS_TOKEN"}
+	val, ok := os.LookupEnv("CI")
+	if !ok {
+		for _, envVar := range envVars {
+			_, ok := os.LookupEnv(envVar)
+			if !ok {
+				fmt.Printf("%s is not set\n", envVar)
+				return false
+			}
+		}
+	} else {
+		if val == "prow" {
+			fmt.Printf("Running e2e test in OpenShift CI\n")
+		} else {
+			fmt.Printf("You cannot run e2e test locally against OpenShift CI\n")
+			return false
+		}
+		return true
+	}
+	return true
 }
