@@ -6,11 +6,13 @@ set -e
 # Do not show token in CI log
 set +x
 export GITHUB_TOKEN=`cat $KAM_GITHUB_TOKEN_FILE`
+export KUBEADMIN_PASSWORD=`cat $KUBEADMIN_PASSWORD_FILE`
 
 # show commands
 set -x
 export CI="prow"
 go mod vendor
+export PRNO="$(jq .refs.pulls[0].number <<< $(echo $JOB_SPEC))"
 make prepare-test-cluster
 make bin
 
@@ -31,16 +33,28 @@ cp $KUBECONFIG $TMP_DIR/kubeconfig
 chmod 640 $TMP_DIR/kubeconfig
 export KUBECONFIG=$TMP_DIR/kubeconfig
 
-# Login as developer
-oc login -u developer -p developer
+gitconfig=`cat <<'EOF'
+[user]
+name = Kam Bot
+email = kambotuser@gmail.com
+
+[credential "https://github.com"]
+username = kam-bot
+helper = "!f() { test \"$1\" = get && echo \"password=$(cat $KAM_GITHUB_TOKEN_FILE)\"; }; f"
+EOF
+`
+echo "$gitconfig" >> ~/.gitconfig
+
+# login as kube:admin
+oc login -u kubeadmin -p $KUBEADMIN_PASSWORD
 
 # Check login user name for debugging purpose
 oc whoami
 login_user=`oc whoami`
-if [[ $login_user == *"developer"* ]]; then
-    echo "Login to the cluster as a developer user"
+if [[ $login_user == *"admin"* ]]; then
+    echo "Login to the cluster as a admin user"
 else
-    echo "Fail to login as a developer user"
+    echo "Fail to login as a admin user"
     exit 1
 fi
 

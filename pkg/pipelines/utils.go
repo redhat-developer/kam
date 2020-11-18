@@ -3,8 +3,11 @@ package pipelines
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/url"
+	"os"
 	"os/exec"
+	"os/user"
 	"strings"
 
 	"github.com/jenkins-x/go-scm/scm"
@@ -67,6 +70,19 @@ func BootstrapRepository(o *BootstrapOptions, f clientFactory, e executor) error
 }
 
 func pushRepository(o *BootstrapOptions, remote string, e executor) error {
+	log.Printf("DEBUGGING: the home dir = %s", os.Getenv("HOME"))
+	wd, err := os.Getwd()
+	if err != nil {
+		log.Printf("DEBUGGING: could not get wd: %s", err)
+	}
+	log.Printf("DEBUGGING: the cwd = %s", wd)
+
+	u, err := user.Current()
+	if err != nil {
+		log.Printf("DEBUGGING: could not get current user: %s", err)
+	}
+	log.Printf("DEBUGGING: the current user config = %+v\n", u)
+
 	if out, err := e.execute(o.OutputPath, "git", "init", "."); err != nil {
 		return fmt.Errorf("failed to initialize git repository in %q %q: %s", o.OutputPath, string(out), err)
 	}
