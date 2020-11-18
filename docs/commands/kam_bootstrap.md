@@ -33,7 +33,7 @@ kam bootstrap [flags]
   -p, --prefix string                                  Add a prefix to the environment names(Dev, stage,prod,cicd etc.) to distinguish and identify individual environments
       --private-repo-driver string                     If your Git repositories are on a custom domain, please indicate which driver to use github or gitlab
       --push-to-git                                    If true, automatically creates and populates the gitops-repo-url with the generated resources
-      --save-token-keyring string                      Explicitely pass this flag to update the git-host-access-token in the keyring on your local file system
+      --save-token-keyring                             Explicitely pass this flag to update the git-host-access-token in the keyring on your local file system
       --sealed-secrets-ns string                       Namespace in which the Sealed Secrets operator is installed, automatically generated secrets are encrypted with this operator (default "cicd")
       --sealed-secrets-svc string                      Name of the Sealed Secrets Services that encrypts secrets (default "sealedsecretcontroller-sealed-secrets")
       --service-repo-url string                        Provide the URL for your Service repository e.g. https://github.com/organisation/service.git
