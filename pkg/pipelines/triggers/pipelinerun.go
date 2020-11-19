@@ -34,6 +34,7 @@ func createDevCIPipelineRun(saName string) pipelinev1.PipelineRun {
 				createPipelineBindingParam("REPO", "$(params.fullname)"),
 				createPipelineBindingParam("GIT_REPO", "$(params.gitrepositoryurl)"),
 				createPipelineBindingParam("TLSVERIFY", "$(params.tlsVerify)"),
+				createPipelineBindingParam("BUILD_EXTRA_ARGS", "$(params.build_extra_args)"),
 				createPipelineBindingParam("COMMIT_SHA", "$(params."+GitCommitID+")"),
 				createPipelineBindingParam("GIT_REF", "$(params."+GitRef+")"),
 				createPipelineBindingParam("COMMIT_DATE", "$(params."+GitCommitDate+")"),

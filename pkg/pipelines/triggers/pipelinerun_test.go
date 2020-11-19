@@ -41,6 +41,7 @@ func TestCreateDevCIPipelineRun(t *testing.T) {
 				createPipelineBindingParam("REPO", "$(params.fullname)"),
 				createPipelineBindingParam("GIT_REPO", "$(params.gitrepositoryurl)"),
 				createPipelineBindingParam("TLSVERIFY", "$(params.tlsVerify)"),
+				createPipelineBindingParam("BUILD_EXTRA_ARGS", "$(params.build_extra_args)"),
 				createPipelineBindingParam("COMMIT_SHA", "$(params.io.openshift.build.commit.id)"),
 				createPipelineBindingParam("GIT_REF", "$(params.io.openshift.build.commit.ref)"),
 				createPipelineBindingParam("COMMIT_DATE", "$(params.io.openshift.build.commit.date)"),
