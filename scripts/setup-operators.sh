@@ -100,12 +100,6 @@ do
 done
 echo "Completed openshift-pipelines operator installation"
 
-# The pipelines operator installs an older version buildah ClusterTask.
-# So were replacing it. This may be removed with the new release of pipelines operator
-# Pipeline operator - https://github.com/openshift/tektoncd-pipeline-operator
-echo "Install the Buildah ClusterTask"
-oc replace -f https://raw.githubusercontent.com/redhat-developer/kam/master/docs/updates/buildah.yaml
-
 echo "Starting argocd operator installation"
 install_argocd_operator(){
 # If the Operator uses the SingleNamespace mode for example argocd namespace
