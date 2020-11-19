@@ -109,7 +109,22 @@ func (b *argocdBuilder) Application(env *config.Environment, app *config.Applica
 		defaultProject,
 		env.Name,
 		clusterForEnv(env),
-		makeSource(env, app, b.repoURL))
+		makeAppSource(env, app, b.repoURL))
+	b.files = res.Merge(argoFiles, b.files)
+	return nil
+}
+
+func (b *argocdBuilder) Environment(env *config.Environment) error {
+	basePath := filepath.Join(config.PathForArgoCD())
+	argoFiles := res.Resources{}
+	filename := filepath.Join(basePath, env.Name+"-env-app.yaml")
+
+	argoFiles[filename] = makeApplication(
+		env.Name+"-env", b.argoNS,
+		defaultProject,
+		env.Name,
+		clusterForEnv(env),
+		makeEnvSource(env, b.repoURL))
 	b.files = res.Merge(argoFiles, b.files)
 	return nil
 }
@@ -143,7 +158,7 @@ func argoCDConfigResources(cfg *config.Config, repoURL string, files res.Resourc
 	return nil
 }
 
-func makeSource(env *config.Environment, app *config.Application, repoURL string) *argoappv1.ApplicationSource {
+func makeAppSource(env *config.Environment, app *config.Application, repoURL string) *argoappv1.ApplicationSource {
 	if app.ConfigRepo == nil {
 		return &argoappv1.ApplicationSource{
 			RepoURL: repoURL,
@@ -154,6 +169,15 @@ func makeSource(env *config.Environment, app *config.Application, repoURL string
 		RepoURL:        app.ConfigRepo.URL,
 		Path:           app.ConfigRepo.Path,
 		TargetRevision: app.ConfigRepo.TargetRevision,
+	}
+}
+
+func makeEnvSource(env *config.Environment, repoURL string) *argoappv1.ApplicationSource {
+	envPath := filepath.Join(config.PathForEnvironment(env), "env")
+	envBasePath := filepath.Join(envPath, "base")
+	return &argoappv1.ApplicationSource{
+		RepoURL: repoURL,
+		Path:    envBasePath,
 	}
 }
 

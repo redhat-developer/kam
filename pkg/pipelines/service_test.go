@@ -105,7 +105,12 @@ func TestServiceResourcesWithArgoCD(t *testing.T) {
 	m := buildManifest(false, true)
 
 	want := res.Resources{
-		"environments/test-dev/apps/test-app/base/kustomization.yaml":     &res.Kustomization{Bases: []string{"../services/test-svc", "../services/test", "../../../env/base"}},
+		"environments/test-dev/apps/test-app/base/kustomization.yaml": &res.Kustomization{
+			Bases: []string{
+				"../services/test-svc",
+				"../services/test",
+			},
+		},
 		"environments/test-dev/apps/test-app/kustomization.yaml":          &res.Kustomization{Bases: []string{"overlays"}},
 		"environments/test-dev/apps/test-app/overlays/kustomization.yaml": &res.Kustomization{Bases: []string{"../base"}},
 		"pipelines.yaml": &config.Manifest{
