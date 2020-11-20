@@ -43,4 +43,4 @@ fi
 kam version
 
 # Providing github.com login instance
-gh auth login --with-token < $KAM_GITHUB_TOKEN
+sudo gh auth login --with-token < $KAM_GITHUB_TOKEN
