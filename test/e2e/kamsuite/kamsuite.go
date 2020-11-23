@@ -34,7 +34,7 @@ func FeatureContext(s *godog.Suite) {
 }
 
 func envVariableCheck() bool {
-	envVars := []string{"SERVICE_REPO_URL", "GITOPS_REPO_URL", "IMAGE_REPO", "DOCKERCONFIGJSON_PATH", "GIT_HOST_ACCESS_TOKEN"}
+	envVars := []string{"SERVICE_REPO_URL", "GITOPS_REPO_URL", "IMAGE_REPO", "DOCKERCONFIGJSON_PATH", "GITHUB_TOKEN"}
 	val, ok := os.LookupEnv("CI")
 	if !ok {
 		for _, envVar := range envVars {
