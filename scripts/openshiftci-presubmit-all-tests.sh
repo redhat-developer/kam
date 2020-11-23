@@ -6,6 +6,10 @@ set -e
 set -x
 
 export CI="prow"
+export GITHUB_TOKEN=$KAM_GITHUB_TOKEN
+cd /var/run/kam-data/user-secret/
+cat secret.txt
+cd -
 make prepare-test-cluster
 make bin
 
@@ -42,6 +46,6 @@ fi
 # kam version check
 kam version
 
-# Providing github.com login instance
-echo $HOME
-gh auth login --with-token < $KAM_GITHUB_TOKEN
+# # Providing github.com login instance
+# echo $HOME
+# gh auth login --with-token < $KAM_GITHUB_TOKEN
