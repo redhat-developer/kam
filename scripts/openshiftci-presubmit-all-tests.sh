@@ -32,18 +32,18 @@ cp $KUBECONFIG $TMP_DIR/kubeconfig
 chmod 640 $TMP_DIR/kubeconfig
 export KUBECONFIG=$TMP_DIR/kubeconfig
 
-# Login as developer
-oc login -u developer -p developer
+# # Login as developer
+# oc login -u developer -p developer
 
 # Check login user name for debugging purpose
 oc whoami
-login_user=`oc whoami`
-if [[ $login_user == *"developer"* ]]; then
-    echo "Login to the cluster as a developer user"
-else
-    echo "Fail to login as a developer user"
-    exit 1
-fi
+# login_user=`oc whoami`
+# if [[ $login_user == *"developer"* ]]; then
+#     echo "Login to the cluster as a developer user"
+# else
+#     echo "Fail to login as a developer user"
+#     exit 1
+# fi
 
 # assert that kam is on the path
 kam version
