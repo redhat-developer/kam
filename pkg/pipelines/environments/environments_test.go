@@ -24,10 +24,11 @@ func TestBuildEnvironmentFilesWithAppsToEnvironment(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := res.Resources{
-		"environments/test-dev/apps/my-app-1/base/kustomization.yaml": &res.Kustomization{Bases: []string{
-			"../services/service-http",
-			"../services/service-metrics",
-			"../../../env/base"},
+		"environments/test-dev/apps/my-app-1/base/kustomization.yaml": &res.Kustomization{
+			Bases: []string{
+				"../services/service-http",
+				"../services/service-metrics",
+			},
 		},
 		"environments/test-dev/apps/my-app-1/kustomization.yaml":                                   &res.Kustomization{Bases: []string{"overlays"}},
 		"environments/test-dev/apps/my-app-1/overlays/kustomization.yaml":                          &res.Kustomization{Bases: []string{"../base"}},
@@ -169,7 +170,7 @@ func TestBuildEnvironmentFilesWithNoCICDEnv(t *testing.T) {
 			Bases: []string{
 				"../services/service-http",
 				"../services/service-metrics",
-				"../../../env/base"},
+			},
 		},
 		"environments/test-dev/apps/my-app-1/kustomization.yaml":                                   &res.Kustomization{Bases: []string{"overlays"}},
 		"environments/test-dev/apps/my-app-1/overlays/kustomization.yaml":                          &res.Kustomization{Bases: []string{"../base"}},

@@ -55,7 +55,7 @@ func Build(fs afero.Fs, m *config.Manifest, saName string, o AppLinks) (res.Reso
 
 func (b *envBuilder) Application(env *config.Environment, app *config.Application) error {
 	appPath := filepath.Join(config.PathForApplication(env, app))
-	appFiles, err := filesForApplication(env, appPath, app, b.appLinks)
+	appFiles, err := filesForApplication(env, appPath, app)
 	if err != nil {
 		return err
 	}
@@ -125,9 +125,7 @@ func filesForEnvironment(basePath string, env *config.Environment, gitOpsRepoURL
 	return envFiles
 }
 
-func filesForApplication(env *config.Environment, appPath string, app *config.Application, o AppLinks) (res.Resources, error) {
-	envPath := filepath.Join(config.PathForEnvironment(env), "env")
-	envBasePath := filepath.Join(envPath, "base")
+func filesForApplication(env *config.Environment, appPath string, app *config.Application) (res.Resources, error) {
 	envFiles := res.Resources{}
 	basePath := filepath.Join(appPath, "base")
 	overlaysPath := filepath.Join(appPath, "overlays")
@@ -145,14 +143,6 @@ func filesForApplication(env *config.Environment, appPath string, app *config.Ap
 			return nil, err
 		}
 		relServices = append(relServices, relService)
-	}
-
-	if o == AppsToEnvironments {
-		relEnv, err := filepath.Rel(filepath.Dir(baseKustomization), envBasePath)
-		if err != nil {
-			return nil, err
-		}
-		relServices = append(relServices, relEnv)
 	}
 
 	envFiles[filepath.Join(appPath, kustomization)] = &res.Kustomization{Bases: []string{"overlays"}}

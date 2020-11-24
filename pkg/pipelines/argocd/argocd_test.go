@@ -53,11 +53,11 @@ func TestBuildCreatesArgoCD(t *testing.T) {
 	}
 
 	want := res.Resources{
-		"config/argocd/test-dev-http-api-app.yaml": &argoappv1.Application{
+		"config/argocd/test-dev-env-app.yaml": &argoappv1.Application{
 			TypeMeta:   applicationTypeMeta,
-			ObjectMeta: meta.ObjectMeta(meta.NamespacedName(ArgoCDNamespace, "test-dev-http-api")),
+			ObjectMeta: meta.ObjectMeta(meta.NamespacedName(ArgoCDNamespace, "test-dev-env")),
 			Spec: argoappv1.ApplicationSpec{
-				Source: *makeSource(testEnv, testEnv.Apps[0], testRepoURL),
+				Source: *makeEnvSource(testEnv, testRepoURL),
 				Destination: argoappv1.ApplicationDestination{
 					Server:    defaultServer,
 					Namespace: "test-dev",
@@ -66,9 +66,29 @@ func TestBuildCreatesArgoCD(t *testing.T) {
 				SyncPolicy: syncPolicy,
 			},
 		},
-		"config/argocd/argo-app.yaml":      fakeArgoApplication(),
-		"config/argocd/argocd.yaml":        fakeArgoCDResource(t, ArgoCDNamespace),
-		"config/argocd/kustomization.yaml": &res.Kustomization{Resources: []string{"argo-app.yaml", "argocd.yaml", "test-dev-http-api-app.yaml"}},
+		"config/argocd/test-dev-http-api-app.yaml": &argoappv1.Application{
+			TypeMeta:   applicationTypeMeta,
+			ObjectMeta: meta.ObjectMeta(meta.NamespacedName(ArgoCDNamespace, "test-dev-http-api")),
+			Spec: argoappv1.ApplicationSpec{
+				Source: *makeAppSource(testEnv, testEnv.Apps[0], testRepoURL),
+				Destination: argoappv1.ApplicationDestination{
+					Server:    defaultServer,
+					Namespace: "test-dev",
+				},
+				Project:    defaultProject,
+				SyncPolicy: syncPolicy,
+			},
+		},
+		"config/argocd/argo-app.yaml": fakeArgoApplication(),
+		"config/argocd/argocd.yaml":   fakeArgoCDResource(t, ArgoCDNamespace),
+		"config/argocd/kustomization.yaml": &res.Kustomization{
+			Resources: []string{
+				"argo-app.yaml",
+				"argocd.yaml",
+				"test-dev-env-app.yaml",
+				"test-dev-http-api-app.yaml",
+			},
+		},
 	}
 
 	if diff := cmp.Diff(want, files); diff != "" {
@@ -97,10 +117,19 @@ func TestBuildCreatesArgoCDWithMultipleApps(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(files) != 5 {
-		t.Fatalf("got %d files, want 3\n", len(files))
+	if len(files) != 7 {
+		t.Fatalf("got %d files, want 7\n", len(files))
 	}
-	want := &res.Kustomization{Resources: []string{"argo-app.yaml", "argocd.yaml", "test-dev-http-api-app.yaml", "test-production-http-api-app.yaml"}}
+	want := &res.Kustomization{
+		Resources: []string{
+			"argo-app.yaml",
+			"argocd.yaml",
+			"test-dev-env-app.yaml",
+			"test-dev-http-api-app.yaml",
+			"test-production-env-app.yaml",
+			"test-production-http-api-app.yaml",
+		},
+	}
 	if diff := cmp.Diff(want, files["config/argocd/kustomization.yaml"]); diff != "" {
 		t.Fatalf("files didn't match: %s\n", diff)
 	}
@@ -166,11 +195,11 @@ func TestBuildWithRepoConfig(t *testing.T) {
 	}
 
 	want := res.Resources{
-		"config/argocd/test-production-prod-api-app.yaml": &argoappv1.Application{
+		"config/argocd/test-production-env-app.yaml": &argoappv1.Application{
 			TypeMeta:   applicationTypeMeta,
-			ObjectMeta: meta.ObjectMeta(meta.NamespacedName(ArgoCDNamespace, "test-production-prod-api")),
+			ObjectMeta: meta.ObjectMeta(meta.NamespacedName(ArgoCDNamespace, "test-production-env")),
 			Spec: argoappv1.ApplicationSpec{
-				Source: *makeSource(prodEnv, prodEnv.Apps[0], testRepoURL),
+				Source: *makeEnvSource(prodEnv, testRepoURL),
 				Destination: argoappv1.ApplicationDestination{
 					Server:    defaultServer,
 					Namespace: "test-production",
@@ -179,9 +208,29 @@ func TestBuildWithRepoConfig(t *testing.T) {
 				SyncPolicy: syncPolicy,
 			},
 		},
-		"config/argocd/argo-app.yaml":      fakeArgoApplication(),
-		"config/argocd/argocd.yaml":        fakeArgoCDResource(t, ArgoCDNamespace),
-		"config/argocd/kustomization.yaml": &res.Kustomization{Resources: []string{"argo-app.yaml", "argocd.yaml", "test-production-prod-api-app.yaml"}},
+		"config/argocd/test-production-prod-api-app.yaml": &argoappv1.Application{
+			TypeMeta:   applicationTypeMeta,
+			ObjectMeta: meta.ObjectMeta(meta.NamespacedName(ArgoCDNamespace, "test-production-prod-api")),
+			Spec: argoappv1.ApplicationSpec{
+				Source: *makeAppSource(prodEnv, prodEnv.Apps[0], testRepoURL),
+				Destination: argoappv1.ApplicationDestination{
+					Server:    defaultServer,
+					Namespace: "test-production",
+				},
+				Project:    defaultProject,
+				SyncPolicy: syncPolicy,
+			},
+		},
+		"config/argocd/argo-app.yaml": fakeArgoApplication(),
+		"config/argocd/argocd.yaml":   fakeArgoCDResource(t, ArgoCDNamespace),
+		"config/argocd/kustomization.yaml": &res.Kustomization{
+			Resources: []string{
+				"argo-app.yaml",
+				"argocd.yaml",
+				"test-production-env-app.yaml",
+				"test-production-prod-api-app.yaml",
+			},
+		},
 	}
 
 	if diff := cmp.Diff(want, files); diff != "" {
@@ -213,11 +262,11 @@ func TestBuildAddsClusterToApp(t *testing.T) {
 	}
 
 	want := res.Resources{
-		"config/argocd/test-dev-http-api-app.yaml": &argoappv1.Application{
+		"config/argocd/test-dev-env-app.yaml": &argoappv1.Application{
 			TypeMeta:   applicationTypeMeta,
-			ObjectMeta: meta.ObjectMeta(meta.NamespacedName(ArgoCDNamespace, "test-dev-http-api")),
+			ObjectMeta: meta.ObjectMeta(meta.NamespacedName(ArgoCDNamespace, "test-dev-env")),
 			Spec: argoappv1.ApplicationSpec{
-				Source: *makeSource(testEnv, testEnv.Apps[0], testRepoURL),
+				Source: *makeEnvSource(testEnv, testRepoURL),
 				Destination: argoappv1.ApplicationDestination{
 					Server:    "not.real.cluster",
 					Namespace: "test-dev",
@@ -226,9 +275,29 @@ func TestBuildAddsClusterToApp(t *testing.T) {
 				SyncPolicy: syncPolicy,
 			},
 		},
-		"config/argocd/argo-app.yaml":      fakeArgoApplication(),
-		"config/argocd/argocd.yaml":        fakeArgoCDResource(t, ArgoCDNamespace),
-		"config/argocd/kustomization.yaml": &res.Kustomization{Resources: []string{"argo-app.yaml", "argocd.yaml", "test-dev-http-api-app.yaml"}},
+		"config/argocd/test-dev-http-api-app.yaml": &argoappv1.Application{
+			TypeMeta:   applicationTypeMeta,
+			ObjectMeta: meta.ObjectMeta(meta.NamespacedName(ArgoCDNamespace, "test-dev-http-api")),
+			Spec: argoappv1.ApplicationSpec{
+				Source: *makeAppSource(testEnv, testEnv.Apps[0], testRepoURL),
+				Destination: argoappv1.ApplicationDestination{
+					Server:    "not.real.cluster",
+					Namespace: "test-dev",
+				},
+				Project:    defaultProject,
+				SyncPolicy: syncPolicy,
+			},
+		},
+		"config/argocd/argo-app.yaml": fakeArgoApplication(),
+		"config/argocd/argocd.yaml":   fakeArgoCDResource(t, ArgoCDNamespace),
+		"config/argocd/kustomization.yaml": &res.Kustomization{
+			Resources: []string{
+				"argo-app.yaml",
+				"argocd.yaml",
+				"test-dev-env-app.yaml",
+				"test-dev-http-api-app.yaml",
+			},
+		},
 	}
 
 	if diff := cmp.Diff(want, files); diff != "" {
