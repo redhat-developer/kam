@@ -43,5 +43,5 @@ else
     exit 1
 fi
 
-# kam version check
+# assert that kam is on the path
 kam version
