@@ -3,6 +3,7 @@ package kamsuite
 import (
 	"fmt"
 	"os"
+	"os/exec"
 
 	"github.com/cucumber/godog"
 	"github.com/cucumber/messages-go/v10"
@@ -22,6 +23,14 @@ func FeatureContext(s *godog.Suite) {
 
 	s.AfterSuite(func() {
 		fmt.Println("After suite")
+		deleteStep1 := "alias set delete 'api -X DELETE \"repos/$1\"'"
+		deleteStep2 := "alias repo-delete kam-bot/" + os.Getenv("GITOPS_REPO_URL")
+		if !executeGhCommad(deleteStep1) {
+			os.Exit(1)
+		}
+		if !executeGhCommad(deleteStep2) {
+			os.Exit(1)
+		}
 	})
 
 	s.BeforeFeature(func(this *messages.GherkinDocument) {
@@ -57,6 +66,24 @@ func envVariableCheck() bool {
 			return false
 		}
 		return true
+	}
+	return true
+}
+
+func executeGhCommad(arg string) bool {
+	ghExecPath, err := exec.LookPath("gh")
+	if err != nil {
+		fmt.Println("Error is ", err)
+		return false
+	}
+	cmdDeleteRepo := &exec.Cmd{
+		Path:   ghExecPath,
+		Args:   []string{ghExecPath, arg},
+		Stderr: os.Stderr,
+	}
+	if cmdDeleteRepo.Stderr != nil {
+		fmt.Println("Error is ", cmdDeleteRepo.Stderr)
+		return false
 	}
 	return true
 }
