@@ -5,7 +5,7 @@ set -e
 
 # Do not show token in CI log
 set +x
-export GITHUB_TOKEN=`cat $KAM_GITHUB_TOKEN`
+export GITHUB_TOKEN=`cat $KAM_GITHUB_TOKEN_FILE`
 
 # show commands
 set -x
