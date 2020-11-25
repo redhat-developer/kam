@@ -35,7 +35,6 @@ func CreateAppCIPipeline(name types.NamespacedName) *pipelinev1.Pipeline {
 			},
 			Resources: []pipelinev1.PipelineDeclaredResource{
 				createPipelineDeclaredResource("source-repo", "git"),
-				createPipelineDeclaredResource("runtime-image", "image"),
 			},
 
 			Tasks: []pipelinev1.PipelineTask{
