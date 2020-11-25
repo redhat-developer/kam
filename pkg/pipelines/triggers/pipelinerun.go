@@ -3,6 +3,8 @@ package triggers
 import (
 	pipelinev1alpha1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	pipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/redhat-developer/kam/pkg/pipelines/meta"
 )
@@ -25,8 +27,10 @@ func createDevCDPipelineRun(saName string) pipelinev1.PipelineRun {
 
 func createDevCIPipelineRun(saName string) pipelinev1.PipelineRun {
 	return pipelinev1.PipelineRun{
-		TypeMeta:   pipelineRunTypeMeta,
-		ObjectMeta: meta.ObjectMeta(meta.NamespacedName("", "app-ci-pipeline-run-$(uid)"), statusTrackerAnnotations("dev-ci-build-from-pr", "CI build on push event")),
+		TypeMeta: pipelineRunTypeMeta,
+		ObjectMeta: meta.ObjectMeta(
+			meta.NamespacedName("", "app-ci-pipeline-run-$(uid)"),
+			statusTrackerAnnotations("dev-ci-build-from-pr", "CI build on push event")),
 		Spec: pipelinev1.PipelineRunSpec{
 			ServiceAccountName: saName,
 			PipelineRef:        createPipelineRef("app-ci-pipeline"),
@@ -42,20 +46,22 @@ func createDevCIPipelineRun(saName string) pipelinev1.PipelineRun {
 				createPipelineBindingParam("COMMIT_AUTHOR", "$(params."+GitCommitAuthor+")"),
 				createPipelineBindingParam("COMMIT_MESSAGE", "$(params."+GitCommitMessage+")"),
 			},
-			Resources: createDevResource("$(params." + GitCommitID + ")"),
+			Workspaces: []pipelinev1.WorkspaceBinding{
+				{
+					Name: "shared-data",
+					VolumeClaimTemplate: &corev1.PersistentVolumeClaim{
+						Spec: corev1.PersistentVolumeClaimSpec{
+							AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+							Resources: corev1.ResourceRequirements{
+								Requests: corev1.ResourceList{"storage": resource.MustParse("1Gi")},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
-
-// {
-// 	Name: "runtime-image",
-// 	ResourceSpec: &pipelinev1alpha1.PipelineResourceSpec{
-// 		Type: "image",
-// 		Params: []pipelinev1.ResourceParam{
-// 			createResourceParams("url", "$(params.imageRepo):$(params."+GitRef+")-$(params."+GitCommitID+")"),
-// 		},
-// 	},
-// },
 
 func createCDPipelineRun(saName string) pipelinev1.PipelineRun {
 	return pipelinev1.PipelineRun{
@@ -71,8 +77,10 @@ func createCDPipelineRun(saName string) pipelinev1.PipelineRun {
 
 func createCIPipelineRun(saName string) pipelinev1.PipelineRun {
 	return pipelinev1.PipelineRun{
-		TypeMeta:   pipelineRunTypeMeta,
-		ObjectMeta: meta.ObjectMeta(meta.NamespacedName("", "ci-dryrun-from-push-pipeline-$(uid)"), statusTrackerAnnotations("ci-dryrun-from-push-pipeline", "CI dry run on push event")),
+		TypeMeta: pipelineRunTypeMeta,
+		ObjectMeta: meta.ObjectMeta(
+			meta.NamespacedName("", "ci-dryrun-from-push-pipeline-$(uid)"),
+			statusTrackerAnnotations("ci-dryrun-from-push-pipeline", "CI dry run on push event")),
 		Spec: pipelinev1.PipelineRunSpec{
 			ServiceAccountName: saName,
 			PipelineRef:        createPipelineRef("ci-dryrun-from-push-pipeline"),

@@ -39,14 +39,20 @@ func CreateAppCIPipeline(name types.NamespacedName) *pipelinev1.Pipeline {
 				createGitCloneTask("clone-source"),
 				createBuildImageTask("build-image", "clone-source"),
 			},
+			Workspaces: []pipelinev1.PipelineWorkspaceDeclaration{
+				{Name: pipelineWorkspace, Description: "This workspace will receive the cloned git repo."},
+			},
 		},
 	}
 }
 
 func createBuildImageTask(name, runAfter string) pipelinev1.PipelineTask {
 	return pipelinev1.PipelineTask{
-		Name:     name,
-		TaskRef:  createTaskRef("buildah", pipelinev1.ClusterTaskKind),
+		Name:    name,
+		TaskRef: createTaskRef("buildah", pipelinev1.ClusterTaskKind),
+		Workspaces: []pipelinev1.WorkspacePipelineTaskBinding{
+			{Name: "source", Workspace: pipelineWorkspace},
+		},
 		RunAfter: []string{runAfter},
 		Params: []pipelinev1.Param{
 			createTaskParam("TLSVERIFY", "$(params.TLSVERIFY)"),

@@ -6,6 +6,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	pipelinev1alpha1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	pipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/redhat-developer/kam/pkg/pipelines/meta"
 )
@@ -39,6 +41,19 @@ func TestCreateDevCIPipelineRun(t *testing.T) {
 		Spec: pipelinev1.PipelineRunSpec{
 			ServiceAccountName: sName,
 			PipelineRef:        createPipelineRef("app-ci-pipeline"),
+			Workspaces: []pipelinev1.WorkspaceBinding{
+				{
+					Name: "shared-data",
+					VolumeClaimTemplate: &corev1.PersistentVolumeClaim{
+						Spec: corev1.PersistentVolumeClaimSpec{
+							AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+							Resources: corev1.ResourceRequirements{
+								Requests: corev1.ResourceList{"storage": resource.MustParse("1Gi")},
+							},
+						},
+					},
+				},
+			},
 			Params: []pipelinev1.Param{
 				createPipelineBindingParam("REPO", "$(params.fullname)"),
 				createPipelineBindingParam("GIT_REPO", "$(params.gitrepositoryurl)"),
@@ -51,7 +66,6 @@ func TestCreateDevCIPipelineRun(t *testing.T) {
 				createPipelineBindingParam("COMMIT_AUTHOR", "$(params.io.openshift.build.commit.author)"),
 				createPipelineBindingParam("COMMIT_MESSAGE", "$(params.io.openshift.build.commit.message)"),
 			},
-			Resources: createDevResource("$(params.io.openshift.build.commit.id)"),
 		},
 	}
 	template := createDevCIPipelineRun(sName)
