@@ -1,6 +1,7 @@
 package argocd
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -35,6 +36,9 @@ var (
 			testApp,
 		},
 	}
+
+	testEnvPath     = filepath.Join(config.PathForEnvironment(testEnv), "env")
+	testEnvBasePath = filepath.Join(testEnvPath, "overlays")
 )
 
 func TestBuildCreatesArgoCD(t *testing.T) {
@@ -57,7 +61,10 @@ func TestBuildCreatesArgoCD(t *testing.T) {
 			TypeMeta:   applicationTypeMeta,
 			ObjectMeta: meta.ObjectMeta(meta.NamespacedName(ArgoCDNamespace, "test-dev-env")),
 			Spec: argoappv1.ApplicationSpec{
-				Source: *makeEnvSource(testEnv, testRepoURL),
+				Source: argoappv1.ApplicationSource{
+					RepoURL: testRepoURL,
+					Path:    testEnvBasePath,
+				},
 				Destination: argoappv1.ApplicationDestination{
 					Server:    defaultServer,
 					Namespace: "test-dev",
@@ -70,7 +77,10 @@ func TestBuildCreatesArgoCD(t *testing.T) {
 			TypeMeta:   applicationTypeMeta,
 			ObjectMeta: meta.ObjectMeta(meta.NamespacedName(ArgoCDNamespace, "test-dev-http-api")),
 			Spec: argoappv1.ApplicationSpec{
-				Source: *makeAppSource(testEnv, testEnv.Apps[0], testRepoURL),
+				Source: argoappv1.ApplicationSource{
+					RepoURL: testRepoURL,
+					Path:    filepath.Join(config.PathForApplication(testEnv, testApp), "overlays"),
+				},
 				Destination: argoappv1.ApplicationDestination{
 					Server:    defaultServer,
 					Namespace: "test-dev",
