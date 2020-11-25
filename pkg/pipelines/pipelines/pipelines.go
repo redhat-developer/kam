@@ -16,67 +16,62 @@ var (
 	pipelineTypeMeta = meta.TypeMeta("Pipeline", "tekton.dev/v1beta1")
 )
 
+const pipelineWorkspace = "shared-data"
+
 // CreateAppCIPipeline creates AppCIPipeline
 func CreateAppCIPipeline(name types.NamespacedName) *pipelinev1.Pipeline {
 	return &pipelinev1.Pipeline{
 		TypeMeta:   pipelineTypeMeta,
 		ObjectMeta: meta.ObjectMeta(name),
 		Spec: pipelinev1.PipelineSpec{
-			Params: []pipelinev1.ParamSpec{
-				createParamSpec("REPO"),
-				createParamSpec("COMMIT_SHA"),
-				createParamSpec("TLSVERIFY"),
-				createParamSpec("BUILD_EXTRA_ARGS"),
-				createParamSpec("GIT_REF"),
-				createParamSpec("COMMIT_DATE"),
-				createParamSpec("COMMIT_AUTHOR"),
-				createParamSpec("COMMIT_MESSAGE"),
-				createParamSpec("GIT_REPO"),
-			},
-			Resources: []pipelinev1.PipelineDeclaredResource{
-				createPipelineDeclaredResource("source-repo", "git"),
-			},
-
+			Params: paramSpecs(
+				"REPO",
+				"COMMIT_SHA",
+				"TLSVERIFY",
+				"BUILD_EXTRA_ARGS",
+				"IMAGE",
+				"GIT_REF",
+				"COMMIT_DATE",
+				"COMMIT_AUTHOR",
+				"COMMIT_MESSAGE",
+				"GIT_REPO"),
 			Tasks: []pipelinev1.PipelineTask{
-				createBuildImageTask("build-image"),
+				createGitCloneTask("clone-source"),
+				createBuildImageTask("build-image", "clone-source"),
 			},
 		},
 	}
 }
 
-func createParamSpec(name string) pipelinev1.ParamSpec {
-	return pipelinev1.ParamSpec{Name: name, Type: "string"}
-}
-
-func createBuildImageTask(name string) pipelinev1.PipelineTask {
-	labels := map[string]string{
-		triggers.GitCommitID:      "$(params.COMMIT_SHA)",
-		triggers.GitRef:           "$(params.GIT_REF)",
-		triggers.GitCommitDate:    "$(params.COMMIT_DATE)",
-		triggers.GitCommitAuthor:  "$(params.COMMIT_AUTHOR)",
-		triggers.GitCommitMessage: "$(params.COMMIT_MESSAGE)",
-	}
-	labelArgs := []string{}
-	for k, v := range labels {
-		labelArgs = append(labelArgs, fmt.Sprintf("--label=%s='%s'", k, v))
-	}
-	sort.Strings(labelArgs)
-
+func createBuildImageTask(name, runAfter string) pipelinev1.PipelineTask {
 	return pipelinev1.PipelineTask{
-		Name:    name,
-		TaskRef: createTaskRef("buildah", pipelinev1.ClusterTaskKind),
-		Resources: &pipelinev1.PipelineTaskResources{
-			Inputs:  []pipelinev1.PipelineTaskInputResource{createInputTaskResource("source", "source-repo")},
-			Outputs: []pipelinev1.PipelineTaskOutputResource{createOutputTaskResource("image", "runtime-image")},
-		},
+		Name:     name,
+		TaskRef:  createTaskRef("buildah", pipelinev1.ClusterTaskKind),
+		RunAfter: []string{runAfter},
 		Params: []pipelinev1.Param{
 			createTaskParam("TLSVERIFY", "$(params.TLSVERIFY)"),
-			createTaskParam("BUILD_EXTRA_ARGS", strings.Join(labelArgs, " ")),
+			createTaskParam("BUILD_EXTRA_ARGS", metadataLabelArgs()),
+			createTaskParam("IMAGE", "$(params.IMAGE)"),
 		},
 	}
 }
 
-// CreateCDPipeline creates CreateCDPipeline
+func createGitCloneTask(name string) pipelinev1.PipelineTask {
+	// The output workspace mapping here comes from the git-clone task.
+	return pipelinev1.PipelineTask{
+		Name:    name,
+		TaskRef: createTaskRef("git-clone", pipelinev1.ClusterTaskKind),
+		Workspaces: []pipelinev1.WorkspacePipelineTaskBinding{
+			{Name: "output", Workspace: pipelineWorkspace},
+		},
+		Params: []pipelinev1.Param{
+			createTaskParam("url", "$(params.GIT_REPO)"),
+			createTaskParam("revision", "$(params.GIT_REF)"),
+		},
+	}
+}
+
+// CreateCDPipeline creates a CD pipeline.
 func CreateCDPipeline(name types.NamespacedName, stageNamespace string) *pipelinev1.Pipeline {
 	return &pipelinev1.Pipeline{
 		TypeMeta:   pipelineTypeMeta,
@@ -181,10 +176,6 @@ func createDevCDBuildImageTask(name string) pipelinev1.PipelineTask {
 	return pipelinev1.PipelineTask{
 		Name:    name,
 		TaskRef: createTaskRef("buildah", pipelinev1.ClusterTaskKind),
-		Resources: &pipelinev1.PipelineTaskResources{
-			Inputs:  []pipelinev1.PipelineTaskInputResource{createInputTaskResource("source", "source-repo")},
-			Outputs: []pipelinev1.PipelineTaskOutputResource{createOutputTaskResource("image", "runtime-image")},
-		},
 		Params: []pipelinev1.Param{
 			createTaskParam("TLSVERIFY", "true"),
 		},
@@ -218,4 +209,32 @@ func createTaskParam(name, value string) pipelinev1.Param {
 
 func createPipelineDeclaredResource(name, resourceType string) pipelinev1.PipelineDeclaredResource {
 	return pipelinev1.PipelineDeclaredResource{Name: name, Type: resourceType}
+}
+
+func metadataLabelArgs() string {
+	labels := map[string]string{
+		triggers.GitCommitID:      "$(params.COMMIT_SHA)",
+		triggers.GitRef:           "$(params.GIT_REF)",
+		triggers.GitCommitDate:    "$(params.COMMIT_DATE)",
+		triggers.GitCommitAuthor:  "$(params.COMMIT_AUTHOR)",
+		triggers.GitCommitMessage: "$(params.COMMIT_MESSAGE)",
+	}
+	labelArgs := []string{}
+	for k, v := range labels {
+		labelArgs = append(labelArgs, fmt.Sprintf("--label=%s='%s'", k, v))
+	}
+	sort.Strings(labelArgs)
+	return strings.Join(labelArgs, " ")
+}
+
+func paramSpecs(s ...string) []pipelinev1.ParamSpec {
+	specs := make([]pipelinev1.ParamSpec, len(s))
+	for i := range s {
+		specs[i] = paramSpec(s[i])
+	}
+	return specs
+}
+
+func paramSpec(name string) pipelinev1.ParamSpec {
+	return pipelinev1.ParamSpec{Name: name, Type: "string"}
 }
