@@ -48,5 +48,7 @@ oc whoami
 # assert that kam is on the path
 kam version
 
+oc get service -n cicd
+
 # Run e2e test
 make e2e
