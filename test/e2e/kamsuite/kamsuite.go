@@ -2,6 +2,7 @@ package kamsuite
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 
@@ -9,10 +10,19 @@ import (
 	"github.com/cucumber/messages-go/v10"
 )
 
+var (
+	gitopsrepodir string
+	originaldir   string
+)
+
 // FeatureContext defines godog.Suite steps for the test suite.
 func FeatureContext(s *godog.Suite) {
 
 	// KAM related steps
+	s.Step(`^create gitops temporary directory$`,
+		GitopsDir)
+	s.Step(`^go to the gitops temporary directory$`,
+		GoToGitopsDirPath)
 
 	s.BeforeSuite(func() {
 		fmt.Println("Before suite")
@@ -86,4 +96,42 @@ func executeGhCommad(arg string) bool {
 		return false
 	}
 	return true
+}
+
+// GitopsDir creates a temporary gitops dir
+func GitopsDir() (string, error) {
+	var err error
+	gitopsrepodir, err = ioutil.TempDir("", "")
+	if err != nil {
+		return "", err
+	}
+	return gitopsrepodir, nil
+}
+
+// WorkingDirPath gets the working dir
+func WorkingDirPath() (string, error) {
+	var err error
+	originaldir, err = os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	return originaldir, nil
+}
+
+// GoToGitopsDirPath change the working dir
+func GoToGitopsDirPath() error {
+	err := os.Chdir(gitopsrepodir)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// GoToKamDirPath change the working dir
+func GoToKamDirPath() error {
+	err := os.Chdir(originaldir)
+	if err != nil {
+		return err
+	}
+	return nil
 }
