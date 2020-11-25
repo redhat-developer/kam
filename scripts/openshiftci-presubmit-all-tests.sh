@@ -2,9 +2,13 @@
 
 # fail if some commands fails
 set -e
+
+# Do not show token in CI log
+set +x
+export GITHUB_TOKEN=`cat $KAM_GITHUB_TOKEN_FILE`
+
 # show commands
 set -x
-
 export CI="prow"
 make prepare-test-cluster
 make bin
@@ -39,4 +43,5 @@ else
     exit 1
 fi
 
+# assert that kam is on the path
 kam version
