@@ -32,8 +32,10 @@ func TestCreateDevCDPipelineRun(t *testing.T) {
 
 func TestCreateDevCIPipelineRun(t *testing.T) {
 	validDevCIPipelineRun := pipelinev1.PipelineRun{
-		TypeMeta:   pipelineRunTypeMeta,
-		ObjectMeta: meta.ObjectMeta(meta.NamespacedName("", "app-ci-pipeline-run-$(uid)"), statusTrackerAnnotations("dev-ci-build-from-pr", "CI build on push event")),
+		TypeMeta: pipelineRunTypeMeta,
+		ObjectMeta: meta.ObjectMeta(
+			meta.NamespacedName("", "app-ci-pipeline-run-$(uid)"),
+			statusTrackerAnnotations("dev-ci-build-from-pr", "CI build on push event")),
 		Spec: pipelinev1.PipelineRunSpec{
 			ServiceAccountName: sName,
 			PipelineRef:        createPipelineRef("app-ci-pipeline"),
@@ -42,6 +44,7 @@ func TestCreateDevCIPipelineRun(t *testing.T) {
 				createPipelineBindingParam("GIT_REPO", "$(params.gitrepositoryurl)"),
 				createPipelineBindingParam("TLSVERIFY", "$(params.tlsVerify)"),
 				createPipelineBindingParam("BUILD_EXTRA_ARGS", "$(params.build_extra_args)"),
+				createPipelineBindingParam("IMAGE", "$(params.imageRepo):$(params."+GitRef+")-$(params."+GitCommitID+")"),
 				createPipelineBindingParam("COMMIT_SHA", "$(params.io.openshift.build.commit.id)"),
 				createPipelineBindingParam("GIT_REF", "$(params.io.openshift.build.commit.ref)"),
 				createPipelineBindingParam("COMMIT_DATE", "$(params.io.openshift.build.commit.date)"),
@@ -98,15 +101,6 @@ func TestCreateDevResource(t *testing.T) {
 				Params: []pipelinev1.ResourceParam{
 					createResourceParams("revision", "test"),
 					createResourceParams("url", "$(params.gitrepositoryurl)"),
-				},
-			},
-		},
-		{
-			Name: "runtime-image",
-			ResourceSpec: &pipelinev1alpha1.PipelineResourceSpec{
-				Type: "image",
-				Params: []pipelinev1.ResourceParam{
-					createResourceParams("url", "$(params.imageRepo):$(params.io.openshift.build.commit.ref)-$(params.io.openshift.build.commit.id)"),
 				},
 			},
 		},

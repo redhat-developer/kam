@@ -35,6 +35,7 @@ func createDevCIPipelineRun(saName string) pipelinev1.PipelineRun {
 				createPipelineBindingParam("GIT_REPO", "$(params.gitrepositoryurl)"),
 				createPipelineBindingParam("TLSVERIFY", "$(params.tlsVerify)"),
 				createPipelineBindingParam("BUILD_EXTRA_ARGS", "$(params.build_extra_args)"),
+				createPipelineBindingParam("IMAGE", "$(params.imageRepo):$(params."+GitRef+")-$(params."+GitCommitID+")"),
 				createPipelineBindingParam("COMMIT_SHA", "$(params."+GitCommitID+")"),
 				createPipelineBindingParam("GIT_REF", "$(params."+GitRef+")"),
 				createPipelineBindingParam("COMMIT_DATE", "$(params."+GitCommitDate+")"),
@@ -45,6 +46,16 @@ func createDevCIPipelineRun(saName string) pipelinev1.PipelineRun {
 		},
 	}
 }
+
+// {
+// 	Name: "runtime-image",
+// 	ResourceSpec: &pipelinev1alpha1.PipelineResourceSpec{
+// 		Type: "image",
+// 		Params: []pipelinev1.ResourceParam{
+// 			createResourceParams("url", "$(params.imageRepo):$(params."+GitRef+")-$(params."+GitCommitID+")"),
+// 		},
+// 	},
+// },
 
 func createCDPipelineRun(saName string) pipelinev1.PipelineRun {
 	return pipelinev1.PipelineRun{
@@ -79,15 +90,6 @@ func createDevResource(revision string) []pipelinev1.PipelineResourceBinding {
 				Params: []pipelinev1.ResourceParam{
 					createResourceParams("revision", revision),
 					createResourceParams("url", "$(params.gitrepositoryurl)"),
-				},
-			},
-		},
-		{
-			Name: "runtime-image",
-			ResourceSpec: &pipelinev1alpha1.PipelineResourceSpec{
-				Type: "image",
-				Params: []pipelinev1.ResourceParam{
-					createResourceParams("url", "$(params.imageRepo):$(params."+GitRef+")-$(params."+GitCommitID+")"),
 				},
 			},
 		},
