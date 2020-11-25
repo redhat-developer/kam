@@ -1,11 +1,11 @@
-
-
 BIN_DIR=bin
 DIST_DIR=dist
 EXECUTABLE=kam
 WINDOWS=$(EXECUTABLE)_windows_amd64.exe
 LINUX=$(EXECUTABLE)_linux_amd64
 DARWIN=$(EXECUTABLE)_darwin_amd64
+PKGS := $(shell go list  ./... | grep -v test/e2e | grep -v vendor)
+FMTPKGS := $(shell go list  ./... | grep -v vendor)
 VERSION=$(shell git describe --tags --always --long --dirty)
 LD_FLAGS="-s -w -X github.com/redhat-developer/kam/pkg/cmd/version.Version=$(VERSION)"
 CFLAGS=-mod=readonly -i -v
@@ -42,7 +42,7 @@ gomod_tidy:
 
 .PHONY: gofmt
 gofmt:
-	go fmt -x ./...
+	go fmt $(FMTPKGS)
 
 .PHONY: bin
 bin:
@@ -54,7 +54,7 @@ install:
 
 .PHONY: test
 test:
-	 go test -mod=readonly ./...
+	 go test -mod=readonly $(PKGS)
 
 .PHONY: clean
 clean:
@@ -67,3 +67,10 @@ cmd-docs:
 .PHONY: prepare-test-cluster
 prepare-test-cluster:
 	. ./scripts/prepare-test-cluster.sh
+
+.PHONY: e2e
+e2e:
+GODOG_OPTS = --godog.tags=$(go env goos)
+
+e2e:
+	@go test --timeout=180m ./test/e2e -v $(GODOG_OPTS)
