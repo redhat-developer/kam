@@ -4,7 +4,7 @@ kam
 
 ### Synopsis
 
-Kubernetes Application Manager (KAM) is a CLI tool to scaffold your GitOps repository
+GitOps Application Manager (KAM) is a CLI tool to scaffold your GitOps repository
 
 ### Options
 
