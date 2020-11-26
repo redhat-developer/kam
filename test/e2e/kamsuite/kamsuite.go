@@ -2,10 +2,7 @@ package kamsuite
 
 import (
 	"fmt"
-<<<<<<< HEAD
 	"os"
-=======
->>>>>>> b25c573... Onboard godog test framework with a basic test (#83)
 
 	"github.com/cucumber/godog"
 	"github.com/cucumber/messages-go/v10"
@@ -18,12 +15,9 @@ func FeatureContext(s *godog.Suite) {
 
 	s.BeforeSuite(func() {
 		fmt.Println("Before suite")
-<<<<<<< HEAD
 		if !envVariableCheck() {
 			os.Exit(1)
 		}
-=======
->>>>>>> b25c573... Onboard godog test framework with a basic test (#83)
 	})
 
 	s.AfterSuite(func() {
@@ -38,7 +32,6 @@ func FeatureContext(s *godog.Suite) {
 		fmt.Println("After feature")
 	})
 }
-<<<<<<< HEAD
 
 func envVariableCheck() bool {
 	envVars := []string{"SERVICE_REPO_URL", "GITOPS_REPO_URL", "IMAGE_REPO", "DOCKERCONFIGJSON_PATH", "GIT_HOST_ACCESS_TOKEN"}
@@ -62,5 +55,3 @@ func envVariableCheck() bool {
 	}
 	return true
 }
-=======
->>>>>>> b25c573... Onboard godog test framework with a basic test (#83)
