@@ -70,8 +70,8 @@ func pushRepository(o *BootstrapOptions, remote string, e executor) error {
 	if out, err := e.execute(o.OutputPath, "git", "init", "."); err != nil {
 		return fmt.Errorf("failed to initialize git repository in %q %q: %s", o.OutputPath, string(out), err)
 	}
-	if out, err := e.execute(o.OutputPath, "git", "add", "."); err != nil {
-		return fmt.Errorf("failed to add files to repository in %q %q: %s", o.OutputPath, string(out), err)
+	if out, err := e.execute(o.OutputPath, "git", "add", "pipelines.yaml", "config", "environments"); err != nil {
+		return fmt.Errorf("failed to add pipelines.yaml to repository in %q %q: %s", o.OutputPath, string(out), err)
 	}
 	if out, err := e.execute(o.OutputPath, "git", "commit", "-m", "Bootstrapped commit"); err != nil {
 		return fmt.Errorf("failed to commit files to repository in %q %q: %s", o.OutputPath, string(out), err)

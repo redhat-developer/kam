@@ -87,7 +87,7 @@ func TestPushRepository(t *testing.T) {
 		{
 			BaseDir: opts.OutputPath,
 			Command: "git",
-			Args:    []string{"add", "."},
+			Args:    []string{"add", "pipelines.yaml", "config", "environments"},
 		},
 		{
 			BaseDir: opts.OutputPath,
