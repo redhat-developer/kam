@@ -6,6 +6,7 @@ set -e
 # Do not show token in CI log
 set +x
 export GITHUB_TOKEN=`cat $KAM_GITHUB_TOKEN_FILE`
+export KUBEADMIN_PASSWORD=`cat $KUBEADMIN_PASSWORD_FILE`
 
 # show commands
 set -x
@@ -31,6 +32,9 @@ TMP_DIR=$(mktemp -d)
 cp $KUBECONFIG $TMP_DIR/kubeconfig
 chmod 640 $TMP_DIR/kubeconfig
 export KUBECONFIG=$TMP_DIR/kubeconfig
+
+# login as kube:admin
+oc login -u kubeadmin -p $KUBEADMIN_PASSWORD
 
 # # Login as developer
 # oc login -u developer -p developer
