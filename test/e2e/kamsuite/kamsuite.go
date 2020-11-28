@@ -2,9 +2,7 @@ package kamsuite
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
-	"os/exec"
 
 	"github.com/cucumber/godog"
 	"github.com/cucumber/messages-go/v10"
@@ -19,10 +17,10 @@ var (
 func FeatureContext(s *godog.Suite) {
 
 	// KAM related steps
-	s.Step(`^create gitops temporary directory$`,
-		GitopsDir)
-	s.Step(`^go to the gitops temporary directory$`,
-		GoToGitopsDirPath)
+	// s.Step(`^create gitops temporary directory$`,
+	// 	GitopsDir)
+	// s.Step(`^go to the gitops temporary directory$`,
+	// 	GoToGitopsDirPath)
 
 	s.BeforeSuite(func() {
 		fmt.Println("Before suite")
@@ -33,14 +31,14 @@ func FeatureContext(s *godog.Suite) {
 
 	s.AfterSuite(func() {
 		fmt.Println("After suite")
-		deleteStep1 := "alias set delete 'api -X DELETE \"repos/$1\"'"
-		deleteStep2 := "alias repo-delete kam-bot/" + os.Getenv("GITOPS_REPO_URL")
-		if !executeGhCommad(deleteStep1) {
-			os.Exit(1)
-		}
-		if !executeGhCommad(deleteStep2) {
-			os.Exit(1)
-		}
+		// deleteStep1 := "alias set delete 'api -X DELETE \"repos/$1\"'"
+		// deleteStep2 := "alias repo-delete kam-bot/" + os.Getenv("GITOPS_REPO_URL")
+		// if !executeGhCommad(deleteStep1) {
+		// 	os.Exit(1)
+		// }
+		// if !executeGhCommad(deleteStep2) {
+		// 	os.Exit(1)
+		// }
 	})
 
 	s.BeforeFeature(func(this *messages.GherkinDocument) {
@@ -80,58 +78,58 @@ func envVariableCheck() bool {
 	return true
 }
 
-func executeGhCommad(arg string) bool {
-	ghExecPath, err := exec.LookPath("gh")
-	if err != nil {
-		fmt.Println("Error is ", err)
-		return false
-	}
-	cmdDeleteRepo := &exec.Cmd{
-		Path:   ghExecPath,
-		Args:   []string{ghExecPath, arg},
-		Stderr: os.Stderr,
-	}
-	if cmdDeleteRepo.Stderr != nil {
-		fmt.Println("Error is ", cmdDeleteRepo.Stderr)
-		return false
-	}
-	return true
-}
+// func executeGhCommad(arg string) bool {
+// 	ghExecPath, err := exec.LookPath("gh")
+// 	if err != nil {
+// 		fmt.Println("Error is ", err)
+// 		return false
+// 	}
+// 	cmdDeleteRepo := &exec.Cmd{
+// 		Path:   ghExecPath,
+// 		Args:   []string{ghExecPath, arg},
+// 		Stderr: os.Stderr,
+// 	}
+// 	if cmdDeleteRepo.Stderr != nil {
+// 		fmt.Println("Error is ", cmdDeleteRepo.Stderr)
+// 		return false
+// 	}
+// 	return true
+// }
 
-// GitopsDir creates a temporary gitops dir
-func GitopsDir() (string, error) {
-	var err error
-	gitopsrepodir, err = ioutil.TempDir("", "")
-	if err != nil {
-		return "", err
-	}
-	return gitopsrepodir, nil
-}
+// // GitopsDir creates a temporary gitops dir
+// func GitopsDir() (string, error) {
+// 	var err error
+// 	gitopsrepodir, err = ioutil.TempDir("", "")
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	return gitopsrepodir, nil
+// }
 
-// WorkingDirPath gets the working dir
-func WorkingDirPath() (string, error) {
-	var err error
-	originaldir, err = os.Getwd()
-	if err != nil {
-		return "", err
-	}
-	return originaldir, nil
-}
+// // WorkingDirPath gets the working dir
+// func WorkingDirPath() (string, error) {
+// 	var err error
+// 	originaldir, err = os.Getwd()
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	return originaldir, nil
+// }
 
-// GoToGitopsDirPath change the working dir
-func GoToGitopsDirPath() error {
-	err := os.Chdir(gitopsrepodir)
-	if err != nil {
-		return err
-	}
-	return nil
-}
+// // GoToGitopsDirPath change the working dir
+// func GoToGitopsDirPath() error {
+// 	err := os.Chdir(gitopsrepodir)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
 
-// GoToKamDirPath change the working dir
-func GoToKamDirPath() error {
-	err := os.Chdir(originaldir)
-	if err != nil {
-		return err
-	}
-	return nil
-}
+// // GoToKamDirPath change the working dir
+// func GoToKamDirPath() error {
+// 	err := os.Chdir(originaldir)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
