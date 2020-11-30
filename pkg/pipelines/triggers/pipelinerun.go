@@ -3,6 +3,8 @@ package triggers
 import (
 	pipelinev1alpha1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	pipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/redhat-developer/kam/pkg/pipelines/meta"
 )
@@ -25,8 +27,13 @@ func createDevCDPipelineRun(saName string) pipelinev1.PipelineRun {
 
 func createDevCIPipelineRun(saName string) pipelinev1.PipelineRun {
 	return pipelinev1.PipelineRun{
-		TypeMeta:   pipelineRunTypeMeta,
-		ObjectMeta: meta.ObjectMeta(meta.NamespacedName("", "app-ci-pipeline-run-$(uid)"), statusTrackerAnnotations("dev-ci-build-from-pr", "CI build on push event")),
+		TypeMeta: pipelineRunTypeMeta,
+		ObjectMeta: meta.ObjectMeta(
+			meta.NamespacedName("", "app-ci-pipeline-run-$(uid)"),
+			statusTrackerAnnotations("dev-ci-build-from-pr", "CI build on push event", map[string]string{
+				"tekton.dev/commit-status-source-url": "$(params.gitrepositoryurl)",
+				"tekton.dev/commit-status-source-sha": "$(params." + GitCommitID + ")",
+			})),
 		Spec: pipelinev1.PipelineRunSpec{
 			ServiceAccountName: saName,
 			PipelineRef:        createPipelineRef("app-ci-pipeline"),
@@ -35,13 +42,26 @@ func createDevCIPipelineRun(saName string) pipelinev1.PipelineRun {
 				createPipelineBindingParam("GIT_REPO", "$(params.gitrepositoryurl)"),
 				createPipelineBindingParam("TLSVERIFY", "$(params.tlsVerify)"),
 				createPipelineBindingParam("BUILD_EXTRA_ARGS", "$(params.build_extra_args)"),
+				createPipelineBindingParam("IMAGE", "$(params.imageRepo):$(params."+GitRef+")-$(params."+GitCommitID+")"),
 				createPipelineBindingParam("COMMIT_SHA", "$(params."+GitCommitID+")"),
 				createPipelineBindingParam("GIT_REF", "$(params."+GitRef+")"),
 				createPipelineBindingParam("COMMIT_DATE", "$(params."+GitCommitDate+")"),
 				createPipelineBindingParam("COMMIT_AUTHOR", "$(params."+GitCommitAuthor+")"),
 				createPipelineBindingParam("COMMIT_MESSAGE", "$(params."+GitCommitMessage+")"),
 			},
-			Resources: createDevResource("$(params." + GitCommitID + ")"),
+			Workspaces: []pipelinev1.WorkspaceBinding{
+				{
+					Name: "shared-data",
+					VolumeClaimTemplate: &corev1.PersistentVolumeClaim{
+						Spec: corev1.PersistentVolumeClaimSpec{
+							AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+							Resources: corev1.ResourceRequirements{
+								Requests: corev1.ResourceList{"storage": resource.MustParse("1Gi")},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -60,8 +80,10 @@ func createCDPipelineRun(saName string) pipelinev1.PipelineRun {
 
 func createCIPipelineRun(saName string) pipelinev1.PipelineRun {
 	return pipelinev1.PipelineRun{
-		TypeMeta:   pipelineRunTypeMeta,
-		ObjectMeta: meta.ObjectMeta(meta.NamespacedName("", "ci-dryrun-from-push-pipeline-$(uid)"), statusTrackerAnnotations("ci-dryrun-from-push-pipeline", "CI dry run on push event")),
+		TypeMeta: pipelineRunTypeMeta,
+		ObjectMeta: meta.ObjectMeta(
+			meta.NamespacedName("", "ci-dryrun-from-push-pipeline-$(uid)"),
+			statusTrackerAnnotations("ci-dryrun-from-push-pipeline", "CI dry run on push event", nil)),
 		Spec: pipelinev1.PipelineRunSpec{
 			ServiceAccountName: saName,
 			PipelineRef:        createPipelineRef("ci-dryrun-from-push-pipeline"),
@@ -79,15 +101,6 @@ func createDevResource(revision string) []pipelinev1.PipelineResourceBinding {
 				Params: []pipelinev1.ResourceParam{
 					createResourceParams("revision", revision),
 					createResourceParams("url", "$(params.gitrepositoryurl)"),
-				},
-			},
-		},
-		{
-			Name: "runtime-image",
-			ResourceSpec: &pipelinev1alpha1.PipelineResourceSpec{
-				Type: "image",
-				Params: []pipelinev1.ResourceParam{
-					createResourceParams("url", "$(params.imageRepo):$(params."+GitRef+")-$(params."+GitCommitID+")"),
 				},
 			},
 		},

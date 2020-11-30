@@ -172,7 +172,7 @@ func createCIResourceTemplate(saName string) []byte {
 	return byteStageCI
 }
 
-func statusTrackerAnnotations(pipeline, description string) func(*v1.ObjectMeta) {
+func statusTrackerAnnotations(pipeline, description string, extra map[string]string) func(*v1.ObjectMeta) {
 	return func(om *v1.ObjectMeta) {
 		annotations := map[string]string{
 			"tekton.dev/git-status":         "true",
@@ -184,6 +184,11 @@ func statusTrackerAnnotations(pipeline, description string) func(*v1.ObjectMeta)
 		}
 		for k, v := range annotations {
 			om.Annotations[k] = v
+		}
+		if extra != nil {
+			for k, v := range extra {
+				om.Annotations[k] = v
+			}
 		}
 	}
 }

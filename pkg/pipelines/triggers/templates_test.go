@@ -180,7 +180,10 @@ func TestCreateCIDryRunTemplate(t *testing.T) {
 
 func TestStatusTrackerAnnotations(t *testing.T) {
 	om := meta.ObjectMeta(meta.NamespacedName("test-ns", "name"))
-	statusTrackerAnnotations("my-pipeline", "description")(&om)
+	statusTrackerAnnotations("my-pipeline", "description", map[string]string{
+		"test-annotation":  "value1",
+		"other-annotation": "value2",
+	})(&om)
 
 	want := v1.ObjectMeta{
 		Name:      "name",
@@ -189,6 +192,8 @@ func TestStatusTrackerAnnotations(t *testing.T) {
 			"tekton.dev/git-status":         "true",
 			"tekton.dev/status-context":     "my-pipeline",
 			"tekton.dev/status-description": "description",
+			"test-annotation":               "value1",
+			"other-annotation":              "value2",
 		},
 	}
 
