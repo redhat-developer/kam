@@ -8,6 +8,7 @@ import (
 	pipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/redhat-developer/kam/pkg/pipelines/meta"
 )
@@ -33,11 +34,19 @@ func TestCreateDevCDPipelineRun(t *testing.T) {
 }
 
 func TestCreateDevCIPipelineRun(t *testing.T) {
-	validDevCIPipelineRun := pipelinev1.PipelineRun{
+	want := pipelinev1.PipelineRun{
 		TypeMeta: pipelineRunTypeMeta,
 		ObjectMeta: meta.ObjectMeta(
 			meta.NamespacedName("", "app-ci-pipeline-run-$(uid)"),
-			statusTrackerAnnotations("dev-ci-build-from-pr", "CI build on push event")),
+			func(om *metav1.ObjectMeta) {
+				om.Annotations = map[string]string{
+					"tekton.dev/commit-status-source-sha": "$(params.io.openshift.build.commit.id)",
+					"tekton.dev/commit-status-source-url": "$(params.gitrepositoryurl)",
+					"tekton.dev/git-status":               "true",
+					"tekton.dev/status-context":           "dev-ci-build-from-pr",
+					"tekton.dev/status-description":       "CI build on push event",
+				}
+			}),
 		Spec: pipelinev1.PipelineRunSpec{
 			ServiceAccountName: sName,
 			PipelineRef:        createPipelineRef("app-ci-pipeline"),
@@ -69,13 +78,13 @@ func TestCreateDevCIPipelineRun(t *testing.T) {
 		},
 	}
 	template := createDevCIPipelineRun(sName)
-	if diff := cmp.Diff(validDevCIPipelineRun, template); diff != "" {
+	if diff := cmp.Diff(want, template); diff != "" {
 		t.Fatalf("createDevCIPipelineRun failed:\n%s", diff)
 	}
 }
 
 func TestCreateCDPipelineRun(t *testing.T) {
-	validStageCDPipeline := pipelinev1.PipelineRun{
+	want := pipelinev1.PipelineRun{
 		TypeMeta:   pipelineRunTypeMeta,
 		ObjectMeta: meta.ObjectMeta(meta.NamespacedName("", "cd-deploy-from-push-pipeline-$(uid)")),
 		Spec: pipelinev1.PipelineRunSpec{
@@ -85,15 +94,17 @@ func TestCreateCDPipelineRun(t *testing.T) {
 		},
 	}
 	template := createCDPipelineRun(sName)
-	if diff := cmp.Diff(validStageCDPipeline, template); diff != "" {
+	if diff := cmp.Diff(want, template); diff != "" {
 		t.Fatalf("createCDPipelineRun failed:\n%s", diff)
 	}
 }
 
 func TestCreateStageCIPipelineRun(t *testing.T) {
-	validStageCIPipeline := pipelinev1.PipelineRun{
-		TypeMeta:   pipelineRunTypeMeta,
-		ObjectMeta: meta.ObjectMeta(meta.NamespacedName("", "ci-dryrun-from-push-pipeline-$(uid)"), statusTrackerAnnotations("ci-dryrun-from-push-pipeline", "CI dry run on push event")),
+	want := pipelinev1.PipelineRun{
+		TypeMeta: pipelineRunTypeMeta,
+		ObjectMeta: meta.ObjectMeta(
+			meta.NamespacedName("", "ci-dryrun-from-push-pipeline-$(uid)"),
+			statusTrackerAnnotations("ci-dryrun-from-push-pipeline", "CI dry run on push event", nil)),
 		Spec: pipelinev1.PipelineRunSpec{
 			ServiceAccountName: sName,
 			PipelineRef:        createPipelineRef("ci-dryrun-from-push-pipeline"),
@@ -101,7 +112,7 @@ func TestCreateStageCIPipelineRun(t *testing.T) {
 		},
 	}
 	template := createCIPipelineRun(sName)
-	if diff := cmp.Diff(validStageCIPipeline, template); diff != "" {
+	if diff := cmp.Diff(want, template); diff != "" {
 		t.Fatalf("createCIPipelineRun failed:\n%s", diff)
 	}
 }

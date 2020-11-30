@@ -30,7 +30,10 @@ func createDevCIPipelineRun(saName string) pipelinev1.PipelineRun {
 		TypeMeta: pipelineRunTypeMeta,
 		ObjectMeta: meta.ObjectMeta(
 			meta.NamespacedName("", "app-ci-pipeline-run-$(uid)"),
-			statusTrackerAnnotations("dev-ci-build-from-pr", "CI build on push event")),
+			statusTrackerAnnotations("dev-ci-build-from-pr", "CI build on push event", map[string]string{
+				"tekton.dev/commit-status-source-url": "$(params.gitrepositoryurl)",
+				"tekton.dev/commit-status-source-sha": "$(params." + GitCommitID + ")",
+			})),
 		Spec: pipelinev1.PipelineRunSpec{
 			ServiceAccountName: saName,
 			PipelineRef:        createPipelineRef("app-ci-pipeline"),
@@ -80,7 +83,7 @@ func createCIPipelineRun(saName string) pipelinev1.PipelineRun {
 		TypeMeta: pipelineRunTypeMeta,
 		ObjectMeta: meta.ObjectMeta(
 			meta.NamespacedName("", "ci-dryrun-from-push-pipeline-$(uid)"),
-			statusTrackerAnnotations("ci-dryrun-from-push-pipeline", "CI dry run on push event")),
+			statusTrackerAnnotations("ci-dryrun-from-push-pipeline", "CI dry run on push event", nil)),
 		Spec: pipelinev1.PipelineRunSpec{
 			ServiceAccountName: saName,
 			PipelineRef:        createPipelineRef("ci-dryrun-from-push-pipeline"),
