@@ -53,7 +53,7 @@ oc create -f - <<EOF
 apiVersion: bitnami.com/v1alpha1
 kind: SealedSecretController
 metadata: 
-  name: sealedsecretsontroller
+  name: sealedsecretscontroller
   namespace: cicd
 spec: 
   affinity: {}
