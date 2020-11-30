@@ -37,13 +37,13 @@ if [ -z $CI ]; then
 
     # Login as admin user
     oc login -u $KUBEADMIN_USER -p $KUBEADMIN_PASSWORD
-else
-    # Copy kubeconfig to temporary kubeconfig file
-    # Read and Write permission to temporary kubeconfig file
-    TMP_DIR=$(mktemp -d)
-    cp $KUBECONFIG $TMP_DIR/kubeconfig
-    chmod 640 $TMP_DIR/kubeconfig
-    export KUBECONFIG=$TMP_DIR/kubeconfig
+# else
+#     # Copy kubeconfig to temporary kubeconfig file
+#     # Read and Write permission to temporary kubeconfig file
+#     TMP_DIR=$(mktemp -d)
+#     cp $KUBECONFIG $TMP_DIR/kubeconfig
+#     chmod 640 $TMP_DIR/kubeconfig
+#     export KUBECONFIG=$TMP_DIR/kubeconfig
 fi
 
 # Create the namespace for operator installation namespace
@@ -127,7 +127,7 @@ oc version
 oc projects
 
 # KUBECONFIG cleanup only if CI is set
-if [ ! -f $CI ]; then
-    rm -rf $KUBECONFIG
-    export KUBECONFIG=$ORIGINAL_KUBECONFIG
-fi
+# if [ ! -f $CI ]; then
+#     rm -rf $KUBECONFIG
+#     export KUBECONFIG=$ORIGINAL_KUBECONFIG
+# fi
