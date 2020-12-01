@@ -15,11 +15,11 @@ export GOLANGCI_LINT_CACHE="/tmp/.cache"
 git describe --always --long --dirty
 go version
 go env
+go mod vendor
 if [[ $(go fmt `go list ./... | grep -v vendor`) ]]; then
     echo "not well formatted sources are found"
     exit 1
 fi
-go mod vendor
 make gomod_tidy
 if [[ ! -z $(git status -s) ]]
 then
