@@ -73,4 +73,4 @@ e2e:
 GODOG_OPTS = --godog.tags=$(go env goos)
 
 e2e:
-	@go test --timeout=180m ./test/e2e -v $(GODOG_OPTS)
+	@go test -mod=readonly --timeout=180m ./test/e2e -v $(GODOG_OPTS)
