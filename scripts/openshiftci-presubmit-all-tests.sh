@@ -10,6 +10,7 @@ export GITHUB_TOKEN=`cat $KAM_GITHUB_TOKEN_FILE`
 # show commands
 set -x
 export CI="prow"
+go mod vendor
 make prepare-test-cluster
 make bin
 
