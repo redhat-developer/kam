@@ -2,7 +2,7 @@
 
 FROM registry.svc.ci.openshift.org/openshift/release:golang-1.14
 
-RUN yum -y install dnf httpd-tools sudo
+RUN yum -y install dnf httpd-tools sudo dbus-x11
 
 RUN dnf -y install 'dnf-command(config-manager)'
 
