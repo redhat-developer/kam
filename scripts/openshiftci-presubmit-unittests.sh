@@ -7,7 +7,7 @@ set -x
 
 export ARTIFACTS_DIR="/tmp/artifacts"
 export CUSTOM_HOMEDIR=$ARTIFACTS_DIR
-export PATH=$PATH:$GOPATH/bin
+export PATH=$PATH:$GOPATH/bin:$(pwd)/bin
 # set location for golangci-lint cache
 # otherwise /.cache is used, and it fails on permission denied
 export GOLANGCI_LINT_CACHE="/tmp/.cache"
@@ -36,6 +36,9 @@ else
     echo "command-documentation is up-to-date."
 fi
 
+git log -n 5
+make bin
+kam version
 # crosscompile and publish artifacts
 make all_platforms
 
