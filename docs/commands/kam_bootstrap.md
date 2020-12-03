@@ -20,7 +20,6 @@ kam bootstrap [flags]
 ### Options
 
 ```
-      --SaveTokenKeyring                               Explicitely pass this flag to update the git-host-access-token in the keyring on your local file system
       --commit-status-tracker                          Enable or disable the commit-status-tracker which reports the success/failure of your pipelineruns to GitHub/GitLab (default true)
       --dockercfgjson string                           Filepath to config.json which authenticates the image push to the desired image registry  (default "~/.docker/config.json")
       --git-host-access-token string                   Used to authenticate repository clones, and commit-status notifications (if enabled). Access token is encrypted and stored on local file system by keyring, will be updated/reused.
@@ -34,6 +33,7 @@ kam bootstrap [flags]
   -p, --prefix string                                  Add a prefix to the environment names(Dev, stage,prod,cicd etc.) to distinguish and identify individual environments
       --private-repo-driver string                     If your Git repositories are on a custom domain, please indicate which driver to use github or gitlab
       --push-to-git                                    If true, automatically creates and populates the gitops-repo-url with the generated resources
+      --save-token-keyring                             Explicitly pass this flag to update the git-host-access-token in the keyring on your local machine
       --sealed-secrets-ns string                       Namespace in which the Sealed Secrets operator is installed, automatically generated secrets are encrypted with this operator (default "cicd")
       --sealed-secrets-svc string                      Name of the Sealed Secrets Services that encrypts secrets (default "sealedsecretcontroller-sealed-secrets")
       --service-repo-url string                        Provide the URL for your Service repository e.g. https://github.com/organisation/service.git
