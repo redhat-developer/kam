@@ -433,6 +433,44 @@ func TestServiceWithArgoCD(t *testing.T) {
 	}
 }
 
+func TestAddServiceWithImageWithNoPipelines(t *testing.T) {
+	defer stubDefaultPublicKeyFunc(t)()
+
+	fakeFs := ioutils.NewMemoryFilesystem()
+	outputPath := afero.GetTempDir(fakeFs, "test")
+	pipelinesPath := filepath.Join(outputPath, pipelinesFile)
+	m := buildManifest(true, true)
+	m.Environments = append(m.Environments, &config.Environment{
+		Name: "staging",
+	})
+	b, err := yaml.Marshal(m)
+	assertNoError(t, err)
+	err = afero.WriteFile(fakeFs, pipelinesPath, b, 0644)
+	assertNoError(t, err)
+	wantedPaths := []string{
+		"environments/staging/apps/new-app/services/test/base/config",
+	}
+	err = AddService(&AddServiceOptions{
+		AppName:             "new-app",
+		EnvName:             "staging",
+		GitRepoURL:          "http://github.com/org/test",
+		PipelinesFolderPath: outputPath,
+		ImageRepo:           "testing/testing",
+		WebhookSecret:       "123",
+		ServiceName:         "test",
+	}, fakeFs)
+	assertNoError(t, err)
+	for _, path := range wantedPaths {
+		t.Run(fmt.Sprintf("checking path %s already exists", path), func(rt *testing.T) {
+			// The inmemory version of Afero doesn't return errors
+			exists, _ := fakeFs.DirExists(filepath.Join(outputPath, path))
+			if !exists {
+				t.Fatalf("The directory does not exist at path : %v", path)
+			}
+		})
+	}
+}
+
 func buildManifest(withPipelines, withArgoCD bool) *config.Manifest {
 	m := config.Manifest{
 		GitOpsURL: "http://github.com/org/test",
