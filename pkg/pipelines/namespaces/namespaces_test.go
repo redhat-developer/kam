@@ -16,8 +16,10 @@ func TestCreate(t *testing.T) {
 	want := &corev1.Namespace{
 		TypeMeta: namespaceTypeMeta,
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        "test-environment",
-			Annotations: map[string]string{vcsURIAnnotation: testGitOpsRepoURL},
+			Name: "test-environment",
+			Annotations: map[string]string{
+				vcsURIAnnotation: testGitOpsRepoURL + "?ref=main",
+			},
 		},
 	}
 
