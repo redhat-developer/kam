@@ -36,7 +36,6 @@ else
     echo "command-documentation is up-to-date."
 fi
 
-git log -n 5
 make bin
 kam version
 # crosscompile and publish artifacts

@@ -44,8 +44,6 @@ else
     exit 1
 fi
 
-git log -n 5
-
 # assert that kam is on the path
 kam version
 
