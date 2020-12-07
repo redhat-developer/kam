@@ -7,8 +7,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/zalando/go-keyring"
-
 	"github.com/jenkins-x/go-scm/scm/factory"
 	"github.com/openshift/odo/pkg/log"
 	"github.com/spf13/cobra"
@@ -126,7 +124,17 @@ func nonInteractiveMode(io *BootstrapParameters, client *utility.Client) error {
 	if err := checkMandatoryFlags(mandatoryFlags); err != nil {
 		return err
 	}
-	err := setAccessToken(io)
+	var gitRepoParams = &ui.RepoParams{TokenRepoMatchCondition: false}
+	gitRepoParams.RepoInfo.RepoURL = io.GitOpsRepoURL
+	gitRepoParams.GitHostAccessToken = io.GitHostAccessToken
+	err := ui.SetAccessToken(gitRepoParams)
+	if err != nil {
+		return err
+	}
+	var serviceRepoParams = &ui.RepoParams{TokenRepoMatchCondition: false}
+	serviceRepoParams.RepoInfo.RepoURL = io.ServiceRepoURL
+	serviceRepoParams.GitHostAccessToken = io.GitHostAccessToken
+	err = ui.ValidateAccessToken(serviceRepoParams)
 	if err != nil {
 		return err
 	}
@@ -153,12 +161,20 @@ func missingFlagErr(flags []string) error {
 
 // initiateInteractiveMode starts the interactive mode impplementation if no flags are passed.
 func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client) error {
+	var gitRepoParams = &ui.RepoParams{TokenRepoMatchCondition: false}
+	var serviceRepoParams = &ui.RepoParams{TokenRepoMatchCondition: false}
 	log.Progressf("\nStarting interactive prompt\n")
 	// ask for sealed secrets only when default is absent
 	if client.CheckIfSealedSecretsExists(defaultSealedSecretsServiceName) != nil {
-		io.SealedSecretsService.Namespace = ui.EnterSealedSecretService(&io.SealedSecretsService)
+		io.SealedSecretsService = ui.EnterSealedSecretService(&io.SealedSecretsService)
 	}
-	io.GitOpsRepoURL = utility.AddGitSuffixIfNecessary(ui.EnterGitRepo())
+	err := ui.CheckRepoAccessTokenValidity(gitRepoParams, ui.GitopsRepoType)
+	if err != nil {
+		return err
+	}
+	serviceRepoParams.TokenAuthenticated = true
+	io.GitHostAccessToken = gitRepoParams.GitHostAccessToken
+	io.GitOpsRepoURL = gitRepoParams.RepoInfo.RepoURL
 	if !isKnownDriver(io.GitOpsRepoURL) {
 		io.PrivateRepoDriver = ui.SelectPrivateRepoDriver()
 		host, err := accesstoken.HostFromURL(io.GitOpsRepoURL)
@@ -176,47 +192,20 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client) er
 		io.DockerConfigJSONFilename = ui.EnterDockercfg()
 	}
 	io.GitOpsWebhookSecret = ui.EnterGitWebhookSecret(io.GitOpsRepoURL)
-	io.ServiceRepoURL = utility.AddGitSuffixIfNecessary(ui.EnterServiceRepoURL())
-	io.ServiceWebhookSecret = ui.EnterGitWebhookSecret(io.ServiceRepoURL)
-	secret, err := accesstoken.GetAccessToken(io.ServiceRepoURL)
-	if err != nil && err != keyring.ErrNotFound {
+	err = ui.CheckRepoAccessTokenValidity(serviceRepoParams, ui.ServiceRepoType)
+	if err != nil {
 		return err
 	}
-	if secret == "" {
-		io.GitHostAccessToken = ui.EnterGitHostAccessToken(io.ServiceRepoURL)
-		io.SaveTokenKeyRing = ui.UseKeyringRingSvc()
-		setAccessToken(io)
-	} else {
-		io.GitHostAccessToken = secret
-	}
+	io.ServiceRepoURL = serviceRepoParams.RepoInfo.RepoURL
+	io.ServiceWebhookSecret = ui.EnterGitWebhookSecret(io.ServiceRepoURL)
 	io.CommitStatusTracker = ui.SetupCommitStatusTracker()
-	io.PushToGit = ui.SelectOptionPushToGit()
+	fmt.Println("This is the value of repovalid", gitRepoParams.RepoInfo.GitRepoValid)
+	if !gitRepoParams.RepoInfo.GitRepoValid {
+		io.PushToGit = ui.SelectOptionPushToGit()
+	}
 	io.Prefix = ui.EnterPrefix()
 	io.OutputPath = ui.EnterOutputPath()
 	io.Overwrite = true
-	return nil
-}
-
-func setAccessToken(io *BootstrapParameters) error {
-	if io.GitHostAccessToken != "" {
-		err := ui.ValidateAccessToken(io.GitHostAccessToken, io.ServiceRepoURL)
-		if err != nil {
-			return fmt.Errorf("Please enter a valid access token for --save-token-keyring: %v", err)
-		}
-	}
-	if io.SaveTokenKeyRing {
-		err := accesstoken.SetAccessToken(io.ServiceRepoURL, io.GitHostAccessToken)
-		if err != nil {
-			return err
-		}
-	}
-	if io.GitHostAccessToken == "" {
-		secret, err := accesstoken.GetAccessToken(io.ServiceRepoURL)
-		if err != nil {
-			return fmt.Errorf("unable to use access-token from keyring/env-var: %v, please pass a valid token to --git-host-access-token", err)
-		}
-		io.GitHostAccessToken = secret
-	}
 	return nil
 }
 
@@ -269,6 +258,7 @@ func warnIfNotFound(spinner status, warningMsg string, err error) {
 
 // Validate validates the parameters of the BootstrapParameters.
 func (io *BootstrapParameters) Validate() error {
+	checkURLAnomalies(io)
 	gr, err := url.Parse(io.GitOpsRepoURL)
 	if err != nil {
 		return fmt.Errorf("failed to parse url %s: %w", io.GitOpsRepoURL, err)
@@ -278,7 +268,6 @@ func (io *BootstrapParameters) Validate() error {
 	if len(utility.RemoveEmptyStrings(strings.Split(gr.Path, "/"))) != 2 {
 		return fmt.Errorf("repo must be org/repo: %s", strings.Trim(gr.Path, ".git"))
 	}
-
 	if io.PrivateRepoDriver != "" {
 		if !supportedDrivers.supported(io.PrivateRepoDriver) {
 			return fmt.Errorf("invalid driver type: %q", io.PrivateRepoDriver)
@@ -359,4 +348,15 @@ func isKnownDriver(repoURL string) bool {
 	}
 	_, err = factory.DefaultIdentifier.Identify(host)
 	return err == nil
+}
+
+func checkURLAnomalies(io *BootstrapParameters) {
+	if strings.Contains(io.BootstrapOptions.GitOpsRepoURL, "/.git") {
+		io.BootstrapOptions.GitOpsRepoURL = strings.Replace(io.BootstrapOptions.GitOpsRepoURL, "/.git", ".git", 1)
+		log.Warningf("URL format correction: Replacing value of gitops-repo-url with %s", io.BootstrapOptions.GitOpsRepoURL)
+	}
+	if strings.Contains(io.BootstrapOptions.ServiceRepoURL, "/.git") {
+		io.BootstrapOptions.ServiceRepoURL = strings.Replace(io.BootstrapOptions.ServiceRepoURL, "/.git", ".git", 1)
+		log.Warningf("URL format correction: Replacing value of service-repo-url with %s", io.BootstrapOptions.ServiceRepoURL)
+	}
 }

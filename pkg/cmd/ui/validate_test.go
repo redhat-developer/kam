@@ -53,22 +53,32 @@ func TestValidateSecretLength(t *testing.T) {
 	}
 }
 
-func TestAccessToken(t *testing.T) {
-	mockurl := "https://github.com/example/test.git"
-	validator := makeAccessTokenCheck(mockurl)
+func TestValidateAccessToken(t *testing.T) {
 	cmdTests := []struct {
 		desc     string
-		argument string
+		argument *RepoParams
 		wantErr  string
 	}{
-		{"Access Token is incorrect",
-			"demo-token",
-			`The token passed is incorrect for repository example/test`},
+		{"Invalid Driver",
+			&RepoParams{TokenRepoMatchCondition: false, RepoInfo: repoInfo{
+				RepoURL: "https://test.com/username/repo.git",
+			}},
+			`unable to identify driver from hostname: test.com`},
+		{"Invalid Access Token",
+			&RepoParams{TokenRepoMatchCondition: false, GitHostAccessToken: "abc123", RepoInfo: repoInfo{
+				RepoURL: "https://github.com/username/repo.git",
+			}},
+			`forbidden: Invalid access token, unable to authenticate client for repo: https://github.com/username/repo.git`},
+		{"Invalid Repo-Name",
+			&RepoParams{TokenRepoMatchCondition: false, GitHostAccessToken: "abc123", RepoInfo: repoInfo{
+				RepoURL: "https://github.com/username./repo.git",
+			}},
+			`unable to get the repo name from "https://github.com/username./repo.git": failed to get Git repo: /username./repo.git`},
 	}
 
 	for _, tt := range cmdTests {
 		t.Run(tt.desc, func(t *testing.T) {
-			err := validator(tt.argument)
+			err := ValidateAccessToken(tt.argument)
 			if err.Error() != tt.wantErr {
 				t.Errorf("got %s, want %s", err, tt.wantErr)
 			}

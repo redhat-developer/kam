@@ -8,12 +8,17 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/openshift/odo/pkg/log"
 	"github.com/redhat-developer/kam/pkg/cmd/utility"
+	"github.com/redhat-developer/kam/pkg/pipelines/accesstoken"
 	"github.com/redhat-developer/kam/pkg/pipelines/git"
 	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
 	"github.com/redhat-developer/kam/pkg/pipelines/namespaces"
+	"github.com/zalando/go-keyring"
 	"gopkg.in/AlecAivazis/survey.v1"
 	"gopkg.in/AlecAivazis/survey.v1/terminal"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/klog"
@@ -39,16 +44,40 @@ func makeOverWriteValidator(path string) survey.Validator {
 	}
 }
 
-func makeSealedSecretsService(sealedSecretService *types.NamespacedName) survey.Validator {
+func makeSealedSecretNamespaceValidator(sealedSecretService *types.NamespacedName) survey.Validator {
+	return func(input interface{}) error {
+		return validateSealedSecretNamespace(input, sealedSecretService)
+	}
+}
+
+func makeSealedSecretServiceValidator(sealedSecretService *types.NamespacedName) survey.Validator {
 	return func(input interface{}) error {
 		return validateSealedSecretService(input, sealedSecretService)
 	}
 }
 
-func makeAccessTokenCheck(serviceRepo string) survey.Validator {
-	return func(input interface{}) error {
-		return ValidateAccessToken(input, serviceRepo)
+// SetAccessToken validates the access  token and the sets/retrieves the value from the keyring based on the situation.
+func SetAccessToken(io *RepoParams) error {
+	if io.GitHostAccessToken != "" {
+		err := ValidateAccessToken(io)
+		if err != nil {
+			return err
+		}
 	}
+	if io.KeyringSVC {
+		err := accesstoken.SetAccessToken(io.RepoInfo.RepoURL, io.GitHostAccessToken)
+		if err != nil {
+			return err
+		}
+	}
+	if io.GitHostAccessToken == "" {
+		secret, err := accesstoken.GetAccessToken(io.RepoInfo.RepoURL)
+		if err != nil {
+			return fmt.Errorf("unable to use access-token from keyring/env-var: %v, please pass a valid token to --git-host-access-token", err)
+		}
+		io.GitHostAccessToken = secret
+	}
+	return nil
 }
 
 // ValidatePrefix checks the length of the prefix with the env crosses 63 chars or not
@@ -109,25 +138,46 @@ func validateOverwriteOption(input interface{}, path string) error {
 }
 
 // ValidateAccessToken validates if the access token is correct for a particular service repo
-func ValidateAccessToken(input interface{}, serviceRepo string) error {
+func ValidateAccessToken(io *RepoParams) error {
+	repo, err := git.NewRepository(io.RepoInfo.RepoURL, io.GitHostAccessToken)
+	if err != nil {
+		return err
+	}
+	parsedURL, err := url.Parse(io.RepoInfo.RepoURL)
+	if err != nil {
+		return fmt.Errorf("failed to parse the provided URL %q: %w", io.RepoInfo.RepoURL, err)
+	}
+	repoName, err := git.GetRepoName(parsedURL)
+	if err != nil {
+		return fmt.Errorf("failed to get the repository name from %q: %w", io.RepoInfo.RepoURL, err)
+	}
+	_, res, err := repo.Client.Repositories.Find(context.Background(), repoName)
+	if err != nil && res.Status == 401 {
+		return apierrors.NewForbidden(schema.GroupResource{}, "", fmt.Errorf("Invalid access token, unable to authenticate client for repo: %s", io.RepoInfo.RepoURL))
+	}
+	if err != nil && res.Status == 404 {
+		log.Warningf("Note: The git repo %v cannot be found, usually occurs when the repository does not exist", io.RepoInfo.RepoURL)
+		io.RepoInfo.GitRepoValid = false
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// validateSealedSecretService validates to see if the sealed secret service is present in the correct namespace.
+func validateSealedSecretNamespace(input interface{}, sealedSecretService *types.NamespacedName) error {
 	if s, ok := input.(string); ok {
-		repo, err := git.NewRepository(serviceRepo, s)
+		clientSet, err := namespaces.GetClientSet()
 		if err != nil {
 			return err
 		}
-		parsedURL, err := url.Parse(serviceRepo)
-		if err != nil {
-			return fmt.Errorf("failed to parse the provided URL %q: %w", serviceRepo, err)
+		exists, _ := namespaces.Exists(clientSet, s)
+		if !exists {
+			return fmt.Errorf("The namespace %s is not found on the cluster", s)
 		}
-		repoName, err := git.GetRepoName(parsedURL)
-		if err != nil {
-			return fmt.Errorf("failed to get the repository name from %q: %w", serviceRepo, err)
-		}
-		_, _, err = repo.Client.Repositories.Find(context.Background(), repoName)
-		if err != nil {
-			return fmt.Errorf("The token passed is incorrect for repository %s", repoName)
-		}
-		return nil
+		sealedSecretService.Namespace = s
 	}
 	return nil
 }
@@ -139,21 +189,34 @@ func validateSealedSecretService(input interface{}, sealedSecretService *types.N
 		if err != nil {
 			return err
 		}
-		clientSet, err := namespaces.GetClientSet()
-		if err != nil {
-			return err
-		}
-		exists, _ := namespaces.Exists(clientSet, s)
-		if !exists {
-			return fmt.Errorf("The namespace %s is not found on the cluster", s)
-		}
-		sealedSecretService.Namespace = s
-		sealedSecretService.Name = enterSealedSecretService()
+		sealedSecretService.Name = s
 		return client.CheckIfSealedSecretsExists(*sealedSecretService)
 	}
 	return nil
 }
 
+func validateRepoTokenCreds(repoParams *RepoParams) error {
+	secret, err := accesstoken.GetAccessToken(repoParams.RepoInfo.RepoURL)
+	if err != nil && err != keyring.ErrNotFound {
+		return err
+	}
+	if secret == "" && !repoParams.TokenAuthenticated {
+		token, err := EnterGitHostAccessToken(repoParams.RepoInfo.RepoURL)
+		repoParams.GitHostAccessToken = token
+		repoParams.KeyringSVC = UseKeyringRingSvc()
+		err = SetAccessToken(repoParams)
+		if err != nil {
+			return err
+		}
+	} else {
+		err := ValidateAccessToken(repoParams)
+		if err != nil {
+			return err
+		}
+		repoParams.GitHostAccessToken = secret
+	}
+	return nil
+}
 func checkSecretLength(secret string) bool {
 	if secret != "" {
 		if len(secret) < minSecretLen {

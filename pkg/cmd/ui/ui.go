@@ -5,28 +5,57 @@ import (
 	"net/url"
 	"path/filepath"
 
+	"github.com/openshift/odo/pkg/log"
+
 	"gopkg.in/AlecAivazis/survey.v1"
 
+	"github.com/redhat-developer/kam/pkg/cmd/utility"
 	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 )
 
-// EnterGitRepo allows the user to specify the git repository in a prompt.
-func EnterGitRepo() string {
-	var gitOpsURL string
-	prompt := &survey.Input{
-		Message: "Provide the URL for your GitOps repository",
-		Help:    "The GitOps repository stores your GitOps configuration files, including your Openshift Pipelines resources for driving automated deployments and builds.  Please enter a valid git repository e.g. https://github.com/example/myorg.git",
-	}
-	err := survey.AskOne(prompt, &gitOpsURL, survey.Required)
-	handleError(err)
+// RepoParams struct contains the parameters required to authenticate the url with the access-token
+type RepoParams struct {
+	RepoInfo                repoInfo
+	GitHostAccessToken      string
+	KeyringSVC              bool
+	TokenRepoMatchCondition bool
+	TokenAuthenticated      bool
+}
 
-	p, err := url.Parse(gitOpsURL)
+type repoInfo struct {
+	RepoURL      string
+	RepoType     string
+	GitRepoValid bool
+}
+
+const (
+	ServiceRepoType = "service"
+	GitopsRepoType  = "gitops"
+)
+
+// EnterGitRepo allows the user to specify the git repository in a prompt.
+func EnterGitRepo(repoType string) string {
+	var repoURL string
+	var help string
+	switch repoType {
+	case "service":
+		help = "The repository name where the source code of your service is situated, this will configure a very basic CI for this repository using OpenShift pipelines."
+	case "gitops":
+		help = "The GitOps repository stores your GitOps configuration files, including your Openshift Pipelines resources for driving automated deployments and builds.  Please enter a valid git repository e.g. https://github.com/example/myorg.git"
+	}
+	prompt := &survey.Input{
+		Message: fmt.Sprintf("Provide the URL for your %s repository e.g. https://github.com/organisation/%s.git", repoType, repoType),
+		Help:    help,
+	}
+	err := survey.AskOne(prompt, &repoURL, survey.Required)
+	p, err := url.Parse(repoURL)
 	handleError(err)
 	if p.Host == "" {
-		handleError(fmt.Errorf("could not identify host from %q", gitOpsURL))
+		handleError(fmt.Errorf("could not identify host from %q", repoURL))
 	}
-	return gitOpsURL
+	return repoURL
 }
 
 // EnterInternalRegistry allows the user to specify the internal registry in a UI prompt.
@@ -133,29 +162,47 @@ func enterSealedSecretService() string {
 }
 
 // EnterSealedSecretService , prompts the UI to ask for the sealed-secrets-namespaces
-func EnterSealedSecretService(sealedSecretService *types.NamespacedName) string {
-	var sealedNs string
-	prompt := &survey.Input{
-		Message: "Provide a namespace in which the Sealed Secrets operator is installed, automatically generated secrets are encrypted with this operator?",
-		Help:    "If you have a custom installation of the Sealed Secrets operator, we need to know how to communicate with it to seal your secrets",
+func EnterSealedSecretService(sealedSecretService *types.NamespacedName) types.NamespacedName {
+	var qs = []*survey.Question{
+		{
+			Name: "namespace",
+			Prompt: &survey.Input{
+				Message: "Provide a namespace in which the Sealed Secrets operator is installed, automatically generated secrets are encrypted with this operator?",
+				Help:    "If you have a custom installation of the Sealed Secrets operator, we need to know how to communicate with it to seal your secrets",
+			},
+			Validate: makeSealedSecretNamespaceValidator(sealedSecretService),
+		},
+		{
+			Name: "name",
+			Prompt: &survey.Input{
+				Message: "Name of the Sealed Secrets Service that encrypts secrets",
+				Help:    "If you have a custom installation of the Sealed Secrets operator, we need to know where to communicate with it to seal your secrets.",
+			},
+			Validate: makeSealedSecretServiceValidator(sealedSecretService),
+		},
 	}
-
-	err := survey.AskOne(prompt, &sealedNs, makeSealedSecretsService(sealedSecretService))
+	answers := struct {
+		Namespace string
+		Name      string
+	}{}
+	err := survey.Ask(qs, &answers)
 	handleError(err)
-	return sealedNs
+	return *sealedSecretService
 }
 
 // EnterGitHostAccessToken , it becomes necessary to add the personal access
 // token to access upstream git hosts.
-func EnterGitHostAccessToken(serviceRepo string) string {
+func EnterGitHostAccessToken(serviceRepo string) (string, error) {
 	var accessToken string
 	prompt := &survey.Password{
 		Message: fmt.Sprintf("Please provide a token used to authenticate requests to %q", serviceRepo),
 		Help:    "Tokens are required to authenticate to git provider various operations on git repository (e.g. enable automated creation/push to git-repo).",
 	}
-	err := survey.AskOne(prompt, &accessToken, makeAccessTokenCheck(serviceRepo))
+	// err := survey.AskOne(prompt, &accessToken, makeAccessTokenCheck(serviceRepo))
+	err := survey.AskOne(prompt, &accessToken, survey.Required)
 	handleError(err)
-	return accessToken
+	// err = ValidateAccessToken(accessToken, serviceRepo)
+	return accessToken, err
 }
 
 // EnterPrefix , if we desire to add the prefix to differentiate between namespaces, then this is the way forward.
@@ -168,24 +215,6 @@ func EnterPrefix() string {
 	err := survey.AskOne(prompt, &prefix, makePrefixValidator())
 	handleError(err)
 	return prefix
-}
-
-// EnterServiceRepoURL , allows users to differentiate between the bootstrap and init options, addition of the service repo url will allow users to bootstrap an environment through the UI prompt.
-func EnterServiceRepoURL() string {
-	var serviceRepo string
-	prompt := &survey.Input{
-		Message: "Provide the URL for your Service repository e.g. https://github.com/organisation/service.git",
-		Help:    "The repository name where the source code of your service is situated, this will configure a very basic CI for this repository using OpenShift pipelines.",
-	}
-	err := survey.AskOne(prompt, &serviceRepo, survey.Required)
-	handleError(err)
-
-	p, err := url.Parse(serviceRepo)
-	handleError(err)
-	if p.Host == "" {
-		handleError(fmt.Errorf("could not identify host from %q", serviceRepo))
-	}
-	return serviceRepo
 }
 
 // EnterServiceWebhookSecret allows the user to specify the webhook secret string they wish to authenticate push/pull to service repo in a UI prompt.
@@ -268,6 +297,25 @@ func SelectOptionPushToGit() bool {
 	err := survey.AskOne(prompt, &optionPushToGit, survey.Required)
 	handleError(err)
 	return optionPushToGit == "yes"
+}
+
+//CheckRepoAccessTokenValidity checks the whether the access-token matches with the given repo passed.
+func CheckRepoAccessTokenValidity(repoParams *RepoParams, repoType string) error {
+	repoParams.RepoInfo.GitRepoValid = true
+	for !repoParams.TokenRepoMatchCondition {
+		repoParams.RepoInfo.RepoURL = utility.AddGitSuffixIfNecessary(EnterGitRepo(repoType))
+		err := validateRepoTokenCreds(repoParams)
+		if apierrors.IsForbidden(err) {
+			log.Warningf("The  personal access token could not authenticate the client for repo: %v", repoParams.RepoInfo.RepoURL)
+		}
+		if err != nil && !apierrors.IsForbidden(err) {
+			return err
+		}
+		if err == nil {
+			repoParams.TokenRepoMatchCondition = true
+		}
+	}
+	return nil
 }
 
 // UseKeyringRingSvc , allows users an option between the Internal image registry and the external image registry through the UI prompt.
