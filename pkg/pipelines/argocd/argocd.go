@@ -16,6 +16,11 @@ import (
 	res "github.com/redhat-developer/kam/pkg/pipelines/resources"
 )
 
+const (
+	vcsSourceLabel = "app.openshift.io/vcs-source"
+	appLabel       = "app.kubernetes.io/name"
+)
+
 var (
 	applicationTypeMeta = meta.TypeMeta(
 		"Application",
@@ -105,7 +110,7 @@ func (b *argocdBuilder) Application(env *config.Environment, app *config.Applica
 	argoFiles := res.Resources{}
 	filename := filepath.Join(basePath, env.Name+"-"+app.Name+"-app.yaml")
 
-	argoFiles[filename] = makeApplication(env.Name+"-"+app.Name, b.argoNS,
+	argoFiles[filename] = makeApplication(app, env.Name+"-"+app.Name, b.argoNS,
 		defaultProject,
 		env.Name,
 		clusterForEnv(env),
@@ -120,6 +125,7 @@ func (b *argocdBuilder) Environment(env *config.Environment) error {
 	filename := filepath.Join(basePath, env.Name+"-env-app.yaml")
 
 	argoFiles[filename] = makeApplication(
+		nil,
 		env.Name+"-env", b.argoNS,
 		defaultProject,
 		env.Name,
@@ -136,12 +142,12 @@ func argoCDConfigResources(cfg *config.Config, repoURL string, files res.Resourc
 	basePath := filepath.Join(config.PathForArgoCD())
 	filename := filepath.Join(basePath, "kustomization.yaml")
 	files[filepath.Join(basePath, "argo-app.yaml")] =
-		ignoreDifferences(makeApplication("argo-app", cfg.ArgoCD.Namespace,
+		ignoreDifferences(makeApplication(nil, "argo-app", cfg.ArgoCD.Namespace,
 			defaultProject, cfg.ArgoCD.Namespace, defaultServer,
 			&argoappv1.ApplicationSource{RepoURL: repoURL, Path: basePath}))
 	if cfg.Pipelines != nil {
 		files[filepath.Join(basePath, "cicd-app.yaml")] = ignoreDifferences(
-			makeApplication("cicd-app", cfg.ArgoCD.Namespace, defaultProject, cfg.Pipelines.Name, defaultServer,
+			makeApplication(nil, "cicd-app", cfg.ArgoCD.Namespace, defaultProject, cfg.Pipelines.Name, defaultServer,
 				&argoappv1.ApplicationSource{RepoURL: repoURL, Path: filepath.Join(config.PathForPipelines(cfg.Pipelines), "overlays")}))
 	}
 	argoResource, err := argoCDResource(cfg.ArgoCD.Namespace)
@@ -203,10 +209,18 @@ func argoCDResource(ns string) (*argov1.ArgoCD, error) {
 	}, nil
 }
 
-func makeApplication(appName, argoNS, project, ns, server string, source *argoappv1.ApplicationSource) *argoappv1.Application {
+func makeApplication(app *config.Application, appName, argoNS, project, ns, server string, source *argoappv1.ApplicationSource) *argoappv1.Application {
+	options := []meta.ObjectMetaOpt{}
+	if app != nil {
+		options = append(options, meta.AddLabels(map[string]string{
+			appLabel: app.Name,
+		}))
+	}
 	return &argoappv1.Application{
-		TypeMeta:   applicationTypeMeta,
-		ObjectMeta: meta.ObjectMeta(meta.NamespacedName(argoNS, appName)),
+		TypeMeta: applicationTypeMeta,
+		ObjectMeta: meta.ObjectMeta(meta.NamespacedName(argoNS, appName),
+			options...,
+		),
 		Spec: argoappv1.ApplicationSpec{
 			Project: project,
 			Destination: argoappv1.ApplicationDestination{

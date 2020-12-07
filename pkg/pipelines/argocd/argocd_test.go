@@ -58,8 +58,10 @@ func TestBuildCreatesArgoCD(t *testing.T) {
 
 	want := res.Resources{
 		"config/argocd/test-dev-env-app.yaml": &argoappv1.Application{
-			TypeMeta:   applicationTypeMeta,
-			ObjectMeta: meta.ObjectMeta(meta.NamespacedName(ArgoCDNamespace, "test-dev-env")),
+			TypeMeta: applicationTypeMeta,
+			ObjectMeta: meta.ObjectMeta(meta.NamespacedName(
+				ArgoCDNamespace, "test-dev-env"),
+			),
 			Spec: argoappv1.ApplicationSpec{
 				Source: argoappv1.ApplicationSource{
 					RepoURL: testRepoURL,
@@ -74,8 +76,13 @@ func TestBuildCreatesArgoCD(t *testing.T) {
 			},
 		},
 		"config/argocd/test-dev-http-api-app.yaml": &argoappv1.Application{
-			TypeMeta:   applicationTypeMeta,
-			ObjectMeta: meta.ObjectMeta(meta.NamespacedName(ArgoCDNamespace, "test-dev-http-api")),
+			TypeMeta: applicationTypeMeta,
+			ObjectMeta: meta.ObjectMeta(
+				meta.NamespacedName(ArgoCDNamespace, "test-dev-http-api"),
+				meta.AddLabels(map[string]string{
+					appLabel: "http-api",
+				}),
+			),
 			Spec: argoappv1.ApplicationSpec{
 				Source: argoappv1.ApplicationSource{
 					RepoURL: testRepoURL,
@@ -219,8 +226,13 @@ func TestBuildWithRepoConfig(t *testing.T) {
 			},
 		},
 		"config/argocd/test-production-prod-api-app.yaml": &argoappv1.Application{
-			TypeMeta:   applicationTypeMeta,
-			ObjectMeta: meta.ObjectMeta(meta.NamespacedName(ArgoCDNamespace, "test-production-prod-api")),
+			TypeMeta: applicationTypeMeta,
+			ObjectMeta: meta.ObjectMeta(
+				meta.NamespacedName(ArgoCDNamespace, "test-production-prod-api"),
+				meta.AddLabels(map[string]string{
+					appLabel: "prod-api",
+				}),
+			),
 			Spec: argoappv1.ApplicationSpec{
 				Source: *makeAppSource(prodEnv, prodEnv.Apps[0], testRepoURL),
 				Destination: argoappv1.ApplicationDestination{
@@ -273,8 +285,10 @@ func TestBuildAddsClusterToApp(t *testing.T) {
 
 	want := res.Resources{
 		"config/argocd/test-dev-env-app.yaml": &argoappv1.Application{
-			TypeMeta:   applicationTypeMeta,
-			ObjectMeta: meta.ObjectMeta(meta.NamespacedName(ArgoCDNamespace, "test-dev-env")),
+			TypeMeta: applicationTypeMeta,
+			ObjectMeta: meta.ObjectMeta(
+				meta.NamespacedName(ArgoCDNamespace, "test-dev-env"),
+			),
 			Spec: argoappv1.ApplicationSpec{
 				Source: *makeEnvSource(testEnv, testRepoURL),
 				Destination: argoappv1.ApplicationDestination{
@@ -286,8 +300,13 @@ func TestBuildAddsClusterToApp(t *testing.T) {
 			},
 		},
 		"config/argocd/test-dev-http-api-app.yaml": &argoappv1.Application{
-			TypeMeta:   applicationTypeMeta,
-			ObjectMeta: meta.ObjectMeta(meta.NamespacedName(ArgoCDNamespace, "test-dev-http-api")),
+			TypeMeta: applicationTypeMeta,
+			ObjectMeta: meta.ObjectMeta(
+				meta.NamespacedName(ArgoCDNamespace, "test-dev-http-api"),
+				meta.AddLabels(map[string]string{
+					appLabel: "http-api",
+				}),
+			),
 			Spec: argoappv1.ApplicationSpec{
 				Source: *makeAppSource(testEnv, testEnv.Apps[0], testRepoURL),
 				Destination: argoappv1.ApplicationDestination{
