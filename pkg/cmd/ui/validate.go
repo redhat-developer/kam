@@ -64,7 +64,7 @@ func SetAccessToken(io *RepoParams) error {
 			return err
 		}
 	}
-	if io.KeyringSVC {
+	if io.KeyringServiceRequired {
 		err := accesstoken.SetAccessToken(io.RepoInfo.RepoURL, io.GitHostAccessToken)
 		if err != nil {
 			return err
@@ -200,10 +200,10 @@ func validateRepoTokenCreds(repoParams *RepoParams) error {
 	if err != nil && err != keyring.ErrNotFound {
 		return err
 	}
-	if secret == "" && !repoParams.TokenAuthenticated {
+	if secret == "" {
 		token, err := EnterGitHostAccessToken(repoParams.RepoInfo.RepoURL)
 		repoParams.GitHostAccessToken = token
-		repoParams.KeyringSVC = UseKeyringRingSvc()
+		repoParams.KeyringServiceRequired = UseKeyringRingSvc()
 		err = SetAccessToken(repoParams)
 		if err != nil {
 			return err

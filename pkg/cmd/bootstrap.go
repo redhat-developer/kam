@@ -172,7 +172,6 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client) er
 	if err != nil {
 		return err
 	}
-	serviceRepoParams.TokenAuthenticated = true
 	io.GitHostAccessToken = gitRepoParams.GitHostAccessToken
 	io.GitOpsRepoURL = gitRepoParams.RepoInfo.RepoURL
 	if !isKnownDriver(io.GitOpsRepoURL) {
@@ -192,14 +191,14 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client) er
 		io.DockerConfigJSONFilename = ui.EnterDockercfg()
 	}
 	io.GitOpsWebhookSecret = ui.EnterGitWebhookSecret(io.GitOpsRepoURL)
-	err = ui.CheckRepoAccessTokenValidity(serviceRepoParams, ui.ServiceRepoType)
+	serviceRepoParams.RepoInfo.RepoURL = utility.AddGitSuffixIfNecessary(ui.EnterGitRepo(ui.ServiceRepoType))
+	err = ui.ValidateAccessToken(serviceRepoParams)
 	if err != nil {
 		return err
 	}
 	io.ServiceRepoURL = serviceRepoParams.RepoInfo.RepoURL
 	io.ServiceWebhookSecret = ui.EnterGitWebhookSecret(io.ServiceRepoURL)
 	io.CommitStatusTracker = ui.SetupCommitStatusTracker()
-	fmt.Println("This is the value of repovalid", gitRepoParams.RepoInfo.GitRepoValid)
 	if !gitRepoParams.RepoInfo.GitRepoValid {
 		io.PushToGit = ui.SelectOptionPushToGit()
 	}
