@@ -17,20 +17,20 @@ import (
 
 // RepoParams struct contains the parameters required to authenticate the url with the access-token
 type RepoParams struct {
-	RepoInfo                repoInfo //holds repo specific information.
-	GitHostAccessToken      string   //holds the personal access token specefic to host-name.
-	KeyringServiceRequired  bool     //holds the value of the SaveTokenKeyring Input.
-	TokenRepoMatchCondition bool     //value is true if accessToken is valid, even if repo does not exist.
+	RepoInfo                repoInfo // holds repo specific information.
+	GitHostAccessToken      string   // holds the personal access token specefic to host-name.
+	KeyringServiceRequired  bool     // holds the value of the SaveTokenKeyring Input.
+	TokenRepoMatchCondition bool     // value is true if accessToken is valid, even if repo does not exist.
 }
 
 type repoInfo struct {
-	RepoURL      string //Stores the repo URL.
-	GitRepoValid bool   //Stores value if gitRepo is present.
+	RepoURL      string // Stores the repo URL.
+	GitRepoValid bool   // Stores value if gitRepo is present.
 }
 
 const (
-	ServiceRepoType = "service" //ServiceRepoType used to differentiate between service and gitops repo
-	GitopsRepoType  = "gitops"
+	ServiceRepoType = "service" // ServiceRepoType used to differentiate between service and gitops repo
+	GitopsRepoType  = "gitops"  // GitopsRepoType used to differentiate between service and gitops repo
 )
 
 // EnterGitRepo allows the user to specify the git repository in a prompt.
