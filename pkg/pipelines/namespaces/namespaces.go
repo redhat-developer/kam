@@ -50,7 +50,7 @@ func Create(name, gitOpsRepoURL string) *corev1.Namespace {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 			Annotations: map[string]string{
-				vcsURIAnnotation: gitOpsRepoURL,
+				vcsURIAnnotation: gitOpsRepoURL + "?ref=main",
 			},
 		},
 	}
