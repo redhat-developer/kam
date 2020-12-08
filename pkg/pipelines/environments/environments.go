@@ -2,6 +2,7 @@ package environments
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
@@ -26,7 +27,10 @@ const (
 	EnvironmentsToApps
 )
 
-const kustomization = "kustomization.yaml"
+const (
+	kustomization  = "kustomization.yaml"
+	vcsSourceLabel = "app.openshift.io/vcs-source"
+)
 
 type envBuilder struct {
 	files           res.Resources
@@ -35,6 +39,7 @@ type envBuilder struct {
 	saName          string
 	appLinks        AppLinks
 	gitOpsRepoURL   string
+	repoPath        string
 }
 
 // Build generates a set of resources from the manifest, related to the
@@ -42,6 +47,13 @@ type envBuilder struct {
 func Build(fs afero.Fs, m *config.Manifest, saName string, o AppLinks) (res.Resources, error) {
 	files := res.Resources{}
 	cfg := m.GetPipelinesConfig()
+
+	parsed, err := url.Parse(m.GitOpsURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse GitOpsURL %q: %w", m.GitOpsURL, err)
+	}
+	repoPath := strings.TrimPrefix(strings.TrimSuffix(parsed.Path, ".git"), "/")
+
 	eb := &envBuilder{
 		fs:              fs,
 		files:           files,
@@ -49,13 +61,14 @@ func Build(fs afero.Fs, m *config.Manifest, saName string, o AppLinks) (res.Reso
 		saName:          saName,
 		appLinks:        o,
 		gitOpsRepoURL:   m.GitOpsURL,
+		repoPath:        repoPath,
 	}
 	return eb.files, m.Walk(eb)
 }
 
 func (b *envBuilder) Application(env *config.Environment, app *config.Application) error {
 	appPath := filepath.Join(config.PathForApplication(env, app))
-	appFiles, err := filesForApplication(env, appPath, app)
+	appFiles, err := filesForApplication(env, b.repoPath, appPath, app)
 	if err != nil {
 		return err
 	}
@@ -125,7 +138,7 @@ func filesForEnvironment(basePath string, env *config.Environment, gitOpsRepoURL
 	return envFiles
 }
 
-func filesForApplication(env *config.Environment, appPath string, app *config.Application) (res.Resources, error) {
+func filesForApplication(env *config.Environment, fullname, appPath string, app *config.Application) (res.Resources, error) {
 	envFiles := res.Resources{}
 	basePath := filepath.Join(appPath, "base")
 	overlaysPath := filepath.Join(appPath, "overlays")
@@ -145,11 +158,18 @@ func filesForApplication(env *config.Environment, appPath string, app *config.Ap
 		relServices = append(relServices, relService)
 	}
 
-	envFiles[filepath.Join(appPath, kustomization)] = &res.Kustomization{Bases: []string{"overlays"}}
+	envFiles[filepath.Join(appPath, kustomization)] = &res.Kustomization{
+		Bases: []string{"overlays"},
+		CommonLabels: map[string]string{
+			vcsSourceLabel: fullname,
+		},
+	}
 	envFiles[filepath.Join(appPath, "base", kustomization)] = &res.Kustomization{
 		Bases: relServices,
 	}
-	envFiles[overlaysFile] = &res.Kustomization{Bases: []string{overlayRel}}
+	envFiles[overlaysFile] = &res.Kustomization{
+		Bases: []string{overlayRel},
+	}
 	return envFiles, nil
 }
 

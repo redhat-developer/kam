@@ -16,10 +16,7 @@ import (
 	res "github.com/redhat-developer/kam/pkg/pipelines/resources"
 )
 
-const (
-	vcsSourceLabel = "app.openshift.io/vcs-source"
-	appLabel       = "app.kubernetes.io/name"
-)
+const appLabel = "app.kubernetes.io/name"
 
 var (
 	applicationTypeMeta = meta.TypeMeta(

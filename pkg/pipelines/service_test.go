@@ -36,10 +36,15 @@ func TestServiceResourcesWithCICD(t *testing.T) {
 	assertNoError(t, err)
 
 	want := res.Resources{
-		"config/cicd/base/03-secrets/webhook-secret-test-dev-test.yaml":   hookSecret,
-		"environments/test-dev/apps/test-app/base/kustomization.yaml":     &res.Kustomization{Bases: []string{"../services/test-svc", "../services/test"}},
-		"environments/test-dev/apps/test-app/kustomization.yaml":          &res.Kustomization{Bases: []string{"overlays"}},
-		"environments/test-dev/apps/test-app/overlays/kustomization.yaml": &res.Kustomization{Bases: []string{"../base"}},
+		"config/cicd/base/03-secrets/webhook-secret-test-dev-test.yaml": hookSecret,
+		"environments/test-dev/apps/test-app/base/kustomization.yaml": &res.Kustomization{
+			Bases: []string{"../services/test-svc", "../services/test"}},
+		"environments/test-dev/apps/test-app/kustomization.yaml": &res.Kustomization{
+			Bases:        []string{"overlays"},
+			CommonLabels: map[string]string{"app.openshift.io/vcs-source": "org/test"},
+		},
+		"environments/test-dev/apps/test-app/overlays/kustomization.yaml": &res.Kustomization{
+			Bases: []string{"../base"}},
 		"pipelines.yaml": &config.Manifest{
 			Config: &config.Config{
 				Pipelines: &config.PipelinesConfig{
@@ -111,8 +116,13 @@ func TestServiceResourcesWithArgoCD(t *testing.T) {
 				"../services/test",
 			},
 		},
-		"environments/test-dev/apps/test-app/kustomization.yaml":          &res.Kustomization{Bases: []string{"overlays"}},
-		"environments/test-dev/apps/test-app/overlays/kustomization.yaml": &res.Kustomization{Bases: []string{"../base"}},
+		"environments/test-dev/apps/test-app/kustomization.yaml": &res.Kustomization{
+			Bases:        []string{"overlays"},
+			CommonLabels: map[string]string{"app.openshift.io/vcs-source": "org/test"},
+		},
+		"environments/test-dev/apps/test-app/overlays/kustomization.yaml": &res.Kustomization{
+			Bases: []string{"../base"},
+		},
 		"pipelines.yaml": &config.Manifest{
 			Config: &config.Config{
 				ArgoCD: &config.ArgoCDConfig{
@@ -164,10 +174,19 @@ func TestServiceResourcesWithoutArgoCD(t *testing.T) {
 	fakeFs := ioutils.NewMemoryFilesystem()
 	m := buildManifest(false, false)
 	want := res.Resources{
-		"environments/test-dev/apps/test-app/base/kustomization.yaml":     &res.Kustomization{Bases: []string{"../services/test-svc", "../services/test"}},
-		"environments/test-dev/apps/test-app/kustomization.yaml":          &res.Kustomization{Bases: []string{"overlays"}},
-		"environments/test-dev/apps/test-app/overlays/kustomization.yaml": &res.Kustomization{Bases: []string{"../base"}},
-		"environments/test-dev/env/base/kustomization.yaml":               &res.Kustomization{Resources: []string{"test-dev-environment.yaml"}, Bases: []string{"../../apps/test-app/overlays"}},
+		"environments/test-dev/apps/test-app/base/kustomization.yaml": &res.Kustomization{
+
+			Bases: []string{"../services/test-svc", "../services/test"}},
+		"environments/test-dev/apps/test-app/kustomization.yaml": &res.Kustomization{
+			Bases:        []string{"overlays"},
+			CommonLabels: map[string]string{"app.openshift.io/vcs-source": "org/test"},
+		},
+		"environments/test-dev/apps/test-app/overlays/kustomization.yaml": &res.Kustomization{
+			Bases: []string{"../base"}},
+		"environments/test-dev/env/base/kustomization.yaml": &res.Kustomization{
+			Resources: []string{"test-dev-environment.yaml"},
+			Bases:     []string{"../../apps/test-app/overlays"},
+		},
 		"pipelines.yaml": &config.Manifest{
 			GitOpsURL: "http://github.com/org/test",
 			Environments: []*config.Environment{
@@ -214,9 +233,12 @@ func TestAddServiceWithoutApp(t *testing.T) {
 	fakeFs := ioutils.NewMemoryFilesystem()
 	m := buildManifest(false, false)
 	want := res.Resources{
-		"environments/test-dev/apps/new-app/base/kustomization.yaml":                        &res.Kustomization{Bases: []string{"../services/test"}},
-		"environments/test-dev/apps/new-app/overlays/kustomization.yaml":                    &res.Kustomization{Bases: []string{"../base"}},
-		"environments/test-dev/apps/new-app/kustomization.yaml":                             &res.Kustomization{Bases: []string{"overlays"}},
+		"environments/test-dev/apps/new-app/base/kustomization.yaml":     &res.Kustomization{Bases: []string{"../services/test"}},
+		"environments/test-dev/apps/new-app/overlays/kustomization.yaml": &res.Kustomization{Bases: []string{"../base"}},
+		"environments/test-dev/apps/new-app/kustomization.yaml": &res.Kustomization{
+			Bases:        []string{"overlays"},
+			CommonLabels: map[string]string{"app.openshift.io/vcs-source": "org/test"},
+		},
 		"environments/test-dev/apps/new-app/services/test/base/kustomization.yaml":          &res.Kustomization{Bases: []string{"./config"}},
 		"environments/test-dev/apps/new-app/services/test/kustomization.yaml":               &res.Kustomization{Bases: []string{"overlays"}},
 		"environments/test-dev/apps/new-app/services/test/overlays/kustomization.yaml":      &res.Kustomization{Bases: []string{"../base"}},
