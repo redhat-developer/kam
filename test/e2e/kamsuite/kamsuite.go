@@ -64,7 +64,7 @@ func envVariableCheck() bool {
 	} else {
 		if val == "prow" {
 			fmt.Printf("Running e2e test in OpenShift CI\n")
-			os.Setenv("SERVICE_REPO_URL", "https://github.com/rhd-gitops-example/taxi")
+			os.Setenv("SERVICE_REPO_URL", "https://github.com/kam-bot/taxi")
 			os.Setenv("GITOPS_REPO_URL", "https://github.com/kam-bot/taxi-"+os.Getenv("PRNO"))
 			os.Setenv("IMAGE_REPO", "quay.io/kam-bot/taxi")
 			os.Setenv("DOCKERCONFIGJSON_PATH", os.Getenv("KAM_QUAY_DOCKER_CONF_SECRET"))
