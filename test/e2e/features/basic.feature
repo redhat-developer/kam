@@ -11,7 +11,7 @@ Feature: Basic test
         # Then go to the gitops temporary directory
         # And executing "gh repo create $GITOPS_REPO_URL --public --confirm"
         # Then stderr should be empty
-        When executing "echo $GITHUB_TOKEN"
-        Then stdout should be empty
-        When executing "kam bootstrap --service-repo-url $SERVICE_REPO_URL --gitops-repo-url $GITOPS_REPO_URL --image-repo $GITOPS_REPO_URL --dockercfgjson $DOCKERCONFIGJSON_PATH --git-host-access-token $GITHUB_TOKEN --output bootstrapresources --push-to-git=true" succeeds
+        # When executing "echo $GITHUB_TOKEN"
+        # Then stdout should be empty
+        When executing "kam bootstrap --service-repo-url $SERVICE_REPO_URL --gitops-repo-url $GITOPS_REPO_URL --image-repo $GITOPS_REPO_URL --dockercfgjson $DOCKERCONFIGJSON_PATH --git-host-access-token abhyerdfgr --output bootstrapresources --push-to-git=true" succeeds
         Then stderr should be empty
