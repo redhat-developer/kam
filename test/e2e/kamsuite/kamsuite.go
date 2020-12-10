@@ -67,7 +67,7 @@ func envVariableCheck() bool {
 			os.Setenv("SERVICE_REPO_URL", "https://github.com/kam-bot/taxi")
 			os.Setenv("GITOPS_REPO_URL", "https://github.com/kam-bot/taxi-"+os.Getenv("PRNO"))
 			os.Setenv("IMAGE_REPO", "quay.io/kam-bot/taxi")
-			os.Setenv("DOCKERCONFIGJSON_PATH", os.Getenv("KAM_QUAY_DOCKER_CONF_SECRET"))
+			os.Setenv("DOCKERCONFIGJSON_PATH", os.Getenv("KAM_QUAY_DOCKER_CONF_SECRET_FILE"))
 			os.Getenv("GITHUB_TOKEN")
 		} else {
 			fmt.Printf("You cannot run e2e test locally against OpenShift CI\n")
