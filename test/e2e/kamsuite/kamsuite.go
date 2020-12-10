@@ -68,7 +68,6 @@ func envVariableCheck() bool {
 			os.Setenv("GITOPS_REPO_URL", "https://github.com/kam-bot/taxi-"+os.Getenv("PRNO"))
 			os.Setenv("IMAGE_REPO", "quay.io/kam-bot/taxi")
 			os.Setenv("DOCKERCONFIGJSON_PATH", os.Getenv("KAM_QUAY_DOCKER_CONF_SECRET_FILE"))
-			os.Getenv("GITHUB_TOKEN")
 		} else {
 			fmt.Printf("You cannot run e2e test locally against OpenShift CI\n")
 			return false
@@ -77,59 +76,3 @@ func envVariableCheck() bool {
 	}
 	return true
 }
-
-// func executeGhCommad(arg string) bool {
-// 	ghExecPath, err := exec.LookPath("gh")
-// 	if err != nil {
-// 		fmt.Println("Error is ", err)
-// 		return false
-// 	}
-// 	cmdDeleteRepo := &exec.Cmd{
-// 		Path:   ghExecPath,
-// 		Args:   []string{ghExecPath, arg},
-// 		Stderr: os.Stderr,
-// 	}
-// 	if cmdDeleteRepo.Stderr != nil {
-// 		fmt.Println("Error is ", cmdDeleteRepo.Stderr)
-// 		return false
-// 	}
-// 	return true
-// }
-
-// // GitopsDir creates a temporary gitops dir
-// func GitopsDir() (string, error) {
-// 	var err error
-// 	gitopsrepodir, err = ioutil.TempDir("", "")
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	return gitopsrepodir, nil
-// }
-
-// // WorkingDirPath gets the working dir
-// func WorkingDirPath() (string, error) {
-// 	var err error
-// 	originaldir, err = os.Getwd()
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	return originaldir, nil
-// }
-
-// // GoToGitopsDirPath change the working dir
-// func GoToGitopsDirPath() error {
-// 	err := os.Chdir(gitopsrepodir)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
-
-// // GoToKamDirPath change the working dir
-// func GoToKamDirPath() error {
-// 	err := os.Chdir(originaldir)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
