@@ -29,7 +29,7 @@ kam bootstrap [flags]
       --image-repo string                              Image repository of the form <registry>/<username>/<repository> or <project>/<app> which is used to push newly built images
       --image-repo-internal-registry-hostname string   Host-name for internal image registry e.g. docker-registry.default.svc.cluster.local:5000, used if you are pushing your images to the internal image registry (default "image-registry.openshift-image-registry.svc:5000")
       --output string                                  Path to write GitOps resources (default ".")
-      --overwrite                                      Overwrites previously existing GitOps configuration (if any)
+      --overwrite                                      Overwrites previously existing GitOps configuration (if any) on the local filesystem
   -p, --prefix string                                  Add a prefix to the environment names(Dev, stage,prod,cicd etc.) to distinguish and identify individual environments
       --private-repo-driver string                     If your Git repositories are on a custom domain, please indicate which driver to use github or gitlab
       --push-to-git                                    If true, automatically creates and populates the gitops-repo-url with the generated resources
