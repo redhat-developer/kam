@@ -86,7 +86,7 @@ func TestAddSuffixWithBootstrap(t *testing.T) {
 					ServiceRepoURL: test.appURL},
 			}
 
-			addGitURLSuffixIfNecessary(o)
+			validateURL(o)
 
 			if o.GitOpsRepoURL != test.validGitOpsURL {
 				rt.Fatalf("URL mismatch: got %s, want %s", o.GitOpsRepoURL, test.validAppURL)
@@ -469,5 +469,34 @@ func TestMissingFlags(t *testing.T) {
 				t.Fatalf("error mismatch: got %v, want %v", gotErr, test.err)
 			}
 		})
+	}
+}
+
+func TestValidateURLCorrection(t *testing.T) {
+	optionTests := []struct {
+		name           string
+		gitRepo        string
+		serviceRepo    string
+		wantGitopsURL  string
+		wantServiceURL string
+	}{
+		{"gitops-repo/service repo unchanged", "https://github.com/username/repo.git", "https://github.com/username/service.git", "https://github.com/username/repo.git", "https://github.com/username/service.git"},
+		{"gitops-repo same/service repo changed", "https://github.com/username/repo.git", "https://github.com/username/service/.git", "https://github.com/username/repo.git", "https://github.com/username/service.git"},
+		{"gitops-repo changed/service repo same", "https://github.com/username/repo/.git", "https://github.com/username/service.git", "https://github.com/username/repo.git", "https://github.com/username/service.git"},
+		{"gitops-repo changed/service repo changed", "https://github.com/username/repo/.git", "https://github.com/username/service/.git", "https://github.com/username/repo.git", "https://github.com/username/service.git"},
+	}
+
+	for _, tt := range optionTests {
+		o := BootstrapParameters{
+			BootstrapOptions: &pipelines.BootstrapOptions{
+				GitOpsRepoURL:  tt.gitRepo,
+				ServiceRepoURL: tt.serviceRepo,
+			},
+		}
+		validateURL(&o)
+
+		if o.GitOpsRepoURL != tt.wantGitopsURL && o.ServiceRepoURL != tt.wantServiceURL {
+			t.Errorf("checkURLAnomalies() got %v for gitops-repo and got %v for service-repo", o.GitOpsRepoURL, o.ServiceRepoURL)
+		}
 	}
 }

@@ -17,13 +17,11 @@ const (
 	argocdCRD = "argocds.argoproj.io"
 )
 
-// AddGitSuffixIfNecessary will append .git to URL if necessary
-func AddGitSuffixIfNecessary(url string) string {
-	if url == "" || strings.HasSuffix(strings.ToLower(url), ".git") {
-		return url
-	}
-	log.Italicf("Adding .git to %s", url)
-	return url + ".git"
+// CheckURLAnomalies checks for the .git suffix and trailing / for the repo url
+func CheckURLAnomalies(url string) string {
+	gitURL := addGitSuffixIfNecessary(url)
+	finalURL := replaceTrailingSlash(gitURL)
+	return finalURL
 }
 
 // RemoveEmptyStrings returns a slice with all the empty strings removed from the
@@ -105,4 +103,20 @@ func (c *Client) CheckIfPipelinesExists(ns string) error {
 // GetFullName generates a command's full name based on its parent's full name and its own name
 func GetFullName(parentName, name string) string {
 	return parentName + " " + name
+}
+
+func addGitSuffixIfNecessary(url string) string {
+	if url == "" || strings.HasSuffix(strings.ToLower(url), ".git") {
+		return url
+	}
+	log.Italicf("Adding .git to %s", url)
+	return url + ".git"
+}
+
+func replaceTrailingSlash(url string) string {
+	if strings.Contains(url, "/.git") {
+		url = strings.Replace(url, "/.git", ".git", 1)
+		log.Italicf("URL format correction: Replacing value of gitops-repo-url with %s", url)
+	}
+	return url
 }

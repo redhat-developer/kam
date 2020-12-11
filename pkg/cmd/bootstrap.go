@@ -111,13 +111,13 @@ func (io *BootstrapParameters) Complete(name string, cmd *cobra.Command, args []
 	if cmd.Flags().NFlag() == 0 {
 		return initiateInteractiveMode(io, client)
 	}
-	addGitURLSuffixIfNecessary(io)
+	validateURL(io)
 	return nonInteractiveMode(io, client)
 }
 
-func addGitURLSuffixIfNecessary(io *BootstrapParameters) {
-	io.GitOpsRepoURL = utility.AddGitSuffixIfNecessary(io.GitOpsRepoURL)
-	io.ServiceRepoURL = utility.AddGitSuffixIfNecessary(io.ServiceRepoURL)
+func validateURL(io *BootstrapParameters) {
+	io.GitOpsRepoURL = utility.CheckURLAnomalies(io.GitOpsRepoURL)
+	io.ServiceRepoURL = utility.CheckURLAnomalies(io.ServiceRepoURL)
 }
 
 // nonInteractiveMode gets triggered if a flag is passed, checks for mandatory flags.
@@ -158,7 +158,7 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client) er
 	if client.CheckIfSealedSecretsExists(defaultSealedSecretsServiceName) != nil {
 		io.SealedSecretsService.Namespace = ui.EnterSealedSecretService(&io.SealedSecretsService)
 	}
-	io.GitOpsRepoURL = utility.AddGitSuffixIfNecessary(ui.EnterGitRepo())
+	io.GitOpsRepoURL = utility.CheckURLAnomalies(ui.EnterGitRepo())
 	if !isKnownDriver(io.GitOpsRepoURL) {
 		io.PrivateRepoDriver = ui.SelectPrivateRepoDriver()
 		host, err := accesstoken.HostFromURL(io.GitOpsRepoURL)
@@ -176,7 +176,7 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client) er
 		io.DockerConfigJSONFilename = ui.EnterDockercfg()
 	}
 	io.GitOpsWebhookSecret = ui.EnterGitWebhookSecret(io.GitOpsRepoURL)
-	io.ServiceRepoURL = utility.AddGitSuffixIfNecessary(ui.EnterServiceRepoURL())
+	io.ServiceRepoURL = utility.CheckURLAnomalies(ui.EnterServiceRepoURL())
 	io.ServiceWebhookSecret = ui.EnterGitWebhookSecret(io.ServiceRepoURL)
 	secret, err := accesstoken.GetAccessToken(io.ServiceRepoURL)
 	if err != nil && err != keyring.ErrNotFound {
