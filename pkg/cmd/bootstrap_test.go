@@ -480,10 +480,12 @@ func TestValidateURLCorrection(t *testing.T) {
 		wantGitopsURL  string
 		wantServiceURL string
 	}{
-		{"gitops-repo/service repo unchanged", "https://github.com/username/repo.git", "https://github.com/username/service.git", "https://github.com/username/repo.git", "https://github.com/username/service.git"},
-		{"gitops-repo same/service repo changed", "https://github.com/username/repo.git", "https://github.com/username/service/.git", "https://github.com/username/repo.git", "https://github.com/username/service.git"},
-		{"gitops-repo changed/service repo same", "https://github.com/username/repo/.git", "https://github.com/username/service.git", "https://github.com/username/repo.git", "https://github.com/username/service.git"},
-		{"gitops-repo changed/service repo changed", "https://github.com/username/repo/.git", "https://github.com/username/service/.git", "https://github.com/username/repo.git", "https://github.com/username/service.git"},
+		{"gitops-repo same/service repo changed:trailing slash", "https://github.com/username/repo.git", "https://github.com/username/service/.git", "https://github.com/username/repo.git", "https://github.com/username/service.git"},
+		{"gitops-repo changed/service repo same:trailing slash", "https://github.com/username/repo/.git", "https://github.com/username/service.git", "https://github.com/username/repo.git", "https://github.com/username/service.git"},
+		{"gitops-repo changed/service repo changed:trailing slash", "https://github.com/username/repo/.git", "https://github.com/username/service/.git", "https://github.com/username/repo.git", "https://github.com/username/service.git"},
+		{"gitops-repo missing/service repo missing:missing .git", "https://github.com/username/repo", "https://github.com/username/service", "https://github.com/username/repo.git", "https://github.com/username/service.git"},
+		{"gitops-repo missing/service repo missing:missing .git and trailing slash", "https://github.com/username/repo/", "https://github.com/username/service/", "https://github.com/username/repo.git", "https://github.com/username/service.git"},
+		{"gitops-repo missing/service repo missing:no anomalies", "https://github.com/username/repo.git", "https://github.com/username/service.git", "https://github.com/username/repo.git", "https://github.com/username/service.git"},
 	}
 
 	for _, tt := range optionTests {
