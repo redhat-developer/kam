@@ -2,30 +2,36 @@ package kamsuite
 
 import (
 	"fmt"
+	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/cucumber/godog"
 	"github.com/cucumber/messages-go/v10"
-)
-
-var (
-	gitopsrepodir string
-	originaldir   string
 )
 
 // FeatureContext defines godog.Suite steps for the test suite.
 func FeatureContext(s *godog.Suite) {
 
 	// KAM related steps
-	// s.Step(`^create gitops temporary directory$`,
-	// 	GitopsDir)
-	// s.Step(`^go to the gitops temporary directory$`,
-	// 	GoToGitopsDirPath)
-
 	s.BeforeSuite(func() {
 		fmt.Println("Before suite")
 		if !envVariableCheck() {
 			os.Exit(1)
+		}
+		val, ok := os.LookupEnv("CI")
+		if ok && val == "prow" {
+			f, err := os.OpenFile(filepath.Join(os.Getenv("HOME"), ".ssh", "config"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+			if err != nil {
+				log.Fatal(err)
+			}
+			if _, err := f.Write([]byte("Host github.com\n\tStrictHostKeyChecking no\n")); err != nil {
+				f.Close() // ignore error; Write error takes precedence
+				log.Fatal(err)
+			}
+			if err := f.Close(); err != nil {
+				log.Fatal(err)
+			}
 		}
 	})
 
