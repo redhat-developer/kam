@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"github.com/cucumber/godog"
@@ -37,14 +38,14 @@ func FeatureContext(s *godog.Suite) {
 
 	s.AfterSuite(func() {
 		fmt.Println("After suite")
-		// deleteStep1 := "alias set delete 'api -X DELETE \"repos/$1\"'"
-		// deleteStep2 := "alias repo-delete kam-bot/" + os.Getenv("GITOPS_REPO_URL")
-		// if !executeGhCommad(deleteStep1) {
-		// 	os.Exit(1)
-		// }
-		// if !executeGhCommad(deleteStep2) {
-		// 	os.Exit(1)
-		// }
+		deleteGhRepoStep1 := "alias set delete 'api -X DELETE \"repos/$1\"'"
+		deleteGhRepoStep2 := "alias repo-delete kam-bot/" + os.Getenv("GITOPS_REPO_URL")
+		if !executeGhCommad(deleteGhRepoStep1) {
+			os.Exit(1)
+		}
+		if !executeGhCommad(deleteGhRepoStep2) {
+			os.Exit(1)
+		}
 	})
 
 	s.BeforeFeature(func(this *messages.GherkinDocument) {
@@ -79,6 +80,23 @@ func envVariableCheck() bool {
 			return false
 		}
 		return true
+	}
+	return true
+}
+
+func executeGhCommad(arg string) bool {
+	ghExecPath, err := exec.LookPath("gh")
+	if err != nil {
+		fmt.Println("Error is ", err)
+		return false
+	}
+
+	cmd := exec.Command(ghExecPath, arg)
+	_, err = cmd.Output()
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
 	}
 	return true
 }
