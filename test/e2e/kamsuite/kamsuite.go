@@ -22,11 +22,17 @@ func FeatureContext(s *godog.Suite) {
 		}
 		val, ok := os.LookupEnv("CI")
 		if ok && val == "prow" {
+			cmd := exec.Command("mkdir", "-p $HOME/.ssh/")
+			_, err := cmd.Output()
+
+			if err != nil {
+				fmt.Println(err.Error())
+			}
 			f, err := os.OpenFile(filepath.Join(os.Getenv("HOME"), ".ssh", "config"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 			if err != nil {
 				log.Fatal(err)
 			}
-			if _, err := f.Write([]byte("Host github.com\n\tStrictHostKeyChecking no\n")); err != nil {
+			if _, err = f.Write([]byte("Host github.com\n\tStrictHostKeyChecking no\n")); err != nil {
 				f.Close() // ignore error; Write error takes precedence
 				log.Fatal(err)
 			}
