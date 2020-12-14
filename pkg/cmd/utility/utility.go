@@ -17,11 +17,13 @@ const (
 	argocdCRD = "argocds.argoproj.io"
 )
 
-// CheckURLAnomalies checks for the .git suffix and trailing / for the repo url
-func CheckURLAnomalies(url string) string {
-	gitURL := addGitSuffixIfNecessary(url)
-	finalURL := replaceTrailingSlash(gitURL)
-	return finalURL
+// AddGitSuffixIfNecessary will append .git to URL if necessary
+func AddGitSuffixIfNecessary(url string) string {
+	if url == "" || strings.HasSuffix(strings.ToLower(url), ".git") {
+		return url
+	}
+	notifyUsers(url)
+	return strings.TrimSuffix(url, "/") + ".git"
 }
 
 // RemoveEmptyStrings returns a slice with all the empty strings removed from the
@@ -105,18 +107,10 @@ func GetFullName(parentName, name string) string {
 	return parentName + " " + name
 }
 
-func addGitSuffixIfNecessary(url string) string {
-	if url == "" || strings.HasSuffix(strings.ToLower(url), ".git") {
-		return url
+func notifyUsers(url string) {
+	if url[len(url)-1:] == "/" {
+		log.Italicf(`Trimming "/" at the end of %s`, url)
+		url = strings.TrimSuffix(url, "/")
 	}
 	log.Italicf("Adding .git to %s", url)
-	return url + ".git"
-}
-
-func replaceTrailingSlash(url string) string {
-	if strings.Contains(url, "/.git") {
-		url = strings.Replace(url, "/.git", ".git", 1)
-		log.Italicf("URL format correction: Replacing value of gitops-repo-url with %s", url)
-	}
-	return url
 }

@@ -35,7 +35,7 @@ type AddServiceOptions struct {
 
 // Complete is called when the command is completed
 func (o *AddServiceOptions) Complete(name string, cmd *cobra.Command, args []string) error {
-	o.GitRepoURL = utility.CheckURLAnomalies(o.GitRepoURL)
+	o.GitRepoURL = utility.AddGitSuffixIfNecessary(o.GitRepoURL)
 	return nil
 }
 
