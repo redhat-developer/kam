@@ -22,15 +22,14 @@ import (
 
 // AddServiceOptions control how new services are added to the configuration.
 type AddServiceOptions struct {
-	AppName                  string
-	EnvName                  string
-	GitRepoURL               string
-	ImageRepo                string
-	InternalRegistryHostname string
-	PipelinesFolderPath      string
-	ServiceName              string
-	WebhookSecret            string
-	SealedSecretsService     types.NamespacedName // SealedSecrets service name
+	AppName              string
+	EnvName              string
+	GitRepoURL           string
+	ImageRepo            string
+	PipelinesFolderPath  string
+	ServiceName          string
+	WebhookSecret        string
+	SealedSecretsService types.NamespacedName // SealedSecrets service name
 }
 
 // AddService is the entry-point from the CLI for adding new services.
@@ -133,7 +132,7 @@ func serviceResources(m *config.Manifest, appFs afero.Fs, o *AddServiceOptions) 
 }
 
 func createImageRepoResources(m *config.Manifest, cfg *config.PipelinesConfig, env *config.Environment, p *AddServiceOptions) ([]string, res.Resources, string, error) {
-	isInternalRegistry, imageRepo, err := imagerepo.ValidateImageRepo(p.ImageRepo, p.InternalRegistryHostname)
+	isInternalRegistry, imageRepo, err := imagerepo.ValidateImageRepo(p.ImageRepo)
 	if err != nil {
 		return nil, nil, "", err
 	}
