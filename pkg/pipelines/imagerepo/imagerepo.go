@@ -16,9 +16,11 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
+const registryURL = "image-registry.openshift-image-registry.svc:5000"
+
 // ValidateImageRepo validates the input image repo.  It determines if it is
 // for internal registry and prepend internal registry hostname if necessary.
-func ValidateImageRepo(imageRepo, registryURL string) (bool, string, error) {
+func ValidateImageRepo(imageRepo string) (bool, string, error) {
 	components := strings.Split(imageRepo, "/")
 
 	// repo url has minimum of 2 components

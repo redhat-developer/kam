@@ -44,7 +44,6 @@ func TestValidateImageRepo(t *testing.T) {
 
 	tests := []struct {
 		description                string
-		internalRegistryHostname   string
 		imageRepo                  string
 		expectedError              string
 		expectedIsInternalRegistry bool
@@ -52,7 +51,6 @@ func TestValidateImageRepo(t *testing.T) {
 	}{
 		{
 			"Valid image registry URL",
-			"image-registry.openshift-image-registry.svc:5000",
 			"quay.io/sample-user/sample-repo",
 			"",
 			false,
@@ -60,7 +58,6 @@ func TestValidateImageRepo(t *testing.T) {
 		},
 		{
 			"Valid image registry URL random registry",
-			"image-registry.openshift-image-registry.svc:5000",
 			"random.io/sample-user/sample-repo",
 			"",
 			false,
@@ -68,7 +65,6 @@ func TestValidateImageRepo(t *testing.T) {
 		},
 		{
 			"Valid image registry URL docker.io",
-			"image-registry.openshift-image-registry.svc:5000",
 			"docker.io/sample-user/sample-repo",
 			"",
 			false,
@@ -76,7 +72,6 @@ func TestValidateImageRepo(t *testing.T) {
 		},
 		{
 			"Invalid image registry URL with missing repo name",
-			"image-registry.openshift-image-registry.svc:5000",
 			"quay.io/sample-user",
 			fmt.Sprintf(errorMsg, "quay.io/sample-user"),
 			false,
@@ -84,7 +79,6 @@ func TestValidateImageRepo(t *testing.T) {
 		},
 		{
 			"Invalid image registry URL with missing repo name docker.io",
-			"image-registry.openshift-image-registry.svc:5000",
 			"docker.io/sample-user",
 			fmt.Sprintf(errorMsg, "docker.io/sample-user"),
 			false,
@@ -92,7 +86,6 @@ func TestValidateImageRepo(t *testing.T) {
 		},
 		{
 			"Invalid image registry URL with whitespaces",
-			"image-registry.openshift-image-registry.svc:5000",
 			"quay.io/sample-user/ ",
 			fmt.Sprintf(errorMsg, "quay.io/sample-user/ "),
 			false,
@@ -100,7 +93,6 @@ func TestValidateImageRepo(t *testing.T) {
 		},
 		{
 			"Invalid image registry URL with whitespaces in between",
-			"image-registry.openshift-image-registry.svc:5000",
 			"quay.io/sam\tple-user/",
 			fmt.Sprintf(errorMsg, "quay.io/sam\tple-user/"),
 			false,
@@ -108,7 +100,6 @@ func TestValidateImageRepo(t *testing.T) {
 		},
 		{
 			"Invalid image registry URL with leading whitespaces",
-			"image-registry.openshift-image-registry.svc:5000",
 			"quay.io/ sample-user/",
 			fmt.Sprintf(errorMsg, "quay.io/ sample-user/"),
 			false,
@@ -116,7 +107,6 @@ func TestValidateImageRepo(t *testing.T) {
 		},
 		{
 			"Valid internal registry URL",
-			"image-registry.openshift-image-registry.svc:5000",
 			"image-registry.openshift-image-registry.svc:5000/project/app",
 			"",
 			true,
@@ -124,7 +114,6 @@ func TestValidateImageRepo(t *testing.T) {
 		},
 		{
 			"Invalid internal registry URL implicit starts with '/'",
-			"image-registry.openshift-image-registry.svc:5000",
 			"/project/app",
 			fmt.Sprintf(errorMsg, "/project/app"),
 			false,
@@ -132,7 +121,6 @@ func TestValidateImageRepo(t *testing.T) {
 		},
 		{
 			"Valid internal registry URL implicit",
-			"image-registry.openshift-image-registry.svc:5000",
 			"project/app",
 			"",
 			true,
@@ -140,7 +128,6 @@ func TestValidateImageRepo(t *testing.T) {
 		},
 		{
 			"Invalid too many URL components docker",
-			"image-registry.openshift-image-registry.svc:5000",
 			"docker.io/foo/project/app",
 			fmt.Sprintf(errorMsg, "docker.io/foo/project/app"),
 			false,
@@ -148,7 +135,6 @@ func TestValidateImageRepo(t *testing.T) {
 		},
 		{
 			"Invalid too many URL components internal",
-			"image-registry.openshift-image-registry.svc:5000",
 			"image-registry.openshift-image-registry.svc:5000/project/app/foo",
 			fmt.Sprintf(errorMsg, "image-registry.openshift-image-registry.svc:5000/project/app/foo"),
 			false,
@@ -156,7 +142,6 @@ func TestValidateImageRepo(t *testing.T) {
 		},
 		{
 			"Invalid not enough URL components, no slash",
-			"image-registry.openshift-image-registry.svc:5000",
 			"docker.io",
 			fmt.Sprintf(errorMsg, "docker.io"),
 			false,
@@ -165,9 +150,7 @@ func TestValidateImageRepo(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.description, func(t *testing.T) {
-			isInternalRegistry, imageRepo, err := ValidateImageRepo(test.imageRepo,
-				test.internalRegistryHostname,
-			)
+			isInternalRegistry, imageRepo, err := ValidateImageRepo(test.imageRepo)
 			if diff := cmp.Diff(isInternalRegistry, test.expectedIsInternalRegistry); diff != "" {
 				t.Errorf("validateImageRepo() failed:\n%s", diff)
 			}

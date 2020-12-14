@@ -76,7 +76,6 @@ type BootstrapOptions struct {
 	Prefix                   string
 	DockerConfigJSONFilename string
 	ImageRepo                string               // This is where built images are pushed to.
-	InternalRegistryHostname string               // This is the internal registry hostname used for pushing images.
 	OutputPath               string               // Where to write the bootstrapped files to?
 	SealedSecretsService     types.NamespacedName // SealedSecrets Services name
 	GitHostAccessToken       string               // The auth token to use to send commit-status notifications, and access private repositories.
@@ -176,7 +175,7 @@ func maybeMakeHookSecrets(o *BootstrapOptions) error {
 }
 
 func bootstrapResources(o *BootstrapOptions, appFs afero.Fs) (res.Resources, error) {
-	isInternalRegistry, imageRepo, err := imagerepo.ValidateImageRepo(o.ImageRepo, o.InternalRegistryHostname)
+	isInternalRegistry, imageRepo, err := imagerepo.ValidateImageRepo(o.ImageRepo)
 	if err != nil {
 		return nil, err
 	}
