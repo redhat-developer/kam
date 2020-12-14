@@ -24,6 +24,10 @@ func TestAddGitSuffix(t *testing.T) {
 		{"suffix for empty string", "", ""},
 		{"suffix already present", "https://github.com/test/org.git", "https://github.com/test/org.git"},
 		{"suffix with a different case", "https://github.com/test/org.GIT", "https://github.com/test/org.GIT"},
+		{"trailing slash absent[github]", "https://github.com/test/org.git", "https://github.com/test/org.git"},
+		{"trailing slash present[github]", "https://github.com/test/org/", "https://github.com/test/org.git"},
+		{"trailing slash absent[gitlab]", "https://gitlab.com/test/org.git", "https://gitlab.com/test/org.git"},
+		{"trailing slash present[gitlab]", "https://gitlab.com/test/org/", "https://gitlab.com/test/org.git"},
 	}
 
 	for _, tt := range addSuffixTests {

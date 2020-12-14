@@ -22,8 +22,12 @@ func AddGitSuffixIfNecessary(url string) string {
 	if url == "" || strings.HasSuffix(strings.ToLower(url), ".git") {
 		return url
 	}
-	log.Italicf("Adding .git to %s", url)
-	return url + ".git"
+	trimmed := strings.TrimSuffix(url, "/")
+	if trimmed != url {
+		log.Italicf(`Trimmed "/" from the end of %q"`, url)
+	}
+	log.Italicf("Adding .git to %s", trimmed)
+	return trimmed + ".git"
 }
 
 // RemoveEmptyStrings returns a slice with all the empty strings removed from the
