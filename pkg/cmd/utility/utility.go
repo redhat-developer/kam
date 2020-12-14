@@ -22,8 +22,12 @@ func AddGitSuffixIfNecessary(url string) string {
 	if url == "" || strings.HasSuffix(strings.ToLower(url), ".git") {
 		return url
 	}
-	notifyUsers(url)
-	return strings.TrimSuffix(url, "/") + ".git"
+	trimmed := strings.TrimSuffix(url, "/")
+	if trimmed != url {
+		log.Italicf(`Trimmed "/" from the end of %q"`, url)
+	}
+	log.Italicf("Adding .git to %s", trimmed)
+	return trimmed + ".git"
 }
 
 // RemoveEmptyStrings returns a slice with all the empty strings removed from the
@@ -105,12 +109,4 @@ func (c *Client) CheckIfPipelinesExists(ns string) error {
 // GetFullName generates a command's full name based on its parent's full name and its own name
 func GetFullName(parentName, name string) string {
 	return parentName + " " + name
-}
-
-func notifyUsers(url string) {
-	if url[len(url)-1:] == "/" {
-		log.Italicf(`Trimming "/" at the end of %s`, url)
-		url = strings.TrimSuffix(url, "/")
-	}
-	log.Italicf("Adding .git to %s", url)
 }
