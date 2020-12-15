@@ -2,9 +2,11 @@ package kamsuite
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/cucumber/godog"
 	"github.com/cucumber/messages-go/v10"
@@ -21,27 +23,12 @@ func FeatureContext(s *godog.Suite) {
 		}
 		val, ok := os.LookupEnv("CI")
 		if ok && val == "prow" {
-			cmd := exec.Command("env", " | grep HOME")
-			stdout, err := cmd.Output()
-			fmt.Println(string(stdout))
+			err := os.MkdirAll(os.Getenv("HOME")+"/.ssh", 0755)
 			if err != nil {
 				fmt.Println(err.Error())
 			}
 
-			cmd = exec.Command("env", "")
-			stdout, err = cmd.Output()
-			fmt.Println(string(stdout))
-			if err != nil {
-				fmt.Println(err.Error())
-			}
-
-			cmd = exec.Command("mkdir", "-p /alabama/.ssh/")
-			_, err = cmd.Output()
-			if err != nil {
-				fmt.Println(err.Error())
-			}
-
-			f, err := os.OpenFile("/alabama/.ssh/config", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+			f, err := os.OpenFile(filepath.Join(os.Getenv("HOME"), ".ssh", "config"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -49,6 +36,15 @@ func FeatureContext(s *godog.Suite) {
 				f.Close() // ignore error; Write error takes precedence
 				log.Fatal(err)
 			}
+
+			content, err := ioutil.ReadFile(filepath.Join(os.Getenv("HOME"), ".ssh", "config"))
+
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			fmt.Println(string(content))
+
 			if err := f.Close(); err != nil {
 				log.Fatal(err)
 			}
@@ -59,10 +55,7 @@ func FeatureContext(s *godog.Suite) {
 		fmt.Println("After suite")
 		deleteGhRepoStep1 := "alias set delete 'api -X DELETE \"repos/$1\"'"
 		deleteGhRepoStep2 := "alias repo-delete kam-bot/" + os.Getenv("GITOPS_REPO_URL")
-		if !executeGhCommad(deleteGhRepoStep1) {
-			os.Exit(1)
-		}
-		if !executeGhCommad(deleteGhRepoStep2) {
+		if !executeGhCommad(deleteGhRepoStep1) || !executeGhCommad(deleteGhRepoStep2) {
 			os.Exit(1)
 		}
 	})
@@ -104,15 +97,8 @@ func envVariableCheck() bool {
 }
 
 func executeGhCommad(arg string) bool {
-	ghExecPath, err := exec.LookPath("gh")
-	if err != nil {
-		fmt.Println("Error is ", err)
-		return false
-	}
-
-	cmd := exec.Command(ghExecPath, arg)
-	_, err = cmd.Output()
-
+	cmd := exec.Command("gh", arg)
+	err := cmd.Run()
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
