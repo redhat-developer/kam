@@ -24,12 +24,29 @@ func FeatureContext(s *godog.Suite) {
 		if ok && val == "prow" {
 			cmd := exec.Command("mkdir", "-p $HOME/.ssh/")
 			_, err := cmd.Output()
+			stdout, err := cmd.Output()
 
 			if err != nil {
 				fmt.Println(err.Error())
 			}
 
-			f, err := os.OpenFile(filepath.Join(os.Getenv("HOME"), ".ssh", "config"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0755)
+			cmd = exec.Command("echo", "$HOME/.ssh/")
+			stdout, err = cmd.Output()
+			fmt.Print(string(stdout))
+
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+
+			cmd = exec.Command("touch", "$HOME/.ssh/config")
+			stdout, err = cmd.Output()
+			fmt.Print(string(stdout))
+
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+
+			f, err := os.OpenFile(filepath.Join(os.Getenv("HOME"), ".ssh", "config"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 			if err != nil {
 				log.Fatal(err)
 			}
