@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"path/filepath"
 
 	"github.com/cucumber/godog"
 	"github.com/cucumber/messages-go/v10"
@@ -22,31 +21,27 @@ func FeatureContext(s *godog.Suite) {
 		}
 		val, ok := os.LookupEnv("CI")
 		if ok && val == "prow" {
-			cmd := exec.Command("mkdir", "-p $HOME/.ssh/")
-			_, err := cmd.Output()
+			cmd := exec.Command("env", " | grep HOME")
 			stdout, err := cmd.Output()
-
+			fmt.Println(string(stdout))
 			if err != nil {
 				fmt.Println(err.Error())
 			}
 
-			cmd = exec.Command("echo", "$HOME/.ssh/")
+			cmd = exec.Command("env", "")
 			stdout, err = cmd.Output()
-			fmt.Print(string(stdout))
-
+			fmt.Println(string(stdout))
 			if err != nil {
 				fmt.Println(err.Error())
 			}
 
-			cmd = exec.Command("touch", "$HOME/.ssh/config")
-			stdout, err = cmd.Output()
-			fmt.Print(string(stdout))
-
+			cmd = exec.Command("mkdir", "-p /alabama/.ssh/")
+			_, err = cmd.Output()
 			if err != nil {
 				fmt.Println(err.Error())
 			}
 
-			f, err := os.OpenFile(filepath.Join(os.Getenv("HOME"), ".ssh", "config"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+			f, err := os.OpenFile("/alabama/.ssh/config", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 			if err != nil {
 				log.Fatal(err)
 			}
