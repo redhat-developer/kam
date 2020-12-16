@@ -145,7 +145,10 @@ func filesForApplication(env *config.Environment, appPath string, app *config.Ap
 		relServices = append(relServices, relService)
 	}
 
-	envFiles[filepath.Join(appPath, kustomization)] = &res.Kustomization{Bases: []string{"overlays"}}
+	envFiles[filepath.Join(appPath, kustomization)] = &res.Kustomization{
+		Bases:     []string{"overlays"},
+		Namespace: env.Name,
+	}
 	envFiles[filepath.Join(appPath, "base", kustomization)] = &res.Kustomization{
 		Bases: relServices,
 	}

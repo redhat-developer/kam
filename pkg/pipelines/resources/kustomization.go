@@ -4,4 +4,5 @@ package resources
 type Kustomization struct {
 	Resources []string `json:"resources,omitempty"`
 	Bases     []string `json:"bases,omitempty"`
+	Namespace string   `json:"namespace,omitempty"`
 }
