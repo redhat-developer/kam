@@ -23,6 +23,10 @@ func FeatureContext(s *godog.Suite) {
 
 	s.AfterSuite(func() {
 		fmt.Println("After suite")
+		ghLogin := "auth login --with-token < " + os.Getenv("KAM_GITHUB_TOKEN_FILE")
+		if !executeGhCommad(ghLogin) {
+			os.Exit(1)
+		}
 		deleteGhRepoStep1 := "alias set delete 'api -X DELETE \"repos/$1\"'"
 		deleteGhRepoStep2 := "repo-delete kam-bot/" + os.Getenv("GITOPS_REPO_URL")
 		if !executeGhCommad(deleteGhRepoStep1) || !executeGhCommad(deleteGhRepoStep2) {
