@@ -2,11 +2,8 @@ package kamsuite
 
 import (
 	"fmt"
-	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
-	"path/filepath"
 
 	"github.com/cucumber/godog"
 	"github.com/cucumber/messages-go/v10"
@@ -22,30 +19,12 @@ func FeatureContext(s *godog.Suite) {
 		if !envVariableCheck() {
 			os.Exit(1)
 		}
-		val, ok := os.LookupEnv("CI")
-		if ok && val == "prow" {
-			err := os.MkdirAll(os.Getenv("HOME")+"/.ssh", 0700)
-			if err != nil {
-				fmt.Println(err.Error())
-			}
-
-			// Writing HostKeyChecking setting to the file
-			err = ioutil.WriteFile(filepath.Join(os.Getenv("HOME"), ".ssh", "config"), []byte("Host github.com\n\tStrictHostKeyChecking no\n"), 0644)
-			// Reading the content
-			content, err := ioutil.ReadFile(filepath.Join(os.Getenv("HOME"), ".ssh", "config"))
-
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			fmt.Println(string(content))
-		}
 	})
 
 	s.AfterSuite(func() {
 		fmt.Println("After suite")
 		deleteGhRepoStep1 := "alias set delete 'api -X DELETE \"repos/$1\"'"
-		deleteGhRepoStep2 := "alias repo-delete kam-bot/" + os.Getenv("GITOPS_REPO_URL")
+		deleteGhRepoStep2 := "repo-delete kam-bot/" + os.Getenv("GITOPS_REPO_URL")
 		if !executeGhCommad(deleteGhRepoStep1) || !executeGhCommad(deleteGhRepoStep2) {
 			os.Exit(1)
 		}
@@ -89,7 +68,7 @@ func envVariableCheck() bool {
 
 func executeGhCommad(arg string) bool {
 	cmd := exec.Command("gh", arg)
-	fmt.Println("Executing command : gh ", arg)
+	fmt.Println("Executing command : gh", arg)
 	err := cmd.Run()
 	if err != nil {
 		fmt.Println(err.Error())

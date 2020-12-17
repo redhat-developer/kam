@@ -7,6 +7,7 @@ Feature: Basic test
         And stdout should contain "kam version"
 
     Scenario: KAM bootstrap command
+        Given executing "echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config"
         When executing "kam bootstrap --service-repo-url $SERVICE_REPO_URL --gitops-repo-url $GITOPS_REPO_URL --image-repo $IMAGE_REPO --dockercfgjson $DOCKERCONFIGJSON_PATH --git-host-access-token $GITHUB_TOKEN --output bootstrapresources --push-to-git=true" succeeds
         Then stderr should be empty
         Then executing "cd bootstrapresources"
