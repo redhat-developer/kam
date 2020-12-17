@@ -23,19 +23,21 @@ func FeatureContext(s *godog.Suite) {
 		}
 		val, ok := os.LookupEnv("CI")
 		if ok && val == "prow" {
-			err := os.MkdirAll(os.Getenv("HOME")+"/.ssh", 0755)
+			err := os.MkdirAll(os.Getenv("HOME")+"/.ssh", 0700)
 			if err != nil {
 				fmt.Println(err.Error())
 			}
 
-			f, err := os.OpenFile(filepath.Join(os.Getenv("HOME"), ".ssh", "config"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-			if err != nil {
-				log.Fatal(err)
-			}
-			if _, err = f.Write([]byte("Host github.com\n\tStrictHostKeyChecking no\n")); err != nil {
-				f.Close() // ignore error; Write error takes precedence
-				log.Fatal(err)
-			}
+			// f, err := os.OpenFile(filepath.Join(os.Getenv("HOME"), ".ssh", "config"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+			// if err != nil {
+			// 	log.Fatal(err)
+			// }
+			// if _, err = f.Write([]byte("Host github.com\n\tStrictHostKeyChecking no\n")); err != nil {
+			// 	f.Close() // ignore error; Write error takes precedence
+			// 	log.Fatal(err)
+			// }
+
+			err = ioutil.WriteFile(filepath.Join(os.Getenv("HOME"), ".ssh", "config"), []byte("Host github.com\n\tStrictHostKeyChecking no\n"), 0644)
 
 			content, err := ioutil.ReadFile(filepath.Join(os.Getenv("HOME"), ".ssh", "config"))
 
@@ -45,9 +47,9 @@ func FeatureContext(s *godog.Suite) {
 
 			fmt.Println(string(content))
 
-			if err := f.Close(); err != nil {
-				log.Fatal(err)
-			}
+			// if err := f.Close(); err != nil {
+			// 	log.Fatal(err)
+			// }
 		}
 	})
 
@@ -98,6 +100,7 @@ func envVariableCheck() bool {
 
 func executeGhCommad(arg string) bool {
 	cmd := exec.Command("gh", arg)
+	fmt.Println("Executing command : gh ", arg)
 	err := cmd.Run()
 	if err != nil {
 		fmt.Println(err.Error())
