@@ -16,6 +16,7 @@ import (
 func FeatureContext(s *godog.Suite) {
 
 	// KAM related steps
+
 	s.BeforeSuite(func() {
 		fmt.Println("Before suite")
 		if !envVariableCheck() {
@@ -28,17 +29,9 @@ func FeatureContext(s *godog.Suite) {
 				fmt.Println(err.Error())
 			}
 
-			// f, err := os.OpenFile(filepath.Join(os.Getenv("HOME"), ".ssh", "config"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-			// if err != nil {
-			// 	log.Fatal(err)
-			// }
-			// if _, err = f.Write([]byte("Host github.com\n\tStrictHostKeyChecking no\n")); err != nil {
-			// 	f.Close() // ignore error; Write error takes precedence
-			// 	log.Fatal(err)
-			// }
-
+			// Writing HostKeyChecking setting to the file
 			err = ioutil.WriteFile(filepath.Join(os.Getenv("HOME"), ".ssh", "config"), []byte("Host github.com\n\tStrictHostKeyChecking no\n"), 0644)
-
+			// Reading the content
 			content, err := ioutil.ReadFile(filepath.Join(os.Getenv("HOME"), ".ssh", "config"))
 
 			if err != nil {
@@ -46,10 +39,6 @@ func FeatureContext(s *godog.Suite) {
 			}
 
 			fmt.Println(string(content))
-
-			// if err := f.Close(); err != nil {
-			// 	log.Fatal(err)
-			// }
 		}
 	})
 
