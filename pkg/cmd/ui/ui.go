@@ -135,6 +135,7 @@ func enterSealedSecretService() string {
 // EnterSealedSecretService , prompts the UI to ask for the sealed-secrets-namespaces
 func EnterSealedSecretService(sealedSecretService *types.NamespacedName) string {
 	var sealedNs string
+	sealedSecretService.Name = enterSealedSecretService()
 	prompt := &survey.Input{
 		Message: "Provide a namespace in which the Sealed Secrets operator is installed, automatically generated secrets are encrypted with this operator?",
 		Help:    "If you have a custom installation of the Sealed Secrets operator, we need to know how to communicate with it to seal your secrets",
