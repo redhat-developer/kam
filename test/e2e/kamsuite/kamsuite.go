@@ -1,6 +1,7 @@
 package kamsuite
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -23,12 +24,8 @@ func FeatureContext(s *godog.Suite) {
 
 	s.AfterSuite(func() {
 		fmt.Println("After suite")
-		ghLogin := "auth login --with-token < " + os.Getenv("KAM_GITHUB_TOKEN_FILE")
-		if !executeGhCommad(ghLogin) {
-			os.Exit(1)
-		}
-		deleteGhRepoStep1 := "alias set delete 'api -X DELETE \"repos/$1\"'"
-		deleteGhRepoStep2 := "repo-delete kam-bot/" + os.Getenv("GITOPS_REPO_URL")
+		deleteGhRepoStep1 := []string{"alias", "set", "delete", "'api -X DELETE \"repos/$1\"'"}
+		deleteGhRepoStep2 := []string{"repo-delete", "kam-bot/" + os.Getenv("GITOPS_REPO_URL")}
 		if !executeGhCommad(deleteGhRepoStep1) || !executeGhCommad(deleteGhRepoStep2) {
 			os.Exit(1)
 		}
@@ -70,12 +67,16 @@ func envVariableCheck() bool {
 	return true
 }
 
-func executeGhCommad(arg string) bool {
-	cmd := exec.Command("gh", arg)
+func executeGhCommad(arg []string) bool {
+	cmd := exec.Command("gh", arg...)
 	fmt.Println("Executing command : gh", arg)
+	fmt.Println("gh path is : ", cmd.Path)
+	fmt.Println("gh command is : ", cmd.Args)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
 	err := cmd.Run()
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
 		return false
 	}
 	return true

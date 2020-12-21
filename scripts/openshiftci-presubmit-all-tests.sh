@@ -50,6 +50,8 @@ else
     exit 1
 fi
 
+gh auth login --with-token < $KAM_GITHUB_TOKEN_FILE
+
 # assert that kam is on the path
 kam version
 
