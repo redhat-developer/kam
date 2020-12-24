@@ -35,7 +35,7 @@ EOF
 install_sealed_secrets_operator
 # sealed-secrets operator status check
 count=0
-while [ "$count" -lt "5" ];
+while [ "$count" -lt "12" ];
 do
     operator_status=`oc get csv -n cicd | grep sealed-secrets-operator`
     if [[ $operator_status == *"Succeeded"* ]]; then
