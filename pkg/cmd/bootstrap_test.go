@@ -380,7 +380,7 @@ Checking if OpenShift Pipelines Operator is installed with the default configura
 
 func TestDependenciesWithAllInstalledCustomSealedSecretsServiceButNotMatched(t *testing.T) {
 	// use an OTHER sealed secret service
-	fakeClient := newFakeClient([]runtime.Object{customSealedSecretsService2(), pipelinesOperator()}, []runtime.Object{argoCDCSV()})
+	fakeClient := newFakeClient([]runtime.Object{customSealedSecretsServiceOther(), pipelinesOperator()}, []runtime.Object{argoCDCSV()})
 
 	wantMsg := `
 Checking if Sealed Secrets is installed with the default configuration [Provided Sealed Secrets namespace/name are not valid. Please verify]
@@ -473,7 +473,7 @@ func customSealedSecretsService() *corev1.Service {
 	}
 }
 
-func customSealedSecretsService2() *corev1.Service {
+func customSealedSecretsServiceOther() *corev1.Service {
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "dummy-controller-do-not-use-value",
