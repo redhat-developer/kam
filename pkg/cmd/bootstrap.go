@@ -225,10 +225,29 @@ func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client,
 
 	spinner.Start("Checking if Sealed Secrets is installed with the default configuration", false)
 	if err := client.CheckIfSealedSecretsExists(defaultSealedSecretsServiceName); err != nil {
-		warnIfNotFound(spinner, "Please install Sealed Secrets Operator from OperatorHub", err)
-		if !apierrors.IsNotFound(err) {
-			return fmt.Errorf("failed to check for Sealed Secrets Operator: %w", err)
+
+		// in case Sealed Secret namespace/service name are provided, try them too
+		if (len(io.BootstrapOptions.SealedSecretsService.Namespace) > 0 && io.BootstrapOptions.SealedSecretsService.Namespace != defaultSealedSecretsServiceName.Namespace) ||
+			(len(io.BootstrapOptions.SealedSecretsService.Name) > 0 && (io.BootstrapOptions.SealedSecretsService.Name != defaultSealedSecretsServiceName.Name)) {
+
+			if err := client.CheckIfSealedSecretsExists(io.BootstrapOptions.SealedSecretsService); err != nil {
+				warnIfNotFound(spinner, "Provided Sealed Secrets namespace/name are not valid. Please verify", err)
+				if !apierrors.IsNotFound(err) {
+					return fmt.Errorf("failed to check for Sealed Secrets Operator: %w", err)
+				}
+			} else {
+				io.SealedSecretsService = io.BootstrapOptions.SealedSecretsService
+			}
+
+		} else {
+			// no dedicated name/namespace given, and also default one not found
+
+			warnIfNotFound(spinner, "Please install Sealed Secrets Operator from OperatorHub", err)
+			if !apierrors.IsNotFound(err) {
+				return fmt.Errorf("failed to check for Sealed Secrets Operator: %w", err)
+			}
 		}
+
 		// We do not add Sealed Secret Operator to missingDeps since we this dependency can be resolved
 		// by optional flags or interactive user inputs.
 	} else {
