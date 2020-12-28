@@ -1,6 +1,7 @@
 package kamsuite
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"os"
@@ -24,10 +25,18 @@ func FeatureContext(s *godog.Suite) {
 
 	s.AfterSuite(func() {
 		fmt.Println("After suite")
-		deleteGhRepoStep1 := []string{"alias", "set", "delete", "'api -X DELETE \"repos/$1\"'"}
-		deleteGhRepoStep2 := []string{"repo-delete", "kam-bot/" + os.Getenv("GITOPS_REPO_URL")}
-		if !executeGhCommad(deleteGhRepoStep1) || !executeGhCommad(deleteGhRepoStep2) {
+		ghLoginCommand := []string{"auth", "login", "--with-token"}
+		if !executeGhLoginCommad(ghLoginCommand) {
 			os.Exit(1)
+		}
+
+		deleteGhRepoStep1 := []string{"alias", "set", "delete", "'api -X DELETE \"repos/$1\"'"}
+		deleteGhRepoStep2 := []string{"repo-delete", "kamuser/gitops"}
+		if !executeGhRepoDeleteCommad(deleteGhRepoStep1) {
+			os.Exit(1)
+			if !executeGhRepoDeleteCommad(deleteGhRepoStep2) {
+				os.Exit(1)
+			}
 		}
 	})
 
@@ -41,7 +50,7 @@ func FeatureContext(s *godog.Suite) {
 }
 
 func envVariableCheck() bool {
-	envVars := []string{"SERVICE_REPO_URL", "GITOPS_REPO_URL", "IMAGE_REPO", "DOCKERCONFIGJSON_PATH", "GITHUB_TOKEN"}
+	envVars := []string{"SERVICE_REPO_URL", "GITOPS_REPO_URL", "IMAGE_REPO", "DOCKERCONFIGJSON_PATH", "GITHUB_TOKEN", "KAM_GITHUB_TOKEN_FILE"}
 	val, ok := os.LookupEnv("CI")
 	if !ok {
 		for _, envVar := range envVars {
@@ -67,12 +76,29 @@ func envVariableCheck() bool {
 	return true
 }
 
-func executeGhCommad(arg []string) bool {
-	cmd := exec.Command("gh", arg...)
-	fmt.Println("Executing command : gh", arg)
-	fmt.Println("gh path is : ", cmd.Path)
-	fmt.Println("gh command is : ", cmd.Args)
+func executeGhLoginCommad(arg []string) bool {
 	var stderr bytes.Buffer
+	f, err := os.Open(os.Getenv("KAM_GITHUB_TOKEN_FILE"))
+	if err != nil {
+		fmt.Println("Error is : ", err)
+		return false
+	}
+	cmd := exec.Command("gh", arg...)
+	cmd.Stdin = bufio.NewReader(f)
+	fmt.Println("gh command is : ", cmd.Args)
+	cmd.Stderr = &stderr
+	err = cmd.Run()
+	if err != nil {
+		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
+		return false
+	}
+	return true
+}
+
+func executeGhRepoDeleteCommad(arg []string) bool {
+	var stderr bytes.Buffer
+	cmd := exec.Command("gh", arg...)
+	fmt.Println("gh command is : ", cmd.Args)
 	cmd.Stderr = &stderr
 	err := cmd.Run()
 	if err != nil {

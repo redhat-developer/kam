@@ -11,10 +11,6 @@ export KUBEADMIN_PASSWORD=`cat $KUBEADMIN_PASSWORD_FILE`
 # show commands
 set -x
 export CI="prow"
-if ! [[ -w ${HOME:-} ]]; then
-    export HOME=/alabama;
-fi
-echo $HOME
 go mod vendor
 export PRNO="$(jq .refs.pulls[0].number <<< $(echo $JOB_SPEC))"
 make prepare-test-cluster
@@ -49,8 +45,6 @@ else
     echo "Fail to login as a admin user"
     exit 1
 fi
-
-gh auth login --with-token < $KAM_GITHUB_TOKEN_FILE
 
 # assert that kam is on the path
 kam version

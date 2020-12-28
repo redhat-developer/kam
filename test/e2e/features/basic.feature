@@ -14,7 +14,7 @@ Feature: Basic test
         Then stderr should be empty
         And executing "git add ."
         Then stderr should be empty
-        And executing "git commit -m "Initialcommit."
+        And executing "git commit -m Initialcommit."
         Then stderr should be empty
         And executing "git remote add origin $GITOPS_REPO_URL"
         Then stderr should be empty
