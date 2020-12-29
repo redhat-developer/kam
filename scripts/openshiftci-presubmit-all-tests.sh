@@ -11,6 +11,23 @@ export KUBEADMIN_PASSWORD=`cat $KUBEADMIN_PASSWORD_FILE`
 # show commands
 set -x
 export CI="prow"
+if ! [[ -w ${HOME:-} ]]; then
+    export HOME=/alabama;
+fi
+mkdir -p -m 700 ~/.ssh/
+cp $KAM_SSH_PRIVATE_KEY_FILE ~/.ssh/
+cp $KAM_SSH_PUBLIC_KEY_FILE ~/.ssh/
+echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+chmod 600 ~/.ssh/config
+ls -lr ~/.ssh/
+
+sudo mkdir -p -m 700 /.ssh/
+sudo cp $KAM_SSH_PRIVATE_KEY_FILE /.ssh/
+sudo cp $KAM_SSH_PUBLIC_KEY_FILE /.ssh/
+sudo echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> /.ssh/config
+sudo chmod 600 /.ssh/config
+sudo ls -lr /.ssh/
+
 go mod vendor
 export PRNO="$(jq .refs.pulls[0].number <<< $(echo $JOB_SPEC))"
 make prepare-test-cluster

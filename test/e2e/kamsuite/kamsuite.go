@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/cucumber/godog"
 	"github.com/cucumber/messages-go/v10"
@@ -21,22 +22,24 @@ func FeatureContext(s *godog.Suite) {
 		if !envVariableCheck() {
 			os.Exit(1)
 		}
-	})
 
-	s.AfterSuite(func() {
-		fmt.Println("After suite")
 		ghLoginCommand := []string{"auth", "login", "--with-token"}
 		if !executeGhLoginCommad(ghLoginCommand) {
 			os.Exit(1)
 		}
+	})
 
-		deleteGhRepoStep1 := []string{"alias", "set", "delete", "'api -X DELETE \"repos/$1\"'"}
-		deleteGhRepoStep2 := []string{"repo-delete", "kamuser/gitops"}
-		if !executeGhRepoDeleteCommad(deleteGhRepoStep1) {
+	s.AfterSuite(func() {
+		fmt.Println("After suite")
+		deleteGhRepoStep1 := []string{"alias", "set", "repo-delete", `api -X DELETE "repos/$1"`}
+		deleteGhRepoStep2 := []string{"repo-delete", strings.Split(strings.Split(os.Getenv("GITOPS_REPO_URL"), "github.com/")[1], ".")[0]}
+		ok, _ := executeGhRepoDeleteCommad(deleteGhRepoStep1)
+		if !ok {
 			os.Exit(1)
-			if !executeGhRepoDeleteCommad(deleteGhRepoStep2) {
-				os.Exit(1)
-			}
+		}
+		ok, errMessage := executeGhRepoDeleteCommad(deleteGhRepoStep2)
+		if !ok {
+			fmt.Println(errMessage)
 		}
 	})
 
@@ -95,15 +98,14 @@ func executeGhLoginCommad(arg []string) bool {
 	return true
 }
 
-func executeGhRepoDeleteCommad(arg []string) bool {
+func executeGhRepoDeleteCommad(arg []string) (bool, string) {
 	var stderr bytes.Buffer
 	cmd := exec.Command("gh", arg...)
 	fmt.Println("gh command is : ", cmd.Args)
 	cmd.Stderr = &stderr
 	err := cmd.Run()
 	if err != nil {
-		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
-		return false
+		return false, stderr.String()
 	}
-	return true
+	return true, stderr.String()
 }
