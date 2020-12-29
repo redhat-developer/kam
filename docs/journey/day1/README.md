@@ -73,6 +73,67 @@ resources, and the resources will be pushed to your git hosting service.
 
 * In the event a token is not passed in the command, if the token is not found in the keyring or the environment variable with the specified name. The command will fail.
 
+## Private Repository
+
+In case a [private repository](https://argoproj.github.io/argo-cd/user-guide/private-repositories) is used enhance the generated `config/argocd/argocd.yaml` with the secret information how to connect to the git repos. 
+For example, this could be as follows:
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  creationTimestamp: null
+  name: argocd
+  namespace: argocd
+spec:
+  resourceExclusions: |
+    - apiGroups:
+      - tekton.dev
+      clusters:
+      - '*'
+      kinds:
+      - TaskRun
+      - PipelineRun
+  dex:
+    image: quay.io/redhat-cop/dex
+    openShiftOAuth: true
+    version: v2.22.0-openshift
+  rbac:
+    defaultPolicy: 'role:readonly'
+    policy: |
+      g, system:cluster-admins, role:admin
+    scopes: '[groups]'
+  server:
+    route:
+      enabled: true
+  repositoryCredentials: |
+    - url: https://github.com/<your organization>/gitops.git
+      passwordSecret:
+        name: <a-secret-name>
+        key: password
+      usernameSecret:
+        name: <a-secret-name>
+        key: username
+
+```
+
+This `ArgoCD` resource defines a repository credential referring a `Secret` (here: `<a-secret-name>`).
+To create the secret using `kubeseal` use the following commands (expecting the same access token as used with `--git-host-access-token`)
+
+```bash
+$ echo -n "token" | kubectl create secret generic <a-secret-name> --dry-run=true --from-file=username=/dev/stdin -o json | kubeseal -n argocd --controller-name=sealedsecretcontroller-sealed-secrets --controller-namespace=cicd > argocd-repo-secret.json
+
+$ echo -n "<your git access token>" | kubectl create secret generic <a-secret-name> --dry-run=true --from-file=password=/dev/stdin -o json | kubeseal -n argocd --controller-name=sealedsecretcontroller-sealed-secrets --controller-namespace=cicd --merge-into argocd-repo-secret.json
+
+$ oc apply -f argocd-repo-secret.json
+sealedsecret.bitnami.com/<a-secret-name> created
+```
+
+Consider here the following configuration parameters
+
+* set the namespace where ArgoCD is running (here: `argocd`)
+* set the SealedSecret namespace and service name (here: `cicd` and `sealedsecretcontroller-sealed-secrets`)
+
 ## Prefixing namespaces
 
 By default, bootstrapping creates `cicd`, `dev`, and `stage` namespaces, these
