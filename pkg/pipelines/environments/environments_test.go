@@ -30,7 +30,11 @@ func TestBuildEnvironmentFilesWithAppsToEnvironment(t *testing.T) {
 				"../services/service-metrics",
 			},
 		},
-		"environments/test-dev/apps/my-app-1/kustomization.yaml":                                   &res.Kustomization{Bases: []string{"overlays"}},
+		"environments/test-dev/apps/my-app-1/kustomization.yaml": &res.Kustomization{
+			Bases: []string{"overlays"},
+			CommonLabels: map[string]string{
+				vcsSourceLabel: "example/example",
+			}},
 		"environments/test-dev/apps/my-app-1/overlays/kustomization.yaml":                          &res.Kustomization{Bases: []string{"../base"}},
 		"environments/test-dev/env/base/test-dev-environment.yaml":                                 namespaces.Create("test-dev", testGitOpsRepoURL),
 		"environments/test-dev/env/base/test-dev-rolebinding.yaml":                                 createRoleBinding(m.Environments[0], "cicd", "pipelines"),
@@ -64,7 +68,12 @@ func TestBuildEnvironmentFilesWithEnvironmentsToApps(t *testing.T) {
 				"../services/service-metrics",
 			},
 		},
-		"environments/test-dev/apps/my-app-1/kustomization.yaml":          &res.Kustomization{Bases: []string{"overlays"}},
+		"environments/test-dev/apps/my-app-1/kustomization.yaml": &res.Kustomization{
+			Bases: []string{"overlays"},
+			CommonLabels: map[string]string{
+				vcsSourceLabel: "example/example",
+			},
+		},
 		"environments/test-dev/apps/my-app-1/overlays/kustomization.yaml": &res.Kustomization{Bases: []string{"../base"}},
 		"environments/test-dev/env/base/test-dev-environment.yaml":        namespaces.Create("test-dev", testGitOpsRepoURL),
 		"environments/test-dev/env/base/test-dev-rolebinding.yaml":        createRoleBinding(m.Environments[0], "cicd", "pipelines"),
@@ -172,7 +181,12 @@ func TestBuildEnvironmentFilesWithNoCICDEnv(t *testing.T) {
 				"../services/service-metrics",
 			},
 		},
-		"environments/test-dev/apps/my-app-1/kustomization.yaml":                                   &res.Kustomization{Bases: []string{"overlays"}},
+		"environments/test-dev/apps/my-app-1/kustomization.yaml": &res.Kustomization{
+			Bases: []string{"overlays"},
+			CommonLabels: map[string]string{
+				vcsSourceLabel: "example/example",
+			},
+		},
 		"environments/test-dev/apps/my-app-1/overlays/kustomization.yaml":                          &res.Kustomization{Bases: []string{"../base"}},
 		"environments/test-dev/env/base/test-dev-environment.yaml":                                 namespaces.Create("test-dev", testGitOpsRepoURL),
 		"environments/test-dev/env/base/kustomization.yaml":                                        &res.Kustomization{Resources: []string{"test-dev-environment.yaml"}},
