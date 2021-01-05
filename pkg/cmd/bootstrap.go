@@ -227,8 +227,8 @@ func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client,
 	if err := client.CheckIfSealedSecretsExists(defaultSealedSecretsServiceName); err != nil {
 
 		// in case Sealed Secret namespace/service name are provided, try them too
-		if (len(io.BootstrapOptions.SealedSecretsService.Namespace) > 0 && io.BootstrapOptions.SealedSecretsService.Namespace != defaultSealedSecretsServiceName.Namespace) ||
-			(len(io.BootstrapOptions.SealedSecretsService.Name) > 0 && (io.BootstrapOptions.SealedSecretsService.Name != defaultSealedSecretsServiceName.Name)) {
+		if (io.BootstrapOptions.SealedSecretsService.Namespace != "" && io.BootstrapOptions.SealedSecretsService.Namespace != defaultSealedSecretsServiceName.Namespace) ||
+			(io.BootstrapOptions.SealedSecretsService.Name != "" && (io.BootstrapOptions.SealedSecretsService.Name != defaultSealedSecretsServiceName.Name)) {
 
 			if err := client.CheckIfSealedSecretsExists(io.BootstrapOptions.SealedSecretsService); err != nil {
 				warnIfNotFound(spinner, "Provided Sealed Secrets namespace/name are not valid. Please verify", err)

@@ -37,7 +37,7 @@ const (
 
 const (
 	customSealedSecretsNS         = "sealed-secrets"
-	customSealedSecretsController = "cutom-sealed-secrets-controller"
+	customSealedSecretsController = "custom-sealed-secrets-controller"
 )
 
 func TestValidatePrefix(t *testing.T) {
