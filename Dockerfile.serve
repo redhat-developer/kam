@@ -2,13 +2,14 @@ FROM openshift/origin-release:golang-1.14 AS builder
 
 WORKDIR /tmp/kam
 COPY . .
-RUN go build  -mod=mod -o=out/kam cmd/kam/kam.go
+RUN make all_platforms 
 
 
 FROM registry.redhat.io/rhel8/httpd-24
 
 # Add application sources
-COPY --from=builder /tmp/kam/out/kam /var/www/html/kam
+RUN mkdir -p /var/www/html/kam
+COPY --from=builder /tmp/kam/dist/kam_windows_amd64.exe /tmp/kam/dist/kam_linux_amd64 /tmp/kam/dist/kam_darwin_amd64 /var/www/html/kam/
 
 # The run script uses standard ways to run the application
 CMD run-httpd
