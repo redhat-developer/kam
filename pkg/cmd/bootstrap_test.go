@@ -223,7 +223,6 @@ func TestValidateMandatoryFlags(t *testing.T) {
 	}{
 		{"missing gitops-repo-url", "", "https://github.com/example/repo.git", "registry/username/repo", false, "", `required flag(s) "gitops-repo-url" not set`},
 		{"missing service-repo-url", "https://github.com/example/repo.git", "", "registry/username/repo", false, "", `required flag(s) "service-repo-url" not set`},
-		{"missing image-repo", "https://github.com/example/repo.git", "https://github.com/example/repo.git", "", false, "", `required flag(s) "image-repo" not set`},
 	}
 
 	for _, tt := range optionTests {
@@ -554,18 +553,18 @@ func TestMissingFlags(t *testing.T) {
 	}{
 		{
 			"Required flags are present",
-			map[string]string{"gitops-repo-url": "value-1", "service-repo-url": "value-2", "image-repo": "value-3"},
+			map[string]string{"gitops-repo-url": "value-1", "service-repo-url": "value-2"},
 			nil,
 		},
 		{
 			"A required flag is absent",
-			map[string]string{"gitops-repo-url": "value-1", "service-repo-url": "value-2", "image-repo": ""},
-			missingFlagErr([]string{`"image-repo"`}),
+			map[string]string{"gitops-repo-url": "value-1", "service-repo-url": ""},
+			missingFlagErr([]string{`"service-repo-url"`}),
 		},
 		{
 			"Multiple required flags are absent",
-			map[string]string{"gitops-repo-url": "value-1", "service-repo-url": "", "image-repo": ""},
-			missingFlagErr([]string{`"service-repo-url"`, `"image-repo"`}),
+			map[string]string{"gitops-repo-url": "", "service-repo-url": ""},
+			missingFlagErr([]string{`"service-repo-url"`, `"gitops-repo-url"`}),
 		},
 	}
 	for _, test := range tests {

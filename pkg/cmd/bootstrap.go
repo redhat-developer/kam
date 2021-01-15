@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"github.com/redhat-developer/kam/pkg/pipelines/imagerepo"
 	"net/url"
 	"os"
 	"strings"
@@ -71,7 +72,8 @@ var (
 // BootstrapParameters encapsulates the parameters for the kam pipelines init command.
 type BootstrapParameters struct {
 	*pipelines.BootstrapOptions
-	PushToGit bool // records whether or not the repository should be pushed to git.
+	PushToGit   bool // records whether or not the repository should be pushed to git.
+	Interactive bool
 }
 
 type status interface {
@@ -108,9 +110,10 @@ func (io *BootstrapParameters) Complete(name string, cmd *cobra.Command, args []
 		return err
 	}
 
-	if cmd.Flags().NFlag() == 0 {
-		return initiateInteractiveMode(io, client)
+	if cmd.Flags().NFlag() == 0 || cmd.Flag("interactive").Changed {
+		return initiateInteractiveMode(io, client, cmd)
 	}
+
 	addGitURLSuffixIfNecessary(io)
 	return nonInteractiveMode(io, client)
 }
@@ -122,7 +125,7 @@ func addGitURLSuffixIfNecessary(io *BootstrapParameters) {
 
 // nonInteractiveMode gets triggered if a flag is passed, checks for mandatory flags.
 func nonInteractiveMode(io *BootstrapParameters, client *utility.Client) error {
-	mandatoryFlags := map[string]string{serviceRepoURLFlag: io.ServiceRepoURL, gitopsRepoURLFlag: io.GitOpsRepoURL, imageRepoFlag: io.ImageRepo}
+	mandatoryFlags := map[string]string{serviceRepoURLFlag: io.ServiceRepoURL, gitopsRepoURLFlag: io.GitOpsRepoURL}
 	if err := checkMandatoryFlags(mandatoryFlags); err != nil {
 		return err
 	}
@@ -135,7 +138,7 @@ func nonInteractiveMode(io *BootstrapParameters, client *utility.Client) error {
 
 func checkMandatoryFlags(flags map[string]string) error {
 	missingFlags := []string{}
-	mandatoryFlags := []string{serviceRepoURLFlag, gitopsRepoURLFlag, imageRepoFlag}
+	mandatoryFlags := []string{serviceRepoURLFlag, gitopsRepoURLFlag}
 	for _, flag := range mandatoryFlags {
 		if flags[flag] == "" {
 			missingFlags = append(missingFlags, fmt.Sprintf("%q", flag))
@@ -152,13 +155,18 @@ func missingFlagErr(flags []string) error {
 }
 
 // initiateInteractiveMode starts the interactive mode impplementation if no flags are passed.
-func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client) error {
+func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client, cmd *cobra.Command) error {
 	log.Progressf("\nStarting interactive prompt\n")
+	// Prompt if user wants to use all default values and only be prompted with required or other necessary questions
+	promptForAll := !ui.UseDefaultValues()
 	// ask for sealed secrets only when default is absent
 	if client.CheckIfSealedSecretsExists(defaultSealedSecretsServiceName) != nil {
 		io.SealedSecretsService.Namespace = ui.EnterSealedSecretService(&io.SealedSecretsService)
 	}
-	io.GitOpsRepoURL = utility.AddGitSuffixIfNecessary(ui.EnterGitRepo())
+	if io.GitOpsRepoURL == "" {
+		io.GitOpsRepoURL = ui.EnterGitRepo()
+	}
+	io.GitOpsRepoURL = utility.AddGitSuffixIfNecessary(io.GitOpsRepoURL)
 	if !isKnownDriver(io.GitOpsRepoURL) {
 		io.PrivateRepoDriver = ui.SelectPrivateRepoDriver()
 		host, err := accesstoken.HostFromURL(io.GitOpsRepoURL)
@@ -168,32 +176,80 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client) er
 		identifier := factory.NewDriverIdentifier(factory.Mapping(host, io.PrivateRepoDriver))
 		factory.DefaultIdentifier = identifier
 	}
-	if ui.UseInternalRegistry() {
-		io.ImageRepo = ui.EnterImageRepoInternalRegistry()
-	} else {
-		io.ImageRepo = ui.EnterImageRepoExternalRepository()
-		io.DockerConfigJSONFilename = ui.EnterDockercfg()
+	if io.ImageRepo != "" {
+		isInternalRegistry, _, err := imagerepo.ValidateImageRepo(io.ImageRepo)
+		if !isInternalRegistry {
+			if !cmd.Flag("dockercfgjson").Changed {
+				log.Progressf("The supplied image repository has been detected as an external repository.")
+				io.DockerConfigJSONFilename = ui.EnterDockercfg()
+			}
+		}
+		if err != nil {
+			return err
+		}
+	} else if promptForAll {
+		if ui.UseInternalRegistry() {
+			io.ImageRepo = ui.EnterImageRepoInternalRegistry()
+		} else {
+			io.ImageRepo = ui.EnterImageRepoExternalRepository()
+			io.DockerConfigJSONFilename = ui.EnterDockercfg()
+		}
 	}
-	io.GitOpsWebhookSecret = ui.EnterGitWebhookSecret(io.GitOpsRepoURL)
-	io.ServiceRepoURL = utility.AddGitSuffixIfNecessary(ui.EnterServiceRepoURL())
-	io.ServiceWebhookSecret = ui.EnterGitWebhookSecret(io.ServiceRepoURL)
+	if promptForAll {
+		io.GitOpsWebhookSecret = ui.EnterGitWebhookSecret(io.GitOpsRepoURL)
+	}
+	if io.ServiceRepoURL == "" {
+		io.ServiceRepoURL = ui.EnterServiceRepoURL()
+	}
+	io.ServiceRepoURL = utility.AddGitSuffixIfNecessary(io.ServiceRepoURL)
+	if promptForAll {
+		io.ServiceWebhookSecret = ui.EnterGitWebhookSecret(io.ServiceRepoURL)
+	}
 	secret, err := accesstoken.GetAccessToken(io.ServiceRepoURL)
 	if err != nil && err != keyring.ErrNotFound {
 		return err
 	}
-	if secret == "" {
-		io.GitHostAccessToken = ui.EnterGitHostAccessToken(io.ServiceRepoURL)
-		io.SaveTokenKeyRing = ui.UseKeyringRingSvc()
+	if secret == "" { // We must prompt for the token
+		if io.GitHostAccessToken == "" {
+			io.GitHostAccessToken = ui.EnterGitHostAccessToken(io.ServiceRepoURL)
+		}
+		if !cmd.Flag("save-token-keyring").Changed {
+			io.SaveTokenKeyRing = ui.UseKeyringRingSvc()
+		}
 		setAccessToken(io)
 	} else {
 		io.GitHostAccessToken = secret
 	}
-	io.CommitStatusTracker = ui.SetupCommitStatusTracker()
-	io.PushToGit = ui.SelectOptionPushToGit()
-	io.Prefix = ui.EnterPrefix()
-	io.OutputPath = ui.EnterOutputPath()
+	if !cmd.Flag("commit-status-tracker").Changed && promptForAll {
+		io.CommitStatusTracker = ui.SetupCommitStatusTracker()
+	}
+	if !cmd.Flag("push-to-git").Changed && promptForAll {
+		io.PushToGit = ui.SelectOptionPushToGit()
+	}
+	if io.Prefix == "" && promptForAll {
+		io.Prefix = ui.EnterPrefix()
+	}
+	outputPathOverridden := cmd.Flag("output").Changed
+	if !outputPathOverridden {
+		// Override the default path to be ./{gitops repo name}
+		repoName, err := repoFromURL(io.GitOpsRepoURL)
+		if err != nil {
+			repoName = "gitops"
+		}
+		io.OutputPath = "./" + repoName
+	}
+	io.OutputPath = ui.VerifyOutputPath(io.OutputPath, io.Overwrite, outputPathOverridden, promptForAll)
 	io.Overwrite = true
 	return nil
+}
+
+func repoFromURL(raw string) (string, error) {
+	u, err := url.Parse(raw)
+	if err != nil {
+		return "", err
+	}
+	parts := strings.Split(u.Path, "/")
+	return strings.TrimSuffix(parts[len(parts)-1], ".git"), nil
 }
 
 func setAccessToken(io *BootstrapParameters) error {
@@ -353,7 +409,7 @@ func NewCmdBootstrap(name, fullName string) *cobra.Command {
 	}
 	bootstrapCmd.Flags().StringVar(&o.GitOpsRepoURL, "gitops-repo-url", "", "Provide the URL for your GitOps repository e.g. https://github.com/organisation/repository.git")
 	bootstrapCmd.Flags().StringVar(&o.GitOpsWebhookSecret, "gitops-webhook-secret", "", "Provide a secret that we can use to authenticate incoming hooks from your Git hosting service for the GitOps repository. (if not provided, it will be auto-generated)")
-	bootstrapCmd.Flags().StringVar(&o.OutputPath, "output", ".", "Path to write GitOps resources")
+	bootstrapCmd.Flags().StringVar(&o.OutputPath, "output", "./gitops", "Path to write GitOps resources")
 	bootstrapCmd.Flags().StringVarP(&o.Prefix, "prefix", "p", "", "Add a prefix to the environment names(Dev, stage,prod,cicd etc.) to distinguish and identify individual environments")
 	bootstrapCmd.Flags().StringVar(&o.DockerConfigJSONFilename, "dockercfgjson", "~/.docker/config.json", "Filepath to config.json which authenticates the image push to the desired image registry ")
 	bootstrapCmd.Flags().StringVar(&o.ImageRepo, "image-repo", "", "Image repository of the form <registry>/<username>/<repository> or <project>/<app> which is used to push newly built images")
@@ -367,6 +423,7 @@ func NewCmdBootstrap(name, fullName string) *cobra.Command {
 	bootstrapCmd.Flags().StringVar(&o.PrivateRepoDriver, "private-repo-driver", "", "If your Git repositories are on a custom domain, please indicate which driver to use github or gitlab")
 	bootstrapCmd.Flags().BoolVar(&o.CommitStatusTracker, "commit-status-tracker", true, "Enable or disable the commit-status-tracker which reports the success/failure of your pipelineruns to GitHub/GitLab")
 	bootstrapCmd.Flags().BoolVar(&o.PushToGit, "push-to-git", false, "If true, automatically creates and populates the gitops-repo-url with the generated resources")
+	bootstrapCmd.Flags().BoolVar(&o.Interactive, "interactive", false, "If true, enable prompting for most options if not already specified on the command line")
 	return bootstrapCmd
 }
 
