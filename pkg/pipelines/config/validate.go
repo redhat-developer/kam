@@ -286,7 +286,7 @@ func missingServiceError(app string, paths []string) *apis.FieldError {
 
 func duplicateSourceError(url string, paths []string) *apis.FieldError {
 	return &apis.FieldError{
-		Message: fmt.Sprintf("duplicate source %v", url),
+		Message: fmt.Sprintf("duplicate source detected, multiple services cannot share the same source repository: %s", url),
 		Paths:   paths,
 	}
 }

@@ -94,7 +94,8 @@ var validateTests = []struct {
 		"testdata/duplicate_application.yaml",
 		multierror.Join(
 			[]error{
-				duplicateFieldsError([]string{"my-app-1"}, []string{"environments.app-environment.apps.my-app-1"}),
+				duplicateFieldsError([]string{"my-app-1"}, []string{
+					"environments.app-environment.apps.my-app-1"}),
 			},
 		),
 	},
@@ -103,7 +104,8 @@ var validateTests = []struct {
 		"testdata/duplicate_service.yaml",
 		multierror.Join(
 			[]error{
-				duplicateFieldsError([]string{"app-1-service-http"}, []string{"environments.duplicate-service.apps.my-app-2.services.app-1-service-http"}),
+				duplicateFieldsError([]string{"app-1-service-http"}, []string{
+					"environments.duplicate-service.apps.my-app-2.services.app-1-service-http"}),
 			},
 		),
 	},
@@ -112,7 +114,9 @@ var validateTests = []struct {
 		"testdata/duplicate_source_url.yaml",
 		multierror.Join(
 			[]error{
-				duplicateSourceError("https://github.com/testing/testing.git", []string{"environments.duplicate-source.apps.my-app-1.services.app-1-service-http", "environments.duplicate-source.apps.my-app-2.services.app-2-service-http"}),
+				duplicateSourceError("https://github.com/testing/testing.git", []string{
+					"environments.duplicate-source.apps.my-app-1.services.app-1-service-http",
+					"environments.duplicate-source.apps.my-app-2.services.app-2-service-http"}),
 			},
 		),
 	},
@@ -129,14 +133,15 @@ var validateTests = []struct {
 }
 
 func TestValidate(t *testing.T) {
-	for _, test := range validateTests {
-		t.Run(fmt.Sprintf("%s (%s)", test.desc, test.filename), func(rt *testing.T) {
-			pipelines, err := ParseFile(ioutils.NewFilesystem(), test.filename)
+	for _, tt := range validateTests {
+		t.Run(fmt.Sprintf("%s (%s)", tt.desc, tt.filename), func(rt *testing.T) {
+			pipelines, err := ParseFile(ioutils.NewFilesystem(), tt.filename)
 			if err != nil {
 				rt.Fatalf("failed to parse file:%v", err)
 			}
 			got := pipelines.Validate()
-			err = matchMultiErrors(rt, got, test.wantErr)
+
+			err = matchMultiErrors(rt, got, tt.wantErr)
 			if err != nil {
 				rt.Fatal(err)
 			}
