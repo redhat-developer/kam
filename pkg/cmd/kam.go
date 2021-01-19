@@ -33,6 +33,7 @@ func MakeRootCmd() *cobra.Command {
 		version.NewCmd(version.RecommendedCommandName, utility.GetFullName(fullName, version.RecommendedCommandName)),
 		webhook.NewCmdWebhook(webhook.RecommendedCommandName, utility.GetFullName(fullName, webhook.RecommendedCommandName)),
 		NewCmdBuild(BuildRecommendedCommandName, utility.GetFullName(fullName, BuildRecommendedCommandName)),
+		completionCmd,
 	)
 	return rootCmd
 }
