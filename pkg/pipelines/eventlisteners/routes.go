@@ -1,4 +1,4 @@
-package routes
+package eventlisteners
 
 import (
 	"encoding/json"
@@ -7,8 +7,10 @@ import (
 
 	routev1 "github.com/openshift/api/route/v1"
 	"github.com/redhat-developer/kam/pkg/pipelines/meta"
-	corev1 "k8s.io/api/core/v1"
 )
+
+// GitOpsWebhookEventListenerRouteName is the OpenShift Route name for GitOps Webhook Listener
+const GitOpsWebhookEventListenerRouteName = "gitops-webhook-event-listener-route"
 
 var (
 	routeTypeMeta = meta.TypeMeta("Route", "route.openshift.io/v1")
@@ -16,13 +18,12 @@ var (
 
 const defaultRoutePort = 8080
 
-// NewFromService creates and returns an OpenShift route preconfigured for the
-// provided Service.
+// GenerateRoute generates an OpenShift route for the EventListener.
 //
 // It strips out the Status field from the route as this causes issues when
 // being created in a cluster.
-func NewFromService(svc *corev1.Service) (interface{}, error) {
-	r := createRoute(svc)
+func GenerateRoute(ns string) (interface{}, error) {
+	r := createRoute(ns)
 	b, err := json.Marshal(r)
 	if err != nil {
 		return nil, err
@@ -33,21 +34,20 @@ func NewFromService(svc *corev1.Service) (interface{}, error) {
 		return nil, err
 	}
 	delete(result, "status")
-	delete(result["spec"].(map[string]interface{}), "host")
 	return result, nil
 }
 
-func createRoute(svc *corev1.Service) routev1.Route {
+func createRoute(ns string) routev1.Route {
 	return routev1.Route{
 		TypeMeta:   routeTypeMeta,
-		ObjectMeta: meta.ObjectMeta(meta.NamespacedName(svc.Namespace, svc.Name)),
+		ObjectMeta: meta.ObjectMeta(meta.NamespacedName(ns, GitOpsWebhookEventListenerRouteName)),
 		Spec: routev1.RouteSpec{
 			To: creatRouteTargetReference(
 				"Service",
-				svc.Name,
+				"el-cicd-event-listener",
 				100,
 			),
-			Port:           createRoutePort(svc.Spec.Ports[0].Port),
+			Port:           createRoutePort(defaultRoutePort),
 			WildcardPolicy: routev1.WildcardPolicyNone,
 		},
 	}
@@ -55,7 +55,9 @@ func createRoute(svc *corev1.Service) routev1.Route {
 
 func createRoutePort(port int32) *routev1.RoutePort {
 	return &routev1.RoutePort{
-		TargetPort: intstr.FromInt(int(port)),
+		TargetPort: intstr.IntOrString{
+			IntVal: port,
+		},
 	}
 }
 
