@@ -8,7 +8,7 @@ PKGS := $(shell go list  ./... | grep -v test/e2e | grep -v vendor)
 FMTPKGS := $(shell go list  ./... | grep -v vendor)
 VERSION=$(shell git describe --tags --always --long --dirty)
 LD_FLAGS="-s -w -X github.com/redhat-developer/kam/pkg/cmd/version.Version=$(VERSION)"
-CFLAGS=-mod=readonly -i -v
+CFLAGS=-i -v
 
 .PHONY: all_platforms
 all_platforms: windows linux darwin 
@@ -54,7 +54,7 @@ install:
 
 .PHONY: test
 test:
-	 go test -mod=readonly $(PKGS)
+	 go test $(PKGS)
 
 .PHONY: clean
 clean:
@@ -62,7 +62,7 @@ clean:
 	
 .PHONY: cmd-docs
 cmd-docs:
-	go run -mod=readonly tools/cmd-docs/main.go
+	go run tools/cmd-docs/main.go
 
 .PHONY: prepare-test-cluster
 prepare-test-cluster:
