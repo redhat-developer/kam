@@ -8,7 +8,7 @@ PKGS := $(shell go list  ./... | grep -v test/e2e | grep -v vendor)
 FMTPKGS := $(shell go list  ./... | grep -v vendor)
 VERSION=$(shell git describe --tags --always --long --dirty)
 LD_FLAGS="-s -w -X github.com/redhat-developer/kam/pkg/cmd/version.Version=$(VERSION)"
-CFLAGS=-i -v
+CFLAGS=-v
 
 .PHONY: all_platforms
 all_platforms: windows linux darwin 
