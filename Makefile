@@ -8,7 +8,6 @@ PKGS := $(shell go list  ./... | grep -v test/e2e | grep -v vendor)
 FMTPKGS := $(shell go list  ./... | grep -v vendor)
 VERSION=$(shell git describe --tags --always --long --dirty)
 LD_FLAGS="-s -w -X github.com/redhat-developer/kam/pkg/cmd/version.Version=$(VERSION)"
-CFLAGS=-mod=readonly -i -v
 
 .PHONY: all_platforms
 all_platforms: windows linux darwin 
@@ -23,13 +22,13 @@ linux: $(LINUX)
 darwin: $(DARWIN) 
 
 $(WINDOWS):
-	env GOOS=windows GOARCH=amd64 go build ${CFLAGS} -o $(DIST_DIR)/$(WINDOWS)  -ldflags=$(LD_FLAGS)  cmd/kam/kam.go
+	env GOOS=windows GOARCH=amd64 go build -o $(DIST_DIR)/$(WINDOWS)  -ldflags=$(LD_FLAGS)  cmd/kam/kam.go
 
 $(LINUX):
-	env GOOS=linux GOARCH=amd64 go build  ${CFLAGS} -o $(DIST_DIR)/$(LINUX)  -ldflags=$(LD_FLAGS) cmd/kam/kam.go
+	env GOOS=linux GOARCH=amd64 go build -o $(DIST_DIR)/$(LINUX)  -ldflags=$(LD_FLAGS) cmd/kam/kam.go
 
 $(DARWIN):
-	env GOOS=darwin GOARCH=amd64 go build  ${CFLAGS} -o $(DIST_DIR)/$(DARWIN) -ldflags=$(LD_FLAGS) cmd/kam/kam.go	
+	env GOOS=darwin GOARCH=amd64 go build -o $(DIST_DIR)/$(DARWIN) -ldflags=$(LD_FLAGS) cmd/kam/kam.go	
 
 default: bin
 
@@ -46,7 +45,7 @@ gofmt:
 
 .PHONY: bin
 bin:
-	go build  ${CFLAGS} -o $(BIN_DIR)/$(EXECUTABLE) -ldflags=$(LD_FLAGS) cmd/kam/kam.go 
+	go build -o $(BIN_DIR)/$(EXECUTABLE) -ldflags=$(LD_FLAGS) cmd/kam/kam.go 
 
 .PHONY: install
 install:
