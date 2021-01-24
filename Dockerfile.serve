@@ -1,0 +1,16 @@
+FROM openshift/origin-release:golang-1.14 AS builder
+
+WORKDIR /tmp/kam
+COPY . .
+RUN make all_platforms 
+
+
+FROM registry.access.redhat.com/rhscl/httpd-24-rhel7
+# Image registry.redhat.io/rhel8/httpd-24 needs authentication
+
+# Add application sources
+RUN mkdir -p /var/www/html/kam
+COPY --from=builder /tmp/kam/dist/kam_windows_amd64.exe /tmp/kam/dist/kam_linux_amd64 /tmp/kam/dist/kam_darwin_amd64 /var/www/html/kam/
+
+# The run script uses standard ways to run the application
+CMD run-httpd
