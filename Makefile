@@ -53,7 +53,7 @@ install:
 
 .PHONY: test
 test:
-	 go test -mod=readonly $(PKGS)
+	 go test $(PKGS)
 
 .PHONY: clean
 clean:
@@ -61,7 +61,7 @@ clean:
 	
 .PHONY: cmd-docs
 cmd-docs:
-	go run -mod=readonly tools/cmd-docs/main.go
+	go run tools/cmd-docs/main.go
 
 .PHONY: prepare-test-cluster
 prepare-test-cluster:
