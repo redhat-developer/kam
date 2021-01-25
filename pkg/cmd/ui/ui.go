@@ -276,10 +276,10 @@ func UseKeyringRingSvc() bool {
 	prompt := &survey.Select{
 		Message: "Do you wish to securely store the git-host-access-token in the keyring on your local machine?",
 		Help:    "The token will be stored securely in the keyring of your local mahine. It will be reused by kam commands(bootstrap/webhoook), further iteration of these commands will not prompt for the access-token",
-		Options: []string{"Yes", "No"},
+		Options: []string{"yes", "no"},
 	}
 
 	err := survey.AskOne(prompt, &optionImageRegistry, survey.Required)
 	handleError(err)
-	return optionImageRegistry == "Yes"
+	return optionImageRegistry == "yes"
 }
