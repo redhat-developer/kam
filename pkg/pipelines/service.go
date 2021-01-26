@@ -99,7 +99,7 @@ func serviceResources(m *config.Manifest, appFs afero.Fs, o *AddServiceOptions) 
 		secretsPath := filepath.Join(config.PathForPipelines(cfg), "base", secretFilename)
 		files[secretsPath] = hookSecret
 
-		if o.ImageRepo != "" {
+		if o.ImageRepo != "" && env.Pipelines != nil {
 			_, resources, bindingName, err := createImageRepoResources(m, cfg, env, o)
 			if err != nil {
 				return nil, err
