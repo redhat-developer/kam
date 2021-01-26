@@ -9,7 +9,6 @@ import (
 	"github.com/redhat-developer/kam/pkg/pipelines/eventlisteners"
 	"github.com/redhat-developer/kam/pkg/pipelines/git"
 	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
-	"github.com/redhat-developer/kam/pkg/pipelines/routes"
 	"github.com/redhat-developer/kam/pkg/pipelines/secrets"
 )
 
@@ -168,7 +167,8 @@ func getSourceRepoURL(manifest *config.Manifest, service *QualifiedServiceName) 
 }
 
 func getListenerURL(r *resources, cicdNamespace string) (string, error) {
-	hasTLS, host, err := r.getListenerAddress(cicdNamespace, routes.GitOpsWebhookEventListenerRouteName)
+	hasTLS, host, err := r.getListenerAddress(cicdNamespace,
+		eventlisteners.GitOpsWebhookEventListenerRouteName)
 	if err != nil {
 		return "", err
 	}

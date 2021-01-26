@@ -15,6 +15,7 @@ import (
 	"github.com/redhat-developer/kam/pkg/pipelines/meta"
 	res "github.com/redhat-developer/kam/pkg/pipelines/resources"
 	"github.com/redhat-developer/kam/pkg/pipelines/roles"
+	"github.com/redhat-developer/kam/pkg/pipelines/routes"
 	"github.com/redhat-developer/kam/pkg/pipelines/scm"
 	"github.com/redhat-developer/kam/pkg/pipelines/secrets"
 	"github.com/redhat-developer/kam/pkg/pipelines/statustracker"
@@ -58,15 +59,20 @@ func TestBootstrapManifest(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	svc := createBootstrapService("app-http-api", "tst-dev", "http-api")
+	route, err := routes.NewFromService(svc)
+	if err != nil {
+		t.Fatal(err)
+	}
 	want := res.Resources{
 		"config/tst-cicd/base/03-secrets/webhook-secret-tst-dev-http-api.yaml": hookSecret,
 		"environments/tst-dev/apps/app-http-api/services/http-api/base/config/100-deployment.yaml": deployment.Create(
 			"app-http-api", "tst-dev", "http-api", bootstrapImage,
 			deployment.ContainerPort(8080)),
-		"environments/tst-dev/apps/app-http-api/services/http-api/base/config/200-service.yaml": createBootstrapService(
-			"app-http-api", "tst-dev", "http-api"),
+		"environments/tst-dev/apps/app-http-api/services/http-api/base/config/200-service.yaml": svc,
+		"environments/tst-dev/apps/app-http-api/services/http-api/base/config/300-route.yaml":   route,
 		"environments/tst-dev/apps/app-http-api/services/http-api/base/config/kustomization.yaml": &res.Kustomization{
-			Resources: []string{"100-deployment.yaml", "200-service.yaml"}},
+			Resources: []string{"100-deployment.yaml", "200-service.yaml", "300-route.yaml"}},
 		pipelinesFile: &config.Manifest{
 			Version:   version,
 			GitOpsURL: "https://github.com/my-org/gitops.git",

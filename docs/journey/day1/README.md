@@ -260,11 +260,10 @@ the configuration should be self-hosted thereafter.
 $ oc apply -k config/argocd/
 ```
 
-You should now be able to create a route to your new service, it should be
-running [nginx](https://nginx.org/) and serving a page.
-
 At this point, the apps in ArgoCD should be synced and healthy. You may need to manually ["sync apps"](https://github.com/argoproj/argo-cd/blob/master/docs/getting_started.md#7-sync-deploy-the-application) from the ArgoCD web UI if some of the apps are out-of-sync. Instructions on how to access the ArgoCD web UI is provided in the next section.  
 
+A route is automatically created which will serve the default image, this is
+automatically created based on the name of your application source repository.
 
 ## Visualize your applications via the ArgoCD UI
 

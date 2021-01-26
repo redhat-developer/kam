@@ -223,7 +223,10 @@ func bootstrapResources(o *BootstrapOptions, appFs afero.Fs) (res.Resources, err
 	if app == nil {
 		return nil, errors.New("unable to bootstrap without application")
 	}
-	svcFiles := bootstrapServiceDeployment(devEnv, app)
+	svcFiles, err := bootstrapServiceDeployment(devEnv, app)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create bootstrap service: %w", err)
+	}
 	hookSecret, err := secrets.CreateSealedSecret(
 		meta.NamespacedName(ns["cicd"], secretName),
 		o.SealedSecretsService,
@@ -276,16 +279,27 @@ func bootstrapResources(o *BootstrapOptions, appFs afero.Fs) (res.Resources, err
 	return bootstrapped, nil
 }
 
-func bootstrapServiceDeployment(dev *config.Environment, app *config.Application) res.Resources {
+func bootstrapServiceDeployment(dev *config.Environment, app *config.Application) (res.Resources, error) {
 	svc := dev.Apps[0].Services[0]
 	svcBase := filepath.Join(config.PathForService(app, dev, svc.Name), "base", "config")
 	resources := res.Resources{}
 	// TODO: This should change if we add Namespace to Environment.
 	// We'd need to create the resources in the namespace _of_ the Environment.
 	resources[filepath.Join(svcBase, "100-deployment.yaml")] = deployment.Create(app.Name, dev.Name, svc.Name, bootstrapImage, deployment.ContainerPort(8080))
-	resources[filepath.Join(svcBase, "200-service.yaml")] = createBootstrapService(app.Name, dev.Name, svc.Name)
-	resources[filepath.Join(svcBase, "kustomization.yaml")] = &res.Kustomization{Resources: []string{"100-deployment.yaml", "200-service.yaml"}}
-	return resources
+	containerSvc := createBootstrapService(app.Name, dev.Name, svc.Name)
+	resources[filepath.Join(svcBase, "200-service.yaml")] = containerSvc
+	r, err := routes.NewFromService(containerSvc)
+	if err != nil {
+		return nil, err
+	}
+	resources[filepath.Join(svcBase, "300-route.yaml")] = r
+	resources[filepath.Join(svcBase, "kustomization.yaml")] = &res.Kustomization{
+		Resources: []string{
+			"100-deployment.yaml",
+			"200-service.yaml",
+			"300-route.yaml",
+		}}
+	return resources, nil
 }
 
 func bootstrapEnvironments(repo scm.Repository, prefix, secretName string, ns map[string]string) ([]*config.Environment, *config.Config, error) {
@@ -514,7 +528,7 @@ func createCICDResources(fs afero.Fs, repo scm.Repository, pipelineConfig *confi
 	outputs[appCIPushTemplatePath] = triggers.CreateDevCIBuildPRTemplate(cicdNamespace, saName)
 	outputs[eventListenerPath] = eventlisteners.Generate(repo, cicdNamespace, saName, eventlisteners.GitOpsWebhookSecret)
 	log.Success("OpenShift Pipelines resources created")
-	route, err := routes.Generate(cicdNamespace)
+	route, err := eventlisteners.GenerateRoute(cicdNamespace)
 	if err != nil {
 		return nil, err
 	}
