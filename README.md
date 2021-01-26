@@ -38,6 +38,20 @@ To contribute to `KAM CLI`, follow these steps:
 
 Alternatively see the GitHub documentation on [creating a pull request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).
 
+### How to Build
+
+```shell
+$ make bin
+```
+
+The resulting binary will be found in `./bin/kam`
+
+Alternatively this is a Standard Go project layout project, so you can build with:
+
+```shell
+$ go build ./cmd/kam
+```
+
 ## Contact
 
 Please open a Github Issue or reach out to the team at [team-gitops@redhat.com](mailto:team-gitops@redhat.com)
