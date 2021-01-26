@@ -223,16 +223,31 @@ func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client,
 	missingDeps := []string{}
 	log.Progressf("\nChecking dependencies\n")
 
-	spinner.Start("Checking if Sealed Secrets is installed with the default configuration", false)
-	if err := client.CheckIfSealedSecretsExists(defaultSealedSecretsServiceName); err != nil {
-		warnIfNotFound(spinner, "Please install Sealed Secrets Operator from OperatorHub", err)
-		if !apierrors.IsNotFound(err) {
-			return fmt.Errorf("failed to check for Sealed Secrets Operator: %w", err)
+	// in case custom Sealed Secrets namespace/service name are provided, try them first
+	// We do not add Sealed Secret Operator to missingDeps since we this dependency can be resolved
+	// by optional flags or interactive user inputs.
+	if (io.BootstrapOptions.SealedSecretsService.Namespace != "" && io.BootstrapOptions.SealedSecretsService.Namespace != defaultSealedSecretsServiceName.Namespace) ||
+		(io.BootstrapOptions.SealedSecretsService.Name != "" && (io.BootstrapOptions.SealedSecretsService.Name != defaultSealedSecretsServiceName.Name)) {
+
+		spinner.Start("Checking if Sealed Secrets is installed with custom configuration", false)
+		if err := checkAndSetSealedSecretsConfig(io, client, io.BootstrapOptions.SealedSecretsService); err != nil {
+
+			warnIfNotFound(spinner, "Provided Sealed Secrets namespace/name are not valid. Please verify", err)
+			if !apierrors.IsNotFound(err) {
+				return fmt.Errorf("failed to check for Sealed Secrets Operator: %w", err)
+			}
 		}
-		// We do not add Sealed Secret Operator to missingDeps since we this dependency can be resolved
-		// by optional flags or interactive user inputs.
 	} else {
-		io.SealedSecretsService = defaultSealedSecretsServiceName
+		// use default configuration to interact with Sealed Secrets
+
+		spinner.Start("Checking if Sealed Secrets is installed with the default configuration", false)
+		if err := checkAndSetSealedSecretsConfig(io, client, defaultSealedSecretsServiceName); err != nil {
+
+			warnIfNotFound(spinner, "Please install Sealed Secrets Operator from OperatorHub", err)
+			if !apierrors.IsNotFound(err) {
+				return fmt.Errorf("failed to check for Sealed Secrets Operator: %w", err)
+			}
+		}
 	}
 
 	spinner.Start("Checking if ArgoCD Operator is installed with the default configuration", false)
@@ -256,6 +271,18 @@ func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client,
 	if len(missingDeps) > 0 {
 		return fmt.Errorf("failed to satisfy the required dependencies: %s", strings.Join(missingDeps, ", "))
 	}
+	return nil
+}
+
+// check and remember the given Sealed Secrets configuration if is available otherwise return the error
+func checkAndSetSealedSecretsConfig(io *BootstrapParameters, client *utility.Client, sealedConfig types.NamespacedName) error {
+
+	if err := client.CheckIfSealedSecretsExists(sealedConfig); err != nil {
+		return err
+	} else {
+		io.SealedSecretsService = sealedConfig
+	}
+
 	return nil
 }
 
