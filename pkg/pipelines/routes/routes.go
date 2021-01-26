@@ -32,6 +32,7 @@ func NewFromService(svc *corev1.Service) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	// These are removed because they cause synchronisation issues in ArgoCD.
 	delete(result, "status")
 	delete(result["spec"].(map[string]interface{}), "host")
 	return result, nil
