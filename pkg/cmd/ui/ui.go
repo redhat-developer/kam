@@ -5,9 +5,9 @@ import (
 	"net/url"
 	"path/filepath"
 
+	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
 	"gopkg.in/AlecAivazis/survey.v1"
 
-	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -61,7 +61,7 @@ func EnterImageRepoInternalRegistry() string {
 func EnterDockercfg() string {
 	var dockerCfg string
 	prompt := &survey.Input{
-		Message: "Path to config.json which authenticates image pushes to the desired image registry",
+		Message: "Provide the path to config.json which authenticates image pushes to the desired image registry",
 		Help:    "The secret present in the file path generates a secure secret that authenticates the push of the image built when the app-ci pipeline is run. The image along with the necessary labels will be present on the upstream image registry of choice.",
 		Default: "~/.docker/config.json",
 	}
@@ -85,24 +85,29 @@ func EnterImageRepoExternalRepository() string {
 	return imageRepoExt
 }
 
-// EnterOutputPath allows the user to specify the path where the gitops configuration must reside locally in a UI prompt.
-func EnterOutputPath() string {
-	var outputPath string
+// VerifyOutputPath allows the user to specify the path where the gitops configuration must reside locally in a UI prompt.
+func VerifyOutputPath(originalPath string, overwrite, outputPathOverridden, promptForPath bool) string {
+	var outputPath = originalPath
 	prompt := &survey.Input{
 		Message: "Provide a path to write GitOps resources?",
 		Help:    "This is the path where the GitOps repository configuration is stored locally before you push it to the repository GitopsRepoURL",
-		Default: ".",
+		Default: originalPath,
 	}
-
-	err := survey.AskOne(prompt, &outputPath, nil)
-	exists, filePathError := ioutils.IsExisting(ioutils.NewFilesystem(), filepath.Join(outputPath, "pipelines.yaml"))
-	if exists {
-		SelectOptionOverwrite(outputPath)
+	if !outputPathOverridden && promptForPath {
+		handleError(survey.AskOne(prompt, &outputPath, nil))
 	}
-	if !exists {
-		err = filePathError
+	for true {
+		exists, err := ioutils.IsExisting(ioutils.NewFilesystem(), filepath.Join(outputPath, "pipelines.yaml"))
+		handleError(err)
+		if !exists || overwrite {
+			break
+		}
+		doOverwrite := SelectOptionOverwrite(outputPath)
+		if doOverwrite {
+			break
+		}
+		handleError(survey.AskOne(prompt, &outputPath, nil))
 	}
-	handleError(err)
 	return outputPath
 }
 
@@ -216,16 +221,16 @@ func UseInternalRegistry() bool {
 }
 
 // SelectOptionOverwrite allows users the option to overwrite the current gitops configuration locally through the UI prompt.
-func SelectOptionOverwrite(path string) string {
+func SelectOptionOverwrite(currentPath string) bool {
 	var overwrite string
 	prompt := &survey.Select{
 		Message: "Do you want to overwrite your output path?",
+		Help:    "Overwrite: " + currentPath,
 		Options: []string{"yes", "no"},
 		Default: "no",
 	}
-	err := survey.AskOne(prompt, &overwrite, makeOverWriteValidator(path))
-	handleError(err)
-	return overwrite
+	handleError(survey.AskOne(prompt, &overwrite, nil))
+	return overwrite == "yes"
 }
 
 // SetupCommitStatusTracker allows users the option to select if they
@@ -268,6 +273,19 @@ func SelectOptionPushToGit() bool {
 	err := survey.AskOne(prompt, &optionPushToGit, survey.Required)
 	handleError(err)
 	return optionPushToGit == "yes"
+}
+
+// UseDefaultValues allows users to use default values so that they will be prompted with fewer questions in interactive mode
+func UseDefaultValues() bool {
+	var useDefaults string
+	prompt := &survey.Select{
+		Message: "Do you want to accept all default values and be prompted only for the minimum required options?",
+		Help:    "Select yes to accept default values or select no to be prompted for all options that haven't already been specified on the command line",
+		Options: []string{"yes", "no"},
+		Default: "yes",
+	}
+	handleError(survey.AskOne(prompt, &useDefaults, nil))
+	return useDefaults == "yes"
 }
 
 // UseKeyringRingSvc , allows users an option between the Internal image registry and the external image registry through the UI prompt.

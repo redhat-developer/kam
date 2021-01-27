@@ -5,12 +5,10 @@ import (
 	"fmt"
 	"net/url"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/redhat-developer/kam/pkg/cmd/utility"
 	"github.com/redhat-developer/kam/pkg/pipelines/git"
-	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
 	"github.com/redhat-developer/kam/pkg/pipelines/namespaces"
 	"gopkg.in/AlecAivazis/survey.v1"
 	"gopkg.in/AlecAivazis/survey.v1/terminal"
@@ -30,12 +28,6 @@ func makePrefixValidator() survey.Validator {
 func makeSecretValidator() survey.Validator {
 	return func(input interface{}) error {
 		return validateSecretLength(input)
-	}
-}
-
-func makeOverWriteValidator(path string) survey.Validator {
-	return func(input interface{}) error {
-		return validateOverwriteOption(input, path)
 	}
 }
 
@@ -91,21 +83,6 @@ func validateSecretLength(input interface{}) error {
 		return nil
 	}
 	return nil
-}
-
-// validateOverwriteOption(  validates the URL
-func validateOverwriteOption(input interface{}, path string) error {
-	if s, ok := input.(string); ok {
-		if s == "no" {
-			exists, _ := ioutils.IsExisting(ioutils.NewFilesystem(), filepath.Join(path, "pipelines.yaml"))
-			if exists {
-				EnterOutputPath()
-			}
-		}
-		return nil
-	}
-	return nil
-
 }
 
 // ValidateAccessToken validates if the access token is correct for a particular service repo
@@ -165,11 +142,11 @@ func checkSecretLength(secret string) bool {
 
 // handleError handles UI-related errors, in particular useful to gracefully handle ctrl-c interrupts gracefully
 func handleError(err error) {
-	if err != nil {
-		if err == terminal.InterruptErr {
-			os.Exit(1)
-		} else {
-			klog.V(4).Infof("Encountered an error processing prompt: %v", err)
-		}
+	if err == nil {
+		return
 	}
+	if err == terminal.InterruptErr {
+		os.Exit(1)
+	}
+	klog.V(4).Infof("Encountered an error processing prompt: %v", err)
 }
