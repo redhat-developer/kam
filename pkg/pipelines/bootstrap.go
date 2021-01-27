@@ -303,7 +303,8 @@ func bootstrapServiceDeployment(dev *config.Environment, app *config.Application
 	resources := res.Resources{}
 	// TODO: This should change if we add Namespace to Environment.
 	// We'd need to create the resources in the namespace _of_ the Environment.
-	resources[filepath.Join(svcBase, "100-deployment.yaml")] = deployment.Create(app.Name, dev.Name, svc.Name, bootstrapImage, deployment.ContainerPort(8080))
+	resources[filepath.Join(svcBase, "100-deployment.yaml")] = deployment.Create(
+		app.Name, svc.Name, bootstrapImage, deployment.ContainerPort(8080))
 	containerSvc := createBootstrapService(app.Name, dev.Name, svc.Name)
 	resources[filepath.Join(svcBase, "200-service.yaml")] = containerSvc
 	r, err := routes.NewFromService(containerSvc)
@@ -312,6 +313,7 @@ func bootstrapServiceDeployment(dev *config.Environment, app *config.Application
 	}
 	resources[filepath.Join(svcBase, "300-route.yaml")] = r
 	resources[filepath.Join(svcBase, "kustomization.yaml")] = &res.Kustomization{
+		Namespace: dev.Name,
 		Resources: []string{
 			"100-deployment.yaml",
 			"200-service.yaml",

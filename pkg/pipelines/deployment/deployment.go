@@ -47,10 +47,10 @@ func ContainerPort(p int32) PodSpecFunc {
 }
 
 // Create creates and returns a Deployment with the specified configuration.
-func Create(partOf, ns, name, image string, opts ...PodSpecFunc) *appsv1.Deployment {
+func Create(partOf, name, image string, opts ...PodSpecFunc) *appsv1.Deployment {
 	return &appsv1.Deployment{
 		TypeMeta: meta.TypeMeta("Deployment", "apps/v1"),
-		ObjectMeta: meta.ObjectMeta(meta.NamespacedName(ns, name), meta.AddLabels(
+		ObjectMeta: meta.Meta(name, meta.AddLabels(
 			map[string]string{
 				KubernetesAppNameLabel: name,
 				KubernetesPartOfLabel:  partOf,

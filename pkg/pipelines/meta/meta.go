@@ -5,7 +5,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-// TypeMeta creates metav1.TypeMeta
+// TypeMeta creates and returns a new metav1.TypeMeta.
 func TypeMeta(kind, apiVersion string) metav1.TypeMeta {
 	return metav1.TypeMeta{
 		Kind:       kind,
@@ -13,11 +13,24 @@ func TypeMeta(kind, apiVersion string) metav1.TypeMeta {
 	}
 }
 
-// ObjectMeta creates metav1.ObjectMeta
+// ObjectMeta creates and returns a new metav1.ObjectMeta.
 func ObjectMeta(n types.NamespacedName, opts ...ObjectMetaOpt) metav1.ObjectMeta {
 	om := metav1.ObjectMeta{
 		Namespace: n.Namespace,
 		Name:      n.Name,
+	}
+	for _, o := range opts {
+		o(&om)
+	}
+	return om
+}
+
+// TODO: Rename this to ObjectMeta
+
+// Meta creates and returns a new ObjectMeta with just the name populated.
+func Meta(n string, opts ...ObjectMetaOpt) metav1.ObjectMeta {
+	om := metav1.ObjectMeta{
+		Name: n,
 	}
 	for _, o := range opts {
 		o(&om)

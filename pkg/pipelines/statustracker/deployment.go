@@ -80,7 +80,7 @@ func Resources(ns, repoURL, driver string) (res.Resources, error) {
 }
 
 func createStatusTrackerDeployment(ns, repoURL, driver string) *appsv1.Deployment {
-	return deployment.Create(commitStatusAppLabel, ns, operatorName, containerImage,
+	return deployment.Create(commitStatusAppLabel, operatorName, containerImage,
 		deployment.ServiceAccount(operatorName),
 		deployment.Env(makeEnvironment(repoURL, driver)),
 		deployment.Command([]string{operatorName}))
