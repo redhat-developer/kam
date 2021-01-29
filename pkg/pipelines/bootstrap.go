@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 
 	ssv1alpha1 "github.com/bitnami-labs/sealed-secrets/pkg/apis/sealed-secrets/v1alpha1"
@@ -175,14 +176,7 @@ func maybeMakeHookSecrets(o *BootstrapOptions) error {
 }
 
 func bootstrapResources(o *BootstrapOptions, appFs afero.Fs) (res.Resources, error) {
-	isInternalRegistry, imageRepo, err := imagerepo.ValidateImageRepo(o.ImageRepo)
-	if err != nil {
-		return nil, err
-	}
-	gitOpsRepo, err := scm.NewRepository(o.GitOpsRepoURL)
-	if err != nil {
-		return nil, err
-	}
+	ns := namespaces.NamesWithPrefix(o.Prefix)
 	appRepo, err := scm.NewRepository(o.ServiceRepoURL)
 	if err != nil {
 		return nil, err
@@ -191,7 +185,31 @@ func bootstrapResources(o *BootstrapOptions, appFs afero.Fs) (res.Resources, err
 	if err != nil {
 		return nil, fmt.Errorf("invalid app repo URL: %v", err)
 	}
+	// No image repo was supplied so create the default OS internal image registry
+	if o.ImageRepo == "" {
+		o.ImageRepo = ns["cicd"] + "/" + repoName
+	}
+	isInternalRegistry, imageRepo, err := imagerepo.ValidateImageRepo(o.ImageRepo)
+	if err != nil {
+		return nil, err
+	}
 
+	log.Success("Options used:")
+	log.Progressf("  Service repository: %s", o.ServiceRepoURL)
+	log.Progressf("  GitOps repository: %s", o.GitOpsRepoURL)
+	log.Progressf("  Image repository: %s", imageRepo)
+	if !isInternalRegistry {
+		log.Progressf("  Path to config.json: %s", o.DockerConfigJSONFilename)
+	}
+	log.Progressf("  Commit status tracker: %s", strconv.FormatBool(o.CommitStatusTracker))
+	log.Progressf("  Output folder: %s", o.OutputPath)
+	log.Progressf("  Overwrite output folder: %s", strconv.FormatBool(o.Overwrite))
+	log.Progressf("")
+
+	gitOpsRepo, err := scm.NewRepository(o.GitOpsRepoURL)
+	if err != nil {
+		return nil, err
+	}
 	bootstrapped, err := createInitialFiles(
 		appFs, gitOpsRepo, o)
 	if err != nil {
@@ -199,7 +217,6 @@ func bootstrapResources(o *BootstrapOptions, appFs afero.Fs) (res.Resources, err
 	}
 	appName := repoToAppName(repoName)
 	serviceName := repoName
-	ns := namespaces.NamesWithPrefix(o.Prefix)
 	secretName := secrets.MakeServiceWebhookSecretName(ns["dev"], serviceName)
 	envs, configEnv, err := bootstrapEnvironments(appRepo, o.Prefix, secretName, ns)
 	if err != nil {
