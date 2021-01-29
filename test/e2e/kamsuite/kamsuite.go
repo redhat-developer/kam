@@ -24,7 +24,7 @@ func FeatureContext(s *godog.Suite) {
 			os.Exit(1)
 		}
 
-		ghLoginCommand := []string{"auth", "login", "--with-token"}
+		ghLoginCommand := []string{"auth", "login"}
 		if !executeGhLoginCommand(ghLoginCommand) {
 			os.Exit(1)
 		}
