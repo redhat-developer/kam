@@ -36,7 +36,10 @@ $ kam bootstrap \
   --output <path to write GitOps resources>
   --push-to-git=true
 ```
-The `kam bootstrap` [command](../../commands/kam_bootstrap.md) also provides an interactive mode, which is triggered by running without any parameters, and will generate the GitOps directory and the required resources.
+The `kam bootstrap` [command](../../commands/kam_bootstrap.md) also provides an interactive mode, which is triggered by running without any parameters, or by providing the `--interactive` flag, and will generate the GitOps directory and the required resources.
+
+During an interactive mode session, choose to use default values or not. If default values are chosen, prompts will appear to allow you to enter any required values that haven't already been provided from the command line. This is the quickest way to generate a bootstrapped GitOps configuration.
+If you choose not to use defaults, you will be prompted to provide the values for each flag, except those flags that you have overridden or specified from the command line.
 
 In the event of using a self-hosted _GitHub Enterprise_ or _GitLab Community/Enterprise Edition_ if the driver name isn't evident from the repository URL, use the `--private-repo-driver` flag to select _github_ or _gitlab_.
 
