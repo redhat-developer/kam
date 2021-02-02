@@ -91,7 +91,7 @@ type BootstrapOptions struct {
 
 // PolicyRules to be bound to service account
 var (
-	Rules = []v1rbac.PolicyRule{
+	ClusterRoleRules = []v1rbac.PolicyRule{
 		{
 			APIGroups: []string{""},
 			Resources: []string{"namespaces", "services"},
@@ -123,6 +123,12 @@ var (
 			Verbs:     []string{"get", "create", "patch"},
 		},
 	}
+)
+
+const (
+	// ClusterRoleName is the name of the ClusterRole created to allow the
+	// servie account to deploy into different environments.
+	ClusterRoleName = "pipelines-clusterrole"
 )
 
 // Bootstrap is the entry-point from the CLI for bootstrapping the GitOps
@@ -303,19 +309,22 @@ func bootstrapServiceDeployment(dev *config.Environment, app *config.Application
 	resources := res.Resources{}
 	// TODO: This should change if we add Namespace to Environment.
 	// We'd need to create the resources in the namespace _of_ the Environment.
-	resources[filepath.Join(svcBase, "100-deployment.yaml")] = deployment.Create(app.Name, dev.Name, svc.Name, bootstrapImage, deployment.ContainerPort(8080))
-	containerSvc := createBootstrapService(app.Name, dev.Name, svc.Name)
+	resources[filepath.Join(svcBase, "100-deployment.yaml")] = deployment.Create(app.Name, "", svc.Name, bootstrapImage, deployment.ContainerPort(8080))
+	containerSvc := createBootstrapService(app.Name, "", svc.Name)
 	resources[filepath.Join(svcBase, "200-service.yaml")] = containerSvc
 	r, err := routes.NewFromService(containerSvc)
 	if err != nil {
 		return nil, err
 	}
 	resources[filepath.Join(svcBase, "300-route.yaml")] = r
+	resources[filepath.Join(svcBase, "400-role.yaml")] = roles.CreateRole(meta.NamespacedName("", "argo-cd"), ClusterRoleRules)
 	resources[filepath.Join(svcBase, "kustomization.yaml")] = &res.Kustomization{
+		Namespace: dev.Name,
 		Resources: []string{
 			"100-deployment.yaml",
 			"200-service.yaml",
 			"300-route.yaml",
+			"400-role.yaml",
 		}}
 	return resources, nil
 }
@@ -501,7 +510,7 @@ func createCICDResources(fs afero.Fs, repo scm.Repository, pipelineConfig *confi
 	}
 	outputs[secretsPath] = githubSecret
 	outputs[namespacesPath] = namespaces.Create(cicdNamespace, o.GitOpsRepoURL)
-	outputs[rolesPath] = roles.CreateClusterRole(meta.NamespacedName("", roles.ClusterRoleName), Rules)
+	outputs[rolesPath] = roles.CreateClusterRole(meta.NamespacedName("", ClusterRoleName), ClusterRoleRules)
 
 	sa := roles.CreateServiceAccount(meta.NamespacedName(cicdNamespace, saName))
 
@@ -532,7 +541,7 @@ func createCICDResources(fs afero.Fs, repo scm.Repository, pipelineConfig *confi
 		log.Success("Pipelines tracker has been configured")
 	}
 
-	outputs[rolebindingsPath] = roles.CreateClusterRoleBinding(meta.NamespacedName("", roleBindingName), sa, "ClusterRole", roles.ClusterRoleName)
+	outputs[rolebindingsPath] = roles.CreateClusterRoleBinding(meta.NamespacedName("", roleBindingName), sa, "ClusterRole", ClusterRoleName)
 	script, err := dryrun.MakeScript("kubectl", cicdNamespace)
 	if err != nil {
 		return nil, err

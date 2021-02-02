@@ -60,7 +60,7 @@ func TestBootstrapManifest(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	svc := createBootstrapService("app-http-api", "tst-dev", "http-api")
+	svc := createBootstrapService("app-http-api", "", "http-api")
 	route, err := routes.NewFromService(svc)
 	if err != nil {
 		t.Fatal(err)
@@ -68,12 +68,22 @@ func TestBootstrapManifest(t *testing.T) {
 	want := res.Resources{
 		"config/tst-cicd/base/03-secrets/webhook-secret-tst-dev-http-api.yaml": hookSecret,
 		"environments/tst-dev/apps/app-http-api/services/http-api/base/config/100-deployment.yaml": deployment.Create(
-			"app-http-api", "tst-dev", "http-api", bootstrapImage,
+			"app-http-api", "", "http-api", bootstrapImage,
 			deployment.ContainerPort(8080)),
 		"environments/tst-dev/apps/app-http-api/services/http-api/base/config/200-service.yaml": svc,
 		"environments/tst-dev/apps/app-http-api/services/http-api/base/config/300-route.yaml":   route,
+		"environments/tst-dev/apps/app-http-api/services/http-api/base/config/400-role.yaml": roles.CreateRole(
+			meta.NamespacedName("", "argo-cd"),
+			ClusterRoleRules),
 		"environments/tst-dev/apps/app-http-api/services/http-api/base/config/kustomization.yaml": &res.Kustomization{
-			Resources: []string{"100-deployment.yaml", "200-service.yaml", "300-route.yaml"}},
+			Namespace: "tst-dev",
+			Resources: []string{
+				"100-deployment.yaml",
+				"200-service.yaml",
+				"300-route.yaml",
+				"400-role.yaml",
+			},
+		},
 		pipelinesFile: &config.Manifest{
 			Version:   version,
 			GitOpsURL: "https://github.com/my-org/gitops.git",
@@ -86,7 +96,6 @@ func TestBootstrapManifest(t *testing.T) {
 						},
 					},
 					Name: "tst-dev",
-
 					Apps: []*config.Application{
 						{
 							Name: "app-http-api",
@@ -101,7 +110,12 @@ func TestBootstrapManifest(t *testing.T) {
 										},
 									},
 									Pipelines: &config.Pipelines{
-										Integration: &config.TemplateBinding{Bindings: []string{"tst-dev-app-http-api-http-api-binding", "github-push-binding"}},
+										Integration: &config.TemplateBinding{
+											Bindings: []string{
+												"tst-dev-app-http-api-http-api-binding",
+												"github-push-binding",
+											},
+										},
 									},
 								},
 							},

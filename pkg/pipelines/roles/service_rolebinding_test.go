@@ -171,14 +171,15 @@ func TestAddSecretToSA(t *testing.T) {
 }
 
 func TestCreateClusterRole(t *testing.T) {
+	clusterRoleName := "test-cluster-role"
 	validClusterRole := &v1rbac.ClusterRole{
 		TypeMeta: clusterRoleTypeMeta,
 		ObjectMeta: v1.ObjectMeta{
-			Name: ClusterRoleName,
+			Name: clusterRoleName,
 		},
 		Rules: testRules,
 	}
-	clusterRole := CreateClusterRole(meta.NamespacedName("", ClusterRoleName), testRules)
+	clusterRole := CreateClusterRole(meta.NamespacedName("", clusterRoleName), testRules)
 	if diff := cmp.Diff(validClusterRole, clusterRole); diff != "" {
 		t.Fatalf("createClusterRole() failed:\n%v", diff)
 	}

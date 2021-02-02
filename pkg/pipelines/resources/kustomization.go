@@ -5,4 +5,5 @@ type Kustomization struct {
 	Resources    []string          `json:"resources,omitempty"`
 	Bases        []string          `json:"bases,omitempty"`
 	CommonLabels map[string]string `json:"commonLabels,omitempty"`
+	Namespace    string            `json:"namespace,omitempty"`
 }
