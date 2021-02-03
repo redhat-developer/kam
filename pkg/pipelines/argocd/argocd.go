@@ -7,9 +7,7 @@ import (
 	// This is a hack because ArgoCD doesn't support a compatible (code-wise)
 	// version of k8s in common with kam.
 
-	argov1 "github.com/redhat-developer/kam/pkg/pipelines/argocd/operator/v1alpha1"
 	argoappv1 "github.com/redhat-developer/kam/pkg/pipelines/argocd/v1alpha1"
-	"sigs.k8s.io/yaml"
 
 	"github.com/redhat-developer/kam/pkg/pipelines/config"
 	"github.com/redhat-developer/kam/pkg/pipelines/meta"
@@ -63,7 +61,7 @@ type resource struct {
 
 const (
 	// ArgoCDNamespace is the default namespace for ArgoCD installations.
-	ArgoCDNamespace = "argocd"
+	ArgoCDNamespace = "openshift-gitops"
 
 	defaultServer      = "https://kubernetes.default.svc"
 	defaultProject     = "default"
@@ -147,11 +145,6 @@ func argoCDConfigResources(cfg *config.Config, repoURL string, files res.Resourc
 			makeApplication(nil, "cicd-app", cfg.ArgoCD.Namespace, defaultProject, cfg.Pipelines.Name, defaultServer,
 				&argoappv1.ApplicationSource{RepoURL: repoURL, Path: filepath.Join(config.PathForPipelines(cfg.Pipelines), "overlays")}))
 	}
-	argoResource, err := argoCDResource(cfg.ArgoCD.Namespace)
-	if err != nil {
-		return err
-	}
-	files[filepath.Join(basePath, argoCDResourceFile)] = argoResource
 	resourceNames := []string{}
 	for k := range files {
 		resourceNames = append(resourceNames, filepath.Base(k))
@@ -187,23 +180,6 @@ func makeEnvSource(env *config.Environment, repoURL string) *argoappv1.Applicati
 func ignoreDifferences(app *argoappv1.Application) *argoappv1.Application {
 	app.Spec.IgnoreDifferences = ignoreDifferencesFields
 	return app
-}
-
-func argoCDResource(ns string) (*argov1.ArgoCD, error) {
-	b, err := yaml.Marshal(resourceExclusions.Resources)
-	if err != nil {
-		return nil, err
-	}
-	return &argov1.ArgoCD{
-		TypeMeta:   meta.TypeMeta("ArgoCD", "argoproj.io/v1alpha1"),
-		ObjectMeta: meta.ObjectMeta(meta.NamespacedName(ns, "argocd")),
-		Spec: argov1.ArgoCDSpec{
-			ResourceExclusions: string(b),
-			Server: argov1.ArgoCDServerSpec{
-				Route: argov1.ArgoCDRouteSpec{Enabled: true},
-			},
-		},
-	}, nil
 }
 
 func makeApplication(app *config.Application, appName, argoNS, project, ns, server string, source *argoappv1.ApplicationSource) *argoappv1.Application {

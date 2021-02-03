@@ -8,6 +8,7 @@ import (
 	ssv1alpha1 "github.com/bitnami-labs/sealed-secrets/pkg/apis/sealed-secrets/v1alpha1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/redhat-developer/kam/pkg/pipelines/argocd"
 	"github.com/redhat-developer/kam/pkg/pipelines/config"
 	"github.com/redhat-developer/kam/pkg/pipelines/deployment"
 	"github.com/redhat-developer/kam/pkg/pipelines/eventlisteners"
@@ -111,7 +112,7 @@ func TestBootstrapManifest(t *testing.T) {
 			},
 			Config: &config.Config{
 				Pipelines: &config.PipelinesConfig{Name: "tst-cicd"},
-				ArgoCD:    &config.ArgoCDConfig{Namespace: "argocd"},
+				ArgoCD:    &config.ArgoCDConfig{Namespace: argocd.ArgoCDNamespace},
 			},
 		},
 	}
