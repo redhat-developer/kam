@@ -6,11 +6,13 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/spf13/afero"
+	rbacv1 "k8s.io/api/rbac/v1"
+
 	"github.com/redhat-developer/kam/pkg/pipelines/config"
 	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
 	"github.com/redhat-developer/kam/pkg/pipelines/namespaces"
 	res "github.com/redhat-developer/kam/pkg/pipelines/resources"
-	"github.com/spf13/afero"
 )
 
 const testGitOpsRepoURL = "https://github.com/example/example.git"
@@ -187,10 +189,15 @@ func TestBuildEnvironmentFilesWithNoCICDEnv(t *testing.T) {
 				vcsSourceLabel: "example/example",
 			},
 		},
-		"environments/test-dev/apps/my-app-1/overlays/kustomization.yaml":                          &res.Kustomization{Bases: []string{"../base"}},
-		"environments/test-dev/env/base/test-dev-environment.yaml":                                 namespaces.Create("test-dev", testGitOpsRepoURL),
-		"environments/test-dev/env/base/kustomization.yaml":                                        &res.Kustomization{Resources: []string{"test-dev-environment.yaml"}},
-		"environments/test-dev/env/overlays/kustomization.yaml":                                    &res.Kustomization{Bases: []string{"../base"}},
+		"environments/test-dev/apps/my-app-1/overlays/kustomization.yaml": &res.Kustomization{Bases: []string{"../base"}},
+		"environments/test-dev/env/base/test-dev-environment.yaml":        namespaces.Create("test-dev", testGitOpsRepoURL),
+		"environments/test-dev/env/base/role-binding.yaml":                &rbacv1.RoleBinding{},
+		"environments/test-dev/env/base/kustomization.yaml": &res.Kustomization{
+			Resources: []string{"test-dev-environment.yaml", "role-binding.yaml"},
+		},
+		"environments/test-dev/env/overlays/kustomization.yaml": &res.Kustomization{
+			Bases: []string{"../base"},
+		},
 		"environments/test-dev/apps/my-app-1/services/service-http/kustomization.yaml":             &res.Kustomization{Bases: []string{"overlays"}},
 		"environments/test-dev/apps/my-app-1/services/service-http/base/kustomization.yaml":        &res.Kustomization{Bases: []string{"./config"}},
 		"environments/test-dev/apps/my-app-1/services/service-http/overlays/kustomization.yaml":    &res.Kustomization{Bases: []string{"../base"}},

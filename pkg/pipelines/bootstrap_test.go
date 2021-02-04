@@ -86,7 +86,6 @@ func TestBootstrapManifest(t *testing.T) {
 						},
 					},
 					Name: "tst-dev",
-
 					Apps: []*config.Application{
 						{
 							Name: "app-http-api",
