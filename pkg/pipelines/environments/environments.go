@@ -68,7 +68,7 @@ func Build(fs afero.Fs, m *config.Manifest, saName string, o AppLinks) (res.Reso
 
 func (b *envBuilder) Application(env *config.Environment, app *config.Application) error {
 	appPath := filepath.Join(config.PathForApplication(env, app))
-	appFiles, err := filesForApplication(env, b.repoPath, appPath, app)
+	appFiles, err := filesForApplication(env, b.gitOpsRepoURL, appPath, app)
 	if err != nil {
 		return err
 	}

@@ -33,7 +33,7 @@ func TestBuildEnvironmentFilesWithAppsToEnvironment(t *testing.T) {
 		"environments/test-dev/apps/my-app-1/kustomization.yaml": &res.Kustomization{
 			Bases: []string{"overlays"},
 			CommonLabels: map[string]string{
-				vcsSourceLabel: "example/example",
+				vcsSourceLabel: testGitOpsRepoURL,
 			}},
 		"environments/test-dev/apps/my-app-1/overlays/kustomization.yaml":                          &res.Kustomization{Bases: []string{"../base"}},
 		"environments/test-dev/env/base/test-dev-environment.yaml":                                 namespaces.Create("test-dev", testGitOpsRepoURL),
@@ -184,7 +184,7 @@ func TestBuildEnvironmentFilesWithNoCICDEnv(t *testing.T) {
 		"environments/test-dev/apps/my-app-1/kustomization.yaml": &res.Kustomization{
 			Bases: []string{"overlays"},
 			CommonLabels: map[string]string{
-				vcsSourceLabel: "example/example",
+				vcsSourceLabel: testGitOpsRepoURL,
 			},
 		},
 		"environments/test-dev/apps/my-app-1/overlays/kustomization.yaml":                          &res.Kustomization{Bases: []string{"../base"}},
