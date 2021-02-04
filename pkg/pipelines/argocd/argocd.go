@@ -63,9 +63,8 @@ const (
 	// ArgoCDNamespace is the default namespace for ArgoCD installations.
 	ArgoCDNamespace = "openshift-gitops"
 
-	defaultServer      = "https://kubernetes.default.svc"
-	defaultProject     = "default"
-	argoCDResourceFile = "argocd.yaml"
+	defaultServer  = "https://kubernetes.default.svc"
+	defaultProject = "default"
 )
 
 // Build creates and returns a set of resources to be used for the ArgoCD

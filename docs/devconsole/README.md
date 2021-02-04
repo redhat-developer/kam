@@ -13,7 +13,7 @@ Visualize your GitOps environment stages and applications on DevConsole in OpenS
 
 ![Installation](./img/GitOps_Installation.jpg)
 
-3. The operator will install the GitOps backend service in `openshift-pipelines-app-delivery` namespace. `Application Stages` nav-item will be visible on the availability of the operator.
+3. The operator will install the GitOps backend service in `openshift-gitops` namespace(`openshift-pipelines-app-delivery` in case of a 4.6 cluster). `Application Stages` nav-item will be visible on the availability of the operator.
 
 ![Service](./img/GitOps_Service.jpg)
 
