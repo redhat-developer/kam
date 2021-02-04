@@ -88,7 +88,7 @@ Also, if you're using the optional _commit-status-tracker_ controller, please se
 
 https://github.com/bitnami-labs/sealed-secrets#how-can-i-do-a-backup-of-my-sealedsecrets
 
-## ArgoCD is failing with forbidden: User "system:serviceaccount:argocd:argocd-application-controller" cannot create resource in API group
+## ArgoCD is failing with forbidden: User "system:serviceaccount:openshift-gitops:argocd-application-controller" cannot create resource in API group
 
 The ArgoCD operator doesn't setup ArgoCD with enough permissions, this is a
 known issue, there's a workaround [here](https://github.com/redhat-developer/kam/blob/master/docs/journey/day1/prerequisites/argocd.md#Add-Role-Binding).

@@ -13,9 +13,8 @@ This document describes how to bootstrap GitOps to deliver your first applicatio
 
 You need to have the following installed in the OCP 4.x cluster.
 
+* [OpenShift GitOps Operator](prerequisites/gitops_operator.md)
 * [Sealed Secrets Operator](prerequisites/sealed_secrets.md)
-* [OpenShift Pipelines Operator](prerequisites/pipelines_operator.md)
-* [ArgoCD](prerequisites/argocd.md)
 
 And, you will need this.
 
@@ -78,7 +77,7 @@ resources, and the resources will be pushed to your git hosting service.
 
 ## Private Repository
 
-In case a [private repository](https://argoproj.github.io/argo-cd/user-guide/private-repositories) is used enhance the generated `config/argocd/argocd.yaml` with the secret information how to connect to the git repos. 
+In case a [private repository](https://argoproj.github.io/argo-cd/user-guide/private-repositories) is used enhance the operator generated ArgoCD instance with the secret information how to connect to the git repos. 
 For example, this could be as follows:
 
 ```yaml
@@ -87,7 +86,7 @@ kind: ArgoCD
 metadata:
   creationTimestamp: null
   name: argocd
-  namespace: argocd
+  namespace: openshift-gitops
 spec:
   resourceExclusions: |
     - apiGroups:
@@ -124,9 +123,9 @@ This `ArgoCD` resource defines a repository credential referring a `Secret` (her
 To create the secret using `kubeseal` use the following commands (expecting the same access token as used with `--git-host-access-token`)
 
 ```bash
-$ echo -n "token" | kubectl create secret generic <a-secret-name> --dry-run=true --from-file=username=/dev/stdin -o json | kubeseal -n argocd --controller-name=sealedsecretcontroller-sealed-secrets --controller-namespace=cicd > argocd-repo-secret.json
+$ echo -n "token" | kubectl create secret generic <a-secret-name> --dry-run=true --from-file=username=/dev/stdin -o json | kubeseal -n openshift-gitops --controller-name=sealedsecretcontroller-sealed-secrets --controller-namespace=cicd > argocd-repo-secret.json
 
-$ echo -n "<your git access token>" | kubectl create secret generic <a-secret-name> --dry-run=true --from-file=password=/dev/stdin -o json | kubeseal -n argocd --controller-name=sealedsecretcontroller-sealed-secrets --controller-namespace=cicd --merge-into argocd-repo-secret.json
+$ echo -n "<your git access token>" | kubectl create secret generic <a-secret-name> --dry-run=true --from-file=password=/dev/stdin -o json | kubeseal -n openshift-gitops --controller-name=sealedsecretcontroller-sealed-secrets --controller-namespace=cicd --merge-into argocd-repo-secret.json
 
 $ oc apply -f argocd-repo-secret.json
 sealedsecret.bitnami.com/<a-secret-name> created
@@ -134,7 +133,7 @@ sealedsecret.bitnami.com/<a-secret-name> created
 
 Consider here the following configuration parameters
 
-* set the namespace where ArgoCD is running (here: `argocd`)
+* set the namespace where ArgoCD is running (here: `openshift-gitops`)
 * set the SealedSecret namespace and service name (here: `cicd` and `sealedsecretcontroller-sealed-secrets`)
 
 ## Prefixing namespaces
@@ -155,7 +154,7 @@ The `dev` environment is a very basic deployment
 ```yaml
 config:
   argocd:
-    namespace: argocd
+    namespace: openshift-gitops
   pipelines:
     name: cicd
 environments:

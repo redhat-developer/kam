@@ -10,7 +10,7 @@ import (
 
 	// This is a hack because ArgoCD doesn't support a compatible (code-wise)
 	// version of k8s in common with kam
-	argov1 "github.com/redhat-developer/kam/pkg/pipelines/argocd/operator/v1alpha1"
+
 	argoappv1 "github.com/redhat-developer/kam/pkg/pipelines/argocd/v1alpha1"
 	res "github.com/redhat-developer/kam/pkg/pipelines/resources"
 )
@@ -47,7 +47,7 @@ func TestBuildCreatesArgoCD(t *testing.T) {
 			testEnv,
 		},
 		Config: &config.Config{
-			ArgoCD: &config.ArgoCDConfig{Namespace: "argocd"},
+			ArgoCD: &config.ArgoCDConfig{Namespace: ArgoCDNamespace},
 		},
 	}
 
@@ -97,11 +97,9 @@ func TestBuildCreatesArgoCD(t *testing.T) {
 			},
 		},
 		"config/argocd/argo-app.yaml": fakeArgoApplication(),
-		"config/argocd/argocd.yaml":   fakeArgoCDResource(t, ArgoCDNamespace),
 		"config/argocd/kustomization.yaml": &res.Kustomization{
 			Resources: []string{
 				"argo-app.yaml",
-				"argocd.yaml",
 				"test-dev-env-app.yaml",
 				"test-dev-http-api-app.yaml",
 			},
@@ -126,7 +124,7 @@ func TestBuildCreatesArgoCDWithMultipleApps(t *testing.T) {
 			testEnv,
 		},
 		Config: &config.Config{
-			ArgoCD: &config.ArgoCDConfig{Namespace: "argocd"},
+			ArgoCD: &config.ArgoCDConfig{Namespace: ArgoCDNamespace},
 		},
 	}
 
@@ -134,13 +132,12 @@ func TestBuildCreatesArgoCDWithMultipleApps(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(files) != 7 {
+	if len(files) != 6 {
 		t.Fatalf("got %d files, want 7\n", len(files))
 	}
 	want := &res.Kustomization{
 		Resources: []string{
 			"argo-app.yaml",
-			"argocd.yaml",
 			"test-dev-env-app.yaml",
 			"test-dev-http-api-app.yaml",
 			"test-production-env-app.yaml",
@@ -158,7 +155,7 @@ func TestBuildWithNoRepoURL(t *testing.T) {
 			testEnv,
 		},
 		Config: &config.Config{
-			ArgoCD: &config.ArgoCDConfig{Namespace: "argocd"},
+			ArgoCD: &config.ArgoCDConfig{Namespace: ArgoCDNamespace},
 		},
 	}
 
@@ -202,7 +199,7 @@ func TestBuildWithRepoConfig(t *testing.T) {
 			prodEnv,
 		},
 		Config: &config.Config{
-			ArgoCD: &config.ArgoCDConfig{Namespace: "argocd"},
+			ArgoCD: &config.ArgoCDConfig{Namespace: ArgoCDNamespace},
 		},
 	}
 
@@ -244,11 +241,9 @@ func TestBuildWithRepoConfig(t *testing.T) {
 			},
 		},
 		"config/argocd/argo-app.yaml": fakeArgoApplication(),
-		"config/argocd/argocd.yaml":   fakeArgoCDResource(t, ArgoCDNamespace),
 		"config/argocd/kustomization.yaml": &res.Kustomization{
 			Resources: []string{
 				"argo-app.yaml",
-				"argocd.yaml",
 				"test-production-env-app.yaml",
 				"test-production-prod-api-app.yaml",
 			},
@@ -271,7 +266,7 @@ func TestBuildAddsClusterToApp(t *testing.T) {
 
 	m := &config.Manifest{
 		Config: &config.Config{
-			ArgoCD: &config.ArgoCDConfig{Namespace: "argocd"},
+			ArgoCD: &config.ArgoCDConfig{Namespace: ArgoCDNamespace},
 		},
 		Environments: []*config.Environment{
 			testEnv,
@@ -318,11 +313,9 @@ func TestBuildAddsClusterToApp(t *testing.T) {
 			},
 		},
 		"config/argocd/argo-app.yaml": fakeArgoApplication(),
-		"config/argocd/argocd.yaml":   fakeArgoCDResource(t, ArgoCDNamespace),
 		"config/argocd/kustomization.yaml": &res.Kustomization{
 			Resources: []string{
 				"argo-app.yaml",
-				"argocd.yaml",
 				"test-dev-env-app.yaml",
 				"test-dev-http-api-app.yaml",
 			},
@@ -340,7 +333,7 @@ func TestIgnoreDifferences(t *testing.T) {
 		ObjectMeta: meta.ObjectMeta(meta.NamespacedName(ArgoCDNamespace, "argo-app")),
 		Spec: argoappv1.ApplicationSpec{
 			Source:      argoappv1.ApplicationSource{Path: "config/argocd"},
-			Destination: argoappv1.ApplicationDestination{Server: "https://kubernetes.default.svc", Namespace: "argocd"},
+			Destination: argoappv1.ApplicationDestination{Server: "https://kubernetes.default.svc", Namespace: ArgoCDNamespace},
 			Project:     "default",
 		},
 	}
@@ -357,18 +350,10 @@ func fakeArgoApplication() *argoappv1.Application {
 		ObjectMeta: meta.ObjectMeta(meta.NamespacedName(ArgoCDNamespace, "argo-app")),
 		Spec: argoappv1.ApplicationSpec{
 			Source:            argoappv1.ApplicationSource{Path: "config/argocd"},
-			Destination:       argoappv1.ApplicationDestination{Server: "https://kubernetes.default.svc", Namespace: "argocd"},
+			Destination:       argoappv1.ApplicationDestination{Server: "https://kubernetes.default.svc", Namespace: ArgoCDNamespace},
 			Project:           "default",
 			SyncPolicy:        &argoappv1.SyncPolicy{Automated: &argoappv1.SyncPolicyAutomated{Prune: true, SelfHeal: true}},
 			IgnoreDifferences: ignoreDifferencesFields,
 		},
 	}
-}
-
-func fakeArgoCDResource(t *testing.T, ns string) *argov1.ArgoCD {
-	res, err := argoCDResource(ns)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return res
 }

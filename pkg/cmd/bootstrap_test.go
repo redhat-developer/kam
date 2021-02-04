@@ -15,6 +15,7 @@ import (
 	operatorsfake "github.com/operator-framework/operator-lifecycle-manager/pkg/api/client/clientset/versioned/fake"
 	"github.com/redhat-developer/kam/pkg/cmd/utility"
 	"github.com/redhat-developer/kam/pkg/pipelines"
+	"github.com/redhat-developer/kam/pkg/pipelines/argocd"
 	"github.com/redhat-developer/kam/pkg/pipelines/secrets"
 	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -280,8 +281,8 @@ func TestDependenciesWithNothingInstalled(t *testing.T) {
 
 	wantMsg := `
 Checking if Sealed Secrets is installed with the default configuration [Please install Sealed Secrets Operator from OperatorHub]
-Checking if ArgoCD Operator is installed with the default configuration [Please install ArgoCD Operator from OperatorHub]
-Checking if OpenShift Pipelines Operator is installed with the default configuration [Please install OpenShift Pipelines Operator from OperatorHub]`
+Checking if ArgoCD is installed with the default configuration [Please install OpenShift GitOps Operator from OperatorHub]
+Checking if OpenShift Pipelines Operator is installed with the default configuration [Please install OpenShift GitOps Operator from OperatorHub]`
 
 	buff := &bytes.Buffer{}
 	fakeSpinner := &mockSpinner{writer: buff}
@@ -299,7 +300,7 @@ func TestDependenciesWithAllInstalled(t *testing.T) {
 
 	wantMsg := `
 Checking if Sealed Secrets is installed with the default configuration
-Checking if ArgoCD Operator is installed with the default configuration
+Checking if ArgoCD is installed with the default configuration
 Checking if OpenShift Pipelines Operator is installed with the default configuration`
 
 	buff := &bytes.Buffer{}
@@ -321,7 +322,7 @@ func TestDependenciesWithAllInstalledDifferentSealedSecretsService(t *testing.T)
 	// expect negative Sealed Secrets check
 	wantMsg := `
 Checking if Sealed Secrets is installed with the default configuration [Please install Sealed Secrets Operator from OperatorHub]
-Checking if ArgoCD Operator is installed with the default configuration
+Checking if ArgoCD is installed with the default configuration
 Checking if OpenShift Pipelines Operator is installed with the default configuration`
 
 	buff := &bytes.Buffer{}
@@ -341,7 +342,7 @@ func TestDependenciesWithAllInstalledCustomSealedSecretsService(t *testing.T) {
 	// expect checking and finding the custom Sealed Secrets config
 	wantMsg := `
 Checking if Sealed Secrets is installed with custom configuration
-Checking if ArgoCD Operator is installed with the default configuration
+Checking if ArgoCD is installed with the default configuration
 Checking if OpenShift Pipelines Operator is installed with the default configuration`
 
 	buff := &bytes.Buffer{}
@@ -364,7 +365,7 @@ func TestDependenciesWithAllInstalledCustomSealedSecretsServiceButDefaultIsInsta
 	// expect checking custom Sealed Secrets, but unsuccessful
 	wantMsg := `
 Checking if Sealed Secrets is installed with custom configuration [Provided Sealed Secrets namespace/name are not valid. Please verify]
-Checking if ArgoCD Operator is installed with the default configuration
+Checking if ArgoCD is installed with the default configuration
 Checking if OpenShift Pipelines Operator is installed with the default configuration`
 
 	buff := &bytes.Buffer{}
@@ -387,7 +388,7 @@ func TestDependenciesWithAllInstalledCustomSealedSecretsServiceButNotMatched(t *
 
 	wantMsg := `
 Checking if Sealed Secrets is installed with custom configuration [Provided Sealed Secrets namespace/name are not valid. Please verify]
-Checking if ArgoCD Operator is installed with the default configuration
+Checking if ArgoCD is installed with the default configuration
 Checking if OpenShift Pipelines Operator is installed with the default configuration`
 
 	buff := &bytes.Buffer{}
@@ -405,7 +406,7 @@ func TestDependenciesWithNoArgoCD(t *testing.T) {
 
 	wantMsg := `
 Checking if Sealed Secrets is installed with the default configuration
-Checking if ArgoCD Operator is installed with the default configuration [Please install ArgoCD Operator from OperatorHub]
+Checking if ArgoCD is installed with the default configuration [Please install OpenShift GitOps Operator from OperatorHub]
 Checking if OpenShift Pipelines Operator is installed with the default configuration`
 
 	buff := &bytes.Buffer{}
@@ -425,8 +426,8 @@ func TestDependenciesWithNoPipelines(t *testing.T) {
 
 	wantMsg := `
 Checking if Sealed Secrets is installed with the default configuration
-Checking if ArgoCD Operator is installed with the default configuration
-Checking if OpenShift Pipelines Operator is installed with the default configuration [Please install OpenShift Pipelines Operator from OperatorHub]`
+Checking if ArgoCD is installed with the default configuration
+Checking if OpenShift Pipelines Operator is installed with the default configuration [Please install OpenShift GitOps Operator from OperatorHub]`
 
 	buff := &bytes.Buffer{}
 	fakeSpinner := &mockSpinner{writer: buff}
@@ -532,7 +533,7 @@ func argoCDCSV() *v1alpha1.ClusterServiceVersion {
 	return &v1alpha1.ClusterServiceVersion{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "argocd",
-			Namespace: "argocd",
+			Namespace: argocd.ArgoCDNamespace,
 		},
 		Spec: v1alpha1.ClusterServiceVersionSpec{
 			CustomResourceDefinitions: v1alpha1.CustomResourceDefinitions{

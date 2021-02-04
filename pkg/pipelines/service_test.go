@@ -126,7 +126,7 @@ func TestServiceResourcesWithArgoCD(t *testing.T) {
 		"pipelines.yaml": &config.Manifest{
 			Config: &config.Config{
 				ArgoCD: &config.ArgoCDConfig{
-					Namespace: "argocd",
+					Namespace: argocd.ArgoCDNamespace,
 				},
 			},
 			GitOpsURL: "http://github.com/org/test",
@@ -375,7 +375,7 @@ func TestServiceWithArgoCD(t *testing.T) {
 					Name: "cicd",
 				},
 				ArgoCD: &config.ArgoCDConfig{
-					Namespace: "argocd",
+					Namespace: argocd.ArgoCDNamespace,
 				},
 			},
 			GitOpsURL: "http://github.com/org/test",
@@ -413,7 +413,7 @@ func TestServiceWithArgoCD(t *testing.T) {
 			},
 		},
 	}
-	argo, err := argocd.Build("argocd", "http://github.com/org/test", m)
+	argo, err := argocd.Build(argocd.ArgoCDNamespace, "http://github.com/org/test", m)
 	assertNoError(t, err)
 	want = res.Merge(argo, want)
 	got, err := serviceResources(m, fakeFs, &AddServiceOptions{
@@ -479,7 +479,7 @@ func buildManifest(withPipelines, withArgoCD bool) *config.Manifest {
 	if withArgoCD {
 		m.Config = &config.Config{
 			ArgoCD: &config.ArgoCDConfig{
-				Namespace: "argocd",
+				Namespace: argocd.ArgoCDNamespace,
 			},
 		}
 	}
