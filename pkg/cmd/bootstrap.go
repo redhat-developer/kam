@@ -22,6 +22,7 @@ import (
 	"github.com/redhat-developer/kam/pkg/cmd/utility"
 	"github.com/redhat-developer/kam/pkg/pipelines"
 	"github.com/redhat-developer/kam/pkg/pipelines/accesstoken"
+	"github.com/redhat-developer/kam/pkg/pipelines/argocd"
 	"github.com/redhat-developer/kam/pkg/pipelines/imagerepo"
 	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
 	"github.com/redhat-developer/kam/pkg/pipelines/secrets"
@@ -32,7 +33,6 @@ const (
 	// BootstrapRecommendedCommandName the recommended command name
 	BootstrapRecommendedCommandName = "bootstrap"
 
-	argoCDNS              = "argocd"
 	pipelinesOperatorNS   = "openshift-operators"
 	gitopsRepoURLFlag     = "gitops-repo-url"
 	serviceRepoURLFlag    = "service-repo-url"
@@ -308,7 +308,7 @@ func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client,
 	}
 
 	spinner.Start("Checking if ArgoCD is installed with the default configuration", false)
-	if err := client.CheckIfArgoCDExists(argoCDNS); err != nil {
+	if err := client.CheckIfArgoCDExists(argocd.ArgoCDNamespace); err != nil {
 		warnIfNotFound(spinner, "Please install OpenShift GitOps Operator from OperatorHub", err)
 		if !apierrors.IsNotFound(err) {
 			return fmt.Errorf("failed to check for ArgoCD Operator: %w", err)

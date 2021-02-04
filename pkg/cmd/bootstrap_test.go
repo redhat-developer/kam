@@ -15,6 +15,7 @@ import (
 	operatorsfake "github.com/operator-framework/operator-lifecycle-manager/pkg/api/client/clientset/versioned/fake"
 	"github.com/redhat-developer/kam/pkg/cmd/utility"
 	"github.com/redhat-developer/kam/pkg/pipelines"
+	"github.com/redhat-developer/kam/pkg/pipelines/argocd"
 	"github.com/redhat-developer/kam/pkg/pipelines/secrets"
 	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -532,7 +533,7 @@ func argoCDCSV() *v1alpha1.ClusterServiceVersion {
 	return &v1alpha1.ClusterServiceVersion{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "argocd",
-			Namespace: "argocd",
+			Namespace: argocd.ArgoCDNamespace,
 		},
 		Spec: v1alpha1.ClusterServiceVersionSpec{
 			CustomResourceDefinitions: v1alpha1.CustomResourceDefinitions{
