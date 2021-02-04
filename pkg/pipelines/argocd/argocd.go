@@ -63,7 +63,7 @@ type resource struct {
 
 const (
 	// ArgoCDNamespace is the default namespace for ArgoCD installations.
-	ArgoCDNamespace = "argocd"
+	ArgoCDNamespace = "openshift-gitops"
 
 	defaultServer      = "https://kubernetes.default.svc"
 	defaultProject     = "default"

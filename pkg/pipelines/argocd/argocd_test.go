@@ -47,7 +47,7 @@ func TestBuildCreatesArgoCD(t *testing.T) {
 			testEnv,
 		},
 		Config: &config.Config{
-			ArgoCD: &config.ArgoCDConfig{Namespace: "argocd"},
+			ArgoCD: &config.ArgoCDConfig{Namespace: "openshift-gitops"},
 		},
 	}
 
@@ -126,7 +126,7 @@ func TestBuildCreatesArgoCDWithMultipleApps(t *testing.T) {
 			testEnv,
 		},
 		Config: &config.Config{
-			ArgoCD: &config.ArgoCDConfig{Namespace: "argocd"},
+			ArgoCD: &config.ArgoCDConfig{Namespace: "openshift-gitops"},
 		},
 	}
 
@@ -158,7 +158,7 @@ func TestBuildWithNoRepoURL(t *testing.T) {
 			testEnv,
 		},
 		Config: &config.Config{
-			ArgoCD: &config.ArgoCDConfig{Namespace: "argocd"},
+			ArgoCD: &config.ArgoCDConfig{Namespace: "openshift-gitops"},
 		},
 	}
 
@@ -202,7 +202,7 @@ func TestBuildWithRepoConfig(t *testing.T) {
 			prodEnv,
 		},
 		Config: &config.Config{
-			ArgoCD: &config.ArgoCDConfig{Namespace: "argocd"},
+			ArgoCD: &config.ArgoCDConfig{Namespace: "openshift-gitops"},
 		},
 	}
 
@@ -271,7 +271,7 @@ func TestBuildAddsClusterToApp(t *testing.T) {
 
 	m := &config.Manifest{
 		Config: &config.Config{
-			ArgoCD: &config.ArgoCDConfig{Namespace: "argocd"},
+			ArgoCD: &config.ArgoCDConfig{Namespace: "openshift-gitops"},
 		},
 		Environments: []*config.Environment{
 			testEnv,
@@ -340,7 +340,7 @@ func TestIgnoreDifferences(t *testing.T) {
 		ObjectMeta: meta.ObjectMeta(meta.NamespacedName(ArgoCDNamespace, "argo-app")),
 		Spec: argoappv1.ApplicationSpec{
 			Source:      argoappv1.ApplicationSource{Path: "config/argocd"},
-			Destination: argoappv1.ApplicationDestination{Server: "https://kubernetes.default.svc", Namespace: "argocd"},
+			Destination: argoappv1.ApplicationDestination{Server: "https://kubernetes.default.svc", Namespace: "openshift-gitops"},
 			Project:     "default",
 		},
 	}
@@ -356,8 +356,10 @@ func fakeArgoApplication() *argoappv1.Application {
 		TypeMeta:   applicationTypeMeta,
 		ObjectMeta: meta.ObjectMeta(meta.NamespacedName(ArgoCDNamespace, "argo-app")),
 		Spec: argoappv1.ApplicationSpec{
-			Source:            argoappv1.ApplicationSource{Path: "config/argocd"},
-			Destination:       argoappv1.ApplicationDestination{Server: "https://kubernetes.default.svc", Namespace: "argocd"},
+			Source: argoappv1.ApplicationSource{Path: "config/argocd"},
+			Destination: argoappv1.ApplicationDestination{
+				Server:    "https://kubernetes.default.svc",
+				Namespace: "openshift-gitops"},
 			Project:           "default",
 			SyncPolicy:        &argoappv1.SyncPolicy{Automated: &argoappv1.SyncPolicyAutomated{Prune: true, SelfHeal: true}},
 			IgnoreDifferences: ignoreDifferencesFields,
