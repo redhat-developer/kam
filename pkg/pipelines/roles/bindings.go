@@ -16,12 +16,6 @@ var (
 	clusterRoleTypeMeta = meta.TypeMeta("ClusterRole", "rbac.authorization.k8s.io/v1")
 )
 
-const (
-	// ClusterRoleName is the name of the ClusterRole created to allow the
-	// servie account to deploy into different environments.
-	ClusterRoleName = "pipelines-clusterrole"
-)
-
 // CreateServiceAccount creates and returns a new ServiceAccount in the provided
 // namespace.
 func CreateServiceAccount(name types.NamespacedName) *corev1.ServiceAccount {

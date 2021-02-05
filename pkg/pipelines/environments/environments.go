@@ -25,6 +25,9 @@ const (
 	AppsToEnvironments AppLinks = iota
 	// EnvironmentsToApps indicates that environments should be linked to Apps.
 	EnvironmentsToApps
+
+	openshiftGitOpsNS = "openshift-gitops"
+	argocdController  = "argocd-application-controller"
 )
 
 const (
@@ -91,7 +94,7 @@ func (b *envBuilder) Service(app *config.Application, env *config.Environment, s
 	envBasePath := filepath.Join(config.PathForEnvironment(env), "env", "base")
 	envBindingPath := filepath.Join(envBasePath, fmt.Sprintf("%s-rolebinding.yaml", env.Name))
 	if _, ok := b.files[envBindingPath]; !ok {
-		b.files[envBindingPath] = createRoleBinding(env, b.pipelinesConfig.Name, b.saName)
+		b.files[envBindingPath] = createRoleBinding(env.Name, b.pipelinesConfig.Name, b.saName, "edit")
 	}
 	return nil
 }
@@ -133,8 +136,10 @@ func (b *envBuilder) Environment(env *config.Environment) error {
 
 func filesForEnvironment(basePath string, env *config.Environment, gitOpsRepoURL string) res.Resources {
 	envFiles := res.Resources{}
-	filename := filepath.Join(basePath, fmt.Sprintf("%s-environment.yaml", env.Name))
-	envFiles[filename] = namespaces.Create(env.Name, gitOpsRepoURL)
+	envFilename := filepath.Join(basePath, fmt.Sprintf("%s-environment.yaml", env.Name))
+	roleFilename := filepath.Join(basePath, fmt.Sprintf("argocd-%s-rolebinding.yaml", env.Name))
+	envFiles[envFilename] = namespaces.Create(env.Name, gitOpsRepoURL)
+	envFiles[roleFilename] = createRoleBinding(env.Name, openshiftGitOpsNS, argocdController, "admin")
 	return envFiles
 }
 
@@ -173,9 +178,9 @@ func filesForApplication(env *config.Environment, fullname, appPath string, app 
 	return envFiles, nil
 }
 
-func createRoleBinding(env *config.Environment, cicdNS, saName string) *v1.RoleBinding {
-	sa := roles.CreateServiceAccount(meta.NamespacedName(cicdNS, saName))
-	return roles.CreateRoleBinding(meta.NamespacedName(env.Name, fmt.Sprintf("%s-rolebinding", env.Name)), sa, "ClusterRole", "edit")
+func createRoleBinding(envNS, saNS, saName, roleName string) *v1.RoleBinding {
+	sa := roles.CreateServiceAccount(meta.NamespacedName(saNS, saName))
+	return roles.CreateRoleBinding(meta.NamespacedName(envNS, fmt.Sprintf("%s-rolebinding", envNS)), sa, "ClusterRole", roleName)
 }
 
 func filesForService(svcPath string) (res.Resources, error) {

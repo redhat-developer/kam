@@ -68,6 +68,8 @@ const (
 	bootstrapImage    = "nginxinc/nginx-unprivileged:latest"
 	appCITemplateName = "app-ci-template"
 	version           = 1
+
+	clusterRoleName = "pipelines-clusterrole"
 )
 
 // BootstrapOptions is a struct that provides the optional flags
@@ -500,7 +502,7 @@ func createCICDResources(fs afero.Fs, repo scm.Repository, pipelineConfig *confi
 	}
 	outputs[secretsPath] = githubSecret
 	outputs[namespacesPath] = namespaces.Create(cicdNamespace, o.GitOpsRepoURL)
-	outputs[rolesPath] = roles.CreateClusterRole(meta.NamespacedName("", roles.ClusterRoleName), Rules)
+	outputs[rolesPath] = roles.CreateClusterRole(meta.NamespacedName("", clusterRoleName), Rules)
 
 	sa := roles.CreateServiceAccount(meta.NamespacedName(cicdNamespace, saName))
 
@@ -531,7 +533,7 @@ func createCICDResources(fs afero.Fs, repo scm.Repository, pipelineConfig *confi
 		log.Success("Pipelines tracker has been configured")
 	}
 
-	outputs[rolebindingsPath] = roles.CreateClusterRoleBinding(meta.NamespacedName("", roleBindingName), sa, "ClusterRole", roles.ClusterRoleName)
+	outputs[rolebindingsPath] = roles.CreateClusterRoleBinding(meta.NamespacedName("", roleBindingName), sa, "ClusterRole", clusterRoleName)
 	script, err := dryrun.MakeScript("kubectl", cicdNamespace)
 	if err != nil {
 		return nil, err
