@@ -139,7 +139,7 @@ func filesForEnvironment(basePath string, env *config.Environment, gitOpsRepoURL
 	envFilename := filepath.Join(basePath, fmt.Sprintf("%s-environment.yaml", env.Name))
 	roleFilename := filepath.Join(basePath, fmt.Sprintf("argocd-%s-rolebinding.yaml", env.Name))
 	envFiles[envFilename] = namespaces.Create(env.Name, gitOpsRepoURL)
-	envFiles[roleFilename] = createRoleBinding(env.Name, openshiftGitOpsNS, argocdController, "admin")
+	envFiles[roleFilename] = createRoleBindingWithName(env.Name, openshiftGitOpsNS, argocdController, "admin", "argo-applier")
 	return envFiles
 }
 
@@ -179,8 +179,12 @@ func filesForApplication(env *config.Environment, fullname, appPath string, app 
 }
 
 func createRoleBinding(envNS, saNS, saName, roleName string) *v1.RoleBinding {
+	return createRoleBindingWithName(envNS, saNS, saName, roleName, envNS+"-rolebinding")
+}
+
+func createRoleBindingWithName(envNS, saNS, saName, roleName, name string) *v1.RoleBinding {
 	sa := roles.CreateServiceAccount(meta.NamespacedName(saNS, saName))
-	return roles.CreateRoleBinding(meta.NamespacedName(envNS, fmt.Sprintf("%s-rolebinding", envNS)), sa, "ClusterRole", roleName)
+	return roles.CreateRoleBinding(meta.NamespacedName(envNS, name), sa, "ClusterRole", roleName)
 }
 
 func filesForService(svcPath string) (res.Resources, error) {

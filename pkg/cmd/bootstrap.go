@@ -32,7 +32,6 @@ const (
 	// BootstrapRecommendedCommandName the recommended command name
 	BootstrapRecommendedCommandName = "bootstrap"
 
-	argoCDNS              = "argocd"
 	pipelinesOperatorNS   = "openshift-operators"
 	gitopsRepoURLFlag     = "gitops-repo-url"
 	serviceRepoURLFlag    = "service-repo-url"
@@ -308,7 +307,7 @@ func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client,
 	}
 
 	spinner.Start("Checking if ArgoCD Operator is installed with the default configuration", false)
-	if err := client.CheckIfArgoCDExists(argoCDNS); err != nil {
+	if err := client.CheckIfArgoCDExists(pipelines.GitOpsNamespace); err != nil {
 		warnIfNotFound(spinner, "Please install ArgoCD Operator from OperatorHub", err)
 		if !apierrors.IsNotFound(err) {
 			return fmt.Errorf("failed to check for ArgoCD Operator: %w", err)

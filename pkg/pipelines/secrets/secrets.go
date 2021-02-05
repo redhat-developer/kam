@@ -22,7 +22,7 @@ import (
 
 const (
 	SealedSecretsController = "sealedsecretcontroller-sealed-secrets"
-	SealedSecretsNS         = "cicd"
+	SealedSecretsNS         = "openshift-gitops"
 )
 
 var (

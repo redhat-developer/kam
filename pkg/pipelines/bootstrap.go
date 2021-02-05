@@ -41,6 +41,8 @@ import (
 const (
 	// Kustomize constants for kustomization.yaml
 	Kustomize = "kustomization.yaml"
+	// GitOpsNamespace is where the argocd and CICD pipelines are created.
+	GitOpsNamespace = "openshift-gitops"
 
 	namespacesPath        = "01-namespaces/cicd-environment.yaml"
 	rolesPath             = "02-rolebindings/pipeline-service-role.yaml"
@@ -346,7 +348,12 @@ func bootstrapEnvironments(repo scm.Repository, prefix, secretName string, ns ma
 			envs = append(envs, env)
 		}
 	}
-	cfg := &config.Config{Pipelines: pipelinesConfig, ArgoCD: &config.ArgoCDConfig{Namespace: "argocd"}}
+	cfg := &config.Config{
+		Pipelines: pipelinesConfig,
+		ArgoCD: &config.ArgoCDConfig{
+			Namespace: GitOpsNamespace,
+		},
+	}
 	return envs, cfg, nil
 }
 

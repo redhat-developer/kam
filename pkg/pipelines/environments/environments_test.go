@@ -38,7 +38,7 @@ func TestBuildEnvironmentFilesWithAppsToEnvironment(t *testing.T) {
 		"environments/test-dev/apps/my-app-1/overlays/kustomization.yaml": &res.Kustomization{Bases: []string{"../base"}},
 		"environments/test-dev/env/base/test-dev-environment.yaml":        namespaces.Create("test-dev", testGitOpsRepoURL),
 		"environments/test-dev/env/base/test-dev-rolebinding.yaml":        createRoleBinding("test-dev", "cicd", "pipelines", "edit"),
-		"environments/test-dev/env/base/argocd-test-dev-rolebinding.yaml": createRoleBinding("test-dev", openshiftGitOpsNS, argocdController, "admin"),
+		"environments/test-dev/env/base/argocd-test-dev-rolebinding.yaml": createRoleBindingWithName("test-dev", openshiftGitOpsNS, argocdController, "admin", "argo-applier"),
 		"environments/test-dev/env/base/kustomization.yaml": &res.Kustomization{
 			Resources: []string{
 				"argocd-test-dev-rolebinding.yaml",
@@ -84,7 +84,7 @@ func TestBuildEnvironmentFilesWithEnvironmentsToApps(t *testing.T) {
 		"environments/test-dev/apps/my-app-1/overlays/kustomization.yaml": &res.Kustomization{Bases: []string{"../base"}},
 		"environments/test-dev/env/base/test-dev-environment.yaml":        namespaces.Create("test-dev", testGitOpsRepoURL),
 		"environments/test-dev/env/base/test-dev-rolebinding.yaml":        createRoleBinding("test-dev", "cicd", "pipelines", "edit"),
-		"environments/test-dev/env/base/argocd-test-dev-rolebinding.yaml": createRoleBinding("test-dev", openshiftGitOpsNS, argocdController, "admin"),
+		"environments/test-dev/env/base/argocd-test-dev-rolebinding.yaml": createRoleBindingWithName("test-dev", openshiftGitOpsNS, argocdController, "admin", "argo-applier"),
 		"environments/test-dev/env/base/kustomization.yaml": &res.Kustomization{
 			Resources: []string{
 				"argocd-test-dev-rolebinding.yaml",
@@ -202,7 +202,7 @@ func TestBuildEnvironmentFilesWithNoCICDEnv(t *testing.T) {
 		},
 		"environments/test-dev/apps/my-app-1/overlays/kustomization.yaml": &res.Kustomization{Bases: []string{"../base"}},
 		"environments/test-dev/env/base/test-dev-environment.yaml":        namespaces.Create("test-dev", testGitOpsRepoURL),
-		"environments/test-dev/env/base/argocd-test-dev-rolebinding.yaml": createRoleBinding("test-dev", openshiftGitOpsNS, argocdController, "admin"),
+		"environments/test-dev/env/base/argocd-test-dev-rolebinding.yaml": createRoleBindingWithName("test-dev", openshiftGitOpsNS, argocdController, "admin", "argo-applier"),
 		"environments/test-dev/env/base/kustomization.yaml": &res.Kustomization{
 			Resources: []string{
 				"argocd-test-dev-rolebinding.yaml",
