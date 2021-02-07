@@ -21,7 +21,7 @@ The operator may not create enough privileges to manage multiple namespaces. In 
 1. Provide cluster-admin access to argocd-application-controller service account.
 
 ```shell
-$ oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:openshift-gitops:argocd-application-controller
+$ oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:openshift-gitops:argocd-cluster-argocd-application-controller
 ```
 
 2. Provide custom privileges to `argocd-application-controller` service account and restrict access to argocd.
