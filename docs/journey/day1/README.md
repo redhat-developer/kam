@@ -276,7 +276,7 @@ Open the ArgoCD web UI from `argocd-server` route
 Get your login credentials from the cluster
 
 ```shell
-$ kubectl get secret argocd-cluster-cluster -n openshift-gitops -ojsonpath='{.data.admin\.password}' | base64 --d
+$ kubectl get secret argocd-cluster-cluster -n openshift-gitops -ojsonpath='{.data.admin\.password}' | base64 -d
 ```
 
 You can now login with username as `admin` and password fetched in the previous step:
