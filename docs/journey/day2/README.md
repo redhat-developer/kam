@@ -17,7 +17,7 @@ Evnrionments and Applications/Services.
 
 ## Create a new Environment
 
-To generate resources for a new Environment, you simiply run this command.
+To generate resources for a new Environment, you simply run this command:
 
 ```shell
 $ kam environment add \
@@ -25,7 +25,7 @@ $ kam environment add \
   --pipelines-folder <path to GitOps folder>
 ```
 
-It adds a new Environment `new-env` in the Pipelines Model.
+This will add a new Environment `new-env` in the Pipelines Model:
 
 ```yaml
 environments:
@@ -43,7 +43,7 @@ And, it generates the following yamls.  The new resources are namespace and role
 
 ## Create an Application/Service in the new Environment
 
-To generate resources for the new Service, run the foolowing command.
+To generate resources for the new Service, run the following command:
 
 ```shell
 $ kam service add \
@@ -54,8 +54,7 @@ $ kam service add \
   --pipelines-folder <path to GitOps file>
 ```
 
-
-The `service add` command adds a new Service and Application under `new-env` Environment in the Pipelines Model as below.
+The `service add` command adds a new Service and Application under `new-env` Environment in the Pipelines Model as below:
 
 ```yaml
 environments:
@@ -84,7 +83,7 @@ In the Service's base folder, an empty `config` folder is created. This is the f
 
 * `environments/new-env/apps/app-bus/services/bus/base/config`
 
-Similar to the Day 1 example, we will just deploy a dummy nginxinc image.  The following files should be added to `config` folder.
+Similar to the Day 1 example, we will just deploy a dummy nginxinc image.  The following files should be added to `config` folder:
 
 * `100-deployment.yaml`
 
@@ -152,17 +151,17 @@ resources:
 - 200-service.yaml
 ```
 
-The new Service/Application will be deployed by ArgoCD.   An ArgoCD application yaml is generated in the ArgoCD environment.
+The new Service/Application will be deployed by ArgoCD. An ArgoCD application yaml is generated in the ArgoCD environment:
 
 * `config/argocd/<env>-<app>-app.yaml`
 
 In the CI/CD Environment, a couple of resources are added or modified.
 
-Webhook secret resource is generated.
+A Webhook secret resource is generated:
 
 * `config/cicd/base/03-secrets/webhook-secret-<env>-<service>.yaml`
 
-The Event Listener is modified as below to add a `trigger` for the new Service's source repository to trigger continous integration.
+The Event Listener is modified as below to add a `trigger` for the new Service's source repository to trigger continous integration:
 
 * `config/cicd/base/08-eventlisteners/cicd-event-listener.yaml`
 
@@ -187,19 +186,19 @@ The Event Listener is modified as below to add a `trigger` for the new Service's
 ```
 ## Commit and Push configuration to GitOps repoository
 
-Now, you can push changes to your gitops repository. 
+Now, you can push changes to your gitops repository:
 
 ```shell
 $ git add .
 $ git commit -m "Add new service"
 $ git push origin master
 ```
- ArgoCD will automatically applies changes to the cluster and deploys your new service.   Pretty neat!
+ArgoCD will automatically apply changes to the cluster and deploys your new service. Pretty neat!
 ![screenshot](img/argocd-refresh.png)
 
 ## Create Webhook
 
-Create a webhook for the new source repository.   This will allow webhook on the source repository to trigger CI Pipeline to run continuous integration on the new Service's source.
+Create a webhook for the new source repository. This will allow a webhook configured on the source repository to trigger CI Pipeline to run continuous integration on the new Service's source:
 
 ```shell
 $ kam webhook create \
@@ -211,11 +210,11 @@ $ kam webhook create \
 	
 * When a token is not provided in the webhook command flag `--git-host-access-token`, the token is retrieved from the keyring using the `hostname of the URL` as the username and service name `kam`. If no token found in the keyring, a token is retrieved from environment variable as described in the step below.	
 
-* When a token is not provided in command flag and the token is not present in the keyring, the webhook cmd will look for the access token in an environment variable with the syntax HOSTNAME_TOKEN (e.g. GITHUB_COM_TOKEN). The environment variable name is assigned as follows, the hostname (e.g. github.com) is extracted from the value passed to the repository URL (e.g. https://github.com/username/repo.git),  where the `.` in the hostname is replaced by `_` and concatenated with `_TOKEN`. Considering the previous examples, the environment varaible name will be `GITHUB_COM_TOKEN`.	
+* When a token is not provided in command flag and the token is not present in the keyring, the webhook cmd will look for the access token in an environment variable with the syntax `<HOSTNAME>_TOKEN` (e.g. `GITHUB_COM_TOKEN`). The environment variable name is assigned as follows: The hostname (e.g. github.com) is extracted from the value passed to the repository URL (e.g. `https://github.com/username/repo.git`), where any dot (`.`) in the hostname is replaced by an underscore (`_`) and concatenated with `_TOKEN`. Considering the previous examples, the environment varaible name will be `GITHUB_COM_TOKEN`.
 
-Assuming the token is not passed in the command, if the token is not found in the keyring or the environment variable with the specified name. The command will fail.
+Assuming the token is not passed in the command, if the token is not found in the keyring or the environment variable with the specified name, the command will fail.
 
-Make some modifications to the new application source reposiotry and raise a PR.
+Make some modifications to the new application source repository and raise a PR.
 
 CD Pipeline is triggered and run successfully.
 ![cd-pipelines-success.png](img/pipeline-success.png)
