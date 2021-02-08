@@ -67,17 +67,17 @@ resources, and the resources will be pushed to your git hosting service.
 
 ## Access Tokens
 
-* The token is stored securely on the local file-system using key-ring. The key-ring requires a user-name and service-name to store the secret, the KAM tool stores the secret with the service-name `Kam` and the user-name being the `host name` of the pertaining URL (e.g. --gitops-repo-url).
+* The token is stored securely on the local filesystem using keyring. The keyring requires a username and service name to store the secret, the KAM tool stores the secret with the service name `Kam` and the username being the `host name` of the pertaining URL (e.g. --gitops-repo-url).
 
-* If the token is set within the keyring, the keyring will not be prompted for in sucessive attempts of the `Bootstrap` and `Webhook` commands. The token can however be updated at the time of bootstrap in the key-ring by passing the `--save-token-keyring` flag along with `--git-host-access-token` flag in the non-interactive mode of the bootstrap command.
+* If the token is set within the keyring, the keyring will not be prompted for in sucessive attempts of the `Bootstrap` and `Webhook` commands. The token can however be updated at the time of bootstrap in the keyring by passing the `--save-token-keyring` flag along with `--git-host-access-token` flag in the non-interactive mode of the bootstrap command.
 
-* When a token is not provided in the command flag, an attempt is made to retrieve the token from the keyring. If unsuccessful, the cmd will look for the access token in an environment variable whose variable naming convention is as follows, the hostname (e.g. github.com) is extracted from the value passed to the repository URL (e.g. https://github.com/username/repo.git),  where the `.` in the hostname is replaced by `_` and concatenated with `_TOKEN`. In this case, the environment varaible name will be `GITHUB_COM_TOKEN`.
+* When a token is not provided in the command flag, an attempt is made to retrieve the token from the keyring. If unsuccessful, the cmd will look for the access token in an environment variable whose variable naming convention is as follows: The hostname (e.g. github.com) is extracted from the value passed to the repository URL (e.g. https://github.com/username/repo.git),  where the `.` in the hostname is replaced by `_` and concatenated with `_TOKEN`. In this case, the environment varaible name will be `GITHUB_COM_TOKEN`.
 
-* In the event a token is not passed in the command, if the token is not found in the keyring or the environment variable with the specified name. The command will fail.
+* In the event a token is not passed in the command, if the token is not found in the keyring or the environment variable with the specified name, the command will fail.
 
 ## Private Repository
 
-In case a [private repository](https://argoproj.github.io/argo-cd/user-guide/private-repositories) is used enhance the operator generated ArgoCD instance with the secret information how to connect to the git repos. 
+In case a [private repository](https://argoproj.github.io/argo-cd/user-guide/private-repositories) is used, enhance the operator generated ArgoCD instance with the secret information how to connect to the git repos. 
 For example, this could be as follows:
 
 ```yaml
@@ -250,13 +250,13 @@ $ git remote add origin <insert gitops repo>
 $ git push -u origin master
 ```
 
-This should initialize the GitOps repository, this is the start of your journey
+This will initialize the GitOps repository and is the start of your journey
 to deploying applications via Git.
 
 ## Bringing the deployment infrastructure up
 
-We'll bring up our deployment infrastructure, this is only necessary at the start,
-the configuration should be self-hosted thereafter.
+We'll bring up our deployment infrastructure, this is only necessary at the start.
+The configuration will be self-hosted thereafter.
 
 ```shell
 $ oc apply -k config/argocd/
@@ -264,7 +264,7 @@ $ oc apply -k config/argocd/
 
 At this point, the apps in ArgoCD should be synced and healthy. You may need to manually ["sync apps"](https://github.com/argoproj/argo-cd/blob/master/docs/getting_started.md#7-sync-deploy-the-application) from the ArgoCD web UI if some of the apps are out-of-sync. Instructions on how to access the ArgoCD web UI is provided in the next section.  
 
-A route is automatically created which will serve the default image, this is
+A route is automatically created, which will serve the default image. This is
 automatically created based on the name of your application source repository.
 
 ## Visualize your applications via the ArgoCD UI
@@ -289,7 +289,7 @@ The deployed applications should be healthy and in-sync
 
 ## Changing the initial deployment
 
-The bootstrap creates a `Deployment` in `environments/dev/apps/<app name>/services/<service name>/base/config/100-deployment.yaml` this should bring up nginx, this is purely for demo purposes, you'll need to change this to deploy your built image.
+The bootstrap creates a `Deployment` in `environments/dev/apps/<app name>/services/<service name>/base/config/100-deployment.yaml`. This should bring up nginx, and is purely for demo purposes, you'll need to change this to deploy your built image.
 
 ```yaml
 spec:
