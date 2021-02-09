@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"path/filepath"
+	"strings"
 
 	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
 	"gopkg.in/AlecAivazis/survey.v1"
@@ -20,7 +21,7 @@ func EnterGitRepo() string {
 	}
 	err := survey.AskOne(prompt, &gitOpsURL, survey.Required)
 	handleError(err)
-
+	gitOpsURL = strings.TrimSpace(gitOpsURL)
 	p, err := url.Parse(gitOpsURL)
 	handleError(err)
 	if p.Host == "" {
@@ -53,7 +54,7 @@ func EnterImageRepoInternalRegistry() string {
 
 	err := survey.AskOne(prompt, &imageRepo, survey.Required)
 	handleError(err)
-	return imageRepo
+	return strings.TrimSpace(imageRepo)
 }
 
 // EnterDockercfg allows the user to specify the path to the docker config json
@@ -68,7 +69,7 @@ func EnterDockercfg() string {
 
 	err := survey.AskOne(prompt, &dockerCfg, nil)
 	handleError(err)
-	return dockerCfg
+	return strings.TrimSpace(dockerCfg)
 }
 
 // EnterImageRepoExternalRepository allows the user to specify the type of image
@@ -82,7 +83,7 @@ func EnterImageRepoExternalRepository() string {
 
 	err := survey.AskOne(prompt, &imageRepoExt, survey.Required)
 	handleError(err)
-	return imageRepoExt
+	return strings.TrimSpace(imageRepoExt)
 }
 
 // VerifyOutputPath allows the user to specify the path where the gitops configuration must reside locally in a UI prompt.
@@ -95,6 +96,7 @@ func VerifyOutputPath(originalPath string, overwrite, outputPathOverridden, prom
 	}
 	if !outputPathOverridden && promptForPath {
 		handleError(survey.AskOne(prompt, &outputPath, nil))
+		outputPath = strings.TrimSpace(outputPath)
 	}
 	for true {
 		exists, err := ioutils.IsExisting(ioutils.NewFilesystem(), filepath.Join(outputPath, "pipelines.yaml"))
@@ -107,6 +109,7 @@ func VerifyOutputPath(originalPath string, overwrite, outputPathOverridden, prom
 			break
 		}
 		handleError(survey.AskOne(prompt, &outputPath, nil))
+		outputPath = strings.TrimSpace(outputPath)
 	}
 	return outputPath
 }
@@ -147,7 +150,7 @@ func EnterSealedSecretService(sealedSecretService *types.NamespacedName) string 
 
 	err := survey.AskOne(prompt, &sealedNs, makeSealedSecretsService(sealedSecretService))
 	handleError(err)
-	return sealedNs
+	return strings.TrimSpace(sealedNs)
 }
 
 // EnterGitHostAccessToken , it becomes necessary to add the personal access
@@ -172,7 +175,7 @@ func EnterPrefix() string {
 	}
 	err := survey.AskOne(prompt, &prefix, makePrefixValidator())
 	handleError(err)
-	return prefix
+	return strings.TrimSpace(prefix)
 }
 
 // EnterServiceRepoURL , allows users to differentiate between the bootstrap and init options, addition of the service repo url will allow users to bootstrap an environment through the UI prompt.
@@ -184,7 +187,7 @@ func EnterServiceRepoURL() string {
 	}
 	err := survey.AskOne(prompt, &serviceRepo, survey.Required)
 	handleError(err)
-
+	serviceRepo = strings.TrimSpace(serviceRepo)
 	p, err := url.Parse(serviceRepo)
 	handleError(err)
 	if p.Host == "" {
