@@ -20,7 +20,7 @@ func createDevCDPipelineRun(saName string) pipelinev1.PipelineRun {
 		Spec: pipelinev1.PipelineRunSpec{
 			ServiceAccountName: saName,
 			PipelineRef:        createPipelineRef("app-cd-pipeline"),
-			Resources:          createDevResource("$(params." + GitCommitID + ")"),
+			Resources:          createDevResource("$(tt.params." + GitCommitID + ")"),
 		},
 	}
 }
@@ -31,23 +31,23 @@ func createDevCIPipelineRun(saName string) pipelinev1.PipelineRun {
 		ObjectMeta: meta.ObjectMeta(
 			meta.NamespacedName("", "app-ci-pipeline-run-$(uid)"),
 			statusTrackerAnnotations("dev-ci-build-from-pr", "CI build on push event", map[string]string{
-				"tekton.dev/commit-status-source-url": "$(params.gitrepositoryurl)",
-				"tekton.dev/commit-status-source-sha": "$(params." + GitCommitID + ")",
+				"tekton.dev/commit-status-source-url": "$(tt.params.gitrepositoryurl)",
+				"tekton.dev/commit-status-source-sha": "$(tt.params." + GitCommitID + ")",
 			})),
 		Spec: pipelinev1.PipelineRunSpec{
 			ServiceAccountName: saName,
 			PipelineRef:        createPipelineRef("app-ci-pipeline"),
 			Params: []pipelinev1.Param{
-				createPipelineBindingParam("REPO", "$(params.fullname)"),
-				createPipelineBindingParam("GIT_REPO", "$(params.gitrepositoryurl)"),
-				createPipelineBindingParam("TLSVERIFY", "$(params.tlsVerify)"),
-				createPipelineBindingParam("BUILD_EXTRA_ARGS", "$(params.build_extra_args)"),
-				createPipelineBindingParam("IMAGE", "$(params.imageRepo):$(params."+GitRef+")-$(params."+GitCommitID+")"),
-				createPipelineBindingParam("COMMIT_SHA", "$(params."+GitCommitID+")"),
-				createPipelineBindingParam("GIT_REF", "$(params."+GitRef+")"),
-				createPipelineBindingParam("COMMIT_DATE", "$(params."+GitCommitDate+")"),
-				createPipelineBindingParam("COMMIT_AUTHOR", "$(params."+GitCommitAuthor+")"),
-				createPipelineBindingParam("COMMIT_MESSAGE", "$(params."+GitCommitMessage+")"),
+				createPipelineBindingParam("REPO", "$(tt.params.fullname)"),
+				createPipelineBindingParam("GIT_REPO", "$(tt.params.gitrepositoryurl)"),
+				createPipelineBindingParam("TLSVERIFY", "$(tt.params.tlsVerify)"),
+				createPipelineBindingParam("BUILD_EXTRA_ARGS", "$(tt.params.build_extra_args)"),
+				createPipelineBindingParam("IMAGE", "$(tt.params.imageRepo):$(tt.params."+GitRef+")-$(tt.params."+GitCommitID+")"),
+				createPipelineBindingParam("COMMIT_SHA", "$(tt.params."+GitCommitID+")"),
+				createPipelineBindingParam("GIT_REF", "$(tt.params."+GitRef+")"),
+				createPipelineBindingParam("COMMIT_DATE", "$(tt.params."+GitCommitDate+")"),
+				createPipelineBindingParam("COMMIT_AUTHOR", "$(tt.params."+GitCommitAuthor+")"),
+				createPipelineBindingParam("COMMIT_MESSAGE", "$(tt.params."+GitCommitMessage+")"),
 			},
 			Workspaces: []pipelinev1.WorkspaceBinding{
 				{
@@ -100,7 +100,7 @@ func createDevResource(revision string) []pipelinev1.PipelineResourceBinding {
 				Type: "git",
 				Params: []pipelinev1.ResourceParam{
 					createResourceParams("revision", revision),
-					createResourceParams("url", "$(params.gitrepositoryurl)"),
+					createResourceParams("url", "$(tt.params.gitrepositoryurl)"),
 				},
 			},
 		},
@@ -114,8 +114,8 @@ func createResources() []pipelinev1.PipelineResourceBinding {
 			ResourceSpec: &pipelinev1alpha1.PipelineResourceSpec{
 				Type: "git",
 				Params: []pipelinev1.ResourceParam{
-					createResourceParams("revision", "$(params."+GitCommitID+")"),
-					createResourceParams("url", "$(params.gitrepositoryurl)"),
+					createResourceParams("revision", "$(tt.params."+GitCommitID+")"),
+					createResourceParams("url", "$(tt.params.gitrepositoryurl)"),
 				},
 			},
 		},
