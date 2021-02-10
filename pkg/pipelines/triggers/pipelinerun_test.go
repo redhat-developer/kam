@@ -24,7 +24,7 @@ func TestCreateDevCDPipelineRun(t *testing.T) {
 		Spec: pipelinev1.PipelineRunSpec{
 			ServiceAccountName: sName,
 			PipelineRef:        createPipelineRef("app-cd-pipeline"),
-			Resources:          createDevResource("$(params.io.openshift.build.commit.id)"),
+			Resources:          createDevResource("$(tt.params.io.openshift.build.commit.id)"),
 		},
 	}
 	template := createDevCDPipelineRun(sName)
@@ -40,8 +40,8 @@ func TestCreateDevCIPipelineRun(t *testing.T) {
 			meta.NamespacedName("", "app-ci-pipeline-run-$(uid)"),
 			func(om *metav1.ObjectMeta) {
 				om.Annotations = map[string]string{
-					"tekton.dev/commit-status-source-sha": "$(params.io.openshift.build.commit.id)",
-					"tekton.dev/commit-status-source-url": "$(params.gitrepositoryurl)",
+					"tekton.dev/commit-status-source-sha": "$(tt.params.io.openshift.build.commit.id)",
+					"tekton.dev/commit-status-source-url": "$(tt.params.gitrepositoryurl)",
 					"tekton.dev/git-status":               "true",
 					"tekton.dev/status-context":           "dev-ci-build-from-pr",
 					"tekton.dev/status-description":       "CI build on push event",
@@ -64,16 +64,16 @@ func TestCreateDevCIPipelineRun(t *testing.T) {
 				},
 			},
 			Params: []pipelinev1.Param{
-				createPipelineBindingParam("REPO", "$(params.fullname)"),
-				createPipelineBindingParam("GIT_REPO", "$(params.gitrepositoryurl)"),
-				createPipelineBindingParam("TLSVERIFY", "$(params.tlsVerify)"),
-				createPipelineBindingParam("BUILD_EXTRA_ARGS", "$(params.build_extra_args)"),
-				createPipelineBindingParam("IMAGE", "$(params.imageRepo):$(params."+GitRef+")-$(params."+GitCommitID+")"),
-				createPipelineBindingParam("COMMIT_SHA", "$(params.io.openshift.build.commit.id)"),
-				createPipelineBindingParam("GIT_REF", "$(params.io.openshift.build.commit.ref)"),
-				createPipelineBindingParam("COMMIT_DATE", "$(params.io.openshift.build.commit.date)"),
-				createPipelineBindingParam("COMMIT_AUTHOR", "$(params.io.openshift.build.commit.author)"),
-				createPipelineBindingParam("COMMIT_MESSAGE", "$(params.io.openshift.build.commit.message)"),
+				createPipelineBindingParam("REPO", "$(tt.params.fullname)"),
+				createPipelineBindingParam("GIT_REPO", "$(tt.params.gitrepositoryurl)"),
+				createPipelineBindingParam("TLSVERIFY", "$(tt.params.tlsVerify)"),
+				createPipelineBindingParam("BUILD_EXTRA_ARGS", "$(tt.params.build_extra_args)"),
+				createPipelineBindingParam("IMAGE", "$(tt.params.imageRepo):$(tt.params."+GitRef+")-$(tt.params."+GitCommitID+")"),
+				createPipelineBindingParam("COMMIT_SHA", "$(tt.params.io.openshift.build.commit.id)"),
+				createPipelineBindingParam("GIT_REF", "$(tt.params.io.openshift.build.commit.ref)"),
+				createPipelineBindingParam("COMMIT_DATE", "$(tt.params.io.openshift.build.commit.date)"),
+				createPipelineBindingParam("COMMIT_AUTHOR", "$(tt.params.io.openshift.build.commit.author)"),
+				createPipelineBindingParam("COMMIT_MESSAGE", "$(tt.params.io.openshift.build.commit.message)"),
 			},
 		},
 	}
@@ -125,7 +125,7 @@ func TestCreateDevResource(t *testing.T) {
 				Type: "git",
 				Params: []pipelinev1.ResourceParam{
 					createResourceParams("revision", "test"),
-					createResourceParams("url", "$(params.gitrepositoryurl)"),
+					createResourceParams("url", "$(tt.params.gitrepositoryurl)"),
 				},
 			},
 		},
