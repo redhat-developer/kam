@@ -70,7 +70,7 @@ func CreateInternalRegistryResources(cfg *config.PipelinesConfig, sa *corev1.Ser
 	resources := res.Resources{}
 	filenames := []string{}
 
-	filename := filepath.Join("01-namespaces", fmt.Sprintf("%s.yaml", namespace))
+	filename := filepath.Join("01-namespaces", fmt.Sprintf("%s-environment.yaml", namespace))
 	namespacePath := filepath.Join(config.PathForPipelines(cfg), "base", filename)
 	resources[namespacePath] = namespaces.Create(namespace, gitOpsRepoURL)
 	filenames = append(filenames, filename)
