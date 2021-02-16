@@ -191,7 +191,7 @@ Now, you can push changes to your gitops repository:
 ```shell
 $ git add .
 $ git commit -m "Add new service"
-$ git push origin master
+$ git push origin main
 ```
 ArgoCD will automatically apply changes to the cluster and deploys your new service. Pretty neat!
 ![screenshot](img/argocd-refresh.png)
