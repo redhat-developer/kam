@@ -248,7 +248,7 @@ $ git init .
 $ git add .
 $ git commit -m "Initial commit."
 $ git remote add origin <insert gitops repo>
-$ git push -u origin master
+$ git push -u origin main
 ```
 
 This will initialize the GitOps repository and is the start of your journey
