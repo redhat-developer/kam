@@ -16,12 +16,13 @@ You need to have the following installed in the OCP 4.x cluster.
 * [OpenShift GitOps Operator](prerequisites/gitops_operator.md)
 * [Sealed Secrets Operator](prerequisites/sealed_secrets.md)
 
-And, you will need this.
+And, you will need these:
 
-* Application Source repository ([taxi](prerequisites/service_repo.md) is used as an example in this document)
+* An application source repository ([taxi](prerequisites/service_repo.md) is used as an example in this document)
 * The external image repository secret to authenticate image pushes on successful pipeline execution. To use quay.io, please follow [prerequisites/quay.md](prerequisites/quay.md)
-* Download official [kam](https://github.com/redhat-developer/kam/releases) binary
-* Steps to create the git access token for [GitHub](prerequisites/github_access_token_steps.md) or [GitLab](prerequisites/gitlab_access_token_steps.md).
+* The official [kam](https://github.com/redhat-developer/kam/releases) binary downloaded
+* A GitHub or GitLab access token (here are the steps to create the git access token for [GitHub](prerequisites/github_access_token_steps.md) or [GitLab](prerequisites/gitlab_access_token_steps.md))
+* An SSH key connected to your GitHub or GitLab account (here are the steps to create an SSH key for [GitHub](https://docs.github.com/en/github/authenticating-to-github/adding-a-new-ssh-key-to-your-github-account) or [GitLab](https://docs.gitlab.com/ee/ssh/#generate-an-ssh-key-pair))
 
 ## Bootstrapping the Manifest
 
