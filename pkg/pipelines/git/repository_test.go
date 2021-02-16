@@ -1,6 +1,7 @@
 package git
 
 import (
+	"net/url"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -149,5 +150,32 @@ func TestCreateWebHook(t *testing.T) {
 
 	if created != "1" {
 		t.Errorf("failed to create webhook, got %q, want %q", created, "1")
+	}
+}
+
+func TestGetRepoName(t *testing.T) {
+	urlTests := []struct {
+		url      string
+		wantRepo string
+	}{
+		{"https://github.com/example/gitops.git?ref=main", "example/gitops"},
+		{"https://github.com/example/testing.git", "example/testing"},
+		{"https://gitlab.com/project/example/testing.git", "project/example/testing"},
+	}
+
+	for _, tt := range urlTests {
+		t.Run(tt.url, func(t *testing.T) {
+			u, err := url.Parse(tt.url)
+			if err != nil {
+				t.Fatal(err)
+			}
+			repo, err := GetRepoName(u)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if repo != tt.wantRepo {
+				t.Errorf("repo got %s, want %s", repo, tt.wantRepo)
+			}
+		})
 	}
 }

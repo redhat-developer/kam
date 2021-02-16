@@ -96,14 +96,14 @@ func GetRepoName(u *url.URL) (string, error) {
 			components = append(components, s)
 		}
 	}
-	if len(components) != 2 {
+	if len(components) == 1 {
 		return "", errors.New("failed to get Git repo: " + u.Path)
 	}
-	components[1] = strings.TrimSuffix(components[1], ".git")
+	components[len(components)-1] = strings.TrimSuffix(components[len(components)-1], ".git")
 	for _, s := range components {
 		if strings.Contains(s, ".") {
 			return "", errors.New("failed to get Git repo: " + u.Path)
 		}
 	}
-	return components[0] + "/" + components[1], nil
+	return strings.Join(components, "/"), nil
 }
