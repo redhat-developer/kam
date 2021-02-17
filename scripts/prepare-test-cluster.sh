@@ -17,7 +17,7 @@ ORIGINAL_KUBECONFIG=${KUBECONFIG:-"${DEFAULT_INSTALLER_ASSETS_DIR}/auth/kubeconf
 export KUBECONFIG=$ORIGINAL_KUBECONFIG
 
 # list of namespace to create
-OPERATOR_NAMESPACES="cicd argocd"
+OPERATOR_NAMESPACES="cicd"
 
 # Attempt resolution of kubeadmin, only if a CI is not set
 if [ -z $CI ]; then
