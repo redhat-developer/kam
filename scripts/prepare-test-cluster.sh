@@ -54,7 +54,7 @@ for i in `echo $OPERATOR_NAMESPACES`; do
     oc adm policy add-role-to-user edit developer
 done
 
-# Setup the cluster for sealed secrets, pipelines and argocd operator
+# Setup the cluster for sealed secrets and OpenShift GitOps operator
 sh $SETUP_OPERATORS
 
 # Remove existing htpasswd file, if any

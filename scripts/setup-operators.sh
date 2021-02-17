@@ -91,7 +91,7 @@ EOF
 install_openshift_gitops_operator
 # GitOps operator status check
 count=0
-while [ "$count" -lt "5" ];
+while [ "$count" -lt "15" ];
 do
     operator_status=`oc get csv -n openshift-operators | grep openshift-gitops-operator`
     if [[ $operator_status == *"Succeeded"* ]]; then
