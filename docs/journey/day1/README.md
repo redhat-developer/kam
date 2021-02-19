@@ -36,7 +36,7 @@ $ kam bootstrap \
   --output <path to write GitOps resources> \
   --push-to-git=true
 ```
-**NOTE**: Flag `--push-to-git=true` brings the bootstrapped environment up, uses SSH protocol to communicate with Git server then create and push bootstrap files into the gitops repo. You need to make sure that public ssh key is added into your GitHub account when using `--push-to-git=true` flag.
+**NOTE**: Flag `--push-to-git=true` push the generated resources to your GitOps repository, this will execute git locally on the developer machine, which will in turn authenticate the push using your local SSH keys, this means that you need to be able to push to a Git repository from your local machine.
 
 The `kam bootstrap` [command](../../commands/kam_bootstrap.md) also provides an interactive mode, which is triggered by running without any parameters, or by providing the `--interactive` flag, and will generate the GitOps directory and the required resources.
 
