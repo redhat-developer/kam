@@ -243,7 +243,7 @@ The`webhook.secret` is used to authenticate incoming hooks from Git host.
 
 Ignore these steps if the flag `--push-to-git=true` is part of your bootstrap command.
 
-From the root of your GitOps directory (with the pipelines.yaml), execute the
+Create a new gitops un initialize private GitHub/GitLab repo, then from the root of your GitOps directory (with the pipelines.yaml), execute the
 following commands:
 
 ```shell
