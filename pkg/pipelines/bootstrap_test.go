@@ -43,7 +43,7 @@ func TestBootstrapManifest(t *testing.T) {
 	params := &BootstrapOptions{
 		Prefix:               "tst-",
 		GitOpsRepoURL:        testGitOpsRepo,
-		ImageRepo:            "image/repo",
+		ImageRepo:            "cicd/repo",
 		GitOpsWebhookSecret:  "123",
 		GitHostAccessToken:   "test-token",
 		ServiceRepoURL:       testSvcRepo,
@@ -126,11 +126,10 @@ func TestBootstrapManifest(t *testing.T) {
 
 	wantResources := []string{
 		"01-namespaces/cicd-environment.yaml",
-		"01-namespaces/image-environment.yaml",
 		"02-rolebindings/commit-status-tracker-role.yaml",
 		"02-rolebindings/commit-status-tracker-rolebinding.yaml",
 		"02-rolebindings/commit-status-tracker-service-account.yaml",
-		"02-rolebindings/internal-registry-image-binding.yaml",
+		"02-rolebindings/internal-registry-cicd-binding.yaml",
 		"02-rolebindings/pipeline-service-account.yaml",
 		"02-rolebindings/pipeline-service-role.yaml",
 		"02-rolebindings/pipeline-service-rolebinding.yaml",

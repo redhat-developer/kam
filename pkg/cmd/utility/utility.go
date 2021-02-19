@@ -42,6 +42,20 @@ func RemoveEmptyStrings(s []string) []string {
 	return nonempty
 }
 
+// RemoveDuplicates returns a slice with all the duplicate strings removed from the
+// source slice.
+func RemoveDuplicates(s []string) []string {
+	exists := make(map[string]bool)
+	out := []string{}
+	for _, v := range s {
+		if !exists[v] {
+			out = append(out, v)
+			exists[v] = true
+		}
+	}
+	return out
+}
+
 // MaybeCompletePrefix adds a hyphen on the end of the prefix if it doesn't have
 // one to make prefix-generated names look a bit nicer.
 func MaybeCompletePrefix(s string) string {

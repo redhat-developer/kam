@@ -40,6 +40,29 @@ func TestAddGitSuffix(t *testing.T) {
 	}
 }
 
+func TestRemoveDuplicates(t *testing.T) {
+	stringsTests := []struct {
+		name   string
+		source []string
+		want   []string
+	}{
+		{"no strings", []string{}, []string{}},
+		{"no duplicates", []string{"test/foo1.bar", "test/foo.bar", "test/foo2.bar", "test1/good"}, []string{"test/foo1.bar", "test/foo.bar", "test/foo2.bar", "test1/good"}},
+		{"1 duplicate", []string{"test/foo.bar", "test/foo.bar", "test1/good"}, []string{"test/foo.bar", "test1/good"}},
+		{"3 of a kind", []string{"test/foo.bar", "test/foo.bar", "test/foo.bar", "test1/good"}, []string{"test/foo.bar", "test1/good"}},
+		{"2 duplicates", []string{"test/foo1.bar", "test/foo1.bar", "test/foo.bar", "test/foo.bar", "test1/good"}, []string{"test/foo1.bar", "test/foo.bar", "test1/good"}},
+	}
+
+	for _, tt := range stringsTests {
+		t.Run(tt.name, func(rt *testing.T) {
+			got := RemoveDuplicates(tt.source)
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				rt.Fatalf("string removal failed:\n%s", diff)
+			}
+		})
+	}
+}
+
 func TestRemoveEmptyStrings(t *testing.T) {
 	stringsTests := []struct {
 		name   string

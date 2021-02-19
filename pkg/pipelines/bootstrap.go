@@ -18,6 +18,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
+	"github.com/redhat-developer/kam/pkg/cmd/utility"
 	"github.com/redhat-developer/kam/pkg/pipelines/argocd"
 	"github.com/redhat-developer/kam/pkg/pipelines/config"
 	"github.com/redhat-developer/kam/pkg/pipelines/deployment"
@@ -289,7 +290,7 @@ func bootstrapResources(o *BootstrapOptions, appFs afero.Fs) (res.Resources, err
 	}
 	bootstrapped[pipelinesFile] = m
 
-	k.Resources = append(k.Resources, secretFilename, imageRepoBindingFilename)
+	k.Resources = utility.RemoveDuplicates(append(k.Resources, secretFilename, imageRepoBindingFilename))
 	sort.Strings(k.Resources)
 	bootstrapped[kustomizePath] = k
 
