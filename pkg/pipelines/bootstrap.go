@@ -278,7 +278,7 @@ func bootstrapResources(o *BootstrapOptions, appFs afero.Fs) (res.Resources, err
 			return nil, fmt.Errorf("failed to get resources for internal image repository: %v", err)
 		}
 		bootstrapped = res.Merge(resources, bootstrapped)
-		k.Resources = append(k.Resources, filenames...)
+		k.AddResources(filenames...)
 	}
 
 	// This is specific to bootstrap, because there's only one service.
@@ -289,8 +289,7 @@ func bootstrapResources(o *BootstrapOptions, appFs afero.Fs) (res.Resources, err
 	}
 	bootstrapped[pipelinesFile] = m
 
-	k.Resources = append(k.Resources, secretFilename, imageRepoBindingFilename)
-	sort.Strings(k.Resources)
+	k.AddResources(secretFilename, imageRepoBindingFilename)
 	bootstrapped[kustomizePath] = k
 
 	bootstrapped = res.Merge(svcFiles, bootstrapped)
