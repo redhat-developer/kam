@@ -37,7 +37,7 @@ const (
 	gitopsRepoURLFlag     = "gitops-repo-url"
 	serviceRepoURLFlag    = "service-repo-url"
 	imageRepoFlag         = "image-repo"
-	argoCdOperatorName    = "ArgoCD Operator"
+	gitopsOperatorName    = "OpenShift GitOps Operator"
 	pipelinesOperatorName = "OpenShift Pipelines Operator"
 )
 
@@ -311,9 +311,9 @@ func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client,
 	if err := client.CheckIfArgoCDExists(argocd.ArgoCDNamespace); err != nil {
 		warnIfNotFound(spinner, "Please install OpenShift GitOps Operator from OperatorHub", err)
 		if !apierrors.IsNotFound(err) {
-			return fmt.Errorf("failed to check for ArgoCD Operator: %w", err)
+			return fmt.Errorf("failed to check for OpenShift GitOps Operator: %w", err)
 		}
-		missingDeps = append(missingDeps, argoCdOperatorName)
+		missingDeps = append(missingDeps, gitopsOperatorName)
 	}
 
 	spinner.Start("Checking if OpenShift Pipelines Operator is installed with the default configuration", false)

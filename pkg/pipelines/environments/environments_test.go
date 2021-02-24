@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/redhat-developer/kam/pkg/pipelines/argocd"
 	"github.com/redhat-developer/kam/pkg/pipelines/config"
 	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
 	"github.com/redhat-developer/kam/pkg/pipelines/namespaces"
@@ -30,6 +31,7 @@ func TestBuildEnvironmentFilesWithAppsToEnvironment(t *testing.T) {
 				"../services/service-metrics",
 			},
 		},
+		"environments/test-dev/env/base/argocd-admin.yaml": argocd.MakeApplicationControllerAdmin("test-dev"),
 		"environments/test-dev/apps/my-app-1/kustomization.yaml": &res.Kustomization{
 			Bases: []string{"overlays"},
 			CommonLabels: map[string]string{
@@ -38,7 +40,7 @@ func TestBuildEnvironmentFilesWithAppsToEnvironment(t *testing.T) {
 		"environments/test-dev/apps/my-app-1/overlays/kustomization.yaml":                          &res.Kustomization{Bases: []string{"../base"}},
 		"environments/test-dev/env/base/test-dev-environment.yaml":                                 namespaces.Create("test-dev", testGitOpsRepoURL),
 		"environments/test-dev/env/base/test-dev-rolebinding.yaml":                                 createRoleBinding(m.Environments[0], "cicd", "pipelines"),
-		"environments/test-dev/env/base/kustomization.yaml":                                        &res.Kustomization{Resources: []string{"test-dev-environment.yaml", "test-dev-rolebinding.yaml"}},
+		"environments/test-dev/env/base/kustomization.yaml":                                        &res.Kustomization{Resources: []string{"argocd-admin.yaml", "test-dev-environment.yaml", "test-dev-rolebinding.yaml"}},
 		"environments/test-dev/env/overlays/kustomization.yaml":                                    &res.Kustomization{Bases: []string{"../base"}},
 		"environments/test-dev/apps/my-app-1/services/service-http/kustomization.yaml":             &res.Kustomization{Bases: []string{"overlays"}},
 		"environments/test-dev/apps/my-app-1/services/service-http/base/kustomization.yaml":        &res.Kustomization{Bases: []string{"./config"}},
@@ -68,6 +70,7 @@ func TestBuildEnvironmentFilesWithEnvironmentsToApps(t *testing.T) {
 				"../services/service-metrics",
 			},
 		},
+		"environments/test-dev/env/base/argocd-admin.yaml": argocd.MakeApplicationControllerAdmin("test-dev"),
 		"environments/test-dev/apps/my-app-1/kustomization.yaml": &res.Kustomization{
 			Bases: []string{"overlays"},
 			CommonLabels: map[string]string{
@@ -78,7 +81,7 @@ func TestBuildEnvironmentFilesWithEnvironmentsToApps(t *testing.T) {
 		"environments/test-dev/env/base/test-dev-environment.yaml":        namespaces.Create("test-dev", testGitOpsRepoURL),
 		"environments/test-dev/env/base/test-dev-rolebinding.yaml":        createRoleBinding(m.Environments[0], "cicd", "pipelines"),
 		"environments/test-dev/env/base/kustomization.yaml": &res.Kustomization{
-			Resources: []string{"test-dev-environment.yaml", "test-dev-rolebinding.yaml"},
+			Resources: []string{"argocd-admin.yaml", "test-dev-environment.yaml", "test-dev-rolebinding.yaml"},
 			Bases:     []string{"../../apps/my-app-1/overlays"},
 		},
 		"environments/test-dev/env/overlays/kustomization.yaml":                                    &res.Kustomization{Bases: []string{"../base"}},
@@ -154,6 +157,7 @@ func TestBuildEnvironmentsAddsKustomizedFiles(t *testing.T) {
 	}
 
 	want := []string{
+		"environments/test-dev/env/base/argocd-admin.yaml",
 		"environments/test-dev/env/base/kustomization.yaml",
 		"environments/test-dev/env/base/test-dev-environment.yaml",
 		"environments/test-dev/env/overlays/kustomization.yaml",
@@ -187,9 +191,10 @@ func TestBuildEnvironmentFilesWithNoCICDEnv(t *testing.T) {
 				vcsSourceLabel: "example/example",
 			},
 		},
+		"environments/test-dev/env/base/argocd-admin.yaml":                                         argocd.MakeApplicationControllerAdmin("test-dev"),
 		"environments/test-dev/apps/my-app-1/overlays/kustomization.yaml":                          &res.Kustomization{Bases: []string{"../base"}},
 		"environments/test-dev/env/base/test-dev-environment.yaml":                                 namespaces.Create("test-dev", testGitOpsRepoURL),
-		"environments/test-dev/env/base/kustomization.yaml":                                        &res.Kustomization{Resources: []string{"test-dev-environment.yaml"}},
+		"environments/test-dev/env/base/kustomization.yaml":                                        &res.Kustomization{Resources: []string{"argocd-admin.yaml", "test-dev-environment.yaml"}},
 		"environments/test-dev/env/overlays/kustomization.yaml":                                    &res.Kustomization{Bases: []string{"../base"}},
 		"environments/test-dev/apps/my-app-1/services/service-http/kustomization.yaml":             &res.Kustomization{Bases: []string{"overlays"}},
 		"environments/test-dev/apps/my-app-1/services/service-http/base/kustomization.yaml":        &res.Kustomization{Bases: []string{"./config"}},

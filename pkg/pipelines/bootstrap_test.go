@@ -127,6 +127,7 @@ func TestBootstrapManifest(t *testing.T) {
 	wantResources := []string{
 		"01-namespaces/cicd-environment.yaml",
 		"01-namespaces/image-environment.yaml",
+		"02-rolebindings/argocd-admin.yaml",
 		"02-rolebindings/commit-status-tracker-role.yaml",
 		"02-rolebindings/commit-status-tracker-rolebinding.yaml",
 		"02-rolebindings/commit-status-tracker-service-account.yaml",
@@ -134,6 +135,7 @@ func TestBootstrapManifest(t *testing.T) {
 		"02-rolebindings/pipeline-service-account.yaml",
 		"02-rolebindings/pipeline-service-role.yaml",
 		"02-rolebindings/pipeline-service-rolebinding.yaml",
+		"02-rolebindings/sealed-secrets-aggregate-to-admin.yaml",
 		"03-secrets/git-host-access-token.yaml",
 		"03-secrets/git-host-basic-auth-token.yaml",
 		"03-secrets/gitops-webhook-secret.yaml",

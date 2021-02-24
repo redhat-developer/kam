@@ -236,6 +236,14 @@ The `pipelines` field describes the templates and bindings used for this service
 
 The`webhook.secret` is used to authenticate incoming hooks from Git host.
 
+## Argo CD Permissions
+
+By default, kam provides admin privileges to Argo CD application controller service account. For each environment
+managed by kam, a rolebinding file is generated, that makes Argo CD an admin in that environment. In order to modify it, 
+update the argocd-admin rolebinding file
+
+* `environments/<name>/env/base/argocd-admin.yaml`
+
 ## Bringing the bootstrapped environment up
 
 First of all, let's get started with our Git repository.

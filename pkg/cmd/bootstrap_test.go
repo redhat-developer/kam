@@ -289,7 +289,7 @@ Checking if OpenShift Pipelines Operator is installed with the default configura
 	err := checkBootstrapDependencies(
 		&BootstrapParameters{BootstrapOptions: &pipelines.BootstrapOptions{SealedSecretsService: types.NamespacedName{Namespace: secrets.SealedSecretsNS, Name: secrets.SealedSecretsController}}},
 		fakeClient, fakeSpinner)
-	wantErr := fmt.Sprintf("failed to satisfy the required dependencies: %s, %s", argoCdOperatorName, pipelinesOperatorName)
+	wantErr := fmt.Sprintf("failed to satisfy the required dependencies: %s, %s", gitopsOperatorName, pipelinesOperatorName)
 
 	assertError(t, err, wantErr)
 	assertMessage(t, buff.String(), wantMsg)
@@ -415,7 +415,7 @@ Checking if OpenShift Pipelines Operator is installed with the default configura
 		BootstrapOptions: &pipelines.BootstrapOptions{},
 	}
 	err := checkBootstrapDependencies(wizardParams, fakeClient, fakeSpinner)
-	wantErr := fmt.Sprintf("failed to satisfy the required dependencies: %s", argoCdOperatorName)
+	wantErr := fmt.Sprintf("failed to satisfy the required dependencies: %s", gitopsOperatorName)
 
 	assertError(t, err, wantErr)
 	assertMessage(t, buff.String(), wantMsg)
