@@ -1,4 +1,4 @@
-# How to retrieve a GitHub access token.
+# How to retrieve a GiLab access token.
 
 #### First log into your GitLab account, and click on the user menu.
 
