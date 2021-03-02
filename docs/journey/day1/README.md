@@ -33,13 +33,16 @@ $ kam bootstrap \
   --image-repo quay.io/<username>/<image-repo> \
   --dockercfgjson ~/Downloads/<username>-auth.json \
   --git-host-access-token <your git access token> \
-  --output <path to write GitOps resources>
+  --output <path to write GitOps resources> \
   --push-to-git=true
 ```
+**NOTE**: Flag `--push-to-git=true` push the generated resources to your GitOps repository, this will execute git locally on the developer machine, which will in turn authenticate the push using your local SSH keys, this means that you need to be able to push to a Git repository from your local machine.
+
 The `kam bootstrap` [command](../../commands/kam_bootstrap.md) also provides an interactive mode, which is triggered by running without any parameters, or by providing the `--interactive` flag, and will generate the GitOps directory and the required resources.
 
 During an interactive mode session, choose to use default values or not. If default values are chosen, prompts will appear to allow you to enter any required values that haven't already been provided from the command line. This is the quickest way to generate a bootstrapped GitOps configuration.
-If you choose not to use defaults, you will be prompted to provide the values for each flag, except those flags that you have overridden or specified from the command line.
+
+The `kam bootstrap` [command](../../commands/kam_bootstrap.md) also provides an interactive mode, which is triggered by running without any parameters, and will generate the GitOps directory and the required resources.
 
 In the event of using a self-hosted _GitHub Enterprise_ or _GitLab Community/Enterprise Edition_ if the driver name isn't evident from the repository URL, use the `--private-repo-driver` flag to select _github_ or _gitlab_.
 
@@ -238,9 +241,9 @@ The`webhook.secret` is used to authenticate incoming hooks from Git host.
 
 ## Bringing the bootstrapped environment up
 
-First of all, let's get started with our Git repository.
+Ignore these steps if the flag `--push-to-git=true` is part of your bootstrap command.
 
-From the root of your GitOps directory (with the pipelines.yaml), execute the
+Create a new gitops un initialize private GitHub/GitLab repo, then from the root of your GitOps directory (with the pipelines.yaml), execute the
 following commands:
 
 ```shell
