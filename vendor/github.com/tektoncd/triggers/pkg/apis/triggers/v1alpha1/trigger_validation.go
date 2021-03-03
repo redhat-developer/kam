@@ -29,70 +29,83 @@ import (
 
 // Validate validates a Trigger
 func (t *Trigger) Validate(ctx context.Context) *apis.FieldError {
-	if err := validate.ObjectMetadata(t.GetObjectMeta()); err != nil {
-		return err.ViaField("metadata")
-	}
-	return t.Spec.validate(ctx).ViaField("spec")
+	errs := validate.ObjectMetadata(t.GetObjectMeta()).ViaField("metadata")
+	return errs.Also(t.Spec.validate(ctx).ViaField("spec"))
 }
 
 func (t *TriggerSpec) validate(ctx context.Context) *apis.FieldError {
 	// Validate optional Bindings
-	if err := triggerSpecBindingArray(t.Bindings).validate(ctx); err != nil {
-		return err
-	}
+	errs := triggerSpecBindingArray(t.Bindings).validate(ctx)
 	// Validate required TriggerTemplate
-	if err := t.Template.validate(ctx); err != nil {
-		return err
-	}
+	errs = errs.Also(t.Template.validate(ctx))
 
 	// Validate optional Interceptors
 	for i, interceptor := range t.Interceptors {
-		if err := interceptor.validate(ctx).ViaField(fmt.Sprintf("interceptors[%d]", i)); err != nil {
-			return err
-		}
+		errs = errs.Also(interceptor.validate(ctx).ViaField(fmt.Sprintf("interceptors[%d]", i)))
 	}
 
-	return nil
+	return errs
 }
 
-func (t TriggerSpecTemplate) validate(ctx context.Context) *apis.FieldError {
+func (t TriggerSpecTemplate) validate(ctx context.Context) (errs *apis.FieldError) {
 	// Optional explicit match
 	if t.APIVersion != "" {
 		if t.APIVersion != "v1alpha1" {
-			return apis.ErrInvalidValue(fmt.Errorf("invalid apiVersion"), "template.apiVersion")
+			errs = errs.Also(apis.ErrInvalidValue(fmt.Errorf("invalid apiVersion"), "template.apiVersion"))
 		}
 	}
-	if t.Name == "" {
-		return apis.ErrMissingField("template.name")
-	}
-	return nil
 
+	// Validate only one of Name or Ref is set.
+	if t.Name != "" && t.Ref != nil {
+		errs = errs.Also(apis.ErrMultipleOneOf("template.name", "template.ref"))
+	}
+
+	// Set Ref to Name
+	if t.Name != "" {
+		t.Ref = &t.Name
+	}
+
+	switch {
+	case t.Spec != nil && t.Ref != nil:
+		errs = errs.Also(apis.ErrMultipleOneOf("template.spec", "template.ref"))
+	case t.Spec == nil && t.Ref == nil:
+		errs = errs.Also(apis.ErrMissingOneOf("template.spec", "template.ref"))
+	case t.Spec != nil:
+		errs = errs.Also(t.Spec.validate(ctx))
+	case t.Ref == nil || *t.Ref == "":
+		errs = errs.Also(apis.ErrMissingField("template.ref"))
+	}
+	return errs
 }
 
-func (t triggerSpecBindingArray) validate(ctx context.Context) *apis.FieldError {
-	if len(t) > 0 {
-		for i, b := range t {
-			// Either Ref or Spec should be present
-			if b.Ref == "" && b.Spec == nil {
-				return apis.ErrMissingOneOf(fmt.Sprintf("bindings[%d].Ref", i), fmt.Sprintf("bindings[%d].Spec", i))
+func (t triggerSpecBindingArray) validate(ctx context.Context) (errs *apis.FieldError) {
+	for i, b := range t {
+		switch {
+		case b.Ref != "":
+			switch {
+			case b.Spec != nil: // Cannot specify both Ref and Spec
+				errs = errs.Also(apis.ErrMultipleOneOf(fmt.Sprintf("bindings[%d].Ref", i), fmt.Sprintf("bindings[%d].Spec", i)))
+			case b.Name != "": // Cannot specify both Ref and Name
+				errs = errs.Also(apis.ErrMultipleOneOf(fmt.Sprintf("bindings[%d].Ref", i), fmt.Sprintf("bindings[%d].Name", i)))
+			case b.Kind != NamespacedTriggerBindingKind && b.Kind != ClusterTriggerBindingKind: // Kind must be valid
+				errs = errs.Also(apis.ErrInvalidValue(fmt.Errorf("invalid kind"), fmt.Sprintf("bindings[%d].kind", i)))
 			}
-
-			// Both Ref and Spec can't be present at the same time
-			if b.Ref != "" && b.Spec != nil {
-				return apis.ErrMultipleOneOf(fmt.Sprintf("bindings[%d].Ref", i), fmt.Sprintf("bindings[%d].Spec", i))
+		case b.Spec != nil: // TODO(#768): Remove deprecated old style embedded bindings
+			break // For backwards compatibility, users who specify Spec may also specify Name
+		case b.Name != "":
+			if b.Value == nil { // Value is mandatory if Name is specified
+				errs = errs.Also(apis.ErrMissingField(fmt.Sprintf("bindings[%d].Value", i)))
 			}
-
-			if b.Ref != "" && b.Kind != NamespacedTriggerBindingKind && b.Kind != ClusterTriggerBindingKind {
-				return apis.ErrInvalidValue(fmt.Errorf("invalid kind"), fmt.Sprintf("bindings[%d].kind", i))
-			}
+		default:
+			errs = errs.Also(apis.ErrMissingOneOf(fmt.Sprintf("bindings[%d].Ref", i), fmt.Sprintf("bindings[%d].Spec", i), fmt.Sprintf("bindings[%d].Name", i)))
 		}
 	}
-	return nil
+	return errs
 }
 
-func (i *TriggerInterceptor) validate(ctx context.Context) *apis.FieldError {
+func (i *TriggerInterceptor) validate(ctx context.Context) (errs *apis.FieldError) {
 	if i.Webhook == nil && i.GitHub == nil && i.GitLab == nil && i.CEL == nil && i.Bitbucket == nil {
-		return apis.ErrMissingField("interceptor")
+		errs = errs.Also(apis.ErrMissingField("interceptor"))
 	}
 
 	// Enforce oneof
@@ -111,35 +124,35 @@ func (i *TriggerInterceptor) validate(ctx context.Context) *apis.FieldError {
 	}
 
 	if numSet > 1 {
-		return apis.ErrMultipleOneOf("interceptor.webhook", "interceptor.github", "interceptor.gitlab")
+		errs = errs.Also(apis.ErrMultipleOneOf("interceptor.webhook", "interceptor.github", "interceptor.gitlab"))
 	}
 
 	if i.Webhook != nil {
 		if i.Webhook.ObjectRef == nil || i.Webhook.ObjectRef.Name == "" {
-			return apis.ErrMissingField("interceptor.webhook.objectRef")
+			errs = errs.Also(apis.ErrMissingField("interceptor.webhook.objectRef"))
 		}
 		w := i.Webhook
 		if w.ObjectRef.Kind != "Service" {
-			return apis.ErrInvalidValue(fmt.Errorf("invalid kind"), "interceptor.webhook.objectRef.kind")
+			errs = errs.Also(apis.ErrInvalidValue(fmt.Errorf("invalid kind"), "interceptor.webhook.objectRef.kind"))
 		}
 
 		// Optional explicit match
 		if w.ObjectRef.APIVersion != "v1" {
-			return apis.ErrInvalidValue(fmt.Errorf("invalid apiVersion"), "interceptor.webhook.objectRef.apiVersion")
+			errs = errs.Also(apis.ErrInvalidValue(fmt.Errorf("invalid apiVersion"), "interceptor.webhook.objectRef.apiVersion"))
 		}
 
 		for i, header := range w.Header {
 			// Enforce non-empty canonical header keys
 			if len(header.Name) == 0 || http.CanonicalHeaderKey(header.Name) != header.Name {
-				return apis.ErrInvalidValue(fmt.Errorf("invalid header name"), fmt.Sprintf("interceptor.webhook.header[%d].name", i))
+				errs = errs.Also(apis.ErrInvalidValue(fmt.Errorf("invalid header name"), fmt.Sprintf("interceptor.webhook.header[%d].name", i)))
 			}
 			// Enforce non-empty header values
 			if header.Value.Type == pipelinev1.ParamTypeString {
 				if len(header.Value.StringVal) == 0 {
-					return apis.ErrInvalidValue(fmt.Errorf("invalid header value"), fmt.Sprintf("interceptor.webhook.header[%d].value", i))
+					errs = errs.Also(apis.ErrInvalidValue(fmt.Errorf("invalid header value"), fmt.Sprintf("interceptor.webhook.header[%d].value", i)))
 				}
 			} else if len(header.Value.ArrayVal) == 0 {
-				return apis.ErrInvalidValue(fmt.Errorf("invalid header value"), fmt.Sprintf("interceptor.webhook.header[%d].value", i))
+				errs = errs.Also(apis.ErrInvalidValue(fmt.Errorf("invalid header value"), fmt.Sprintf("interceptor.webhook.header[%d].value", i)))
 			}
 		}
 	}
@@ -156,22 +169,22 @@ func (i *TriggerInterceptor) validate(ctx context.Context) *apis.FieldError {
 
 	if i.CEL != nil {
 		if i.CEL.Filter == "" && len(i.CEL.Overlays) == 0 {
-			return apis.ErrMultipleOneOf("cel.filter", "cel.overlays")
+			errs = errs.Also(apis.ErrMultipleOneOf("cel.filter", "cel.overlays"))
 		}
 		env, err := cel.NewEnv()
 		if err != nil {
-			return apis.ErrInvalidValue(fmt.Errorf("failed to create a CEL env: %s", err), "cel.filter")
+			errs = errs.Also(apis.ErrInvalidValue(fmt.Errorf("failed to create a CEL env: %s", err), "cel.filter"))
 		}
 		if i.CEL.Filter != "" {
 			if _, issues := env.Parse(i.CEL.Filter); issues != nil && issues.Err() != nil {
-				return apis.ErrInvalidValue(fmt.Errorf("failed to parse the CEL filter: %s", issues.Err()), "cel.filter")
+				errs = errs.Also(apis.ErrInvalidValue(fmt.Errorf("failed to parse the CEL filter: %s", issues.Err()), "cel.filter"))
 			}
 		}
 		for _, v := range i.CEL.Overlays {
 			if _, issues := env.Parse(v.Expression); issues != nil && issues.Err() != nil {
-				return apis.ErrInvalidValue(fmt.Errorf("failed to parse the CEL overlay: %s", issues.Err()), "cel.overlay")
+				errs = errs.Also(apis.ErrInvalidValue(fmt.Errorf("failed to parse the CEL overlay: %s", issues.Err()), "cel.overlay"))
 			}
 		}
 	}
-	return nil
+	return errs
 }

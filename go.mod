@@ -11,10 +11,11 @@ require (
 	github.com/docker/docker v17.12.0-ce-rc1.0.20200309214505-aa6a9891b09c+incompatible // indirect
 	github.com/elazarl/goproxy v0.0.0-20190911111923-ecfe977594f1 // indirect
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32 // indirect
-	github.com/google/go-cmp v0.5.0
+	github.com/google/go-cmp v0.5.2
 	github.com/h2non/gock v1.0.9
 	github.com/hinshun/vt10x v0.0.0-20180809195222-d55458df857c // indirect
 	github.com/jenkins-x/go-scm v1.5.160
+	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mkmik/multierror v0.3.0
 	github.com/openshift/api v3.9.1-0.20190924102528-32369d4db2ad+incompatible
@@ -24,16 +25,16 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/afero v1.2.2
 	github.com/spf13/cobra v1.0.0
-	github.com/tektoncd/pipeline v0.16.3
-	github.com/tektoncd/triggers v0.8.1
+	github.com/tektoncd/pipeline v0.18.0
+	github.com/tektoncd/triggers v0.10.2
 	github.com/zalando/go-keyring v0.1.0
 	gopkg.in/AlecAivazis/survey.v1 v1.8.0
-	k8s.io/api v0.18.2
-	k8s.io/apimachinery v0.18.2
+	k8s.io/api v0.18.8
+	k8s.io/apimachinery v0.19.0
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/klog v1.0.0
 	k8s.io/kubectl v0.17.2
-	knative.dev/pkg v0.0.0-20200702222342-ea4d6e985ba0
+	knative.dev/pkg v0.0.0-20200922164940-4bf40ad82aab
 	sigs.k8s.io/yaml v1.2.0
 )
 
@@ -64,4 +65,5 @@ replace (
 	k8s.io/legacy-cloud-providers => k8s.io/legacy-cloud-providers v0.17.1
 	k8s.io/metrics => k8s.io/metrics v0.17.1
 	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.17.1
+	knative.dev/pkg v0.0.0-20200922164940-4bf40ad82aab => knative.dev/pkg v0.0.0-20200702222342-ea4d6e985ba0
 )

@@ -67,7 +67,6 @@ func (r *gitlabSpec) eventInterceptor(secretNamespace, secretName string) *trigg
 			SecretRef: &triggersv1.SecretRef{
 				SecretName: secretName,
 				SecretKey:  webhookSecretKey,
-				Namespace:  secretNamespace,
 			},
 		},
 	}

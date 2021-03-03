@@ -24,8 +24,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
-	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 )
 
 // Check that EventListener may be validated and defaulted.
@@ -33,7 +33,7 @@ var _ apis.Validatable = (*EventListener)(nil)
 var _ apis.Defaultable = (*EventListener)(nil)
 
 // +genclient
-// +genreconciler
+// +genreconciler:krshapedlogic=false
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // EventListener exposes a service to accept HTTP event payloads.
@@ -58,6 +58,17 @@ type EventListenerSpec struct {
 	ServiceType        corev1.ServiceType     `json:"serviceType,omitempty"`
 	Replicas           *int32                 `json:"replicas,omitempty"`
 	PodTemplate        PodTemplate            `json:"podTemplate,omitempty"`
+	NamespaceSelector  NamespaceSelector      `json:"namespaceSelector,omitempty"`
+	Resources          Resources              `json:"resources,omitempty"`
+}
+
+type Resources struct {
+	KubernetesResource *KubernetesResource `json:"kubernetesResource,omitempty"`
+}
+
+type KubernetesResource struct {
+	ServiceType        corev1.ServiceType `json:"serviceType,omitempty"`
+	duckv1.WithPodSpec `json:"spec,omitempty"`
 }
 
 type PodTemplate struct {
@@ -102,7 +113,6 @@ type EventInterceptor = TriggerInterceptor
 type SecretRef struct {
 	SecretKey  string `json:"secretKey,omitempty"`
 	SecretName string `json:"secretName,omitempty"`
-	Namespace  string `json:"namespace,omitempty"`
 }
 
 // EventListenerBinding refers to a particular TriggerBinding or ClusterTriggerBindingresource.
@@ -124,7 +134,7 @@ type EventListenerList struct {
 // EventListenerStatus holds the status of the EventListener
 // +k8s:deepcopy-gen=true
 type EventListenerStatus struct {
-	duckv1beta1.Status `json:",inline"`
+	duckv1.Status `json:",inline"`
 
 	// EventListener is Addressable. It currently exposes the service DNS
 	// address of the the EventListener sink
@@ -140,6 +150,14 @@ type EventListenerConfig struct {
 	// GeneratedResourceName is the name given to all resources reconciled by
 	// the EventListener
 	GeneratedResourceName string `json:"generatedName"`
+}
+
+// NamespaceSelector is a selector for selecting either all namespaces or a
+// list of namespaces.
+// +k8s:openapi-gen=true
+type NamespaceSelector struct {
+	// List of namespace names.
+	MatchNames []string `json:"matchNames,omitempty"`
 }
 
 // The conditions that are internally resolved by the EventListener reconciler

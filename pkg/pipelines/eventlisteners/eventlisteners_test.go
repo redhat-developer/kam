@@ -27,7 +27,6 @@ func TestGenerateEventListener(t *testing.T) {
 								SecretRef: &triggersv1.SecretRef{
 									SecretName: "test",
 									SecretKey:  WebhookSecretKey,
-									Namespace:  "testing",
 								},
 							},
 						},
