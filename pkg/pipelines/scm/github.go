@@ -68,7 +68,6 @@ func (r *githubSpec) eventInterceptor(secretNamespace, secretName string) *trigg
 			SecretRef: &triggersv1.SecretRef{
 				SecretName: secretName,
 				SecretKey:  webhookSecretKey,
-				Namespace:  secretNamespace,
 			},
 		},
 	}
