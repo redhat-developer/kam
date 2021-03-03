@@ -280,7 +280,7 @@ func TestDependenciesWithNothingInstalled(t *testing.T) {
 	fakeClient := newFakeClient(nil, nil)
 
 	wantMsg := `
-Checking if Sealed Secrets is installed with the default configuration [Please install Sealed Secrets Operator from OperatorHub]
+Checking if Sealed Secrets is installed with the default configuration [The Sealed Secrets Operator was not detected]
 Checking if ArgoCD is installed with the default configuration [Please install OpenShift GitOps Operator from OperatorHub]
 Checking if OpenShift Pipelines Operator is installed with the default configuration [Please install OpenShift GitOps Operator from OperatorHub]`
 
@@ -321,7 +321,7 @@ func TestDependenciesWithAllInstalledDifferentSealedSecretsService(t *testing.T)
 
 	// expect negative Sealed Secrets check
 	wantMsg := `
-Checking if Sealed Secrets is installed with the default configuration [Please install Sealed Secrets Operator from OperatorHub]
+Checking if Sealed Secrets is installed with the default configuration [The Sealed Secrets Operator was not detected]
 Checking if ArgoCD is installed with the default configuration
 Checking if OpenShift Pipelines Operator is installed with the default configuration`
 

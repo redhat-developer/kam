@@ -87,7 +87,7 @@ func TestServiceResourcesWithCICD(t *testing.T) {
 		},
 	}
 
-	got, err := serviceResources(m, fakeFs, &AddServiceOptions{
+	got, otherResources, err := serviceResources(m, fakeFs, &AddServiceOptions{
 		AppName:             "test-app",
 		EnvName:             "test-dev",
 		GitRepoURL:          "http://github.com/org/test",
@@ -101,6 +101,103 @@ func TestServiceResourcesWithCICD(t *testing.T) {
 		return !ok
 	})); diff != "" {
 		t.Fatalf("serviceResources() failed: %v", diff)
+	}
+	if diff := cmp.Diff(0, len(otherResources)); diff != "" {
+		t.Fatalf("other resources is not empty:\n%s", diff)
+	}
+}
+
+func TestServiceResourcesAndUnsealedSecretsWithCICD(t *testing.T) {
+	defer stubDefaultPublicKeyFunc(t)()
+	fakeFs := ioutils.NewMemoryFilesystem()
+	m := buildManifest(true, false)
+	hookSecret, err := secrets.CreateUnsealedSecret(
+		meta.NamespacedName(
+			"cicd", "webhook-secret-test-dev-test"),
+		meta.NamespacedName("test-ns", "service"),
+		"123",
+		eventlisteners.WebhookSecretKey)
+	assertNoError(t, err)
+
+	wantOther := res.Resources{
+		"secrets/webhook-secret-test-dev-test.yaml": hookSecret,
+	}
+	want := res.Resources{
+		//"config/cicd/base/03-secrets/webhook-secret-test-dev-test.yaml": hookSecret,
+		"environments/test-dev/apps/test-app/base/kustomization.yaml": &res.Kustomization{
+			Bases: []string{"../services/test-svc", "../services/test"}},
+		"environments/test-dev/apps/test-app/kustomization.yaml": &res.Kustomization{
+			Bases:        []string{"overlays"},
+			CommonLabels: map[string]string{"app.openshift.io/vcs-source": "org/test"},
+		},
+		"environments/test-dev/apps/test-app/overlays/kustomization.yaml": &res.Kustomization{
+			Bases: []string{"../base"}},
+		"pipelines.yaml": &config.Manifest{
+			Config: &config.Config{
+				Pipelines: &config.PipelinesConfig{
+					Name: "cicd",
+				},
+			},
+			GitOpsURL: "http://github.com/org/test",
+			Environments: []*config.Environment{
+				{
+					Name: "test-dev",
+					Apps: []*config.Application{
+						{
+							Name: "test-app",
+							Services: []*config.Service{
+								{
+									Name:      "test-svc",
+									SourceURL: "https://github.com/myproject/test-svc",
+									Webhook: &config.Webhook{
+										Secret: &config.Secret{
+											Name:      "webhook-secret-test-dev-test-svc",
+											Namespace: "cicd",
+										},
+									},
+								},
+								{
+									Name:      "test",
+									SourceURL: "http://github.com/org/test",
+									Webhook: &config.Webhook{
+										Secret: &config.Secret{
+											Name:      "webhook-secret-test-dev-test",
+											Namespace: "cicd",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	got, otherResources, err := serviceResources(m, fakeFs, &AddServiceOptions{
+		AppName:             "test-app",
+		EnvName:             "test-dev",
+		GitRepoURL:          "http://github.com/org/test",
+		PipelinesFolderPath: pipelinesFile,
+		WebhookSecret:       "123",
+		ServiceName:         "test",
+		Insecure:            true,
+	})
+	assertNoError(t, err)
+	if diff := cmp.Diff(got, want, cmpopts.IgnoreMapEntries(func(k string, v interface{}) bool {
+		_, ok := want[k]
+		return !ok
+	})); diff != "" {
+		t.Fatalf("serviceResources() failed: %v", diff)
+	}
+	if diff := cmp.Diff(1, len(otherResources)); diff != "" {
+		t.Fatalf("other resources contain one entry:\n%s", diff)
+	}
+	if diff := cmp.Diff(otherResources, wantOther, cmpopts.IgnoreMapEntries(func(k string, v interface{}) bool {
+		_, ok := wantOther[k]
+		return !ok
+	})); diff != "" {
+		t.Fatalf("serviceResources() failed to create unsealed secrets properly:\n%s", diff)
 	}
 }
 
@@ -153,7 +250,7 @@ func TestServiceResourcesWithArgoCD(t *testing.T) {
 		},
 	}
 
-	got, err := serviceResources(m, fakeFs, &AddServiceOptions{
+	got, otherResources, err := serviceResources(m, fakeFs, &AddServiceOptions{
 		AppName:             "test-app",
 		EnvName:             "test-dev",
 		GitRepoURL:          "http://github.com/org/test",
@@ -167,6 +264,9 @@ func TestServiceResourcesWithArgoCD(t *testing.T) {
 		return !ok
 	})); diff != "" {
 		t.Fatalf("serviceResources() failed: %v", diff)
+	}
+	if diff := cmp.Diff(0, len(otherResources)); diff != "" {
+		t.Fatalf("other resources is not empty:\n%s", diff)
 	}
 }
 
@@ -212,7 +312,7 @@ func TestServiceResourcesWithoutArgoCD(t *testing.T) {
 		},
 	}
 
-	got, err := serviceResources(m, fakeFs, &AddServiceOptions{
+	got, otherResources, err := serviceResources(m, fakeFs, &AddServiceOptions{
 		AppName:             "test-app",
 		EnvName:             "test-dev",
 		GitRepoURL:          "http://github.com/org/test",
@@ -226,6 +326,9 @@ func TestServiceResourcesWithoutArgoCD(t *testing.T) {
 		return !ok
 	})); diff != "" {
 		t.Fatalf("serviceResources() failed: %v", diff)
+	}
+	if diff := cmp.Diff(0, len(otherResources)); diff != "" {
+		t.Fatalf("other resources is not empty:\n%s", diff)
 	}
 }
 
@@ -270,7 +373,7 @@ func TestAddServiceWithoutApp(t *testing.T) {
 		},
 	}
 
-	got, err := serviceResources(m, fakeFs, &AddServiceOptions{
+	got, otherResources, err := serviceResources(m, fakeFs, &AddServiceOptions{
 		AppName:             "new-app",
 		EnvName:             "test-dev",
 		GitRepoURL:          "http://github.com/org/test",
@@ -283,6 +386,9 @@ func TestAddServiceWithoutApp(t *testing.T) {
 		if diff := cmp.Diff(want[i], got[i]); diff != "" {
 			t.Fatalf("serviceResources() failed: %v", diff)
 		}
+	}
+	if diff := cmp.Diff(0, len(otherResources)); diff != "" {
+		t.Fatalf("other resources is not empty:\n%s", diff)
 	}
 }
 
@@ -416,7 +522,7 @@ func TestServiceWithArgoCD(t *testing.T) {
 	argo, err := argocd.Build(argocd.ArgoCDNamespace, "http://github.com/org/test", m)
 	assertNoError(t, err)
 	want = res.Merge(argo, want)
-	got, err := serviceResources(m, fakeFs, &AddServiceOptions{
+	got, otherResources, err := serviceResources(m, fakeFs, &AddServiceOptions{
 		AppName:             "test-app",
 		EnvName:             "test-dev",
 		GitRepoURL:          "http://github.com/org/test",
@@ -430,6 +536,9 @@ func TestServiceWithArgoCD(t *testing.T) {
 		return !ok
 	})); diff != "" {
 		t.Fatalf("serviceResources() failed: %v", diff)
+	}
+	if diff := cmp.Diff(0, len(otherResources)); diff != "" {
+		t.Fatalf("other resources is not empty:\n%s", diff)
 	}
 }
 
