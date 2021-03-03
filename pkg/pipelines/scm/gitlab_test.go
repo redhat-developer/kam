@@ -74,7 +74,7 @@ func TestCreateCDTriggersForGitLab(t *testing.T) {
 		Interceptors: []*triggersv1.EventInterceptor{
 			{
 				GitLab: &triggersv1.GitLabInterceptor{
-					SecretRef: &triggersv1.SecretRef{SecretKey: "webhook-secret-key", SecretName: "secret", Namespace: "ns"},
+					SecretRef: &triggersv1.SecretRef{SecretKey: "webhook-secret-key", SecretName: "secret"},
 				},
 			},
 			{

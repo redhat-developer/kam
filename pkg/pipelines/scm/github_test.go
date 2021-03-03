@@ -73,7 +73,7 @@ func TestCreateCDTriggersForGithub(t *testing.T) {
 		Interceptors: []*triggersv1.EventInterceptor{
 			{
 				GitHub: &triggersv1.GitHubInterceptor{
-					SecretRef: &triggersv1.SecretRef{SecretKey: "webhook-secret-key", SecretName: "secret", Namespace: "ns"},
+					SecretRef: &triggersv1.SecretRef{SecretKey: "webhook-secret-key", SecretName: "secret"},
 				},
 			},
 			{
