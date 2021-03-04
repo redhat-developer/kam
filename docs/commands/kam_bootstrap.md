@@ -27,6 +27,7 @@ kam bootstrap [flags]
       --gitops-webhook-secret string    Provide a secret that we can use to authenticate incoming hooks from your Git hosting service for the GitOps repository. (if not provided, it will be auto-generated)
   -h, --help                            help for bootstrap
       --image-repo string               Image repository of the form <registry>/<username>/<repository> or <project>/<app> which is used to push newly built images
+      --insecure                        Set to true to use unencrypted secrets instead of sealed secrets.
       --interactive                     If true, enable prompting for most options if not already specified on the command line
       --output string                   Path to write GitOps resources (default "./gitops")
       --overwrite                       Overwrites previously existing GitOps configuration (if any) on the local filesystem

@@ -77,12 +77,6 @@ type BootstrapParameters struct {
 	Interactive bool
 }
 
-type status interface {
-	WarningStatus(status string)
-	Start(status string, debug bool)
-	End(status bool)
-}
-
 // NewBootstrapParameters bootsraps a Bootstrap Parameters instance.
 func NewBootstrapParameters() *BootstrapParameters {
 	return &BootstrapParameters{
@@ -160,8 +154,9 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client, cm
 	log.Progressf("\nStarting interactive prompt\n")
 	// Prompt if user wants to use all default values and only be prompted with required or other necessary questions
 	promptForAll := !ui.UseDefaultValues()
-	// ask for sealed secrets only when default is absent
-	if client.CheckIfSealedSecretsExists(defaultSealedSecretsServiceName) != nil {
+	// ask for sealed secrets only when default is absent, and consider insecure/secure cases
+	err := client.CheckIfSealedSecretsExists(defaultSealedSecretsServiceName)
+	if !io.Insecure && err != nil {
 		io.SealedSecretsService.Namespace = ui.EnterSealedSecretService(&io.SealedSecretsService)
 	}
 	if io.GitOpsRepoURL == "" {
@@ -239,8 +234,14 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client, cm
 		}
 		io.OutputPath = filepath.Join(".", repoName)
 	}
-	io.OutputPath = ui.VerifyOutputPath(io.OutputPath, io.Overwrite, outputPathOverridden, promptForAll)
-	io.Overwrite = true
+	io.OutputPath, io.Overwrite = ui.VerifyOutputPath(io.OutputPath, io.Overwrite, outputPathOverridden, promptForAll)
+
+	if !io.Overwrite {
+		exists := ui.VerifySecretsPath(io.OutputPath)
+		if exists {
+			return fmt.Errorf("the secrets folder located as a sibling of the output folder %s already exists. Delete or rename the secrets folder and try again", io.OutputPath)
+		}
+	}
 	return nil
 }
 
@@ -276,33 +277,34 @@ func setAccessToken(io *BootstrapParameters) error {
 	return nil
 }
 
-func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client, spinner status) error {
+func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client, spinner utility.Status) error {
 	missingDeps := []string{}
 	log.Progressf("\nChecking dependencies\n")
 
 	// in case custom Sealed Secrets namespace/service name are provided, try them first
 	// We do not add Sealed Secret Operator to missingDeps since we this dependency can be resolved
 	// by optional flags or interactive user inputs.
-	if (io.BootstrapOptions.SealedSecretsService.Namespace != "" && io.BootstrapOptions.SealedSecretsService.Namespace != defaultSealedSecretsServiceName.Namespace) ||
-		(io.BootstrapOptions.SealedSecretsService.Name != "" && (io.BootstrapOptions.SealedSecretsService.Name != defaultSealedSecretsServiceName.Name)) {
+	if !io.Insecure && ((io.BootstrapOptions.SealedSecretsService.Namespace != "" && io.BootstrapOptions.SealedSecretsService.Namespace != defaultSealedSecretsServiceName.Namespace) ||
+		(io.BootstrapOptions.SealedSecretsService.Name != "" && (io.BootstrapOptions.SealedSecretsService.Name != defaultSealedSecretsServiceName.Name))) {
 
 		spinner.Start("Checking if Sealed Secrets is installed with custom configuration", false)
 		if err := checkAndSetSealedSecretsConfig(io, client, io.BootstrapOptions.SealedSecretsService); err != nil {
-
 			warnIfNotFound(spinner, "Provided Sealed Secrets namespace/name are not valid. Please verify", err)
 			if !apierrors.IsNotFound(err) {
 				return fmt.Errorf("failed to check for Sealed Secrets Operator: %w", err)
 			}
 		}
 	} else {
-		// use default configuration to interact with Sealed Secrets
-
-		spinner.Start("Checking if Sealed Secrets is installed with the default configuration", false)
-		if err := checkAndSetSealedSecretsConfig(io, client, defaultSealedSecretsServiceName); err != nil {
-
-			warnIfNotFound(spinner, "Please install Sealed Secrets Operator from OperatorHub", err)
-			if !apierrors.IsNotFound(err) {
-				return fmt.Errorf("failed to check for Sealed Secrets Operator: %w", err)
+		if io.Insecure {
+			utility.DisplayUnsealedSecretsWarning()
+		} else {
+			spinner.Start("Checking if Sealed Secrets is installed with the default configuration", false)
+			if err := checkAndSetSealedSecretsConfig(io, client, defaultSealedSecretsServiceName); err != nil {
+				// use default configuration to interact with Sealed Secrets
+				warnIfNotFound(spinner, "The Sealed Secrets Controller was not detected", err)
+				if !apierrors.IsNotFound(err) {
+					return fmt.Errorf("failed to check for Sealed Secrets Operator: %w", err)
+				}
 			}
 		}
 	}
@@ -343,7 +345,7 @@ func checkAndSetSealedSecretsConfig(io *BootstrapParameters, client *utility.Cli
 	return nil
 }
 
-func warnIfNotFound(spinner status, warningMsg string, err error) {
+func warnIfNotFound(spinner utility.Status, warningMsg string, err error) {
 	if apierrors.IsNotFound(err) {
 		spinner.WarningStatus(warningMsg)
 	}
@@ -425,6 +427,7 @@ func NewCmdBootstrap(name, fullName string) *cobra.Command {
 	bootstrapCmd.Flags().BoolVar(&o.CommitStatusTracker, "commit-status-tracker", true, "Enable or disable the commit-status-tracker which reports the success/failure of your pipelineruns to GitHub/GitLab")
 	bootstrapCmd.Flags().BoolVar(&o.PushToGit, "push-to-git", false, "If true, automatically creates and populates the gitops-repo-url with the generated resources")
 	bootstrapCmd.Flags().BoolVar(&o.Interactive, "interactive", false, "If true, enable prompting for most options if not already specified on the command line")
+	bootstrapCmd.Flags().BoolVar(&o.Insecure, "insecure", false, "Set to true to use unencrypted secrets instead of sealed secrets.")
 	return bootstrapCmd
 }
 

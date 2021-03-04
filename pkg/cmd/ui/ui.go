@@ -87,8 +87,9 @@ func EnterImageRepoExternalRepository() string {
 }
 
 // VerifyOutputPath allows the user to specify the path where the gitops configuration must reside locally in a UI prompt.
-func VerifyOutputPath(originalPath string, overwrite, outputPathOverridden, promptForPath bool) string {
+func VerifyOutputPath(originalPath string, overwrite, outputPathOverridden, promptForPath bool) (string, bool) {
 	var outputPath = originalPath
+	var doOverwrite = overwrite
 	prompt := &survey.Input{
 		Message: "Provide a path to write GitOps resources?",
 		Help:    "This is the path where the GitOps repository configuration is stored locally before you push it to the repository GitopsRepoURL",
@@ -104,14 +105,20 @@ func VerifyOutputPath(originalPath string, overwrite, outputPathOverridden, prom
 		if !exists || overwrite {
 			break
 		}
-		doOverwrite := SelectOptionOverwrite(outputPath)
+		doOverwrite = SelectOptionOverwrite(outputPath)
 		if doOverwrite {
 			break
 		}
 		handleError(survey.AskOne(prompt, &outputPath, nil))
 		outputPath = strings.TrimSpace(outputPath)
 	}
-	return outputPath
+	return outputPath, doOverwrite
+}
+
+func VerifySecretsPath(outputPath string) bool {
+	exists, err := ioutils.IsExisting(ioutils.NewFilesystem(), filepath.Join(outputPath, "..", "secrets"))
+	handleError(err)
+	return exists
 }
 
 // EnterGitWebhookSecret allows the user to specify the webhook secret string
