@@ -47,6 +47,8 @@ const (
 	rolesPath             = "02-rolebindings/pipeline-service-role.yaml"
 	rolebindingsPath      = "02-rolebindings/pipeline-service-rolebinding.yaml"
 	serviceAccountPath    = "02-rolebindings/pipeline-service-account.yaml"
+	sealedSecretRolePath  = "02-rolebindings/sealed-secrets-aggregate-to-admin.yaml"
+	argocdAdminRolePath   = "02-rolebindings/argocd-admin.yaml"
 	secretsPath           = "03-secrets/gitops-webhook-secret.yaml"     //nolint:gosec
 	authTokenPath         = "03-secrets/git-host-access-token.yaml"     // nolint:gosec
 	basicAuthTokenPath    = "03-secrets/git-host-basic-auth-token.yaml" // nolint:gosec
@@ -69,6 +71,8 @@ const (
 	bootstrapImage    = "nginxinc/nginx-unprivileged:latest"
 	appCITemplateName = "app-ci-template"
 	version           = 1
+
+	sealedsecretsAggregate = "sealed-secrets-aggregate-to-admin"
 )
 
 // BootstrapOptions is a struct that provides the optional flags
@@ -531,6 +535,12 @@ func createCICDResources(fs afero.Fs, repo scm.Repository, pipelineConfig *confi
 		log.Success("Pipelines tracker has been configured")
 	}
 
+	// aggregate sealed secrets cluster role to OpenShift admin cluster role
+	// we can remove this file when it's fixed in upstream Sealed Secrets operator
+	outputs[sealedSecretRolePath] = aggregateSealedSecretsToAdmin()
+
+	outputs[argocdAdminRolePath] = argocd.MakeApplicationControllerAdmin(cicdNamespace)
+
 	outputs[rolebindingsPath] = roles.CreateClusterRoleBinding(meta.NamespacedName("", roleBindingName), sa, "ClusterRole", roles.ClusterRoleName)
 	script, err := dryrun.MakeScript("kubectl", cicdNamespace)
 	if err != nil {
@@ -593,6 +603,22 @@ func getResourceFiles(r res.Resources) []string {
 	}
 	sort.Strings(files)
 	return files
+}
+
+func aggregateSealedSecretsToAdmin() *v1rbac.ClusterRole {
+	policyRule := []v1rbac.PolicyRule{
+		{
+			APIGroups: []string{"bitnami.com"},
+			Resources: []string{"sealedsecrets"},
+			Verbs:     []string{"*"},
+		},
+	}
+	aggregateToAdminLabel := func(cl *v1rbac.ClusterRole) {
+		cl.SetLabels(map[string]string{
+			"rbac.authorization.k8s.io/aggregate-to-admin": "true",
+		})
+	}
+	return roles.CreateClusterRole(meta.NamespacedName("", sealedsecretsAggregate), policyRule, aggregateToAdminLabel)
 }
 
 func generateSecrets(outputs res.Resources, sa *corev1.ServiceAccount, ns string, o *BootstrapOptions) error {

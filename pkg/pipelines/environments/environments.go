@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/redhat-developer/kam/pkg/pipelines/argocd"
 	"github.com/redhat-developer/kam/pkg/pipelines/config"
 	"github.com/redhat-developer/kam/pkg/pipelines/meta"
 	"github.com/redhat-developer/kam/pkg/pipelines/namespaces"
@@ -108,6 +109,12 @@ func (b *envBuilder) Environment(env *config.Environment) error {
 	if _, ok := b.files[envBindingPath]; ok {
 		envFiles[envBindingPath] = b.files[envBindingPath]
 	}
+
+	argocdAdminPath := filepath.Join(basePath, "argocd-admin.yaml")
+	if _, ok := b.files[argocdAdminPath]; !ok {
+		envFiles[argocdAdminPath] = argocd.MakeApplicationControllerAdmin(env.Name)
+	}
+
 	for k := range envFiles {
 		kustomizedFilenames[filepath.Base(k)] = true
 	}

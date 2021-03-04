@@ -89,12 +89,18 @@ func CreateRole(name types.NamespacedName, policyRules []v1rbac.PolicyRule) *v1r
 	}
 }
 
+type clusterRoleOpts func(*v1rbac.ClusterRole)
+
 // CreateClusterRole creates and returns a ClusterRole given a name and policy
 // rules.
-func CreateClusterRole(name types.NamespacedName, policyRules []v1rbac.PolicyRule) *v1rbac.ClusterRole {
-	return &v1rbac.ClusterRole{
+func CreateClusterRole(name types.NamespacedName, policyRules []v1rbac.PolicyRule, opts ...clusterRoleOpts) *v1rbac.ClusterRole {
+	clusterRole := &v1rbac.ClusterRole{
 		TypeMeta:   clusterRoleTypeMeta,
 		ObjectMeta: meta.ObjectMeta(name),
 		Rules:      policyRules,
 	}
+	for _, opt := range opts {
+		opt(clusterRole)
+	}
+	return clusterRole
 }
