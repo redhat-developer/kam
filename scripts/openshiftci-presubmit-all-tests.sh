@@ -33,17 +33,6 @@ cp $KUBECONFIG $TMP_DIR/kubeconfig
 chmod 640 $TMP_DIR/kubeconfig
 export KUBECONFIG=$TMP_DIR/kubeconfig
 
-gitconfig=`cat <<'EOF'
-[user]
-name = Kam Bot
-email = kambotuser@gmail.com
-[credential "https://github.com"]
-username = kam-bot
-helper = "!f() { test \"$1\" = get && echo \"password=$(cat $KAM_GITHUB_TOKEN_FILE)\"; }; f"
-EOF
-`
-echo "$gitconfig" >> ~/.gitconfig
-
 # login as kube:admin
 oc login -u kubeadmin -p $KUBEADMIN_PASSWORD
 

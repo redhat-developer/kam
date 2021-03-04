@@ -1,12 +1,8 @@
 package kamsuite
 
 import (
-	"bufio"
-	"bytes"
 	"fmt"
 	"os"
-	"os/exec"
-	"strings"
 
 	"github.com/cucumber/godog"
 	"github.com/cucumber/messages-go/v10"
@@ -22,25 +18,10 @@ func FeatureContext(s *godog.Suite) {
 		if !envVariableCheck() {
 			os.Exit(1)
 		}
-
-		ghLoginCommand := []string{"auth", "login", "--with-token"}
-		if !executeGhLoginCommad(ghLoginCommand) {
-			os.Exit(1)
-		}
 	})
 
 	s.AfterSuite(func() {
 		fmt.Println("After suite")
-		deleteGhRepoStep1 := []string{"alias", "set", "repo-delete", `api -X DELETE "repos/$1"`}
-		deleteGhRepoStep2 := []string{"repo-delete", strings.Split(strings.Split(os.Getenv("GITOPS_REPO_URL"), "github.com/")[1], ".")[0]}
-		ok, _ := executeGhRepoDeleteCommad(deleteGhRepoStep1)
-		if !ok {
-			os.Exit(1)
-		}
-		ok, errMessage := executeGhRepoDeleteCommad(deleteGhRepoStep2)
-		if !ok {
-			fmt.Println(errMessage)
-		}
 	})
 
 	s.BeforeFeature(func(this *messages.GherkinDocument) {
@@ -77,35 +58,4 @@ func envVariableCheck() bool {
 		return true
 	}
 	return true
-}
-
-func executeGhLoginCommad(arg []string) bool {
-	var stderr bytes.Buffer
-	f, err := os.Open(os.Getenv("KAM_GITHUB_TOKEN_FILE"))
-	if err != nil {
-		fmt.Println("Error is : ", err)
-		return false
-	}
-	cmd := exec.Command("gh", arg...)
-	cmd.Stdin = bufio.NewReader(f)
-	fmt.Println("gh command is : ", cmd.Args)
-	cmd.Stderr = &stderr
-	err = cmd.Run()
-	if err != nil {
-		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
-		return false
-	}
-	return true
-}
-
-func executeGhRepoDeleteCommad(arg []string) (bool, string) {
-	var stderr bytes.Buffer
-	cmd := exec.Command("gh", arg...)
-	fmt.Println("gh command is : ", cmd.Args)
-	cmd.Stderr = &stderr
-	err := cmd.Run()
-	if err != nil {
-		return false, stderr.String()
-	}
-	return true, stderr.String()
 }
