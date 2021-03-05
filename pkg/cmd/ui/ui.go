@@ -2,7 +2,6 @@ package ui
 
 import (
 	"fmt"
-	"net/url"
 	"path/filepath"
 	"strings"
 
@@ -21,13 +20,7 @@ func EnterGitRepo() string {
 	}
 	err := survey.AskOne(prompt, &gitOpsURL, survey.Required)
 	handleError(err)
-	gitOpsURL = strings.TrimSpace(gitOpsURL)
-	p, err := url.Parse(gitOpsURL)
-	handleError(err)
-	if p.Host == "" {
-		handleError(fmt.Errorf("could not identify host from %q", gitOpsURL))
-	}
-	return gitOpsURL
+	return strings.TrimSpace(gitOpsURL)
 }
 
 // EnterInternalRegistry allows the user to specify the internal registry in a UI prompt.
@@ -187,13 +180,7 @@ func EnterServiceRepoURL() string {
 	}
 	err := survey.AskOne(prompt, &serviceRepo, survey.Required)
 	handleError(err)
-	serviceRepo = strings.TrimSpace(serviceRepo)
-	p, err := url.Parse(serviceRepo)
-	handleError(err)
-	if p.Host == "" {
-		handleError(fmt.Errorf("could not identify host from %q", serviceRepo))
-	}
-	return serviceRepo
+	return strings.TrimSpace(serviceRepo)
 }
 
 // EnterServiceWebhookSecret allows the user to specify the webhook secret string they wish to authenticate push/pull to service repo in a UI prompt.

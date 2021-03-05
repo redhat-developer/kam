@@ -165,7 +165,15 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client, cm
 		io.SealedSecretsService.Namespace = ui.EnterSealedSecretService(&io.SealedSecretsService)
 	}
 	if io.GitOpsRepoURL == "" {
-		io.GitOpsRepoURL = ui.EnterGitRepo()
+		gitopsRepoURL := ui.EnterGitRepo()
+		p, err := url.Parse(gitopsRepoURL)
+		if err != nil {
+			return fmt.Errorf("Invalid URL, err: %v", err)
+		}
+		if p.Host == "" {
+			return fmt.Errorf("could not identify host from %q", gitopsRepoURL)
+		}
+		io.GitOpsRepoURL = p.Host
 	}
 	io.GitOpsRepoURL = utility.AddGitSuffixIfNecessary(io.GitOpsRepoURL)
 	if !isKnownDriver(io.GitOpsRepoURL) {
@@ -200,7 +208,15 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client, cm
 		io.GitOpsWebhookSecret = ui.EnterGitWebhookSecret(io.GitOpsRepoURL)
 	}
 	if io.ServiceRepoURL == "" {
-		io.ServiceRepoURL = ui.EnterServiceRepoURL()
+		serviceRepoURL := ui.EnterServiceRepoURL()
+		p, err := url.Parse(serviceRepoURL)
+		if err != nil {
+			return fmt.Errorf("Invalid URL, err: %v", err)
+		}
+		if p.Host == "" {
+			return fmt.Errorf("could not identify host from %q", serviceRepoURL)
+		}
+		io.ServiceRepoURL = p.Host
 	}
 	io.ServiceRepoURL = utility.AddGitSuffixIfNecessary(io.ServiceRepoURL)
 	if promptForAll {
