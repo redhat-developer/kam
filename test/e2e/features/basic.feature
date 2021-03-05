@@ -4,7 +4,7 @@ Feature: Basic test
     Scenario: KAM version
         When executing "kam version" succeeds
         Then stderr should be empty
-        And stdout should contain "kam\sversion\sv\d+\.\d+\.\d+"
+        And stdout should match "kam\sversion\sv\d+\.\d+\.\d+"
 
     Scenario: Execute KAM bootstrap command without --push-to-git=true flag
         When executing "kam bootstrap --service-repo-url $SERVICE_REPO_URL --gitops-repo-url $GITOPS_REPO_URL --image-repo $IMAGE_REPO --dockercfgjson $DOCKERCONFIGJSON_PATH --git-host-access-token $GITHUB_TOKEN --output bootstrapresources" succeeds
