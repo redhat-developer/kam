@@ -18,7 +18,7 @@ func EnterGitRepo() string {
 		Message: "Provide the URL for your GitOps repository",
 		Help:    "The GitOps repository stores your GitOps configuration files, including your Openshift Pipelines resources for driving automated deployments and builds.  Please enter a valid git repository e.g. https://github.com/example/myorg.git",
 	}
-	err := survey.AskOne(prompt, &gitOpsURL, survey.Required)
+	err := survey.AskOne(prompt, &gitOpsURL, makeURLValidatorCheck())
 	handleError(err)
 	return strings.TrimSpace(gitOpsURL)
 }
@@ -178,7 +178,7 @@ func EnterServiceRepoURL() string {
 		Message: "Provide the URL for your Service repository e.g. https://github.com/organisation/service.git",
 		Help:    "The repository name where the source code of your service is situated, this will configure a very basic CI for this repository using OpenShift pipelines.",
 	}
-	err := survey.AskOne(prompt, &serviceRepo, survey.Required)
+	err := survey.AskOne(prompt, &serviceRepo, makeURLValidatorCheck())
 	handleError(err)
 	return strings.TrimSpace(serviceRepo)
 }
