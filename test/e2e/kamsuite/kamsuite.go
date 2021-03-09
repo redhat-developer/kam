@@ -13,7 +13,7 @@ func FeatureContext(s *godog.Suite) {
 
 	// KAM related steps
 	s.Step(`^directory "([^"]*)" should exist$`,
-		BootstrapDirectoryShouldExist)
+		DirectoryShouldExist)
 
 	s.BeforeSuite(func() {
 		fmt.Println("Before suite")

@@ -77,6 +77,21 @@ And directory "bootstrapresources" should exist
 ```
 NOTE: See the [Gherkin Reference](https://cucumber.io/docs/gherkin/reference/) for more general information about the structure of Gherkin, its features, scenarios, and steps.
 
+#### Run E2E test locally
+
+To run the e2e test locally, user need to export the environment variables SERVICE_REPO_URL, GITOPS_REPO_URL, IMAGE_REPO, DOCKERCONFIGJSON_PATH and GITHUB_TOKEN corresponding to its flag --service-repo-url, --gitops-repo-url, --image-repo, --dockercfgjson and --git-host-access-token respectively.
+
+For example:
+```
+$ export SERVICE_REPO_URL=<Provide the URL for your Service repository>
+$ export GITOPS_REPO_URL=<Provide the URL for your GitOps repository>
+$ export IMAGE_REPO=<Image repository which is used to push newly built images>
+$ export DOCKERCONFIGJSON_PATH=<Filepath to config.json which authenticates the image push to the desired image registry>
+$ export GITHUB_TOKEN=<Used to authenticate repository clones, and commit-status notifications (if enabled)>
+```
+
+Then run the command `make e2e`.
+
 #### Using the GODOG_OPTS Parameter
 
 The `GODOG_OPTS` parameter specifies additional arguments for the Godog runner. The following options are available:
