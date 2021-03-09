@@ -1,7 +1,7 @@
 # ci-reference
 
 ## Running e2e on Prow
-Prow is the Kubernetes or OpenShift way of managing workflow, including tests. KAM e2e test targets are passed through the script scripts/openshiftci-presubmit-all-tests.sh available in the kam repository. Prow uses the script through the command attribute of the odo job configuration file in openshift/release repository.
+Prow is the Kubernetes or OpenShift way of managing workflow, including tests. KAM e2e test targets are passed through the script [scripts/openshiftci-presubmit-all-tests.sh](https://github.com/redhat-developer/kam/blob/master/scripts/openshiftci-presubmit-all-tests.sh) available in the kam repository. Prow uses the script through the command attribute of the kam job configuration file in [openshift/release](https://github.com/openshift/release/tree/master/ci-operator/config/redhat-developer/kam) repository.
 
 For running e2e test on 4.5 cluster, job configuration file will be
 
