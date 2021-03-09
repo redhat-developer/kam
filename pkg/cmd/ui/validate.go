@@ -43,6 +43,12 @@ func makeAccessTokenCheck(serviceRepo string) survey.Validator {
 	}
 }
 
+func makeURLValidatorCheck() survey.Validator {
+	return func(input interface{}) error {
+		return validateURL(input)
+	}
+}
+
 // ValidatePrefix checks the length of the prefix with the env crosses 63 chars or not
 func validatePrefix(input interface{}) error {
 	if s, ok := input.(string); ok {
@@ -127,6 +133,19 @@ func validateSealedSecretService(input interface{}, sealedSecretService *types.N
 		sealedSecretService.Namespace = s
 		sealedSecretService.Name = enterSealedSecretService()
 		return client.CheckIfSealedSecretsExists(*sealedSecretService)
+	}
+	return nil
+}
+
+func validateURL(input interface{}) error {
+	if u, ok := input.(string); ok {
+		p, err := url.Parse(u)
+		if err != nil {
+			return fmt.Errorf("invalid URL, err: %v", err)
+		}
+		if p.Host == "" {
+			return fmt.Errorf("could not identify host from %q", u)
+		}
 	}
 	return nil
 }

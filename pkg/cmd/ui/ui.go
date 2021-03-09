@@ -2,7 +2,6 @@ package ui
 
 import (
 	"fmt"
-	"net/url"
 	"path/filepath"
 	"strings"
 
@@ -19,15 +18,9 @@ func EnterGitRepo() string {
 		Message: "Provide the URL for your GitOps repository",
 		Help:    "The GitOps repository stores your GitOps configuration files, including your Openshift Pipelines resources for driving automated deployments and builds.  Please enter a valid git repository e.g. https://github.com/example/myorg.git",
 	}
-	err := survey.AskOne(prompt, &gitOpsURL, survey.Required)
+	err := survey.AskOne(prompt, &gitOpsURL, makeURLValidatorCheck())
 	handleError(err)
-	gitOpsURL = strings.TrimSpace(gitOpsURL)
-	p, err := url.Parse(gitOpsURL)
-	handleError(err)
-	if p.Host == "" {
-		handleError(fmt.Errorf("could not identify host from %q", gitOpsURL))
-	}
-	return gitOpsURL
+	return strings.TrimSpace(gitOpsURL)
 }
 
 // EnterInternalRegistry allows the user to specify the internal registry in a UI prompt.
@@ -185,15 +178,9 @@ func EnterServiceRepoURL() string {
 		Message: "Provide the URL for your Service repository e.g. https://github.com/organisation/service.git",
 		Help:    "The repository name where the source code of your service is situated, this will configure a very basic CI for this repository using OpenShift pipelines.",
 	}
-	err := survey.AskOne(prompt, &serviceRepo, survey.Required)
+	err := survey.AskOne(prompt, &serviceRepo, makeURLValidatorCheck())
 	handleError(err)
-	serviceRepo = strings.TrimSpace(serviceRepo)
-	p, err := url.Parse(serviceRepo)
-	handleError(err)
-	if p.Host == "" {
-		handleError(fmt.Errorf("could not identify host from %q", serviceRepo))
-	}
-	return serviceRepo
+	return strings.TrimSpace(serviceRepo)
 }
 
 // EnterServiceWebhookSecret allows the user to specify the webhook secret string they wish to authenticate push/pull to service repo in a UI prompt.
