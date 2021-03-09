@@ -5,8 +5,7 @@ Prow is the Kubernetes or OpenShift way of managing workflow, including tests. K
 
 For running e2e test on 4.5 cluster, job configuration file will be
 
-[source,sh]
-----
+```yaml
     - as: integration-e2e
     steps:
         cluster_profile: aws
@@ -31,8 +30,8 @@ For running e2e test on 4.5 cluster, job configuration file will be
             cpu: "2"
             memory: 6Gi
         workflow: ipi-aws
-----
+```
 
-To generate the kam job file, run make jobs in [https://github.com/openshift/release](openshift/release) for the kam pr.
+To generate the kam job file, run make jobs in [openshift/release](https://github.com/openshift/release) for the kam pr.
 
-Job dashboard is monitored at: [https://deck-ci.apps.ci.l2s4.p1.openshiftapps.com/?repo=redhat-developer%2Fkam](kam pr jobs dashboard)
+Job dashboard is monitored at: [kam pr jobs dashboard](https://deck-ci.apps.ci.l2s4.p1.openshiftapps.com/?repo=redhat-developer%2Fkam)

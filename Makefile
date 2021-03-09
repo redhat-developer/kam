@@ -69,7 +69,7 @@ prepare-test-cluster:
 
 .PHONY: e2e
 e2e:
-GODOG_OPTS = --godog.tags=$(go env goos)
+GODOG_OPTS = --godog.tags=basic
 
 e2e:
 	@go test --timeout=180m ./test/e2e -v $(GODOG_OPTS)
