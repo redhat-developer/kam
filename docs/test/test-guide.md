@@ -39,7 +39,7 @@ For more information about test options, run the `go test --help` command and re
 Follow [https://github.com/code-ready/crc#documentation](crc) installation guide.
 * Or a 4.5+ cluster hosted remotely
 
-NOTE: Make sure that `kam`, `oc`, `gh` and `argocd` binaries are in `$PATH`. Use the cloned kam directory to launch tests on `4.5+` clusters. `4.5+` cluster needs to be configured before launching the tests against it. The files `kubeadmin-password` and `kubeconfig` which contain cluster login details should be present in the `auth` directory and it should reside in the same directory as `Makefile`. If it is not present in the auth directory, please create it. Then run `make prepare-test-cluster` to configure the `4.5+` cluster. `make prepare-test-cluster` comprises installation of sealed secrets and OpenShift GitOps operator and create sealed secrets instance.
+NOTE: Make sure that `kam` and `oc`binaries are in `$PATH`. Use the cloned kam directory to launch tests on `4.5+` clusters. `4.5+` cluster needs to be configured before launching the tests against it. The files `kubeadmin-password` and `kubeconfig` which contain cluster login details should be present in the `auth` directory and it should reside in the same directory as `Makefile`. If it is not present in the auth directory, please create it. Then run `make prepare-test-cluster` to configure the `4.5+` cluster. `make prepare-test-cluster` comprises installation of sealed secrets and OpenShift GitOps operator and create sealed secrets instance.
 
 #### E2e tests:
 E2e(end to end) tests utilize [godog](https://github.com/cucumber/godog) and an external library package [clicumber](https://github.com/code-ready/clicumber) which define sets of generic gherkin test steps.
