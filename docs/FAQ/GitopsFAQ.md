@@ -1,6 +1,6 @@
 # Frequently Asked Questions
 
-## What is Gitops?
+## What is GitOps?
 _GitOps is a way to do operations, by using Git as a single source of truth, and updating the state of the operating configuration automatically, based on a Git repository_.
 
 ## How does GitOps differ from Infrastructure as Code?
@@ -19,7 +19,7 @@ _Git has strong auditability, and it fits naturally into a developer's flow._
 _We are going with Sealed Secrets because of it's low-maintenance, and because it requires little investment to get going, you need to consider that anything you put into Git might get leaked at some point, so if you’re keeping secrets in there, they might be made publicly available._
 
 ## How do I get started?
-_Add some resources to a directory, and git commit and push, then ask ArgoCD to deploy the repository, change your resource, git commit and push, and the change should be deployed automatically._
+_Add some resources to a directory, and git commit and push, then ask Argo CD to deploy the repository, change your resource, git commit and push, and the change should be deployed automatically._
 
 ## How are OpenShift pipelines used?
 _They are used in the default setup to drive the CI from pushes to your application code repository_.
@@ -76,7 +76,7 @@ This additional parameter configures the TLS to be insecure, i.e. it will not do
 
 The `config/cicd/base/07-templates/app-ci-build-from-push-template.yaml` template will need the same change applied.
 
-You will also need to configure ArgoCD to fetch your data insecurely.
+You will also need to configure Argo CD to fetch your data insecurely.
 
 ```
 $ argocd repo add https://gitlab.example.com/my-org/my-gitops-repo.git --username git --password <auth token> --insecure-skip-server-verification
@@ -87,10 +87,5 @@ Also, if you're using the optional _commit-status-tracker_ controller, please se
 ## The secrets in my Git repository are encrypted, how do I backup the key?
 
 https://github.com/bitnami-labs/sealed-secrets#how-can-i-do-a-backup-of-my-sealedsecrets
-
-## ArgoCD is failing with forbidden: User "system:serviceaccount:openshift-gitops:argocd-application-controller" cannot create resource in API group
-
-The ArgoCD operator doesn't setup ArgoCD with enough permissions, this is a
-known issue, there's a workaround [here](https://github.com/redhat-developer/kam/blob/master/docs/journey/day1/prerequisites/argocd.md#Add-Role-Binding).
 
 

@@ -43,16 +43,16 @@ gitops_url: https://github.com/<your organization>/<your repository>
 
 There are three types of Environments
 * CI/CD Environment
-* ArgoCD Environment
+* Argo CD Environment
 * (Plain old) Environment
 
 ### CI/CD Environment
 
 The CI/CD Environment is a special Environment that contains CI/CD pipelines.  These pipelines respond to changes in GitOps configuration repository and Application/Service soruce repositories.  They are responisble for keeping the resources in the cluster in-sync with the configurations in Git and re-build/re-deploy application/service images.
 
-### ArgoCD Environment
+### Argo CD Environment
 
-ArgoCD is used to perform Continuous Delivery of Applications.  When an Application is created in the target Environment an ArgoCD application is also created and kept in the ArgoCD Environment.  The user is reponsible for creating deployment.yaml in the "config" folder for the application.  ArgoCD will deploy the application based on the user-provided deployment specification and re-deploy it automatically when the specification is changed.
+Argo CD is used to perform Continuous Delivery of Applications.  When an Application is created in the target Environment an Argo CD application is also created and kept in the Argo CD Environment.  The user is reponsible for creating deployment.yaml in the "config" folder for the application.  Argo CD will deploy the application based on the user-provided deployment specification and re-deploy it automatically when the specification is changed.
 
 ### (Plain Old) Enviroment
 

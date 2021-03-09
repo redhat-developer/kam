@@ -151,7 +151,7 @@ resources:
 - 200-service.yaml
 ```
 
-The new Service/Application will be deployed by ArgoCD. An ArgoCD application yaml is generated in the ArgoCD environment:
+The new Service/Application will be deployed by Argo CD. An Argo CD application yaml is generated in the Argo CD environment:
 
 * `config/argocd/<env>-<app>-app.yaml`
 
@@ -193,7 +193,7 @@ $ git add .
 $ git commit -m "Add new service"
 $ git push origin main
 ```
-ArgoCD will automatically apply changes to the cluster and deploys your new service. Pretty neat!
+Argo CD will automatically apply changes to the cluster and deploys your new service. Pretty neat!
 ![screenshot](img/argocd-refresh.png)
 
 ## Create Webhook
@@ -219,7 +219,7 @@ Make some modifications to the new application source repository and raise a PR.
 CD Pipeline is triggered and run successfully.
 ![cd-pipelines-success.png](img/pipeline-success.png)
 
-New Application is deployed by ArgoCD successfully.
+New Application is deployed by Argo CD successfully.
 ![argocd.png](img/argocd.png)
 
 Make a change to your application source, the `bus` repo from the example, it
