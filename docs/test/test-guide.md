@@ -33,13 +33,19 @@ To run specific tests, use one of the following methods:
     ```
 For more information about test options, run the `go test --help` command and review the documentation.
 
-#### Prerequisites for OpenShift cluster:
+#### Get an OpenShift cluster:
 
-* A `crc` environment for 4.5+ local cluster:
+* A `crc` environment for 4.7 local cluster:
 Follow [https://github.com/code-ready/crc#documentation](crc) installation guide.
-* Or a 4.5+ cluster hosted remotely
+* Or a 4.7 cluster hosted remotely
 
-NOTE: Make sure that `kam` and `oc`binaries are in `$PATH`. Use the cloned kam directory to launch tests on `4.5+` clusters. `4.5+` cluster needs to be configured before launching the tests against it. The files `kubeadmin-password` and `kubeconfig` which contain cluster login details should be present in the `auth` directory and it should reside in the same directory as `Makefile`. If it is not present in the auth directory, please create it. Then run `make prepare-test-cluster` to configure the `4.5+` cluster. `make prepare-test-cluster` comprises installation of sealed secrets and OpenShift GitOps operator and create sealed secrets instance.
+#### Prepare the cluster:
+
+Download the oc binary from [4.7.0-0.ci](https://openshift-release.apps.ci.l2s4.p1.openshiftapps.com/#4.7.0-0.ci) and put it in the `$PATH`. Use the cloned kam directory to launch tests on `4.7` clusters. `4.7` cluster needs to be configured before launching the tests against it. The files `kubeadmin-password` and `kubeconfig` which contain cluster login details should be present in the `auth` directory and it should reside in the same directory as `Makefile`. If it is not present in the auth directory, please create it. Then run `make prepare-test-cluster` to configure the `4.7` cluster. `make prepare-test-cluster` comprises installation of sealed secrets and OpenShift GitOps operator and create sealed secrets instance.
+
+#### Build kam binary:
+
+In the kam clone path run `make bin` to build the KAM binary. Copy the kam binary from `bin/kam` into the `$PATH`
 
 #### E2e tests:
 E2e(end to end) tests utilize [godog](https://github.com/cucumber/godog) and an external library package [clicumber](https://github.com/code-ready/clicumber) which define sets of generic gherkin test steps.
@@ -48,7 +54,7 @@ Clicumber allows running commands in a persistent shell instance (bash, tcsh, zs
 
 Kam test feature files are located in `tests/e2e` directory and can be called using `make e2e`.
 
-#### How to write the test feature files
+#### How to write the test feature files:
 
 Before writing KAM specific steps make sure that the same step is not part of [clicumber](https://github.com/code-ready/clicumber/blob/master/testsuite/testsuite.go) generic steps.
 
@@ -77,7 +83,7 @@ And directory "bootstrapresources" should exist
 ```
 NOTE: See the [Gherkin Reference](https://cucumber.io/docs/gherkin/reference/) for more general information about the structure of Gherkin, its features, scenarios, and steps.
 
-#### Run E2E test locally
+#### Run E2E test locally:
 
 To run the e2e test locally, user need to export the environment variables SERVICE_REPO_URL, GITOPS_REPO_URL, IMAGE_REPO, DOCKERCONFIGJSON_PATH and GITHUB_TOKEN corresponding to its flag --service-repo-url, --gitops-repo-url, --image-repo, --dockercfgjson and --git-host-access-token respectively.
 
@@ -92,7 +98,7 @@ $ export GITHUB_TOKEN=<Used to authenticate repository clones, and commit-status
 
 Then run the command `make e2e`.
 
-#### Using the GODOG_OPTS Parameter
+#### Using the GODOG_OPTS Parameter:
 
 The `GODOG_OPTS` parameter specifies additional arguments for the Godog runner. The following options are available:
 
@@ -128,7 +134,7 @@ $ make e2e GODOG_OPTS="-paths ~/tests/custom.feature,~/my.feature -tags basic -n
 ```
 NOTE: Multiple values for a `GODOG_OPTS` option must be separated by a comma without whitespace. For example, -tags basic,manual will be parsed properly by make, whereas -tags basic, manual will result in only @basic being used.
 
-#### Viewing Results
+#### Viewing Results:
 
 The e2e test logs its progress directly into a console. This information is often enough to find and debug the reason for a failure.
 
