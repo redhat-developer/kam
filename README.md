@@ -18,7 +18,7 @@ Please visit the CLI [user documentation](./docs/README.md) to try out the CLI.
 
 ### OpenShift Console
 
-Please visit the [OpenShift Console Documentation](./docs/devconsole) to visualize application stages on your Console's Developer Perspective.
+Please visit the [OpenShift Console Documentation](./docs/devconsole) to visualize Environments on your Console's Developer Perspective.
 
 ### FAQs
 
