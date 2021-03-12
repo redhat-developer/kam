@@ -2,7 +2,7 @@
 
 Some of the Tasks in this Tutorial involve pushing images to Quay image registry.   (The image is to be built by CI Pipeline.)   Before we can start creating Kubernetes resources, we need to obtain credentials for your Quay user account.
 
- * Create `taxi` Quay repos. Login to your Quay.io account and create a repository `taxi`
+ * Login to your Quay.io account and create a public repository `taxi`
 
  ![Screenshot](img/create-taxi-in-quay.png)
 
