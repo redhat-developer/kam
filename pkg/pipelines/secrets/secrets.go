@@ -51,6 +51,15 @@ func CreateSealedDockerConfigSecret(name, service types.NamespacedName, in io.Re
 	return seal(secret, DefaultPublicKeyFunc, service)
 }
 
+// CreateUnsealedDockerConfigSecret creates an Unsealed Secret with the given name and reader
+func CreateUnsealedDockerConfigSecret(name, service types.NamespacedName, in io.Reader) (*corev1.Secret, error) {
+	secret, err := createDockerConfigSecret(name, in)
+	if err != nil {
+		return nil, err
+	}
+	return secret, nil
+}
+
 // CreateSealedSecret creates a SealedSecret with the provided name and body/data and type
 func CreateSealedSecret(name, service types.NamespacedName, data, secretKey string) (*ssv1alpha1.SealedSecret, error) {
 	secret, err := createOpaqueSecret(name, data, secretKey)
@@ -61,11 +70,26 @@ func CreateSealedSecret(name, service types.NamespacedName, data, secretKey stri
 	return seal(secret, DefaultPublicKeyFunc, service)
 }
 
+func CreateUnsealedSecret(name, service types.NamespacedName, data, secretKey string) (*corev1.Secret, error) {
+	secret, err := createOpaqueSecret(name, data, secretKey)
+	if err != nil {
+		return nil, err
+	}
+	return secret, nil
+}
+
 // CreateSealedBasicAuthSecret creates a SealedSecret with a BasicAuth type
 // secret.
 func CreateSealedBasicAuthSecret(name, service types.NamespacedName, token string,
 	opts ...meta.ObjectMetaOpt) (*ssv1alpha1.SealedSecret, error) {
 	return seal(createBasicAuthSecret(name, token, opts...), DefaultPublicKeyFunc, service)
+}
+
+// CreateUnsealedBasicAuthSecret creates a SealedSecret with a BasicAuth type
+// secret.
+func CreateUnsealedBasicAuthSecret(name, service types.NamespacedName, token string,
+	opts ...meta.ObjectMetaOpt) *corev1.Secret {
+	return createBasicAuthSecret(name, token, opts...)
 }
 
 // Returns a sealed secret

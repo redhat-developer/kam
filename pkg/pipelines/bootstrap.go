@@ -91,6 +91,7 @@ type BootstrapOptions struct {
 	ServiceWebhookSecret     string               // This is the secret for authenticating hooks from your app source.
 	PrivateRepoDriver        string               // Records the type of the GitOpsRepoURL driver if not a well-known host.
 	CommitStatusTracker      bool                 // If true, this is a "private repository", i.e. requires authentication to clone the repository.
+	Insecure                 bool                 // If true, use unencrypted, unsealed secrets. By default, sealed secrets are generated.
 }
 
 // PolicyRules to be bound to service account
@@ -141,7 +142,7 @@ func Bootstrap(o *BootstrapOptions, appFs afero.Fs) error {
 		return err
 	}
 
-	bootstrapped, err := bootstrapResources(o, appFs)
+	bootstrapped, otherResources, err := bootstrapResources(o, appFs)
 	if err != nil {
 		return fmt.Errorf("failed to bootstrap resources: %v", err)
 	}
@@ -155,6 +156,10 @@ func Bootstrap(o *BootstrapOptions, appFs afero.Fs) error {
 	bootstrapped = res.Merge(built, bootstrapped)
 	log.Successf("Created dev, stage and CICD environments")
 	_, err = yaml.WriteResources(appFs, o.OutputPath, bootstrapped)
+	if err != nil {
+		return fmt.Errorf("failed to write resources: %w", err)
+	}
+	_, err = yaml.WriteResources(appFs, filepath.Join(o.OutputPath, ".."), otherResources)
 	if err != nil {
 		return fmt.Errorf("failed to write resources: %w", err)
 	}
@@ -180,15 +185,15 @@ func maybeMakeHookSecrets(o *BootstrapOptions) error {
 	return nil
 }
 
-func bootstrapResources(o *BootstrapOptions, appFs afero.Fs) (res.Resources, error) {
+func bootstrapResources(o *BootstrapOptions, appFs afero.Fs) (res.Resources, res.Resources, error) {
 	ns := namespaces.NamesWithPrefix(o.Prefix)
 	appRepo, err := scm.NewRepository(o.ServiceRepoURL)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	repoName, err := repoFromURL(appRepo.URL())
 	if err != nil {
-		return nil, fmt.Errorf("invalid app repo URL: %v", err)
+		return nil, nil, fmt.Errorf("invalid app repo URL: %v", err)
 	}
 	// No image repo was supplied so create the default OS internal image registry
 	if o.ImageRepo == "" {
@@ -196,7 +201,7 @@ func bootstrapResources(o *BootstrapOptions, appFs afero.Fs) (res.Resources, err
 	}
 	isInternalRegistry, imageRepo, err := imagerepo.ValidateImageRepo(o.ImageRepo)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	log.Success("Options used:")
@@ -209,28 +214,29 @@ func bootstrapResources(o *BootstrapOptions, appFs afero.Fs) (res.Resources, err
 	log.Progressf("  Commit status tracker: %s", strconv.FormatBool(o.CommitStatusTracker))
 	log.Progressf("  Output folder: %s", o.OutputPath)
 	log.Progressf("  Overwrite output folder: %s", strconv.FormatBool(o.Overwrite))
+	log.Progressf("  Insecure: %s", strconv.FormatBool(o.Insecure))
 	log.Progressf("")
 
 	gitOpsRepo, err := scm.NewRepository(o.GitOpsRepoURL)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	bootstrapped, err := createInitialFiles(
+	bootstrapped, otherResources, err := createInitialFiles(
 		appFs, gitOpsRepo, o)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	appName := repoToAppName(repoName)
 	serviceName := repoName
 	secretName := secrets.MakeServiceWebhookSecretName(ns["dev"], serviceName)
 	envs, configEnv, err := bootstrapEnvironments(appRepo, o.Prefix, secretName, ns)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if o.PrivateRepoDriver != "" {
 		host, err := scm.HostnameFromURL(o.GitOpsRepoURL)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get hostname from URL %q: %w", o.GitOpsRepoURL, err)
+			return nil, nil, fmt.Errorf("failed to get hostname from URL %q: %w", o.GitOpsRepoURL, err)
 		}
 		configEnv.Git = &config.GitConfig{Drivers: map[string]string{host: o.PrivateRepoDriver}}
 	}
@@ -238,48 +244,64 @@ func bootstrapResources(o *BootstrapOptions, appFs afero.Fs) (res.Resources, err
 
 	devEnv := m.GetEnvironment(ns["dev"])
 	if devEnv == nil {
-		return nil, errors.New("unable to bootstrap without dev environment")
+		return nil, nil, errors.New("unable to bootstrap without dev environment")
 	}
 
 	app := m.GetApplication(ns["dev"], appName)
 	if app == nil {
-		return nil, errors.New("unable to bootstrap without application")
+		return nil, nil, errors.New("unable to bootstrap without application")
 	}
 	svcFiles, err := bootstrapServiceDeployment(devEnv, app)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create bootstrap service: %w", err)
+		return nil, nil, fmt.Errorf("failed to create bootstrap service: %w", err)
 	}
-	hookSecret, err := secrets.CreateSealedSecret(
-		meta.NamespacedName(ns["cicd"], secretName),
-		o.SealedSecretsService,
-		o.ServiceWebhookSecret,
-		eventlisteners.WebhookSecretKey)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate GitHub Webhook Secret: %v", err)
+	var hookSecret *ssv1alpha1.SealedSecret
+	var opaqueSecret *corev1.Secret
+	if !o.Insecure {
+		hookSecret, err = secrets.CreateSealedSecret(
+			meta.NamespacedName(ns["cicd"], secretName),
+			o.SealedSecretsService,
+			o.ServiceWebhookSecret,
+			eventlisteners.WebhookSecretKey)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to generate GitHub Webhook Secret: %v", err)
+		}
+	} else {
+		opaqueSecret, err = secrets.CreateUnsealedSecret(meta.NamespacedName(ns["cicd"], secretName),
+			o.SealedSecretsService,
+			o.ServiceWebhookSecret,
+			eventlisteners.WebhookSecretKey)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to create secret")
+		}
 	}
 
 	cfg := m.GetPipelinesConfig()
 	if cfg == nil {
-		return nil, errors.New("failed to find a pipeline configuration - unable to continue bootstrap")
+		return nil, nil, errors.New("failed to find a pipeline configuration - unable to continue bootstrap")
 	}
 	secretFilename := filepath.Join("03-secrets", secretName+".yaml")
-	secretsPath := filepath.Join(config.PathForPipelines(cfg), "base", secretFilename)
-	bootstrapped[secretsPath] = hookSecret
-
+	if !o.Insecure {
+		secretsPath := filepath.Join(config.PathForPipelines(cfg), "base", secretFilename)
+		bootstrapped[secretsPath] = hookSecret
+	} else {
+		secretFilename = filepath.Join("secrets", secretName+".yaml")
+		otherResources[secretFilename] = opaqueSecret
+	}
 	bindingName, imageRepoBindingFilename, svcImageBinding := createSvcImageBinding(cfg, devEnv, appName, serviceName, imageRepo, !isInternalRegistry)
 	bootstrapped = res.Merge(svcImageBinding, bootstrapped)
 
 	kustomizePath := filepath.Join(config.PathForPipelines(cfg), "base", "kustomization.yaml")
 	k, ok := bootstrapped[kustomizePath].(res.Kustomization)
 	if !ok {
-		return nil, fmt.Errorf("no kustomization for the %s environment found", kustomizePath)
+		return nil, nil, fmt.Errorf("no kustomization for the %s environment found", kustomizePath)
 	}
 	if isInternalRegistry {
 		filenames, resources, err := imagerepo.CreateInternalRegistryResources(
 			cfg, roles.CreateServiceAccount(meta.NamespacedName(cfg.Name, saName)),
 			imageRepo, o.GitOpsRepoURL)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get resources for internal image repository: %v", err)
+			return nil, nil, fmt.Errorf("failed to get resources for internal image repository: %v", err)
 		}
 		bootstrapped = res.Merge(resources, bootstrapped)
 		k.AddResources(filenames...)
@@ -293,11 +315,14 @@ func bootstrapResources(o *BootstrapOptions, appFs afero.Fs) (res.Resources, err
 	}
 	bootstrapped[pipelinesFile] = m
 
-	k.AddResources(secretFilename, imageRepoBindingFilename)
+	if !o.Insecure {
+		k.AddResources(secretFilename)
+	}
+	k.AddResources(imageRepoBindingFilename)
 	bootstrapped[kustomizePath] = k
 
 	bootstrapped = res.Merge(svcFiles, bootstrapped)
-	return bootstrapped, nil
+	return bootstrapped, otherResources, nil
 }
 
 func bootstrapServiceDeployment(dev *config.Environment, app *config.Application) (res.Resources, error) {
@@ -441,19 +466,24 @@ func checkPipelinesFileExists(appFs afero.Fs, outputPath string, overWrite bool)
 	if exists && !overWrite {
 		return fmt.Errorf("pipelines.yaml in output path already exists. If you want to replace your existing files, please rerun with --overwrite")
 	}
+
+	secretsFolderExists, _ := ioutils.IsExisting(ioutils.NewFilesystem(), filepath.Join(outputPath, "..", "secrets"))
+	if secretsFolderExists && !overWrite {
+		return fmt.Errorf("the secrets folder located as a sibling of the output folder %s already exists. Rerun with --overwrite", outputPath)
+	}
 	return nil
 }
 
-func createInitialFiles(fs afero.Fs, repo scm.Repository, o *BootstrapOptions) (res.Resources, error) {
+func createInitialFiles(fs afero.Fs, repo scm.Repository, o *BootstrapOptions) (res.Resources, res.Resources, error) {
 	cicd := &config.PipelinesConfig{Name: o.Prefix + "cicd"}
 	pipelineConfig := &config.Config{Pipelines: cicd}
 	manifest := createManifest(repo.URL(), pipelineConfig)
 	initialFiles := res.Resources{
 		pipelinesFile: manifest,
 	}
-	resources, err := createCICDResources(fs, repo, cicd, o)
+	resources, otherResources, err := createCICDResources(fs, repo, cicd, o)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	files := getResourceFiles(resources)
@@ -465,71 +495,95 @@ func createInitialFiles(fs afero.Fs, repo scm.Repository, o *BootstrapOptions) (
 		getCICDKustomization(files))
 	initialFiles = res.Merge(pipelinesConfigKustomizations, initialFiles)
 
-	return initialFiles, nil
+	return initialFiles, otherResources, nil
 }
 
 // createDockerSecret creates a secret that allows pushing images to upstream repositories.
-func createDockerSecret(fs afero.Fs, dockerConfigJSONFilename, secretNS string, sealedSecretsService types.NamespacedName) (*ssv1alpha1.SealedSecret, error) {
+func createDockerSecret(fs afero.Fs, dockerConfigJSONFilename, secretNS string, sealedSecretsService types.NamespacedName, unencryptSecrets bool) (*ssv1alpha1.SealedSecret, *corev1.Secret, error) {
 	if dockerConfigJSONFilename == "" {
-		return nil, errors.New("failed to generate path to file: --dockerconfigjson flag is not provided")
+		return nil, nil, errors.New("failed to generate path to file: --dockerconfigjson flag is not provided")
 	}
 	authJSONPath, err := homedir.Expand(dockerConfigJSONFilename)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate path to file: %v", err)
+		return nil, nil, fmt.Errorf("failed to generate path to file: %v", err)
 	}
 	f, err := fs.Open(authJSONPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read Docker config %#v : %s", authJSONPath, err)
+		return nil, nil, fmt.Errorf("failed to read Docker config %#v : %s", authJSONPath, err)
 	}
 	defer f.Close()
 
-	dockerSecret, err := secrets.CreateSealedDockerConfigSecret(meta.NamespacedName(secretNS, dockerSecretName), sealedSecretsService, f)
-	if err != nil {
-		return nil, err
+	if !unencryptSecrets {
+		dockerSecret, err := secrets.CreateSealedDockerConfigSecret(meta.NamespacedName(secretNS, dockerSecretName), sealedSecretsService, f)
+		if err != nil {
+			return nil, nil, err
+		}
+		return dockerSecret, nil, nil
+	} else {
+		dockerSecret, err := secrets.CreateUnsealedDockerConfigSecret(meta.NamespacedName(secretNS, dockerSecretName), sealedSecretsService, f)
+		if err != nil {
+			return nil, nil, err
+		}
+		return nil, dockerSecret, nil
 	}
-
-	return dockerSecret, nil
 }
 
 // createCICDResources creates resources for OpenShift pipelines.
-func createCICDResources(fs afero.Fs, repo scm.Repository, pipelineConfig *config.PipelinesConfig, o *BootstrapOptions) (res.Resources, error) {
+func createCICDResources(fs afero.Fs, repo scm.Repository, pipelineConfig *config.PipelinesConfig, o *BootstrapOptions) (res.Resources, res.Resources, error) {
 	cicdNamespace := pipelineConfig.Name
 	// key: path of the resource
 	// value: YAML content of the resource
 	outputs := map[string]interface{}{}
-	githubSecret, err := secrets.CreateSealedSecret(meta.NamespacedName(cicdNamespace, eventlisteners.GitOpsWebhookSecret),
-		o.SealedSecretsService, o.GitOpsWebhookSecret, eventlisteners.WebhookSecretKey)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate GitHub Webhook Secret: %w", err)
+	otherOutputs := map[string]interface{}{}
+	if !o.Insecure {
+		githubSecret, err := secrets.CreateSealedSecret(meta.NamespacedName(cicdNamespace, eventlisteners.GitOpsWebhookSecret),
+			o.SealedSecretsService, o.GitOpsWebhookSecret, eventlisteners.WebhookSecretKey)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to generate GitHub Webhook Secret: %w", err)
+		}
+		outputs[secretsPath] = githubSecret
+	} else {
+		githubSecret, err := secrets.CreateUnsealedSecret(meta.NamespacedName(cicdNamespace, eventlisteners.GitOpsWebhookSecret),
+			o.SealedSecretsService, o.GitOpsWebhookSecret, eventlisteners.WebhookSecretKey)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to generate GitHub Webhook Unsealed Secret: %w", err)
+		}
+		unEncSecretPath := filepath.Join("secrets", "gitops-webhook-secret.yaml")
+		otherOutputs[unEncSecretPath] = githubSecret
 	}
-	outputs[secretsPath] = githubSecret
 	outputs[namespacesPath] = namespaces.Create(cicdNamespace, o.GitOpsRepoURL)
 	outputs[rolesPath] = roles.CreateClusterRole(meta.NamespacedName("", roles.ClusterRoleName), Rules)
 
 	sa := roles.CreateServiceAccount(meta.NamespacedName(cicdNamespace, saName))
 
 	if o.DockerConfigJSONFilename != "" {
-		dockerSecret, err := createDockerSecret(fs, o.DockerConfigJSONFilename, cicdNamespace,
-			o.SealedSecretsService)
+		dockerSecret, dockerUnencryptedSecret, err := createDockerSecret(fs, o.DockerConfigJSONFilename, cicdNamespace,
+			o.SealedSecretsService, o.Insecure)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		outputs[dockerConfigPath] = dockerSecret
-		log.Success("Authentication tokens encrypted in secrets")
+		if dockerSecret != nil {
+			outputs[dockerConfigPath] = dockerSecret
+			log.Success("Authentication tokens encrypted in secrets")
+		}
+		if dockerUnencryptedSecret != nil {
+			otherOutputs[filepath.Join("secrets", "docker-config.yaml")] = dockerUnencryptedSecret
+			log.Success("Authentication tokens for docker config not sealed in secrets")
+		}
 		outputs[serviceAccountPath] = roles.AddSecretToSA(sa, dockerSecretName)
 	}
 
 	if o.GitHostAccessToken != "" {
-		err := generateSecrets(outputs, sa, cicdNamespace, o)
+		err := generateSecrets(outputs, otherOutputs, sa, cicdNamespace, o)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 
 	if o.CommitStatusTracker {
 		trackerResources, err := statustracker.Resources(cicdNamespace, o.GitOpsRepoURL, o.PrivateRepoDriver)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		outputs = res.Merge(outputs, trackerResources)
 		log.Success("Pipelines tracker has been configured")
@@ -544,7 +598,7 @@ func createCICDResources(fs afero.Fs, repo scm.Repository, pipelineConfig *confi
 	outputs[rolebindingsPath] = roles.CreateClusterRoleBinding(meta.NamespacedName("", roleBindingName), sa, "ClusterRole", roles.ClusterRoleName)
 	script, err := dryrun.MakeScript("kubectl", cicdNamespace)
 	if err != nil {
-		return nil, err
+		return nil, otherOutputs, err
 	}
 	outputs[gitopsTasksPath] = tasks.CreateDeployFromSourceTask(cicdNamespace, script)
 	outputs[ciPipelinesPath] = pipelines.CreateCIPipeline(meta.NamespacedName(cicdNamespace, "ci-dryrun-from-push-pipeline"), cicdNamespace)
@@ -557,11 +611,11 @@ func createCICDResources(fs afero.Fs, repo scm.Repository, pipelineConfig *confi
 	log.Success("OpenShift Pipelines resources created")
 	route, err := eventlisteners.GenerateRoute(cicdNamespace)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	outputs[routePath] = route
 	log.Success("Openshift Route for EventListener created")
-	return outputs, nil
+	return outputs, otherOutputs, nil
 }
 
 func createManifest(gitOpsRepoURL string, configEnv *config.Config, envs ...*config.Environment) *config.Manifest {
@@ -621,28 +675,47 @@ func aggregateSealedSecretsToAdmin() *v1rbac.ClusterRole {
 	return roles.CreateClusterRole(meta.NamespacedName("", sealedsecretsAggregate), policyRule, aggregateToAdminLabel)
 }
 
-func generateSecrets(outputs res.Resources, sa *corev1.ServiceAccount, ns string, o *BootstrapOptions) error {
+func generateSecrets(outputs res.Resources, otherOutputs res.Resources, sa *corev1.ServiceAccount, ns string, o *BootstrapOptions) error {
 	if o.CommitStatusTracker {
-		tokenSecret, err := secrets.CreateSealedSecret(meta.NamespacedName(
-			ns, statustracker.CommitStatusTrackerSecret), o.SealedSecretsService, o.GitHostAccessToken, "token")
-		if err != nil {
-			return fmt.Errorf("failed to generate access token Secret: %w", err)
+		if !o.Insecure {
+			tokenSecret, err := secrets.CreateSealedSecret(meta.NamespacedName(
+				ns, statustracker.CommitStatusTrackerSecret), o.SealedSecretsService, o.GitHostAccessToken, "token")
+			if err != nil {
+				return fmt.Errorf("failed to generate access token Secret: %w", err)
+			}
+			outputs[authTokenPath] = tokenSecret
+			outputs[serviceAccountPath] = roles.AddSecretToSA(sa, tokenSecret.Name)
+		} else {
+			tokenSecret, err := secrets.CreateUnsealedSecret(meta.NamespacedName(
+				ns, statustracker.CommitStatusTrackerSecret), o.SealedSecretsService, o.GitHostAccessToken, "token")
+			if err != nil {
+				return fmt.Errorf("failed to generate unencrypted Secret: %w", err)
+			}
+			otherOutputs[filepath.Join("secrets", "git-host-access-token.yaml")] = tokenSecret
+			outputs[serviceAccountPath] = roles.AddSecretToSA(sa, tokenSecret.Name)
 		}
-		outputs[authTokenPath] = tokenSecret
-		outputs[serviceAccountPath] = roles.AddSecretToSA(sa, tokenSecret.Name)
 	}
 	secretTargetHost, err := repoURL(o.ServiceRepoURL)
 	if err != nil {
 		return fmt.Errorf("failed to parse the Service Repo URL %q: %w", o.ServiceRepoURL, err)
 	}
-	basicAuthSecret, err := secrets.CreateSealedBasicAuthSecret(meta.NamespacedName(
-		ns, "git-host-basic-auth-token"), o.SealedSecretsService, o.GitHostAccessToken, meta.AddAnnotations(map[string]string{
-		"tekton.dev/git-0": secretTargetHost,
-	}))
-	if err != nil {
-		return fmt.Errorf("failed to generate basic auth token Secret: %w", err)
+	if !o.Insecure {
+		basicAuthSecret, err := secrets.CreateSealedBasicAuthSecret(meta.NamespacedName(
+			ns, "git-host-basic-auth-token"), o.SealedSecretsService, o.GitHostAccessToken, meta.AddAnnotations(map[string]string{
+			"tekton.dev/git-0": secretTargetHost,
+		}))
+		if err != nil {
+			return fmt.Errorf("failed to generate basic auth token Secret: %w", err)
+		}
+		outputs[basicAuthTokenPath] = basicAuthSecret
+		outputs[serviceAccountPath] = roles.AddSecretToSA(sa, basicAuthSecret.Name)
+	} else {
+		basicAuthSecret := secrets.CreateUnsealedBasicAuthSecret(meta.NamespacedName(
+			ns, "git-host-basic-auth-token"), o.SealedSecretsService, o.GitHostAccessToken, meta.AddAnnotations(map[string]string{
+			"tekton.dev/git-0": secretTargetHost,
+		}))
+		otherOutputs[filepath.Join("secrets", "git-host-basic-auth-token.yaml")] = basicAuthSecret
+		outputs[serviceAccountPath] = roles.AddSecretToSA(sa, basicAuthSecret.Name)
 	}
-	outputs[basicAuthTokenPath] = basicAuthSecret
-	outputs[serviceAccountPath] = roles.AddSecretToSA(sa, basicAuthSecret.Name)
 	return nil
 }

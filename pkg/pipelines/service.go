@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strconv"
 
+	ssv1alpha1 "github.com/bitnami-labs/sealed-secrets/pkg/apis/sealed-secrets/v1alpha1"
 	"github.com/mitchellh/go-homedir"
 	"github.com/redhat-developer/kam/pkg/pipelines/config"
 	"github.com/redhat-developer/kam/pkg/pipelines/environments"
@@ -17,6 +18,7 @@ import (
 	"github.com/redhat-developer/kam/pkg/pipelines/triggers"
 	"github.com/redhat-developer/kam/pkg/pipelines/yaml"
 	"github.com/spf13/afero"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -30,6 +32,7 @@ type AddServiceOptions struct {
 	ServiceName          string
 	WebhookSecret        string
 	SealedSecretsService types.NamespacedName // SealedSecrets service name
+	Insecure             bool
 }
 
 // AddService is the entry-point from the CLI for adding new services.
@@ -38,12 +41,16 @@ func AddService(o *AddServiceOptions, appFs afero.Fs) error {
 	if err != nil {
 		return err
 	}
-	files, err := serviceResources(m, appFs, o)
+	files, otherResources, err := serviceResources(m, appFs, o)
 	if err != nil {
 		return err
 	}
 
 	_, err = yaml.WriteResources(appFs, o.PipelinesFolderPath, files)
+	if err != nil {
+		return err
+	}
+	_, err = yaml.WriteResources(appFs, filepath.Join(o.PipelinesFolderPath, ".."), otherResources)
 	if err != nil {
 		return err
 	}
@@ -62,31 +69,41 @@ func AddService(o *AddServiceOptions, appFs afero.Fs) error {
 	return nil
 }
 
-func serviceResources(m *config.Manifest, appFs afero.Fs, o *AddServiceOptions) (res.Resources, error) {
+func serviceResources(m *config.Manifest, appFs afero.Fs, o *AddServiceOptions) (res.Resources, res.Resources, error) {
 	files := res.Resources{}
+	otherResources := res.Resources{}
 	svc := createService(o.ServiceName, o.GitRepoURL)
 	cfg := m.GetPipelinesConfig()
 	if cfg != nil && o.WebhookSecret == "" && o.GitRepoURL != "" {
 		gitSecret, err := secrets.GenerateString(webhookSecretLength)
 		if err != nil {
-			return nil, fmt.Errorf("failed to generate service webhook secret: %v", err)
+			return nil, nil, fmt.Errorf("failed to generate service webhook secret: %v", err)
 		}
 		o.WebhookSecret = gitSecret
 	}
 
 	env := m.GetEnvironment(o.EnvName)
 	if env == nil {
-		return nil, fmt.Errorf("environment %s does not exist", o.EnvName)
+		return nil, nil, fmt.Errorf("environment %s does not exist", o.EnvName)
 	}
 
 	// add the secret only if CI/CD env is present
 	if cfg != nil {
 		secretName := secrets.MakeServiceWebhookSecretName(o.EnvName, svc.Name)
-		hookSecret, err := secrets.CreateSealedSecret(
-			meta.NamespacedName(cfg.Name, secretName), o.SealedSecretsService, o.WebhookSecret,
-			eventlisteners.WebhookSecretKey)
+		var hookSecret *ssv1alpha1.SealedSecret
+		var opaqueSecret *corev1.Secret
+		var err error
+		if !o.Insecure {
+			hookSecret, err = secrets.CreateSealedSecret(
+				meta.NamespacedName(cfg.Name, secretName), o.SealedSecretsService, o.WebhookSecret,
+				eventlisteners.WebhookSecretKey)
+		} else {
+			opaqueSecret, err = secrets.CreateUnsealedSecret(
+				meta.NamespacedName(cfg.Name, secretName), o.SealedSecretsService, o.WebhookSecret,
+				eventlisteners.WebhookSecretKey)
+		}
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		svc.Webhook = &config.Webhook{
@@ -95,14 +112,19 @@ func serviceResources(m *config.Manifest, appFs afero.Fs, o *AddServiceOptions) 
 				Namespace: cfg.Name,
 			},
 		}
-		secretFilename := filepath.Join("03-secrets", secretName+".yaml")
-		secretsPath := filepath.Join(config.PathForPipelines(cfg), "base", secretFilename)
-		files[secretsPath] = hookSecret
+		if !o.Insecure {
+			secretFilename := filepath.Join("03-secrets", secretName+".yaml")
+			secretsPath := filepath.Join(config.PathForPipelines(cfg), "base", secretFilename)
+			files[secretsPath] = hookSecret
+		} else {
+			secretFilename := filepath.Join("secrets", secretName+".yaml")
+			otherResources[secretFilename] = opaqueSecret
+		}
 
 		if o.ImageRepo != "" && env.Pipelines != nil {
 			_, resources, bindingName, err := createImageRepoResources(m, cfg, env, o)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 
 			files = res.Merge(resources, files)
@@ -116,19 +138,19 @@ func serviceResources(m *config.Manifest, appFs afero.Fs, o *AddServiceOptions) 
 
 	err := m.AddService(o.EnvName, o.AppName, svc)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	err = m.Validate()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	files[filepath.Base(filepath.Join(o.PipelinesFolderPath, pipelinesFile))] = m
 	built, err := buildResources(appFs, m)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return res.Merge(built, files), nil
+	return res.Merge(built, files), otherResources, nil
 }
 
 func createImageRepoResources(m *config.Manifest, cfg *config.PipelinesConfig, env *config.Environment, p *AddServiceOptions) ([]string, res.Resources, string, error) {

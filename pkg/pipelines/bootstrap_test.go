@@ -50,8 +50,12 @@ func TestBootstrapManifest(t *testing.T) {
 		ServiceWebhookSecret: "456",
 		CommitStatusTracker:  true,
 	}
-	r, err := bootstrapResources(params, ioutils.NewMemoryFilesystem())
+	r, otherResources, err := bootstrapResources(params, ioutils.NewMemoryFilesystem())
 	fatalIfError(t, err)
+
+	if diff := cmp.Diff(0, len(otherResources)); diff != "" {
+		t.Fatalf("other resources is not empty:\n%s", diff)
+	}
 
 	hookSecret, err := secrets.CreateSealedSecret(
 		meta.NamespacedName("tst-cicd", "webhook-secret-tst-dev-http-api"),
@@ -140,6 +144,141 @@ func TestBootstrapManifest(t *testing.T) {
 		"03-secrets/git-host-basic-auth-token.yaml",
 		"03-secrets/gitops-webhook-secret.yaml",
 		"03-secrets/webhook-secret-tst-dev-http-api.yaml",
+		"04-tasks/deploy-from-source-task.yaml",
+		"05-pipelines/app-ci-pipeline.yaml",
+		"05-pipelines/ci-dryrun-from-push-pipeline.yaml",
+		"06-bindings/github-push-binding.yaml",
+		"06-bindings/tst-dev-app-http-api-http-api-binding.yaml",
+		"07-templates/app-ci-build-from-push-template.yaml",
+		"07-templates/ci-dryrun-from-push-template.yaml",
+		"08-eventlisteners/cicd-event-listener.yaml",
+		"09-routes/gitops-webhook-event-listener.yaml",
+		"10-commit-status-tracker/operator.yaml",
+	}
+	k := r["config/tst-cicd/base/kustomization.yaml"].(res.Kustomization)
+	if diff := cmp.Diff(wantResources, k.Resources); diff != "" {
+		t.Fatalf("base kustomization failed:\n%s\n", diff)
+	}
+}
+
+func TestBootstrapManifestWithInsecureSecrets(t *testing.T) {
+	defer func(f secrets.PublicKeyFunc) {
+		secrets.DefaultPublicKeyFunc = f
+	}(secrets.DefaultPublicKeyFunc)
+
+	secrets.DefaultPublicKeyFunc = makeTestKey(t)
+
+	params := &BootstrapOptions{
+		Prefix:               "tst-",
+		GitOpsRepoURL:        testGitOpsRepo,
+		ImageRepo:            "image/repo",
+		GitOpsWebhookSecret:  "123",
+		GitHostAccessToken:   "test-token",
+		ServiceRepoURL:       testSvcRepo,
+		ServiceWebhookSecret: "456",
+		CommitStatusTracker:  true,
+		Insecure:             true,
+	}
+	r, otherResources, err := bootstrapResources(params, ioutils.NewMemoryFilesystem())
+	fatalIfError(t, err)
+
+	otherResourcesNotEmpty := 4
+	if diff := cmp.Diff(otherResourcesNotEmpty, len(otherResources)); diff != "" {
+		t.Fatalf("other resources is empty:\n%s", diff)
+	}
+
+	hookSecret, err := secrets.CreateUnsealedSecret(
+		meta.NamespacedName("tst-cicd", "webhook-secret-tst-dev-http-api"),
+		meta.NamespacedName("test-ns", "service"), "456", eventlisteners.WebhookSecretKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	svc := createBootstrapService("app-http-api", "tst-dev", "http-api")
+	route, err := routes.NewFromService(svc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantOther := res.Resources{
+		"secrets/webhook-secret-tst-dev-http-api.yaml": hookSecret,
+	}
+	if diff := cmp.Diff(wantOther, otherResources, cmpopts.IgnoreMapEntries(func(k string, v interface{}) bool {
+		_, ok := wantOther[k]
+		return !ok
+	})); diff != "" {
+		t.Fatalf("bootstrapped resources:\n%s", diff)
+	}
+
+	want := res.Resources{
+		//"config/tst-cicd/base/03-secrets/webhook-secret-tst-dev-http-api.yaml": hookSecret,
+		"environments/tst-dev/apps/app-http-api/services/http-api/base/config/100-deployment.yaml": deployment.Create(
+			"app-http-api", "tst-dev", "http-api", bootstrapImage,
+			deployment.ContainerPort(8080)),
+		"environments/tst-dev/apps/app-http-api/services/http-api/base/config/200-service.yaml": svc,
+		"environments/tst-dev/apps/app-http-api/services/http-api/base/config/300-route.yaml":   route,
+		"environments/tst-dev/apps/app-http-api/services/http-api/base/config/kustomization.yaml": &res.Kustomization{
+			Resources: []string{"100-deployment.yaml", "200-service.yaml", "300-route.yaml"}},
+		pipelinesFile: &config.Manifest{
+			Version:   version,
+			GitOpsURL: "https://github.com/my-org/gitops.git",
+			Environments: []*config.Environment{
+				{
+					Pipelines: &config.Pipelines{
+						Integration: &config.TemplateBinding{
+							Template: "app-ci-template",
+							Bindings: []string{"github-push-binding"},
+						},
+					},
+					Name: "tst-dev",
+
+					Apps: []*config.Application{
+						{
+							Name: "app-http-api",
+							Services: []*config.Service{
+								{
+									Name:      "http-api",
+									SourceURL: testSvcRepo,
+									Webhook: &config.Webhook{
+										Secret: &config.Secret{
+											Name:      "webhook-secret-tst-dev-http-api",
+											Namespace: "tst-cicd",
+										},
+									},
+									Pipelines: &config.Pipelines{
+										Integration: &config.TemplateBinding{Bindings: []string{"tst-dev-app-http-api-http-api-binding", "github-push-binding"}},
+									},
+								},
+							},
+						},
+					},
+				},
+				{Name: "tst-stage"},
+			},
+			Config: &config.Config{
+				Pipelines: &config.PipelinesConfig{Name: "tst-cicd"},
+				ArgoCD:    &config.ArgoCDConfig{Namespace: argocd.ArgoCDNamespace},
+			},
+		},
+	}
+
+	if diff := cmp.Diff(want, r, cmpopts.IgnoreMapEntries(func(k string, v interface{}) bool {
+		_, ok := want[k]
+		return !ok
+	})); diff != "" {
+		t.Fatalf("bootstrapped resources:\n%s", diff)
+	}
+	// No secrets in output
+	wantResources := []string{
+		"01-namespaces/cicd-environment.yaml",
+		"01-namespaces/image-environment.yaml",
+		"02-rolebindings/argocd-admin.yaml",
+		"02-rolebindings/commit-status-tracker-role.yaml",
+		"02-rolebindings/commit-status-tracker-rolebinding.yaml",
+		"02-rolebindings/commit-status-tracker-service-account.yaml",
+		"02-rolebindings/internal-registry-image-binding.yaml",
+		"02-rolebindings/pipeline-service-account.yaml",
+		"02-rolebindings/pipeline-service-role.yaml",
+		"02-rolebindings/pipeline-service-rolebinding.yaml",
+		"02-rolebindings/sealed-secrets-aggregate-to-admin.yaml",
 		"04-tasks/deploy-from-source-task.yaml",
 		"05-pipelines/app-ci-pipeline.yaml",
 		"05-pipelines/ci-dryrun-from-push-pipeline.yaml",
@@ -258,13 +397,13 @@ func TestInitialFiles(t *testing.T) {
 	fakeFs := ioutils.NewMemoryFilesystem()
 	repo, err := scm.NewRepository(gitOpsURL)
 	assertNoError(t, err)
-	got, err := createInitialFiles(fakeFs, repo, &o)
+	got, _, err := createInitialFiles(fakeFs, repo, &o)
 	assertNoError(t, err)
 
 	want := res.Resources{
 		pipelinesFile: createManifest(gitOpsURL, &config.Config{Pipelines: testpipelineConfig}),
 	}
-	resources, err := createCICDResources(fakeFs, repo, testpipelineConfig, &o)
+	resources, _, err := createCICDResources(fakeFs, repo, testpipelineConfig, &o)
 	if err != nil {
 		t.Fatalf("CreatePipelineResources() failed due to :%s\n", err)
 	}
@@ -324,6 +463,7 @@ func TestGenerateSecrets(t *testing.T) {
 	defer stubDefaultPublicKeyFunc(t)()
 	ns := "test-ns"
 	outputs := res.Resources{}
+	otherOutputs := res.Resources{}
 	sa := roles.CreateServiceAccount(meta.NamespacedName("test-ns", "test-sa"))
 	o := &BootstrapOptions{
 		SealedSecretsService: meta.NamespacedName("sealed-secrets", "secrets"),
@@ -332,7 +472,7 @@ func TestGenerateSecrets(t *testing.T) {
 		CommitStatusTracker:  true,
 	}
 
-	err := generateSecrets(outputs, sa, ns, o)
+	err := generateSecrets(outputs, otherOutputs, sa, ns, o)
 	fatalIfError(t, err)
 
 	wantSA := &corev1.ServiceAccount{
@@ -392,6 +532,7 @@ func TestGenerateSecretsWithNoCommitStatusTracker(t *testing.T) {
 	defer stubDefaultPublicKeyFunc(t)()
 	ns := "test-ns"
 	outputs := res.Resources{}
+	otherOutputs := res.Resources{}
 	sa := roles.CreateServiceAccount(meta.NamespacedName("test-ns", "test-sa"))
 	o := &BootstrapOptions{
 		SealedSecretsService: meta.NamespacedName("sealed-secrets", "secrets"),
@@ -400,7 +541,7 @@ func TestGenerateSecretsWithNoCommitStatusTracker(t *testing.T) {
 		CommitStatusTracker:  false,
 	}
 
-	err := generateSecrets(outputs, sa, ns, o)
+	err := generateSecrets(outputs, otherOutputs, sa, ns, o)
 	fatalIfError(t, err)
 
 	wantSA := &corev1.ServiceAccount{
