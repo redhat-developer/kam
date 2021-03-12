@@ -31,7 +31,7 @@ func TestCreatePushBindingForGitlab(t *testing.T) {
 				},
 				{
 					Name:  triggers.GitRef,
-					Value: "$(body.ref)",
+					Value: "$(extensions.ref)",
 				},
 				{
 					Name:  triggers.GitCommitID,
