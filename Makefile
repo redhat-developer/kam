@@ -73,3 +73,8 @@ GODOG_OPTS = --godog.tags=basic
 
 e2e:
 	@go test --timeout=180m ./test/e2e -v $(GODOG_OPTS)
+
+
+.PHONY: e2e-local
+e2e-local:
+	@go test --timeout=180m ./test/e2e -v --godog.tags=local
