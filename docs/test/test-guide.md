@@ -98,15 +98,9 @@ $ export DOCKERCONFIGJSON_PATH=<Filepath to config.json which authenticates the 
 $ export GITHUB_TOKEN=<Used to authenticate repository clones, and commit-status notifications (if enabled)>
 ```
 
-Then run the command `make e2e`. Target `make e2e` runs the test scenario under @basic tag.
+Then run the command `make e2e`. Target `make e2e` runs the test scenario under `@basic` tag.
 
-For running test scenarios which is specifically design for local verification, please follow few additional steps.
-
-* Create a file. For example: `mytoken`
-* Paste the GitHub access token and save the file
-* Export the file path. For example: `$export KAM_GITHUB_TOKEN_FILE=<path_to_mytoken>`
-
-Then run `make e2e-local`. Target `make e2e-local` runs the test scenario under @local tag.
+For running test scenarios which are specifically design for local verification, use target `make e2e-local`. Target `make e2e-local` runs the test scenario under `@local` tag.
 
 #### Using the GODOG_OPTS Parameter:
 
@@ -114,7 +108,7 @@ The `GODOG_OPTS` parameter specifies additional arguments for the Godog runner. 
 
 * Tags
 
-    Use tags to ensure that scenarios and features containing at least one of the selected tags are executed. To select particular feature, you can use its name as a tag. For example, the basic.feature contains @basic tag through which it can be selected and run with the following command: `make e2e GODOG_OPTS=--tags=basic`. There are also a few special tags used to indicate specific subsets of e2e tests. These are the following:
+    Use tags to ensure that scenarios and features containing at least one of the selected tags are executed. To select particular feature, you can use its name as a tag. For example, the basic.feature contains `@basic` tag through which it can be selected and run with the following command: `make e2e GODOG_OPTS=--tags=basic`. There are also a few special tags used to indicate specific subsets of e2e tests. These are the following:
 
 * Paths
 
@@ -138,11 +132,11 @@ The `GODOG_OPTS` parameter specifies additional arguments for the Godog runner. 
 
 Note: Passing any value via `GODOG_OPTS` overrides the default tag definition on each e2e target. Thus in this case `--tags` must be specified manually, otherwise all features will be run.
 
-For example, to run e2e tests on two specific feature files using only the @basic tags and without ANSI colors, the following command can be used:
+For example, to run e2e tests on two specific feature files using only the `@basic` tags and without ANSI colors, the following command can be used:
 ```
 $ make e2e GODOG_OPTS="-paths ~/tests/custom.feature,~/my.feature -tags basic -no-colors true"
 ```
-NOTE: Multiple values for a `GODOG_OPTS` option must be separated by a comma without whitespace. For example, -tags basic,manual will be parsed properly by make, whereas -tags basic, manual will result in only @basic being used.
+NOTE: Multiple values for a `GODOG_OPTS` option must be separated by a comma without whitespace. For example, -tags basic,manual will be parsed properly by make, whereas -tags basic, manual will result in only `@basic` being used.
 
 #### Viewing Results:
 

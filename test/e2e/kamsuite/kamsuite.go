@@ -1,7 +1,6 @@
 package kamsuite
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"os"
@@ -23,15 +22,6 @@ func FeatureContext(s *godog.Suite) {
 		fmt.Println("Before suite")
 		if !envVariableCheck() {
 			os.Exit(1)
-		}
-
-		// Checking it for local test
-		_, ok := os.LookupEnv("CI")
-		if !ok {
-			ghLoginCommand := []string{"auth", "login", "--with-token"}
-			if !executeGhLoginCommad(ghLoginCommand) {
-				os.Exit(1)
-			}
 		}
 	})
 
@@ -85,25 +75,6 @@ func envVariableCheck() bool {
 			return false
 		}
 		return true
-	}
-	return true
-}
-
-func executeGhLoginCommad(arg []string) bool {
-	var stderr bytes.Buffer
-	f, err := os.Open(os.Getenv("KAM_GITHUB_TOKEN_FILE"))
-	if err != nil {
-		fmt.Println("Error is : ", err)
-		return false
-	}
-	cmd := exec.Command("gh", arg...)
-	cmd.Stdin = bufio.NewReader(f)
-	fmt.Println("gh command is : ", cmd.Args)
-	cmd.Stderr = &stderr
-	err = cmd.Run()
-	if err != nil {
-		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
-		return false
 	}
 	return true
 }
