@@ -14,6 +14,7 @@ import (
 	"github.com/redhat-developer/kam/pkg/pipelines/meta"
 	res "github.com/redhat-developer/kam/pkg/pipelines/resources"
 	"github.com/redhat-developer/kam/pkg/pipelines/roles"
+	"github.com/redhat-developer/kam/pkg/pipelines/scm"
 	"github.com/redhat-developer/kam/pkg/pipelines/secrets"
 	"github.com/redhat-developer/kam/pkg/pipelines/triggers"
 	"github.com/redhat-developer/kam/pkg/pipelines/yaml"
@@ -121,7 +122,25 @@ func serviceResources(m *config.Manifest, appFs afero.Fs, o *AddServiceOptions) 
 			otherResources[secretFilename] = opaqueSecret
 		}
 
-		if o.ImageRepo != "" && env.Pipelines != nil {
+		if m.Config.Pipelines != nil {
+			// add the default pipelines if they're absent
+			if env.Pipelines == nil {
+				repo, err := scm.NewRepository(m.GitOpsURL)
+				if err != nil {
+					return nil, nil, err
+				}
+				env.Pipelines = defaultPipelines(repo)
+			}
+
+			// use internal registry if no input image registry is provided
+			if o.ImageRepo == "" {
+				repoName, err := repoFromURL(o.GitRepoURL)
+				if err != nil {
+					return nil, nil, err
+				}
+				o.ImageRepo = m.Config.Pipelines.Name + "/" + repoName
+			}
+
 			_, resources, bindingName, err := createImageRepoResources(m, cfg, env, o)
 			if err != nil {
 				return nil, nil, err
