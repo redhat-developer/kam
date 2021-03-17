@@ -41,7 +41,7 @@ Follow [https://github.com/code-ready/crc#documentation](crc) installation guide
 
 #### Prepare the cluster:
 
-Download the oc binary from [4.7.0-0.ci](https://openshift-release.apps.ci.l2s4.p1.openshiftapps.com/#4.7.0-0.ci) and put it in the `$PATH`. Use the cloned kam directory to launch tests on `4.7` clusters. `4.7` cluster needs to be configured before launching the tests against it. The files `kubeadmin-password` and `kubeconfig` which contain cluster login details should be present in the `auth` directory and it should reside in the same directory as `Makefile`. If it is not present in the auth directory, please create it. Then run `make prepare-test-cluster` to configure the `4.7` cluster. `make prepare-test-cluster` comprises installation of sealed secrets and OpenShift GitOps operator and create sealed secrets instance.
+Download the oc binary from [4.7.0-0.ci](https://openshift-release.apps.ci.l2s4.p1.openshiftapps.com/#4.7.0-0.ci) and put it in the `$PATH`. Also put `gh` [cli](https://github.com/cli/cli) in the `$PATH`. Use the cloned kam directory to launch tests on `4.7` clusters. `4.7` cluster needs to be configured before launching the tests against it. The files `kubeadmin-password` and `kubeconfig` which contain cluster login details should be present in the `auth` directory and it should reside in the same directory as `Makefile`. If it is not present in the auth directory, please create it. Then run `make prepare-test-cluster` to configure the `4.7` cluster. `make prepare-test-cluster` comprises installation of sealed secrets and OpenShift GitOps operator and create sealed secrets instance.
 
 #### Build kam binary:
 
@@ -53,6 +53,8 @@ E2e(end to end) tests utilize [godog](https://github.com/cucumber/godog) and an 
 Clicumber allows running commands in a persistent shell instance (bash, tcsh, zsh, Command Prompt, or PowerShell), assert its outputs (standard output, standard error, or exit code), check configuration files, and so on.
 
 Kam test feature files are located in `tests/e2e` directory and can be called using `make e2e`.
+
+Use make target `make e2e-local` for test scenarios which are specifically design for local verification.
 
 #### How to write the test feature files:
 
@@ -96,7 +98,9 @@ $ export DOCKERCONFIGJSON_PATH=<Filepath to config.json which authenticates the 
 $ export GITHUB_TOKEN=<Used to authenticate repository clones, and commit-status notifications (if enabled)>
 ```
 
-Then run the command `make e2e`.
+Then run the command `make e2e`. Target `make e2e` runs the test scenario under `@basic` tag.
+
+For running test scenarios which are specifically design for local verification, use target `make e2e-local`. Target `make e2e-local` runs the test scenario under `@local` tag.
 
 #### Using the GODOG_OPTS Parameter:
 
@@ -104,7 +108,7 @@ The `GODOG_OPTS` parameter specifies additional arguments for the Godog runner. 
 
 * Tags
 
-    Use tags to ensure that scenarios and features containing at least one of the selected tags are executed. To select particular feature, you can use its name as a tag. For example, the basic.feature contains @basic tag through which it can be selected and run with the following command: `make e2e GODOG_OPTS=--tags=basic`. There are also a few special tags used to indicate specific subsets of e2e tests. These are the following:
+    Use tags to ensure that scenarios and features containing at least one of the selected tags are executed. To select particular feature, you can use its name as a tag. For example, the basic.feature contains `@basic` tag through which it can be selected and run with the following command: `make e2e GODOG_OPTS=--tags=basic`. There are also a few special tags used to indicate specific subsets of e2e tests. These are the following:
 
 * Paths
 
@@ -128,11 +132,11 @@ The `GODOG_OPTS` parameter specifies additional arguments for the Godog runner. 
 
 Note: Passing any value via `GODOG_OPTS` overrides the default tag definition on each e2e target. Thus in this case `--tags` must be specified manually, otherwise all features will be run.
 
-For example, to run e2e tests on two specific feature files using only the @basic tags and without ANSI colors, the following command can be used:
+For example, to run e2e tests on two specific feature files using only the `@basic` tags and without ANSI colors, the following command can be used:
 ```
 $ make e2e GODOG_OPTS="-paths ~/tests/custom.feature,~/my.feature -tags basic -no-colors true"
 ```
-NOTE: Multiple values for a `GODOG_OPTS` option must be separated by a comma without whitespace. For example, -tags basic,manual will be parsed properly by make, whereas -tags basic, manual will result in only @basic being used.
+NOTE: Multiple values for a `GODOG_OPTS` option must be separated by a comma without whitespace. For example, -tags basic,manual will be parsed properly by make, whereas -tags basic, manual will result in only `@basic` being used.
 
 #### Viewing Results:
 
