@@ -16,6 +16,7 @@ import (
 	"github.com/redhat-developer/kam/pkg/pipelines/meta"
 	res "github.com/redhat-developer/kam/pkg/pipelines/resources"
 	"github.com/redhat-developer/kam/pkg/pipelines/secrets"
+	"github.com/redhat-developer/kam/pkg/pipelines/triggers"
 	"github.com/spf13/afero"
 	triggersv1 "github.com/tektoncd/triggers/pkg/apis/triggers/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -78,9 +79,15 @@ func TestServiceResourcesWithCICD(t *testing.T) {
 											Namespace: "cicd",
 										},
 									},
+									Pipelines: &config.Pipelines{
+										Integration: &config.TemplateBinding{Bindings: []string{"test-dev-test-app-test-binding", "github-push-binding"}},
+									},
 								},
 							},
 						},
+					},
+					Pipelines: &config.Pipelines{
+						Integration: &config.TemplateBinding{Template: "app-ci-template", Bindings: []string{"github-push-binding"}},
 					},
 				},
 			},
@@ -165,9 +172,15 @@ func TestServiceResourcesAndUnsealedSecretsWithCICD(t *testing.T) {
 											Namespace: "cicd",
 										},
 									},
+									Pipelines: &config.Pipelines{
+										Integration: &config.TemplateBinding{Bindings: []string{"test-dev-test-app-test-binding", "github-push-binding"}},
+									},
 								},
 							},
 						},
+					},
+					Pipelines: &config.Pipelines{
+						Integration: &config.TemplateBinding{Template: "app-ci-template", Bindings: []string{"github-push-binding"}},
 					},
 				},
 			},
@@ -511,9 +524,15 @@ func TestServiceWithArgoCD(t *testing.T) {
 											Namespace: "cicd",
 										},
 									},
+									Pipelines: &config.Pipelines{
+										Integration: &config.TemplateBinding{Bindings: []string{"test-dev-test-app-test-binding", "github-push-binding"}},
+									},
 								},
 							},
 						},
+					},
+					Pipelines: &config.Pipelines{
+						Integration: &config.TemplateBinding{Template: "app-ci-template", Bindings: []string{"github-push-binding"}},
 					},
 				},
 			},
@@ -575,6 +594,56 @@ func TestAddServiceWithImageWithNoPipelines(t *testing.T) {
 			exists, _ := fakeFs.DirExists(filepath.Join(outputPath, path))
 			if !exists {
 				t.Fatalf("The directory does not exist at path : %v", path)
+			}
+		})
+	}
+}
+
+func TestAddServiceWithoutImage(t *testing.T) {
+	defer stubDefaultPublicKeyFunc(t)()
+
+	fakeFs := ioutils.NewMemoryFilesystem()
+	outputPath := afero.GetTempDir(fakeFs, "test")
+	pipelinesPath := filepath.Join(outputPath, pipelinesFile)
+	m := buildManifest(true, true)
+	m.Environments = append(m.Environments, &config.Environment{
+		Name: "staging",
+	})
+	b, err := yaml.Marshal(m)
+	assertNoError(t, err)
+	err = afero.WriteFile(fakeFs, pipelinesPath, b, 0644)
+	assertNoError(t, err)
+
+	err = AddService(&AddServiceOptions{
+		AppName:             "new-app",
+		EnvName:             "staging",
+		GitRepoURL:          "http://github.com/org/test",
+		PipelinesFolderPath: outputPath,
+		WebhookSecret:       "123",
+		ServiceName:         "test",
+	}, fakeFs)
+	assertNoError(t, err)
+
+	files := res.Resources{
+		"config/cicd/base/06-bindings/staging-new-app-test-binding.yaml": triggers.CreateImageRepoBinding("cicd", "staging-new-app-test-binding", "image-registry.openshift-image-registry.svc:5000/cicd/test", "false"),
+	}
+
+	for path, resource := range files {
+		t.Run(fmt.Sprintf("checking path %s already exists", path), func(rt *testing.T) {
+			filePath := filepath.Join(outputPath, path)
+			exists, err := fakeFs.Exists(filePath)
+			assertNoError(t, err)
+			if !exists {
+				t.Fatalf("The file does not exist at path : %s", filepath.Join(outputPath, path))
+			}
+			got, err := fakeFs.ReadFile(filePath)
+			assertNoError(t, err)
+
+			want, err := yaml.Marshal(resource)
+			assertNoError(t, err)
+
+			if diff := cmp.Diff(want, got); diff != "" {
+				t.Fatalf("AddServices failed: %s", diff)
 			}
 		})
 	}
