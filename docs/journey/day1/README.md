@@ -85,6 +85,8 @@ resources, and the resources will be pushed to your git hosting service.
 
 ## Private Repository
 
+> **_NOTE:_**  Currently there is a known issue with using private repos and the steps below may not be successful. If you wish to use a private repo, for now we recommend connecting to your repos through the Argo CD UI or CLI. Detailed instructions for this can be found in the [Argo CD docs here](https://argoproj.github.io/argo-cd/user-guide/private-repositories/). Once you have made the connection, you may manually sync your apps in Argo CD and proceed to the next section. 
+
 In case a [private repository](https://argoproj.github.io/argo-cd/user-guide/private-repositories) is used, enhance the operator generated Argo CD instance with the secret information how to connect to the git repos. 
 For example, this could be as follows:
 
