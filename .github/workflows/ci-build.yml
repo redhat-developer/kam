@@ -27,7 +27,9 @@ jobs:
         make gomod_tidy
         if [[ ! -z $(git status -s) ]]
         then
-          echo "Go mod state is not clean"
+          echo "Go mod state is not clean, commit these files before proceed"
+          git status -s
+          git diff
           exit 1
         fi
     - name: Check cobra command documentation is up-to-date
