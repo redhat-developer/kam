@@ -6,8 +6,6 @@ set -e
 # show commands
 set -x
 
-export ARTIFACTS_DIR="/tmp/artifacts"
-export CUSTOM_HOMEDIR=$ARTIFACTS_DIR
 export PATH=$PATH:$GOPATH/bin
 # set location for golangci-lint cache
 # otherwise /.cache is used, and it fails on permission denied
@@ -39,6 +37,6 @@ fi
 # crosscompile and publish artifacts
 make all_platforms
 
-cp dist/kam_darwin_amd64 $CUSTOM_HOMEDIR
-cp dist/kam_linux_amd64 $CUSTOM_HOMEDIR
-cp dist/kam_windows_amd64.exe $CUSTOM_HOMEDIR
+cp dist/kam_darwin_amd64 $ARTIFACT_DIR
+cp dist/kam_linux_amd64 $ARTIFACT_DIR
+cp dist/kam_windows_amd64.exe $ARTIFACT_DIR
