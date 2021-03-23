@@ -22,8 +22,6 @@ INSTALL_DOCKER="./scripts/install-docker-cli.sh"
 sh $INSTALL_DOCKER
 
 export PATH="$PATH:$(pwd)/bin"
-export ARTIFACTS_DIR="/tmp/artifacts"
-export CUSTOM_HOMEDIR=$ARTIFACTS_DIR
 
 # Copy kubeconfig to temporary kubeconfig file and grant
 # read and Write permission to temporary kubeconfig file
