@@ -67,7 +67,7 @@ const (
 
 	defaultServer          = "https://kubernetes.default.svc"
 	defaultProject         = "default"
-	argoCDSAName           = "argocd-cluster-argocd-application-controller"
+	argoCDSAName           = "openshift-gitops-application-controller"
 	argocdAdminBindingName = "argocd-admin"
 )
 
