@@ -6,6 +6,7 @@
 package gitea
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -22,41 +23,83 @@ var jsonHeader = http.Header{"content-type": []string{"application/json"}}
 
 // Version return the library version
 func Version() string {
-	return "0.12.0"
+	return "0.14.0"
 }
 
 // Client represents a Gitea API client.
 type Client struct {
-	url           string
-	accessToken   string
-	username      string
-	password      string
-	otp           string
-	sudo          string
-	client        *http.Client
-	serverVersion *version.Version
-	versionLock   sync.RWMutex
+	url            string
+	accessToken    string
+	username       string
+	password       string
+	otp            string
+	sudo           string
+	debug          bool
+	client         *http.Client
+	ctx            context.Context
+	serverVersion  *version.Version
+	getVersionOnce sync.Once
+}
+
+// Response represents the gitea response
+type Response struct {
+	*http.Response
 }
 
 // NewClient initializes and returns a API client.
-func NewClient(url, token string) *Client {
-	return &Client{
-		url:         strings.TrimSuffix(url, "/"),
-		accessToken: token,
-		client:      &http.Client{},
+func NewClient(url string, options ...func(*Client)) (*Client, error) {
+	client := &Client{
+		url:    strings.TrimSuffix(url, "/"),
+		client: &http.Client{},
+		ctx:    context.Background(),
 	}
+	for _, opt := range options {
+		opt(client)
+	}
+	if err := client.checkServerVersionGreaterThanOrEqual(version1_11_0); err != nil {
+		return nil, err
+	}
+	return client, nil
 }
 
 // NewClientWithHTTP creates an API client with a custom http client
+// Deprecated use SetHTTPClient option
 func NewClientWithHTTP(url string, httpClient *http.Client) *Client {
-	client := NewClient(url, "")
-	client.client = httpClient
+	client, _ := NewClient(url, SetHTTPClient(httpClient))
 	return client
 }
 
-// SetBasicAuth sets basicauth
+// SetHTTPClient is an option for NewClient to set custom http client
+func SetHTTPClient(httpClient *http.Client) func(client *Client) {
+	return func(client *Client) {
+		client.client = httpClient
+	}
+}
+
+// SetToken is an option for NewClient to set token
+func SetToken(token string) func(client *Client) {
+	return func(client *Client) {
+		client.accessToken = token
+	}
+}
+
+// SetBasicAuth is an option for NewClient to set username and password
+func SetBasicAuth(username, password string) func(client *Client) {
+	return func(client *Client) {
+		client.SetBasicAuth(username, password)
+	}
+}
+
+// SetBasicAuth sets username and password
 func (c *Client) SetBasicAuth(username, password string) {
 	c.username, c.password = username, password
+}
+
+// SetOTP is an option for NewClient to set OTP for 2FA
+func SetOTP(otp string) func(client *Client) {
+	return func(client *Client) {
+		client.SetOTP(otp)
+	}
 }
 
 // SetOTP sets OTP for 2FA
@@ -64,9 +107,28 @@ func (c *Client) SetOTP(otp string) {
 	c.otp = otp
 }
 
+// SetContext is an option for NewClient to set context
+func SetContext(ctx context.Context) func(client *Client) {
+	return func(client *Client) {
+		client.SetContext(ctx)
+	}
+}
+
+// SetContext set context witch is used for http requests
+func (c *Client) SetContext(ctx context.Context) {
+	c.ctx = ctx
+}
+
 // SetHTTPClient replaces default http.Client with user given one.
 func (c *Client) SetHTTPClient(client *http.Client) {
 	c.client = client
+}
+
+// SetSudo is an option for NewClient to set sudo header
+func SetSudo(sudo string) func(client *Client) {
+	return func(client *Client) {
+		client.SetSudo(sudo)
+	}
 }
 
 // SetSudo sets username to impersonate.
@@ -74,8 +136,39 @@ func (c *Client) SetSudo(sudo string) {
 	c.sudo = sudo
 }
 
-func (c *Client) doRequest(method, path string, header http.Header, body io.Reader) (*http.Response, error) {
-	req, err := http.NewRequest(method, c.url+"/api/v1"+path, body)
+// SetDebugMode is an option for NewClient to enable debug mode
+func SetDebugMode() func(client *Client) {
+	return func(client *Client) {
+		client.debug = true
+	}
+}
+
+func (c *Client) getWebResponse(method, path string, body io.Reader) ([]byte, *Response, error) {
+	if c.debug {
+		fmt.Printf("%s: %s\nBody: %v\n", method, c.url+path, body)
+	}
+	req, err := http.NewRequestWithContext(c.ctx, method, c.url+path, body)
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	defer resp.Body.Close()
+	data, err := ioutil.ReadAll(resp.Body)
+	if c.debug {
+		fmt.Printf("Response: %v\n\n", resp)
+	}
+	return data, &Response{resp}, nil
+}
+
+func (c *Client) doRequest(method, path string, header http.Header, body io.Reader) (*Response, error) {
+	if c.debug {
+		fmt.Printf("%s: %s\nHeader: %v\nBody: %s\n", method, c.url+"/api/v1"+path, header, body)
+	}
+	req, err := http.NewRequestWithContext(c.ctx, method, c.url+"/api/v1"+path, body)
 	if err != nil {
 		return nil, err
 	}
@@ -95,59 +188,94 @@ func (c *Client) doRequest(method, path string, header http.Header, body io.Read
 		req.Header[k] = v
 	}
 
-	return c.client.Do(req)
-}
-
-func (c *Client) getResponse(method, path string, header http.Header, body io.Reader) ([]byte, error) {
-	resp, err := c.doRequest(method, path, header, body)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	if c.debug {
+		fmt.Printf("Response: %v\n\n", resp)
+	}
+	return &Response{resp}, nil
+}
 
+// Converts a response for a HTTP status code indicating an error condition
+// (non-2XX) to a well-known error value and response body. For non-problematic
+// (2XX) status codes nil will be returned. Note that on a non-2XX response, the
+// response body stream will have been read and, hence, is closed on return.
+func statusCodeToErr(resp *Response) (body []byte, err error) {
+	// no error
+	if resp.StatusCode/100 == 2 {
+		return nil, nil
+	}
+
+	//
+	// error: body will be read for details
+	//
+	defer resp.Body.Close()
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("body read on HTTP error %d: %v", resp.StatusCode, err)
 	}
 
 	switch resp.StatusCode {
 	case 403:
-		return nil, errors.New("403 Forbidden")
+		return data, errors.New("403 Forbidden")
 	case 404:
-		return nil, errors.New("404 Not Found")
+		return data, errors.New("404 Not Found")
 	case 409:
-		return nil, errors.New("409 Conflict")
+		return data, errors.New("409 Conflict")
 	case 422:
-		return nil, fmt.Errorf("422 Unprocessable Entity: %s", string(data))
+		return data, fmt.Errorf("422 Unprocessable Entity: %s", string(data))
 	}
 
-	if resp.StatusCode/100 != 2 {
-		errMap := make(map[string]interface{})
-		if err = json.Unmarshal(data, &errMap); err != nil {
-			// when the JSON can't be parsed, data was probably empty or a plain string,
-			// so we try to return a helpful error anyway
-			return nil, fmt.Errorf("Unknown API Error: %d\nRequest: '%s' with '%s' method '%s' header and '%s' body", resp.StatusCode, path, method, header, string(data))
-		}
-		return nil, errors.New(errMap["message"].(string))
+	path := resp.Request.URL.Path
+	method := resp.Request.Method
+	header := resp.Request.Header
+	errMap := make(map[string]interface{})
+	if err = json.Unmarshal(data, &errMap); err != nil {
+		// when the JSON can't be parsed, data was probably empty or a
+		// plain string, so we try to return a helpful error anyway
+		return data, fmt.Errorf("Unknown API Error: %d\nRequest: '%s' with '%s' method '%s' header and '%s' body", resp.StatusCode, path, method, header, string(data))
 	}
-
-	return data, nil
+	return data, errors.New(errMap["message"].(string))
 }
 
-func (c *Client) getParsedResponse(method, path string, header http.Header, body io.Reader, obj interface{}) error {
-	data, err := c.getResponse(method, path, header, body)
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(data, obj)
-}
-
-func (c *Client) getStatusCode(method, path string, header http.Header, body io.Reader) (int, error) {
+func (c *Client) getResponse(method, path string, header http.Header, body io.Reader) ([]byte, *Response, error) {
 	resp, err := c.doRequest(method, path, header, body)
 	if err != nil {
-		return -1, err
+		return nil, nil, err
 	}
 	defer resp.Body.Close()
 
-	return resp.StatusCode, nil
+	// check for errors
+	data, err := statusCodeToErr(resp)
+	if err != nil {
+		return data, resp, err
+	}
+
+	// success (2XX), read body
+	data, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return data, resp, nil
+}
+
+func (c *Client) getParsedResponse(method, path string, header http.Header, body io.Reader, obj interface{}) (*Response, error) {
+	data, resp, err := c.getResponse(method, path, header, body)
+	if err != nil {
+		return resp, err
+	}
+	return resp, json.Unmarshal(data, obj)
+}
+
+func (c *Client) getStatusCode(method, path string, header http.Header, body io.Reader) (int, *Response, error) {
+	resp, err := c.doRequest(method, path, header, body)
+	if err != nil {
+		return -1, resp, err
+	}
+	defer resp.Body.Close()
+
+	return resp.StatusCode, resp, nil
 }

@@ -5,9 +5,13 @@
 package gitea
 
 import (
-	"code.gitea.io/sdk/gitea"
 	"context"
+	"errors"
+	"fmt"
+	"strings"
 	"time"
+
+	"code.gitea.io/sdk/gitea"
 
 	"github.com/jenkins-x/go-scm/scm"
 )
@@ -19,11 +23,17 @@ type gitService struct {
 func (s *gitService) FindRef(ctx context.Context, repo, ref string) (string, *scm.Response, error) {
 	namespace, name := scm.Split(repo)
 
-	out, err := s.client.GiteaClient.GetRepoRef(namespace, name, ref)
-	if err != nil || out.Object == nil {
-		return "", nil, err
+	out, giteaResp, err := s.client.GiteaClient.GetRepoRefs(namespace, name, ref)
+	resp := toSCMResponse(giteaResp)
+	if err != nil {
+		return "", resp, err
 	}
-	return out.Object.SHA, nil, nil
+	for _, r := range out {
+		if r.Object != nil {
+			return r.Object.SHA, resp, nil
+		}
+	}
+	return "", resp, fmt.Errorf("no match found for ref %s", ref)
 }
 
 func (s *gitService) CreateRef(ctx context.Context, repo, ref, sha string) (*scm.Reference, *scm.Response, error) {
@@ -31,40 +41,66 @@ func (s *gitService) CreateRef(ctx context.Context, repo, ref, sha string) (*scm
 }
 
 func (s *gitService) DeleteRef(ctx context.Context, repo, ref string) (*scm.Response, error) {
-	return nil, scm.ErrNotSupported
+	namespace, name := scm.Split(repo)
+	if strings.HasPrefix(ref, "heads/") {
+		ref = strings.TrimPrefix(ref, "heads/")
+	}
+	out, giteaResp, err := s.client.GiteaClient.DeleteRepoBranch(namespace, name, ref)
+	resp := toSCMResponse(giteaResp)
+	if !out {
+		return resp, errors.New("Failed to delete branch")
+	}
+	return resp, err
 }
 
 func (s *gitService) FindBranch(ctx context.Context, repo, branchName string) (*scm.Reference, *scm.Response, error) {
 	namespace, name := scm.Split(repo)
-	out, err := s.client.GiteaClient.GetRepoBranch(namespace, name, branchName)
-	return convertBranch(out), nil, err
+	out, resp, err := s.client.GiteaClient.GetRepoBranch(namespace, name, branchName)
+	return convertBranch(out), toSCMResponse(resp), err
 }
 
 func (s *gitService) FindCommit(ctx context.Context, repo, ref string) (*scm.Commit, *scm.Response, error) {
 	namespace, name := scm.Split(repo)
-	out, err := s.client.GiteaClient.GetSingleCommit(namespace, name, ref)
-	return convertCommit(out), nil, err
+	out, resp, err := s.client.GiteaClient.GetSingleCommit(namespace, name, ref)
+	return convertCommit(out), toSCMResponse(resp), err
 }
 
 func (s *gitService) FindTag(ctx context.Context, repo, name string) (*scm.Reference, *scm.Response, error) {
 	return nil, nil, scm.ErrNotSupported
 }
 
-func (s *gitService) ListBranches(ctx context.Context, repo string, _ scm.ListOptions) ([]*scm.Reference, *scm.Response, error) {
+func (s *gitService) ListBranches(ctx context.Context, repo string, opts scm.ListOptions) ([]*scm.Reference, *scm.Response, error) {
 	namespace, name := scm.Split(repo)
-	out, err := s.client.GiteaClient.ListRepoBranches(namespace, name, gitea.ListRepoBranchesOptions{})
-	return convertBranchList(out), nil, err
+	out, resp, err := s.client.GiteaClient.ListRepoBranches(namespace, name, gitea.ListRepoBranchesOptions{ListOptions: toGiteaListOptions(opts)})
+	return convertBranchList(out), toSCMResponse(resp), err
 }
 
-func (s *gitService) ListCommits(ctx context.Context, repo string, _ scm.CommitListOptions) ([]*scm.Commit, *scm.Response, error) {
-	return nil, nil, scm.ErrNotSupported
+func (s *gitService) ListCommits(ctx context.Context, repo string, opts scm.CommitListOptions) ([]*scm.Commit, *scm.Response, error) {
+	namespace, name := scm.Split(repo)
+
+	listOpts := gitea.ListCommitOptions{
+		ListOptions: gitea.ListOptions{
+			Page:     opts.Page,
+			PageSize: opts.Size,
+		},
+		SHA: opts.Sha,
+	}
+	out, resp, err := s.client.GiteaClient.ListRepoCommits(namespace, name, listOpts)
+	return convertCommitList(out), toSCMResponse(resp), err
 }
 
-func (s *gitService) ListTags(ctx context.Context, repo string, _ scm.ListOptions) ([]*scm.Reference, *scm.Response, error) {
-	return nil, nil, scm.ErrNotSupported
+func (s *gitService) ListTags(ctx context.Context, repo string, opts scm.ListOptions) ([]*scm.Reference, *scm.Response, error) {
+	namespace, name := scm.Split(repo)
+
+	out, resp, err := s.client.GiteaClient.ListRepoTags(namespace, name, gitea.ListRepoTagsOptions{ListOptions: toGiteaListOptions(opts)})
+	return convertTagList(out), toSCMResponse(resp), err
 }
 
 func (s *gitService) ListChanges(ctx context.Context, repo, ref string, _ scm.ListOptions) ([]*scm.Change, *scm.Response, error) {
+	return nil, nil, scm.ErrNotSupported
+}
+
+func (s *gitService) CompareCommits(ctx context.Context, repo, ref1, ref2 string, _ scm.ListOptions) ([]*scm.Change, *scm.Response, error) {
 	return nil, nil, scm.ErrNotSupported
 }
 
@@ -113,6 +149,33 @@ func convertBranch(src *gitea.Branch) *scm.Reference {
 		Path: scm.ExpandRef(src.Name, "refs/heads/"),
 		Sha:  src.Commit.ID,
 	}
+}
+
+func convertTagList(src []*gitea.Tag) []*scm.Reference {
+	dst := []*scm.Reference{}
+	for _, v := range src {
+		dst = append(dst, convertTag(v))
+	}
+	return dst
+}
+
+func convertTag(src *gitea.Tag) *scm.Reference {
+	if src == nil || src.Commit == nil {
+		return nil
+	}
+	return &scm.Reference{
+		Name: scm.TrimRef(src.Name),
+		Path: scm.ExpandRef(src.Name, "refs/tags/"),
+		Sha:  src.Commit.SHA,
+	}
+}
+
+func convertCommitList(src []*gitea.Commit) []*scm.Commit {
+	dst := []*scm.Commit{}
+	for _, v := range src {
+		dst = append(dst, convertCommit(v))
+	}
+	return dst
 }
 
 func convertCommit(src *gitea.Commit) *scm.Commit {

@@ -72,6 +72,31 @@ func (s *repositoryService) AddCollaborator(ctx context.Context, repo, user, per
 	m[user] = permission
 
 	s.data.UserPermissions[repo] = m
+
+	// lets add an invitation if the user isn't already in the repo...
+	if !alreadyExists {
+		id := int64(len(s.data.Invitations) + 1)
+		names := strings.SplitN(repo, "/", 2)
+		owner := ""
+		repoName := ""
+		if len(names) == 2 {
+			owner = names[0]
+			repoName = names[1]
+		}
+		s.data.Invitations = append(s.data.Invitations, &scm.Invitation{
+			ID: id,
+			Repo: &scm.Repository{
+				Namespace: owner,
+				Name:      repoName,
+				FullName:  repo,
+			},
+			Invitee:     &scm.User{},
+			Inviter:     &scm.User{},
+			Permissions: permission,
+			Created:     time.Now(),
+		})
+	}
+
 	return true, alreadyExists, nil, nil
 }
 
@@ -98,10 +123,10 @@ func (s *repositoryService) ListCollaborators(ctx context.Context, repo string, 
 func (s *repositoryService) Find(ctx context.Context, fullName string) (*scm.Repository, *scm.Response, error) {
 	for _, repo := range s.data.Repositories {
 		if repo.FullName == fullName {
-			return repo, nil, nil
+			return repo, &scm.Response{Status: 200}, nil
 		}
 	}
-	return nil, nil, scm.ErrNotFound
+	return nil, &scm.Response{Status: 404}, scm.ErrNotFound
 }
 
 func (s *repositoryService) List(ctx context.Context, opts scm.ListOptions) ([]*scm.Repository, *scm.Response, error) {
@@ -150,6 +175,7 @@ func (s *repositoryService) ListHooks(ctx context.Context, fullName string, opts
 }
 
 func (s *repositoryService) CreateHook(ctx context.Context, fullName string, input *scm.HookInput) (*scm.Hook, *scm.Response, error) {
+	/* #nosec */
 	hook := &scm.Hook{
 		ID:     fmt.Sprintf("%d", rand.Int()),
 		Name:   input.Name,
@@ -187,4 +213,8 @@ func (s *repositoryService) CreateStatus(ctx context.Context, repo string, ref s
 	statuses = append(statuses, status)
 	s.data.Statuses[ref] = statuses
 	return status, nil, nil
+}
+
+func (s *repositoryService) Delete(context.Context, string) (*scm.Response, error) {
+	panic("implement me")
 }

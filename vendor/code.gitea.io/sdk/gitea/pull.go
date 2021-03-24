@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -35,6 +36,7 @@ type PullRequest struct {
 	Assignee  *User      `json:"assignee"`
 	Assignees []*User    `json:"assignees"`
 	State     StateType  `json:"state"`
+	IsLocked  bool       `json:"is_locked"`
 	Comments  int        `json:"comments"`
 
 	HTMLURL  string `json:"html_url"`
@@ -96,19 +98,21 @@ func (opt *ListPullRequestsOptions) QueryEncode() string {
 }
 
 // ListRepoPullRequests list PRs of one repository
-func (c *Client) ListRepoPullRequests(owner, repo string, opt ListPullRequestsOptions) ([]*PullRequest, error) {
+func (c *Client) ListRepoPullRequests(owner, repo string, opt ListPullRequestsOptions) ([]*PullRequest, *Response, error) {
 	opt.setDefaults()
 	prs := make([]*PullRequest, 0, opt.PageSize)
 
 	link, _ := url.Parse(fmt.Sprintf("/repos/%s/%s/pulls", owner, repo))
 	link.RawQuery = opt.QueryEncode()
-	return prs, c.getParsedResponse("GET", link.String(), jsonHeader, nil, &prs)
+	resp, err := c.getParsedResponse("GET", link.String(), jsonHeader, nil, &prs)
+	return prs, resp, err
 }
 
 // GetPullRequest get information of one PR
-func (c *Client) GetPullRequest(owner, repo string, index int64) (*PullRequest, error) {
+func (c *Client) GetPullRequest(owner, repo string, index int64) (*PullRequest, *Response, error) {
 	pr := new(PullRequest)
-	return pr, c.getParsedResponse("GET", fmt.Sprintf("/repos/%s/%s/pulls/%d", owner, repo, index), nil, nil, pr)
+	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/repos/%s/%s/pulls/%d", owner, repo, index), nil, nil, pr)
+	return pr, resp, err
 }
 
 // CreatePullRequestOption options when creating a pull request
@@ -125,14 +129,16 @@ type CreatePullRequestOption struct {
 }
 
 // CreatePullRequest create pull request with options
-func (c *Client) CreatePullRequest(owner, repo string, opt CreatePullRequestOption) (*PullRequest, error) {
+func (c *Client) CreatePullRequest(owner, repo string, opt CreatePullRequestOption) (*PullRequest, *Response, error) {
 	body, err := json.Marshal(&opt)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	pr := new(PullRequest)
-	return pr, c.getParsedResponse("POST", fmt.Sprintf("/repos/%s/%s/pulls", owner, repo),
+	resp, err := c.getParsedResponse("POST",
+		fmt.Sprintf("/repos/%s/%s/pulls", owner, repo),
 		jsonHeader, bytes.NewReader(body), pr)
+	return pr, resp, err
 }
 
 // EditPullRequestOption options when modify pull request
@@ -148,15 +154,33 @@ type EditPullRequestOption struct {
 	Deadline  *time.Time `json:"due_date"`
 }
 
+// Validate the EditPullRequestOption struct
+func (opt EditPullRequestOption) Validate(c *Client) error {
+	if len(opt.Title) != 0 && len(strings.TrimSpace(opt.Title)) == 0 {
+		return fmt.Errorf("title is empty")
+	}
+	if len(opt.Base) != 0 {
+		if err := c.checkServerVersionGreaterThanOrEqual(version1_12_0); err != nil {
+			return fmt.Errorf("can not change base gitea to old")
+		}
+	}
+	return nil
+}
+
 // EditPullRequest modify pull request with PR id and options
-func (c *Client) EditPullRequest(owner, repo string, index int64, opt EditPullRequestOption) (*PullRequest, error) {
+func (c *Client) EditPullRequest(owner, repo string, index int64, opt EditPullRequestOption) (*PullRequest, *Response, error) {
+	if err := opt.Validate(c); err != nil {
+		return nil, nil, err
+	}
 	body, err := json.Marshal(&opt)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	pr := new(PullRequest)
-	return pr, c.getParsedResponse("PATCH", fmt.Sprintf("/repos/%s/%s/pulls/%d", owner, repo, index),
+	resp, err := c.getParsedResponse("PATCH",
+		fmt.Sprintf("/repos/%s/%s/pulls/%d", owner, repo, index),
 		jsonHeader, bytes.NewReader(body), pr)
+	return pr, resp, err
 }
 
 // MergePullRequestOption options when merging a pull request
@@ -166,31 +190,64 @@ type MergePullRequestOption struct {
 	Message string     `json:"MergeMessageField"`
 }
 
-// MergePullRequest merge a PR to repository by PR id
-func (c *Client) MergePullRequest(owner, repo string, index int64, opt MergePullRequestOption) (bool, error) {
+// Validate the MergePullRequestOption struct
+func (opt MergePullRequestOption) Validate(c *Client) error {
 	if opt.Style == MergeStyleSquash {
 		if err := c.CheckServerVersionConstraint(">=1.11.5"); err != nil {
-			return false, err
+			return err
 		}
+	}
+	return nil
+}
+
+// MergePullRequest merge a PR to repository by PR id
+func (c *Client) MergePullRequest(owner, repo string, index int64, opt MergePullRequestOption) (bool, *Response, error) {
+	if err := opt.Validate(c); err != nil {
+		return false, nil, err
 	}
 	body, err := json.Marshal(&opt)
 	if err != nil {
-		return false, err
+		return false, nil, err
 	}
-	status, err := c.getStatusCode("POST", fmt.Sprintf("/repos/%s/%s/pulls/%d/merge", owner, repo, index), jsonHeader, bytes.NewReader(body))
+	status, resp, err := c.getStatusCode("POST", fmt.Sprintf("/repos/%s/%s/pulls/%d/merge", owner, repo, index), jsonHeader, bytes.NewReader(body))
 	if err != nil {
-		return false, err
+		return false, resp, err
 	}
-	return status == 200, nil
+	return status == 200, resp, nil
 }
 
 // IsPullRequestMerged test if one PR is merged to one repository
-func (c *Client) IsPullRequestMerged(owner, repo string, index int64) (bool, error) {
-	statusCode, err := c.getStatusCode("GET", fmt.Sprintf("/repos/%s/%s/pulls/%d/merge", owner, repo, index), nil, nil)
+func (c *Client) IsPullRequestMerged(owner, repo string, index int64) (bool, *Response, error) {
+	status, resp, err := c.getStatusCode("GET", fmt.Sprintf("/repos/%s/%s/pulls/%d/merge", owner, repo, index), nil, nil)
 
 	if err != nil {
-		return false, err
+		return false, resp, err
 	}
 
-	return statusCode == 204, nil
+	return status == 204, resp, nil
+}
+
+// getPullRequestDiffOrPatch gets the patch or diff file as bytes for a PR
+func (c *Client) getPullRequestDiffOrPatch(owner, repo, kind string, index int64) ([]byte, *Response, error) {
+	if err := c.checkServerVersionGreaterThanOrEqual(version1_13_0); err != nil {
+		r, _, err2 := c.GetRepo(owner, repo)
+		if err2 != nil {
+			return nil, nil, err
+		}
+		if r.Private {
+			return nil, nil, err
+		}
+		return c.getWebResponse("GET", fmt.Sprintf("/%s/%s/pulls/%d.%s", owner, repo, index, kind), nil)
+	}
+	return c.getResponse("GET", fmt.Sprintf("/repos/%s/%s/pulls/%d.%s", owner, repo, index, kind), nil, nil)
+}
+
+// GetPullRequestPatch gets the .patch file as bytes for a PR
+func (c *Client) GetPullRequestPatch(owner, repo string, index int64) ([]byte, *Response, error) {
+	return c.getPullRequestDiffOrPatch(owner, repo, "patch", index)
+}
+
+// GetPullRequestDiff gets the .diff file as bytes for a PR
+func (c *Client) GetPullRequestDiff(owner, repo string, index int64) ([]byte, *Response, error) {
+	return c.getPullRequestDiffOrPatch(owner, repo, "diff", index)
 }
