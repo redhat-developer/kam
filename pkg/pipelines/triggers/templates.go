@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	triggersv1 "github.com/tektoncd/triggers/pkg/apis/triggers/v1alpha1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/redhat-developer/kam/pkg/pipelines/meta"
@@ -170,27 +169,6 @@ func createCDResourceTemplate(saName string) []byte {
 func createCIResourceTemplate(saName string) []byte {
 	byteStageCI, _ := json.Marshal(createCIPipelineRun(saName))
 	return byteStageCI
-}
-
-func statusTrackerAnnotations(pipeline, description string, extra map[string]string) func(*v1.ObjectMeta) {
-	return func(om *v1.ObjectMeta) {
-		annotations := map[string]string{
-			"tekton.dev/git-status":         "true",
-			"tekton.dev/status-context":     pipeline,
-			"tekton.dev/status-description": description,
-		}
-		if om.Annotations == nil {
-			om.Annotations = map[string]string{}
-		}
-		for k, v := range annotations {
-			om.Annotations[k] = v
-		}
-		if extra != nil {
-			for k, v := range extra {
-				om.Annotations[k] = v
-			}
-		}
-	}
 }
 
 func strPtr(s string) *string {

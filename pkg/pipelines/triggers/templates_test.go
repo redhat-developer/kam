@@ -5,7 +5,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	triggersv1 "github.com/tektoncd/triggers/pkg/apis/triggers/v1alpha1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/redhat-developer/kam/pkg/pipelines/meta"
@@ -175,29 +174,5 @@ func TestCreateCIDryRunTemplate(t *testing.T) {
 	template := CreateCIDryRunTemplate("testns", serviceAccName)
 	if diff := cmp.Diff(validStageCIDryRunTemplate, template); diff != "" {
 		t.Fatalf("createCIdryrunptemplate failed:\n%s", diff)
-	}
-}
-
-func TestStatusTrackerAnnotations(t *testing.T) {
-	om := meta.ObjectMeta(meta.NamespacedName("test-ns", "name"))
-	statusTrackerAnnotations("my-pipeline", "description", map[string]string{
-		"test-annotation":  "value1",
-		"other-annotation": "value2",
-	})(&om)
-
-	want := v1.ObjectMeta{
-		Name:      "name",
-		Namespace: "test-ns",
-		Annotations: map[string]string{
-			"tekton.dev/git-status":         "true",
-			"tekton.dev/status-context":     "my-pipeline",
-			"tekton.dev/status-description": "description",
-			"test-annotation":               "value1",
-			"other-annotation":              "value2",
-		},
-	}
-
-	if diff := cmp.Diff(want, om); diff != "" {
-		t.Fatalf("statusTrackerAnnotations failed:\n%s", diff)
 	}
 }
