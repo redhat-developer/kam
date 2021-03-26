@@ -35,6 +35,13 @@ func FeatureContext(s *godog.Suite) {
 
 	s.AfterFeature(func(this *messages.GherkinDocument) {
 		fmt.Println("After feature")
+	})
+
+	s.BeforeScenario(func(this *messages.Pickle) {
+		fmt.Println("Before scenario")
+	})
+
+	s.AfterScenario(func(*messages.Pickle, error) {
 		// Checking it for local test
 		_, ci := os.LookupEnv("CI")
 		if !ci {
@@ -55,6 +62,7 @@ func FeatureContext(s *godog.Suite) {
 			}
 		}
 	})
+
 }
 
 func envVariableCheck() bool {
