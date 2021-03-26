@@ -96,6 +96,7 @@ $ export GITOPS_REPO_URL=<Provide the URL for your GitOps repository>
 $ export IMAGE_REPO=<Image repository which is used to push newly built images>
 $ export DOCKERCONFIGJSON_PATH=<Filepath to config.json which authenticates the image push to the desired image registry>
 $ export GITHUB_TOKEN=<Used to authenticate repository clones, and commit-status notifications (if enabled)>
+$ export PRIVATE_REPO_DRIVER=<If your Git repositories are on a custom domain, please indicate which driver to use github or gitlab>
 ```
 
 Then run the command `make e2e`. Target `make e2e` runs the test scenario under `@basic` tag.

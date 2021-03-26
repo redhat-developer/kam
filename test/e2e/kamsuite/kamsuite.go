@@ -31,7 +31,7 @@ func FeatureContext(s *godog.Suite) {
 		_, ci := os.LookupEnv("CI")
 		if !ci {
 			deleteGhRepoStep1 := []string{"alias", "set", "repo-delete", `api -X DELETE "repos/$1"`}
-			deleteGhRepoStep2 := []string{"repo-delete", strings.Split(strings.Split(os.Getenv("GITOPS_REPO_URL"), "github.com/")[1], ".")[0]}
+			deleteGhRepoStep2 := []string{"repo-delete", strings.Split(strings.Split(os.Getenv("GITOPS_REPO_URL"), os.Getenv("PRIVATE_REPO_DRIVER")+".com/")[1], ".")[0]}
 			ok, _ := executeGhRepoDeleteCommad(deleteGhRepoStep1)
 			if !ok {
 				os.Exit(1)
@@ -53,7 +53,7 @@ func FeatureContext(s *godog.Suite) {
 }
 
 func envVariableCheck() bool {
-	envVars := []string{"SERVICE_REPO_URL", "GITOPS_REPO_URL", "IMAGE_REPO", "DOCKERCONFIGJSON_PATH", "GITHUB_TOKEN"}
+	envVars := []string{"SERVICE_REPO_URL", "GITOPS_REPO_URL", "IMAGE_REPO", "DOCKERCONFIGJSON_PATH", "GITHUB_TOKEN", "PRIVATE_REPO_DRIVER"}
 	val, ok := os.LookupEnv("CI")
 	if !ok {
 		for _, envVar := range envVars {
