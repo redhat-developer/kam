@@ -41,7 +41,7 @@ Follow [https://github.com/code-ready/crc#documentation](crc) installation guide
 
 #### Prepare the cluster:
 
-Download the oc binary from [4.7.0-0.ci](https://openshift-release.apps.ci.l2s4.p1.openshiftapps.com/#4.7.0-0.ci) and put it in the `$PATH`. Also put `gh` [cli](https://github.com/cli/cli) in the `$PATH`. Use the cloned kam directory to launch tests on `4.7` clusters. `4.7` cluster needs to be configured before launching the tests against it. The files `kubeadmin-password` and `kubeconfig` which contain cluster login details should be present in the `auth` directory and it should reside in the same directory as `Makefile`. If it is not present in the auth directory, please create it. Then run `make prepare-test-cluster` to configure the `4.7` cluster. `make prepare-test-cluster` comprises installation of sealed secrets and OpenShift GitOps operator and create sealed secrets instance.
+Download the oc binary from [4.7.0-0.ci](https://openshift-release.apps.ci.l2s4.p1.openshiftapps.com/#4.7.0-0.ci) and put it in the `$PATH`. Also put `gh` [cli](https://github.com/cli/cli) and `glab` [cli](https://github.com/profclems/glab) in the `$PATH`. Use the cloned kam directory to launch tests on `4.7` clusters. `4.7` cluster needs to be configured before launching the tests against it. The files `kubeadmin-password` and `kubeconfig` which contain cluster login details should be present in the `auth` directory and it should reside in the same directory as `Makefile`. If it is not present in the auth directory, please create it. Then run `make prepare-test-cluster` to configure the `4.7` cluster. `make prepare-test-cluster` comprises installation of sealed secrets and OpenShift GitOps operator and create sealed secrets instance.
 
 #### Build kam binary:
 
@@ -87,7 +87,7 @@ NOTE: See the [Gherkin Reference](https://cucumber.io/docs/gherkin/reference/) f
 
 #### Run E2E test locally:
 
-To run the e2e test locally, user need to export the environment variables SERVICE_REPO_URL, GITOPS_REPO_URL, IMAGE_REPO, DOCKERCONFIGJSON_PATH and GITHUB_TOKEN corresponding to its flag --service-repo-url, --gitops-repo-url, --image-repo, --dockercfgjson and --git-host-access-token respectively.
+To run the e2e test locally, user need to export the environment variables SERVICE_REPO_URL, GITOPS_REPO_URL, IMAGE_REPO, DOCKERCONFIGJSON_PATH and GIT_ACCESS_TOKEN corresponding to its flag --service-repo-url, --gitops-repo-url, --image-repo, --dockercfgjson and --git-host-access-token respectively.
 
 For example:
 ```
@@ -95,7 +95,7 @@ $ export SERVICE_REPO_URL=<Provide the URL for your Service repository>
 $ export GITOPS_REPO_URL=<Provide the URL for your GitOps repository>
 $ export IMAGE_REPO=<Image repository which is used to push newly built images>
 $ export DOCKERCONFIGJSON_PATH=<Filepath to config.json which authenticates the image push to the desired image registry>
-$ export GITHUB_TOKEN=<Used to authenticate repository clones, and commit-status notifications (if enabled)>
+$ export GIT_ACCESS_TOKEN=<Used to authenticate repository clones, and commit-status notifications (if enabled)>
 $ export PRIVATE_REPO_DRIVER=<If your Git repositories are on a custom domain, please indicate which driver to use github or gitlab>
 ```
 

@@ -11,7 +11,6 @@ export KUBEADMIN_PASSWORD=`cat $KUBEADMIN_PASSWORD_FILE`
 # show commands
 set -x
 export CI="prow"
-export PRIVATE_REPO_DRIVER="github"
 export PRNO="$(jq .refs.pulls[0].number <<< $(echo $JOB_SPEC))"
 make prepare-test-cluster
 make bin
