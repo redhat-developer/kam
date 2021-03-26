@@ -13,6 +13,6 @@ Feature: Local test
         When executing "kam bootstrap --service-repo-url $SERVICE_REPO_URL --gitops-repo-url $GITOPS_REPO_URL --git-host-access-token $GIT_ACCESS_TOKEN --overwrite" succeeds
         Then stderr should be empty
     
-    Scenario: Execute KAM bootstrap command with gitlab host and --push-to-git=true flags
-        When executing "kam bootstrap --service-repo-url $SERVICE_REPO_URL --gitops-repo-url $GITOPS_REPO_URL --git-host-access-token $GIT_ACCESS_TOKEN --push-to-git=true --output bootstrapresources --overwrite" succeeds
+    Scenario: Execute KAM bootstrap command with --output and --push-to-git=true flags
+        When executing "kam bootstrap --service-repo-url $SERVICE_REPO_URL --gitops-repo-url $GITOPS_REPO_URL --git-host-access-token $GIT_ACCESS_TOKEN --push-to-git=true --output bootstrapresources" succeeds
         Then stderr should be empty
