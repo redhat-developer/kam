@@ -20,7 +20,6 @@ import (
 // Reference API Documentation:
 //   https://docs.atlassian.com/bitbucket-server/rest/5.11.1/bitbucket-rest.html
 
-// NewWebHookService creates a new instance of the webhook service without the rest of the client
 func NewWebHookService() scm.WebhookService {
 	return &webhookService{nil}
 }
@@ -41,7 +40,6 @@ func New(uri string) (*scm.Client, error) {
 	client.Contents = &contentService{client}
 	client.Git = &gitService{client}
 	client.Issues = &issueService{client}
-	client.Milestones = &milestoneService{client}
 	client.Organizations = &organizationService{client}
 	client.PullRequests = &pullService{client}
 	client.Repositories = &repositoryService{client}
@@ -75,7 +73,7 @@ func (c *wrapper) do(ctx context.Context, method, path string, in, out interface
 	// write it to the body of the request.
 	if in != nil {
 		buf := new(bytes.Buffer)
-		json.NewEncoder(buf).Encode(in) // #nosec
+		json.NewEncoder(buf).Encode(in)
 		req.Header.Add("Content-Type", "application/json")
 		req.Body = buf
 	}
@@ -94,7 +92,7 @@ func (c *wrapper) do(ctx context.Context, method, path string, in, out interface
 		return res, scm.ErrNotAuthorized
 	} else if res.Status > 300 {
 		err := new(Error)
-		json.NewDecoder(res.Body).Decode(err) // #nosec
+		json.NewDecoder(res.Body).Decode(err)
 		return res, err
 	}
 
@@ -105,8 +103,8 @@ func (c *wrapper) do(ctx context.Context, method, path string, in, out interface
 	// if raw output is expected, copy to the provided
 	// buffer and exit.
 	if w, ok := out.(io.Writer); ok {
-		_, err := io.Copy(w, res.Body)
-		return res, err
+		io.Copy(w, res.Body)
+		return res, nil
 	}
 
 	// if a json response is expected, parse and return

@@ -51,14 +51,14 @@ func (s *gitService) CreateRef(ctx context.Context, repo, ref, sha string) (*scm
 	out := &struct {
 		Name   string `json:"name"`
 		Commit struct {
-			ID string `json:"id"`
+			Id string `json:"id"`
 		} `json:"commit"`
 	}{}
 
 	res, err := s.client.do(ctx, "POST", path, nil, out)
 	scmRef := &scm.Reference{
 		Name: out.Name,
-		Sha:  out.Commit.ID,
+		Sha:  out.Commit.Id,
 	}
 	return scmRef, res, err
 }
@@ -68,21 +68,21 @@ func (s *gitService) DeleteRef(ctx context.Context, repo, ref string) (*scm.Resp
 }
 
 func (s *gitService) FindBranch(ctx context.Context, repo, name string) (*scm.Reference, *scm.Response, error) {
-	path := fmt.Sprintf("api/v4/projects/%s/repository/branches/%s", encode(repo), encode(name))
+	path := fmt.Sprintf("api/v4/projects/%s/repository/branches/%s", encode(repo), name)
 	out := new(branch)
 	res, err := s.client.do(ctx, "GET", path, nil, out)
 	return convertBranch(out), res, err
 }
 
 func (s *gitService) FindCommit(ctx context.Context, repo, ref string) (*scm.Commit, *scm.Response, error) {
-	path := fmt.Sprintf("api/v4/projects/%s/repository/commits/%s", encode(repo), encode(scm.TrimRef(ref)))
+	path := fmt.Sprintf("api/v4/projects/%s/repository/commits/%s", encode(repo), ref)
 	out := new(commit)
 	res, err := s.client.do(ctx, "GET", path, nil, out)
 	return convertCommit(out), res, err
 }
 
 func (s *gitService) FindTag(ctx context.Context, repo, name string) (*scm.Reference, *scm.Response, error) {
-	path := fmt.Sprintf("api/v4/projects/%s/repository/tags/%s", encode(repo), encode(name))
+	path := fmt.Sprintf("api/v4/projects/%s/repository/tags/%s", encode(repo), name)
 	out := new(branch)
 	res, err := s.client.do(ctx, "GET", path, nil, out)
 	return convertTag(out), res, err
@@ -110,23 +110,10 @@ func (s *gitService) ListTags(ctx context.Context, repo string, opts scm.ListOpt
 }
 
 func (s *gitService) ListChanges(ctx context.Context, repo, ref string, opts scm.ListOptions) ([]*scm.Change, *scm.Response, error) {
-	path := fmt.Sprintf("api/v4/projects/%s/repository/commits/%s/diff", encode(repo), encode(ref))
+	path := fmt.Sprintf("api/v4/projects/%s/repository/commits/%s/diff", encode(repo), ref)
 	out := []*change{}
 	res, err := s.client.do(ctx, "GET", path, nil, &out)
 	return convertChangeList(out), res, err
-}
-
-func (s *gitService) CompareCommits(ctx context.Context, repo, ref1, ref2 string, opts scm.ListOptions) ([]*scm.Change, *scm.Response, error) {
-	opts.From = encode(ref1)
-	opts.To = encode(ref2)
-	path := fmt.Sprintf("api/v4/projects/%s/repository/compare?%s", encode(repo), encodeListOptions(opts))
-	out := compare{}
-	res, err := s.client.do(ctx, "GET", path, nil, &out)
-	return convertChangeList(out.Diffs), res, err
-}
-
-type compare struct {
-	Diffs []*change `json:"diffs"`
 }
 
 type branch struct {
@@ -147,7 +134,6 @@ type commit struct {
 	CommitterName  string    `json:"committer_name"`
 	CommitterEmail string    `json:"committer_email"`
 	Created        time.Time `json:"created_at"`
-	URL            string    `json:"web_url"`
 }
 
 func convertCommitList(from []*commit) []*scm.Commit {
@@ -162,7 +148,6 @@ func convertCommit(from *commit) *scm.Commit {
 	return &scm.Commit{
 		Message: from.Message,
 		Sha:     from.ID,
-		Link:    from.URL,
 		Author: scm.Signature{
 			Login: from.AuthorName,
 			Name:  from.AuthorName,

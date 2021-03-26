@@ -8,11 +8,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
-
-	"github.com/jenkins-x/go-scm/scm/labels"
 
 	"github.com/jenkins-x/go-scm/scm"
 )
@@ -62,29 +59,19 @@ func (s *pullService) ListChanges(ctx context.Context, repo string, number int, 
 }
 
 func (s *pullService) ListLabels(ctx context.Context, repo string, number int, opts scm.ListOptions) ([]*scm.Label, *scm.Response, error) {
-	// Get all comments, parse out labels (removing and added based off time)
-	cs, res, err := s.ListComments(ctx, repo, number, opts)
-	if err == nil {
-		l, err := labels.ConvertLabelComments(cs)
-		return l, res, err
-	}
-	return nil, res, err
-}
-
-func (s *pullService) AddLabel(ctx context.Context, repo string, number int, label string) (*scm.Response, error) {
-	input := labels.CreateLabelAddComment(label)
-	_, res, err := s.CreateComment(ctx, repo, number, input)
-	return res, err
-}
-
-func (s *pullService) DeleteLabel(ctx context.Context, repo string, number int, label string) (*scm.Response, error) {
-	input := labels.CreateLabelRemoveComment(label)
-	_, res, err := s.CreateComment(ctx, repo, number, input)
-	return res, err
+	return nil, nil, scm.ErrNotSupported
 }
 
 func (s *pullService) ListEvents(context.Context, string, int, scm.ListOptions) ([]*scm.ListedIssueEvent, *scm.Response, error) {
 	return nil, nil, scm.ErrNotSupported
+}
+
+func (s *pullService) AddLabel(ctx context.Context, repo string, number int, label string) (*scm.Response, error) {
+	return nil, scm.ErrNotSupported
+}
+
+func (s *pullService) DeleteLabel(ctx context.Context, repo string, number int, label string) (*scm.Response, error) {
+	return nil, scm.ErrNotSupported
 }
 
 func (s *pullService) ListComments(ctx context.Context, repo string, number int, opts scm.ListOptions) ([]*scm.Comment, *scm.Response, error) {
@@ -264,7 +251,7 @@ func (s *pullService) RequestReview(ctx context.Context, repo string, number int
 			Approved: false,
 			Status:   "UNAPPROVED",
 		}
-		path := fmt.Sprintf("rest/api/1.0/projects/%s/repos/%s/pull-requests/%d/participants/%s", namespace, name, number, url.PathEscape(l))
+		path := fmt.Sprintf("rest/api/1.0/projects/%s/repos/%s/pull-requests/%d/participants/%s", namespace, name, number, l)
 		res, err = s.client.do(ctx, "PUT", path, &input, nil)
 		if err != nil && res != nil {
 			missing.Users = append(missing.Users, l)
@@ -284,21 +271,13 @@ func (s *pullService) UnrequestReview(ctx context.Context, repo string, number i
 	var err error
 
 	for _, l := range logins {
-		path := fmt.Sprintf("rest/api/1.0/projects/%s/repos/%s/pull-requests/%d/participants/%s", namespace, name, number, url.PathEscape(l))
+		path := fmt.Sprintf("rest/api/1.0/projects/%s/repos/%s/pull-requests/%d/participants/%s", namespace, name, number, l)
 		res, err = s.client.do(ctx, "DELETE", path, nil, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to add reviewer to PR. errmsg: %v", err)
 		}
 	}
 	return res, err
-}
-
-func (s *pullService) SetMilestone(ctx context.Context, repo string, prID int, number int) (*scm.Response, error) {
-	return nil, scm.ErrNotSupported
-}
-
-func (s *pullService) ClearMilestone(ctx context.Context, repo string, prID int) (*scm.Response, error) {
-	return nil, scm.ErrNotSupported
 }
 
 type createPRInput struct {

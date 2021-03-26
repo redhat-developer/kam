@@ -11,7 +11,6 @@ import (
 )
 
 type (
-	// MergeableState represents whether the PR can be merged
 	MergeableState string
 
 	// PullRequest represents a repository pull request.
@@ -49,7 +48,6 @@ type (
 		DiffLink string
 	}
 
-	// PullRequestInput provides the input needed to create or update a PR.
 	PullRequestInput struct {
 		Title string
 		Head  string
@@ -57,7 +55,7 @@ type (
 		Body  string
 	}
 
-	// Milestone the milestone
+	// Milestone the milestotne
 	Milestone struct {
 		Number      int
 		ID          int
@@ -65,19 +63,6 @@ type (
 		Description string
 		Link        string
 		State       string
-		DueDate     *time.Time
-	}
-
-	// Release the release
-	Release struct {
-		ID          int
-		Title       string
-		Description string
-		Link        string
-		Tag         string
-		Commitish   string
-		Draft       bool
-		Prerelease  bool
 	}
 
 	// PullRequestListOptions provides options for querying
@@ -126,9 +111,6 @@ type (
 
 		// Merge automatically once the pipeline completes. (Supported only in gitlab)
 		MergeWhenPipelineSucceeds bool
-
-		// Signals to the SCM to remove the source branch during merge
-		DeleteSourceBranch bool
 	}
 
 	// PullRequestService provides access to pull request resources.
@@ -195,12 +177,6 @@ type (
 
 		// UnrequestReview removes one or more users as a reviewer on a pull request.
 		UnrequestReview(ctx context.Context, repo string, number int, logins []string) (*Response, error)
-
-		// SetMilestone adds a milestone to a pull request
-		SetMilestone(ctx context.Context, repo string, prID int, number int) (*Response, error)
-
-		// ClearMilestone removes the milestone from a pull request
-		ClearMilestone(ctx context.Context, repo string, prID int) (*Response, error)
 	}
 )
 

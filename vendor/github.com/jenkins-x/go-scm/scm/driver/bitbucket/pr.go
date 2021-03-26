@@ -11,8 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jenkins-x/go-scm/scm/labels"
-
 	"github.com/jenkins-x/go-scm/scm"
 )
 
@@ -39,10 +37,7 @@ func (s *pullService) List(ctx context.Context, repo string, opts scm.PullReques
 		return nil, res, err
 	}
 	res, err := s.client.do(ctx, "GET", path, nil, out)
-	if err != nil {
-		return nil, res, err
-	}
-	err = copyPagination(out.pagination, res)
+	copyPagination(out.pagination, res)
 	return convertPullRequests(out), res, err
 }
 
@@ -50,37 +45,20 @@ func (s *pullService) ListChanges(ctx context.Context, repo string, number int, 
 	path := fmt.Sprintf("2.0/repositories/%s/pullrequests/%d/diffstat?%s", repo, number, encodeListOptions(opts))
 	out := new(diffstats)
 	res, err := s.client.do(ctx, "GET", path, nil, out)
-	if err != nil {
-		return nil, res, err
-	}
-	err = copyPagination(out.pagination, res)
+	copyPagination(out.pagination, res)
 	return convertDiffstats(out), res, err
 }
 
-func (s *pullService) ListLabels(ctx context.Context, repo string, number int, opts scm.ListOptions) ([]*scm.Label, *scm.Response, error) {
-	// Get all comments, parse out labels (removing and added based off time)
-	cs, res, err := s.ListComments(ctx, repo, number, opts)
-	if err == nil {
-		l, err := labels.ConvertLabelComments(cs)
-		return l, res, err
-	}
-	return nil, res, err
-}
-
-func (s *pullService) AddLabel(ctx context.Context, repo string, number int, label string) (*scm.Response, error) {
-	input := labels.CreateLabelAddComment(label)
-	_, res, err := s.CreateComment(ctx, repo, number, input)
-	return res, err
-}
-
-func (s *pullService) DeleteLabel(ctx context.Context, repo string, number int, label string) (*scm.Response, error) {
-	input := labels.CreateLabelRemoveComment(label)
-	_, res, err := s.CreateComment(ctx, repo, number, input)
-	return res, err
+func (s *pullService) ListLabels(context.Context, string, int, scm.ListOptions) ([]*scm.Label, *scm.Response, error) {
+	return nil, nil, scm.ErrNotSupported
 }
 
 func (s *pullService) ListEvents(context.Context, string, int, scm.ListOptions) ([]*scm.ListedIssueEvent, *scm.Response, error) {
 	return nil, nil, scm.ErrNotSupported
+}
+
+func (s *pullService) DeleteLabel(ctx context.Context, repo string, number int, label string) (*scm.Response, error) {
+	return nil, scm.ErrNotSupported
 }
 
 func (s *pullService) Merge(ctx context.Context, repo string, number int, options *scm.PullRequestMergeOptions) (*scm.Response, error) {
@@ -109,33 +87,8 @@ func (s *pullService) UnassignIssue(ctx context.Context, repo string, number int
 	return nil, scm.ErrNotSupported
 }
 
-type prPatchName struct {
-	Name string `json:"name"`
-}
-
-type prPatchBranch struct {
-	Branch prPatchName `json:"branch,omitempty"`
-}
-
-type prInput struct {
-	Title   string        `json:"title,omitempty"`
-	Source  prPatchBranch `json:"source,omitempty"`
-	Project string
-}
-
 func (s *pullService) Create(ctx context.Context, repo string, input *scm.PullRequestInput) (*scm.PullRequest, *scm.Response, error) {
-	path := fmt.Sprintf("2.0/repositories/%s/pullrequests", repo)
-	in := &prInput{
-		Title: input.Title,
-		Source: prPatchBranch{
-			Branch: prPatchName{
-				Name: input.Head,
-			},
-		},
-	}
-	out := new(pullRequest)
-	res, err := s.client.do(ctx, "POST", path, in, out)
-	return convertPullRequest(out), res, err
+	return nil, nil, scm.ErrNotSupported
 }
 
 func (s *pullService) RequestReview(ctx context.Context, repo string, number int, logins []string) (*scm.Response, error) {

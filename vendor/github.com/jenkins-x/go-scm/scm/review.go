@@ -97,14 +97,9 @@ type (
 )
 
 const (
-	// ReviewStateApproved is used for approved reviews
-	ReviewStateApproved string = "APPROVED"
-	// ReviewStateChangesRequested is used for reviews with changes requested
+	ReviewStateApproved         string = "APPROVED"
 	ReviewStateChangesRequested string = "CHANGES_REQUESTED"
-	// ReviewStateCommented is used for reviews with comments
-	ReviewStateCommented string = "COMMENTED"
-	// ReviewStateDismissed is used for reviews that have been dismissed
-	ReviewStateDismissed string = "DISMISSED"
-	// ReviewStatePending is used for reviews that are awaiting response
-	ReviewStatePending string = "PENDING"
+	ReviewStateCommented        string = "COMMENTED"
+	ReviewStateDismissed        string = "DISMISSED"
+	ReviewStatePending          string = "PENDING"
 )

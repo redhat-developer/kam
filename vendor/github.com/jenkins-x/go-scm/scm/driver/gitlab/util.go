@@ -24,12 +24,6 @@ func encodeListOptions(opts scm.ListOptions) string {
 	if opts.Size != 0 {
 		params.Set("per_page", strconv.Itoa(opts.Size))
 	}
-	if opts.From != "" {
-		params.Set("from", opts.From)
-	}
-	if opts.To != "" {
-		params.Set("to", opts.To)
-	}
 	return params.Encode()
 }
 
@@ -77,22 +71,6 @@ func encodeIssueListOptions(opts scm.IssueListOptions) string {
 	return params.Encode()
 }
 
-func encodeMilestoneListOptions(opts scm.MilestoneListOptions) string {
-	params := url.Values{}
-	if opts.Page != 0 {
-		params.Set("page", strconv.Itoa(opts.Page))
-	}
-	if opts.Size != 0 {
-		params.Set("per_page", strconv.Itoa(opts.Size))
-	}
-	if opts.Closed && !opts.Open {
-		params.Set("state", "closed")
-	} else if opts.Open && !opts.Closed {
-		params.Set("state", "active")
-	}
-	return params.Encode()
-}
-
 func encodePullRequestListOptions(opts scm.PullRequestListOptions) string {
 	params := url.Values{}
 	if opts.Page != 0 {
@@ -133,24 +111,12 @@ func encodePullRequestMergeOptions(opts *scm.PullRequestMergeOptions) *pullReque
 		if opts.SHA != "" {
 			prRequest.SHA = opts.SHA
 		}
-		switch opts.MergeMethod {
-		case "squash":
-			if opts.CommitTitle != "" {
-				prRequest.SquashCommitMessage = opts.CommitTitle
-			}
-			prRequest.Squash = "true"
-		default:
-			if opts.CommitTitle != "" {
-				prRequest.CommitMessage = opts.CommitTitle
-			}
-		}
 		if opts.MergeWhenPipelineSucceeds {
 			prRequest.MergeWhenPipelineSucceeds = "true"
 		}
-		if opts.DeleteSourceBranch {
-			prRequest.RemoveSourceBranch = "true"
+		if opts.CommitTitle != "" {
+			prRequest.CommitMessage = opts.CommitTitle
 		}
-
 	}
 	return prRequest
 }

@@ -51,7 +51,7 @@ func (s *webhookService) Parse(req *http.Request, fn scm.SecretFunc) (scm.Webhoo
 	case "pr:reviewer:approved", "pr:reviewer:unapproved", "pr:reviewer:needs_work":
 		hook, err = s.parsePullRequestApproval(data)
 	default:
-		return nil, scm.UnknownWebhook{Event: event}
+		return nil, scm.UnknownWebhook{event}
 	}
 	if err != nil {
 		return nil, err
@@ -224,17 +224,15 @@ func convertPushHook(src *pushHook) *scm.PushHook {
 	sender := convertUser(src.Actor)
 	signer := convertSignature(src.Actor)
 	signer.Date, _ = time.Parse("2006-01-02T15:04:05+0000", src.Date)
-	sha := change.ToHash
 	return &scm.PushHook{
 		Ref: change.RefID,
 		Commit: scm.Commit{
-			Sha:       sha,
+			Sha:       change.ToHash,
 			Message:   "",
 			Link:      "",
 			Author:    signer,
 			Committer: signer,
 		},
-		After:  sha,
 		Repo:   *repo,
 		Sender: *sender,
 	}

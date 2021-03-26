@@ -19,18 +19,12 @@ import (
 	"github.com/jenkins-x/go-scm/scm"
 )
 
-// NewWebHookService creates a new instance of the webhook service without the rest of the client
 func NewWebHookService() scm.WebhookService {
 	return &webhookService{nil}
 }
 
-// New returns a new Gitea API client without a token set
+// New returns a new Gitea API client.
 func New(uri string) (*scm.Client, error) {
-	return NewWithToken(uri, "")
-}
-
-// NewWithToken returns a new Gitea API client with the token set.
-func NewWithToken(uri string, token string) (*scm.Client, error) {
 	base, err := url.Parse(uri)
 	if err != nil {
 		return nil, err
@@ -38,51 +32,18 @@ func NewWithToken(uri string, token string) (*scm.Client, error) {
 	if !strings.HasSuffix(base.Path, "/") {
 		base.Path = base.Path + "/"
 	}
-	client := &wrapper{Client: new(scm.Client)}
-	client.GiteaClient, err = gitea.NewClient(base.String(), gitea.SetToken(token))
-
-	if err != nil {
-		return nil, err
+	client := &wrapper{
+		Client: &scm.Client{
+			Client: &http.Client{},
+		},
 	}
+	client.GiteaClient = gitea.NewClientWithHTTP(base.String(), client.Client.Client)
 	client.BaseURL = base
 	// initialize services
 	client.Driver = scm.DriverGitea
 	client.Contents = &contentService{client}
 	client.Git = &gitService{client}
 	client.Issues = &issueService{client}
-	client.Milestones = &milestoneService{client}
-	client.Organizations = &organizationService{client}
-	client.PullRequests = &pullService{&issueService{client}}
-	client.Repositories = &repositoryService{client}
-	client.Reviews = &reviewService{client}
-	client.Releases = &releaseService{client}
-	client.Users = &userService{client}
-	client.Webhooks = &webhookService{client}
-	return client.Client, nil
-}
-
-// NewWithBasicAuth returns a new Gitea API client with the basic auth set.
-func NewWithBasicAuth(uri string, user, password string) (*scm.Client, error) {
-	base, err := url.Parse(uri)
-	if err != nil {
-		return nil, err
-	}
-	if !strings.HasSuffix(base.Path, "/") {
-		base.Path = base.Path + "/"
-	}
-	client := &wrapper{Client: new(scm.Client)}
-	client.GiteaClient, err = gitea.NewClient(base.String(), gitea.SetBasicAuth(user, password))
-
-	if err != nil {
-		return nil, err
-	}
-	client.BaseURL = base
-	// initialize services
-	client.Driver = scm.DriverGitea
-	client.Contents = &contentService{client}
-	client.Git = &gitService{client}
-	client.Issues = &issueService{client}
-	client.Milestones = &milestoneService{client}
 	client.Organizations = &organizationService{client}
 	client.PullRequests = &pullService{&issueService{client}}
 	client.Repositories = &repositoryService{client}
@@ -146,26 +107,4 @@ func (c *wrapper) do(ctx context.Context, method, path string, in, out interface
 	// if a json response is expected, parse and return
 	// the json response.
 	return res, json.NewDecoder(res.Body).Decode(out)
-}
-
-// toSCMResponse creates a new Response for the provided
-// http.Response. r must not be nil.
-func toSCMResponse(r *gitea.Response) *scm.Response {
-	if r == nil {
-		return nil
-	}
-	res := &scm.Response{
-		Status: r.StatusCode,
-		Header: r.Header,
-		Body:   r.Body,
-	}
-	res.PopulatePageValues()
-	return res
-}
-
-func toGiteaListOptions(in scm.ListOptions) gitea.ListOptions {
-	return gitea.ListOptions{
-		Page:     in.Page,
-		PageSize: in.Size,
-	}
 }

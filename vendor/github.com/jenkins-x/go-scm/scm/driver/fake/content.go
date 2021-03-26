@@ -32,7 +32,7 @@ func (c contentService) Find(_ context.Context, repo, path, ref string) (*scm.Co
 			Status: 404,
 		}, errors.Wrapf(err, "file %s does not exist", f)
 	}
-	data, err := ioutil.ReadFile(f) // #nosec
+	data, err := ioutil.ReadFile(f)
 	if err != nil {
 		return nil, nil, errors.Wrapf(err, "failed to read file %s", f)
 	}
@@ -112,30 +112,5 @@ func (c contentService) path(repo string, path string, ref string) (string, erro
 	if c.data.ContentDir == "" {
 		return "", errors.Errorf("no data.ContentDir configured")
 	}
-	if ref == "" {
-		ref = "master"
-	}
-	repoDir := filepath.Join(c.data.ContentDir, repo)
-
-	// lets see if there's a 'refs' folder for testing out different files in different ref/shas
-	refDir := filepath.Join(repoDir, "refs", ref)
-	exists, err := DirExists(refDir)
-	if err != nil {
-		return repoDir, errors.Wrapf(err, "failed to check if refs dir %s exists", refDir)
-	}
-	if exists {
-		repoDir = refDir
-	}
-	return filepath.Join(repoDir, path), nil
-}
-
-// DirExists checks if path exists and is a directory
-func DirExists(path string) (bool, error) {
-	info, err := os.Stat(path)
-	if err == nil {
-		return info.IsDir(), nil
-	} else if os.IsNotExist(err) {
-		return false, nil
-	}
-	return false, err
+	return filepath.Join(c.data.ContentDir, repo, path), nil
 }

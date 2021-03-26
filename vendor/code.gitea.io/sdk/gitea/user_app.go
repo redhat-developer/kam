@@ -9,7 +9,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"reflect"
 )
 
 // AccessToken represents an API access token.
@@ -26,14 +25,13 @@ type ListAccessTokensOptions struct {
 }
 
 // ListAccessTokens lists all the access tokens of user
-func (c *Client) ListAccessTokens(opts ListAccessTokensOptions) ([]*AccessToken, *Response, error) {
+func (c *Client) ListAccessTokens(opts ListAccessTokensOptions) ([]*AccessToken, error) {
 	if len(c.username) == 0 {
-		return nil, nil, fmt.Errorf("\"username\" not set: only BasicAuth allowed")
+		return nil, fmt.Errorf("\"username\" not set: only BasicAuth allowed")
 	}
 	opts.setDefaults()
 	tokens := make([]*AccessToken, 0, opts.PageSize)
-	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/users/%s/tokens?%s", c.username, opts.getURLQuery().Encode()), jsonHeader, nil, &tokens)
-	return tokens, resp, err
+	return tokens, c.getParsedResponse("GET", fmt.Sprintf("/users/%s/tokens?%s", c.username, opts.getURLQuery().Encode()), jsonHeader, nil, &tokens)
 }
 
 // CreateAccessTokenOption options when create access token
@@ -42,39 +40,23 @@ type CreateAccessTokenOption struct {
 }
 
 // CreateAccessToken create one access token with options
-func (c *Client) CreateAccessToken(opt CreateAccessTokenOption) (*AccessToken, *Response, error) {
-	if len(c.username) == 0 {
-		return nil, nil, fmt.Errorf("\"username\" not set: only BasicAuth allowed")
-	}
-	body, err := json.Marshal(&opt)
-	if err != nil {
-		return nil, nil, err
-	}
-	t := new(AccessToken)
-	resp, err := c.getParsedResponse("POST", fmt.Sprintf("/users/%s/tokens", c.username), jsonHeader, bytes.NewReader(body), t)
-	return t, resp, err
-}
-
-// DeleteAccessToken delete token, identified by ID and if not available by name
-func (c *Client) DeleteAccessToken(value interface{}) (*Response, error) {
+func (c *Client) CreateAccessToken(opt CreateAccessTokenOption) (*AccessToken, error) {
 	if len(c.username) == 0 {
 		return nil, fmt.Errorf("\"username\" not set: only BasicAuth allowed")
 	}
-
-	var token = ""
-
-	switch reflect.ValueOf(value).Kind() {
-	case reflect.Int64:
-		token = fmt.Sprintf("%d", value.(int64))
-	case reflect.String:
-		if err := c.CheckServerVersionConstraint(">= 1.13.0"); err != nil {
-			return nil, err
-		}
-		token = value.(string)
-	default:
-		return nil, fmt.Errorf("only string and int64 supported")
+	body, err := json.Marshal(&opt)
+	if err != nil {
+		return nil, err
 	}
+	t := new(AccessToken)
+	return t, c.getParsedResponse("POST", fmt.Sprintf("/users/%s/tokens", c.username), jsonHeader, bytes.NewReader(body), t)
+}
 
-	_, resp, err := c.getResponse("DELETE", fmt.Sprintf("/users/%s/tokens/%s", c.username, token), jsonHeader, nil)
-	return resp, err
+// DeleteAccessToken delete token with key id
+func (c *Client) DeleteAccessToken(keyID int64) error {
+	if len(c.username) == 0 {
+		return fmt.Errorf("\"username\" not set: only BasicAuth allowed")
+	}
+	_, err := c.getResponse("DELETE", fmt.Sprintf("/users/%s/tokens/%d", c.username, keyID), jsonHeader, nil)
+	return err
 }

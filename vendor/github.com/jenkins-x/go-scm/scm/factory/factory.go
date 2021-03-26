@@ -8,8 +8,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/pkg/errors"
-
 	"github.com/jenkins-x/go-scm/scm"
 	"github.com/jenkins-x/go-scm/scm/driver/bitbucket"
 	"github.com/jenkins-x/go-scm/scm/driver/fake"
@@ -22,52 +20,16 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// ErrMissingGitServerURL the error returned if you use a git driver that needs a git server URL
-var ErrMissingGitServerURL = fmt.Errorf("No git serverURL was specified")
+// MissingGitServerURL the error returned if you use a git driver that needs a git server URL
+var MissingGitServerURL = fmt.Errorf("No git serverURL was specified")
 
 // DefaultIdentifier is the default driver identifier used by FromRepoURL.
 var DefaultIdentifier = NewDriverIdentifier()
 
-// ClientOptionFunc is a function taking a client as its argument
-type ClientOptionFunc func(*scm.Client)
-
-// SetUsername allows the username to be set
-func SetUsername(username string) ClientOptionFunc {
-	return func(client *scm.Client) {
-		if username != "" {
-			client.Username = username
-		}
-	}
-}
-
-// NewClientWithBasicAuth creates a new client for a given driver, serverURL and basic auth
-func NewClientWithBasicAuth(driver, serverURL, user, password string, opts ...ClientOptionFunc) (*scm.Client, error) {
-	if driver == "" {
-		driver = "github"
-	}
-	var client *scm.Client
-	var err error
-
-	switch driver {
-	case "gitea":
-		if serverURL == "" {
-			return nil, ErrMissingGitServerURL
-		}
-		client, err = gitea.NewWithBasicAuth(serverURL, user, password)
-	default:
-		return nil, fmt.Errorf("Unsupported $GIT_KIND value: %s", driver)
-	}
-	if err != nil {
-		return client, err
-	}
-	for _, o := range opts {
-		o(client)
-	}
-	return client, err
-}
+type clientOptionFunc func(*scm.Client)
 
 // NewClient creates a new client for a given driver, serverURL and OAuth token
-func NewClient(driver, serverURL, oauthToken string, opts ...ClientOptionFunc) (*scm.Client, error) {
+func NewClient(driver, serverURL, oauthToken string, opts ...clientOptionFunc) (*scm.Client, error) {
 	if driver == "" {
 		driver = "github"
 	}
@@ -85,9 +47,9 @@ func NewClient(driver, serverURL, oauthToken string, opts ...ClientOptionFunc) (
 		client, _ = fake.NewDefault()
 	case "gitea":
 		if serverURL == "" {
-			return nil, ErrMissingGitServerURL
+			return nil, MissingGitServerURL
 		}
-		client, err = gitea.NewWithToken(serverURL, oauthToken)
+		client, err = gitea.New(serverURL)
 	case "github":
 		if serverURL != "" {
 			client, err = github.New(ensureGHEEndpoint(serverURL))
@@ -102,12 +64,12 @@ func NewClient(driver, serverURL, oauthToken string, opts ...ClientOptionFunc) (
 		}
 	case "gogs":
 		if serverURL == "" {
-			return nil, ErrMissingGitServerURL
+			return nil, MissingGitServerURL
 		}
 		client, err = gogs.New(serverURL)
 	case "stash", "bitbucketserver":
 		if serverURL == "" {
-			return nil, ErrMissingGitServerURL
+			return nil, MissingGitServerURL
 		}
 		client, err = stash.New(serverURL)
 	default:
@@ -117,36 +79,13 @@ func NewClient(driver, serverURL, oauthToken string, opts ...ClientOptionFunc) (
 		return client, err
 	}
 	if oauthToken != "" {
-		switch driver {
-		case "gitea":
-			client.Client = &http.Client{
-				Transport: &transport.Authorization{
-					Scheme:      "token",
-					Credentials: oauthToken,
-				},
-			}
-		case "gitlab":
+		if driver == "gitlab" || driver == "bitbucketcloud" {
 			client.Client = &http.Client{
 				Transport: &transport.PrivateToken{
 					Token: oauthToken,
 				},
 			}
-		case "bitbucketcloud":
-			// lets process any options now so that we can populate the username
-			for _, o := range opts {
-				o(client)
-			}
-			if client.Username == "" {
-				return nil, errors.Errorf("no username supplied")
-			}
-			client.Client = &http.Client{
-				Transport: &transport.BasicAuth{
-					Username: client.Username,
-					Password: oauthToken,
-				},
-			}
-			return client, nil
-		default:
+		} else {
 			ts := oauth2.StaticTokenSource(
 				&oauth2.Token{AccessToken: oauthToken},
 			)
@@ -168,15 +107,10 @@ func NewClientFromEnvironment() (*scm.Client, error) {
 	driver := os.Getenv("GIT_KIND")
 	serverURL := os.Getenv("GIT_SERVER")
 	oauthToken := os.Getenv("GIT_TOKEN")
-	username := os.Getenv("GIT_USER")
-	if username == "" {
-		username = os.Getenv("GIT_USERNAME")
-	}
-
 	if oauthToken == "" {
 		return nil, fmt.Errorf("No Git OAuth token specified for $GIT_TOKEN")
 	}
-	client, err := NewClient(driver, serverURL, oauthToken, SetUsername(username))
+	client, err := NewClient(driver, serverURL, oauthToken)
 	if driver == "" {
 		driver = client.Driver.String()
 	}
@@ -212,7 +146,7 @@ func ensureGHEEndpoint(u string) string {
 	}
 	// lets ensure we use the API endpoint to login
 	if !strings.Contains(u, "/api/") {
-		u = scm.URLJoin(u, "/api/v3")
+		u = scm.UrlJoin(u, "/api/v3")
 	}
 	return u
 }
@@ -225,19 +159,17 @@ func ensureBBCEndpoint(u string) string {
 	return u
 }
 
-// Client creates a new client with the given HTTP client
-func Client(httpClient *http.Client) ClientOptionFunc {
+func Client(httpClient *http.Client) clientOptionFunc {
 	return func(c *scm.Client) {
 		c.Client = httpClient
 	}
 }
 
-// NewWebHookService creates a new instance of the webhook service without the rest of the client
 func NewWebHookService(driver string) (scm.WebhookService, error) {
 	if driver == "" {
 		driver = "github"
 	}
-	var service scm.WebhookService
+	var service scm.WebhookService = nil
 	switch driver {
 	case "bitbucket", "bitbucketcloud":
 		service = bitbucket.NewWebHookService()

@@ -9,7 +9,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -26,7 +25,6 @@ import (
 // but will prevent an indefinite stall if GitHub never responds.
 const maxRequestTime = 5 * time.Minute
 
-// NewWebHookService creates a new instance of the webhook service without the rest of the client
 func NewWebHookService() scm.WebhookService {
 	return &webhookService{nil}
 }
@@ -48,8 +46,6 @@ func New(uri string) (*scm.Client, error) {
 	client.Deployments = &deploymentService{client}
 	client.Git = &gitService{client}
 	client.Issues = &issueService{client}
-	client.Milestones = &milestoneService{client}
-	client.Releases = &releaseService{client}
 	client.Organizations = &organizationService{client}
 	client.PullRequests = &pullService{&issueService{client}}
 	client.Repositories = &repositoryService{client}
@@ -58,9 +54,9 @@ func New(uri string) (*scm.Client, error) {
 	client.Webhooks = &webhookService{client}
 	client.Apps = &appService{client}
 
-	graphqlEndpoint := scm.URLJoin(uri, "/graphql")
+	graphqlEndpoint := scm.UrlJoin(uri, "/graphql")
 	if strings.HasSuffix(uri, "/api/v3") {
-		graphqlEndpoint = scm.URLJoin(uri[0:len(uri)-2], "graphql")
+		graphqlEndpoint = scm.UrlJoin(uri[0:len(uri)-2], "graphql")
 	}
 	client.GraphQLURL, err = url.Parse(graphqlEndpoint)
 	if err != nil {
@@ -161,9 +157,9 @@ func (c *wrapper) doRequest(ctx context.Context, req *scm.Request, in, out inter
 		if res.Status == 404 {
 			return res, scm.ErrNotFound
 		}
-		return res, errors.New(
-			http.StatusText(res.Status),
-		)
+		err := new(Error)
+		json.NewDecoder(res.Body).Decode(err)
+		return res, err
 	}
 
 	if out == nil {

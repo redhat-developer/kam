@@ -61,8 +61,7 @@ type memberPermissions struct {
 func stringToAccessLevel(perm string) int {
 	switch perm {
 	case scm.AdminPermission:
-		// owner permission only applies to groups, so fails for projects
-		return maintainerPermissions
+		return ownerPermissions
 	case scm.WritePermission:
 		return developerPermissions
 	case scm.ReadPermission:
@@ -179,22 +178,9 @@ func (s *repositoryService) Fork(ctx context.Context, input *scm.RepositoryInput
 }
 
 func (s *repositoryService) FindCombinedStatus(ctx context.Context, repo, ref string) (*scm.CombinedStatus, *scm.Response, error) {
-	var resp *scm.Response
-	var statuses []*scm.Status
-	var statusesByPage []*scm.Status
-	var err error
-	firstRun := false
-	opts := scm.ListOptions{
-		Page: 1,
-	}
-	for !firstRun || (resp != nil && opts.Page <= resp.Page.Last) {
-		statusesByPage, resp, err = s.ListStatus(ctx, repo, ref, opts)
-		if err != nil {
-			return nil, resp, err
-		}
-		statuses = append(statuses, statusesByPage...)
-		firstRun = true
-		opts.Page++
+	statuses, res, err := s.ListStatus(ctx, repo, ref, scm.ListOptions{})
+	if err != nil {
+		return nil, res, err
 	}
 
 	combinedState := scm.StateUnknown
@@ -210,32 +196,22 @@ func (s *repositoryService) FindCombinedStatus(ctx context.Context, repo, ref st
 		State:    combinedState,
 		Sha:      ref,
 		Statuses: statuses,
-	}, resp, err
+	}, res, err
 }
 
 func (s *repositoryService) FindUserPermission(ctx context.Context, repo string, user string) (string, *scm.Response, error) {
-	var resp *scm.Response
-	var err error
-	firstRun := false
-	opts := scm.ListOptions{
-		Page: 1,
+	path := fmt.Sprintf("api/v4/projects/%s/members/all", encode(repo))
+	out := []*member{}
+	res, err := s.client.do(ctx, "GET", path, nil, &out)
+	if err != nil {
+		return scm.NoPermission, res, err
 	}
-	for !firstRun || (resp != nil && opts.Page <= resp.Page.Last) {
-		path := fmt.Sprintf("api/v4/projects/%s/members/all?%s", encode(repo), encodeListOptions(opts))
-		out := []*member{}
-		resp, err = s.client.do(ctx, "GET", path, nil, &out)
-		if err != nil {
-			return scm.NoPermission, resp, err
+	for _, u := range out {
+		if u.Username == user {
+			return accessLevelToString(u.AccessLevel), res, nil
 		}
-		firstRun = true
-		for _, u := range out {
-			if u.Username == user {
-				return accessLevelToString(u.AccessLevel), resp, nil
-			}
-		}
-		opts.Page++
 	}
-	return scm.NoPermission, resp, nil
+	return scm.NoPermission, res, nil
 }
 
 func (s *repositoryService) AddCollaborator(ctx context.Context, repo, username, permission string) (bool, bool, *scm.Response, error) {
@@ -260,25 +236,14 @@ func (s *repositoryService) AddCollaborator(ctx context.Context, repo, username,
 }
 
 func (s *repositoryService) IsCollaborator(ctx context.Context, repo, user string) (bool, *scm.Response, error) {
-	var resp *scm.Response
-	var users []scm.User
-	var err error
-	firstRun := false
-	opts := scm.ListOptions{
-		Page: 1,
+	users, resp, err := s.ListCollaborators(ctx, repo, scm.ListOptions{})
+	if err != nil {
+		return false, resp, err
 	}
-	for !firstRun || (resp != nil && opts.Page <= resp.Page.Last) {
-		users, resp, err = s.ListCollaborators(ctx, repo, opts)
-		if err != nil {
-			return false, resp, err
+	for _, u := range users {
+		if u.Name == user || u.Login == user {
+			return true, resp, err
 		}
-		firstRun = true
-		for _, u := range users {
-			if u.Name == user || u.Login == user {
-				return true, resp, err
-			}
-		}
-		opts.Page++
 	}
 	return false, resp, err
 }
@@ -356,29 +321,23 @@ func (s *repositoryService) CreateHook(ctx context.Context, repo string, input *
 	if input.SkipVerify {
 		params.Set("enable_ssl_verification", "true")
 	}
-	hasStarEvents := false
-	for _, event := range input.NativeEvents {
-		if event == "*" {
-			hasStarEvents = true
-		}
-	}
 	if input.Events.Branch {
 		// no-op
 	}
-	if input.Events.Issue || hasStarEvents {
+	if input.Events.Issue {
 		params.Set("issues_events", "true")
 	}
 	if input.Events.IssueComment ||
-		input.Events.PullRequestComment || hasStarEvents {
+		input.Events.PullRequestComment {
 		params.Set("note_events", "true")
 	}
-	if input.Events.PullRequest || hasStarEvents {
+	if input.Events.PullRequest {
 		params.Set("merge_requests_events", "true")
 	}
-	if input.Events.Push || input.Events.Branch || hasStarEvents {
+	if input.Events.Push || input.Events.Branch {
 		params.Set("push_events", "true")
 	}
-	if input.Events.Tag || hasStarEvents {
+	if input.Events.Tag {
 		params.Set("tag_push_events", "true")
 	}
 
@@ -405,10 +364,6 @@ func (s *repositoryService) DeleteHook(ctx context.Context, repo string, id stri
 	return s.client.do(ctx, "DELETE", path, nil, nil)
 }
 
-func (s *repositoryService) Delete(context.Context, string) (*scm.Response, error) {
-	return nil, scm.ErrNotSupported
-}
-
 // helper function to convert from the gogs repository list to
 // the common repository structure.
 func convertRepositoryList(from []*repository) []*scm.Repository {
@@ -431,7 +386,6 @@ func convertRepository(from *repository) *scm.Repository {
 		Private:   convertPrivate(from.Visibility),
 		Clone:     from.HTTPURL,
 		CloneSSH:  from.SSHURL,
-		Link:      from.WebURL,
 		Perm: &scm.Perm{
 			Pull:  true,
 			Push:  canPush(from),

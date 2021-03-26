@@ -7,23 +7,11 @@ package bitbucket
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net/url"
-	"strings"
 	"time"
-
-	"github.com/pkg/errors"
 
 	"github.com/jenkins-x/go-scm/scm"
 )
-
-type repositoryInput struct {
-	SCM     string `json:"scm,omitempty"`
-	Project struct {
-		Key string `json:"key,omitempty"`
-	} `json:"project,omitempty"`
-	Private bool `json:"is_private,omitempty"`
-}
 
 type repository struct {
 	UUID       string    `json:"uuid"`
@@ -71,50 +59,8 @@ type repositoryService struct {
 	client *wrapper
 }
 
-func (s *repositoryService) Create(ctx context.Context, input *scm.RepositoryInput) (*scm.Repository, *scm.Response, error) {
-	workspace := input.Namespace
-	if workspace == "" {
-		workspace = s.client.Username
-	}
-	projectKey := ""
-	if workspace == "" {
-		user, res, err := s.client.Users.Find(ctx)
-		if err != nil {
-			return nil, res, errors.Wrapf(err, "failed to find current user")
-		}
-		workspace = user.Login
-		if workspace == "" {
-			return nil, nil, errors.Errorf("failed to find current user login")
-		}
-		s.client.Username = workspace
-	}
-
-	// lets allow the projectKey to be specified as workspace:projectKey
-	words := strings.SplitN(workspace, ":", 2)
-	if len(words) > 1 {
-		workspace = words[0]
-		projectKey = words[1]
-	}
-	path := fmt.Sprintf("2.0/repositories/%s/%s", workspace, input.Name)
-	out := new(repository)
-	in := new(repositoryInput)
-	in.SCM = "git"
-	in.Project.Key = projectKey
-	in.Private = input.Private
-	res, err := s.client.do(ctx, "POST", path, in, out)
-	return convertRepository(out), res, wrapError(res, err)
-
-}
-
-func wrapError(res *scm.Response, err error) error {
-	if res == nil {
-		return err
-	}
-	data, err2 := ioutil.ReadAll(res.Body)
-	if err2 != nil {
-		return errors.Wrapf(err, "http status %d", res.Status)
-	}
-	return errors.Wrapf(err, "http status %d mesage %s", res.Status, string(data))
+func (s *repositoryService) Create(context.Context, *scm.RepositoryInput) (*scm.Repository, *scm.Response, error) {
+	return nil, nil, scm.ErrNotSupported
 }
 
 func (s *repositoryService) Fork(context.Context, *scm.RepositoryInput, string) (*scm.Repository, *scm.Response, error) {
@@ -130,25 +76,19 @@ func (s *repositoryService) FindUserPermission(ctx context.Context, repo string,
 }
 
 func (s *repositoryService) AddCollaborator(ctx context.Context, repo, user, permission string) (bool, bool, *scm.Response, error) {
-	// TODO lets fake out this method for now
-	return true, false, nil, nil
+	return false, false, nil, scm.ErrNotSupported
 }
 
 func (s *repositoryService) IsCollaborator(ctx context.Context, repo, user string) (bool, *scm.Response, error) {
-	// TODO lets fake out this method for now
-	return true, nil, nil
+	return false, nil, scm.ErrNotSupported
 }
 
 func (s *repositoryService) ListCollaborators(ctx context.Context, repo string, ops scm.ListOptions) ([]scm.User, *scm.Response, error) {
-	return nil, nil, nil
+	return nil, nil, scm.ErrNotSupported
 }
 
 func (s *repositoryService) ListLabels(context.Context, string, scm.ListOptions) ([]*scm.Label, *scm.Response, error) {
-	return nil, nil, nil
-}
-
-func (s *repositoryService) Delete(context.Context, string) (*scm.Response, error) {
-	return nil, scm.ErrNotSupported
+	return nil, nil, scm.ErrNotSupported
 }
 
 // Find returns the repository by name.
@@ -156,7 +96,7 @@ func (s *repositoryService) Find(ctx context.Context, repo string) (*scm.Reposit
 	path := fmt.Sprintf("2.0/repositories/%s", repo)
 	out := new(repository)
 	res, err := s.client.do(ctx, "GET", path, nil, out)
-	return convertRepository(out), res, wrapError(res, err)
+	return convertRepository(out), res, err
 }
 
 // FindHook returns a repository hook.
@@ -164,7 +104,7 @@ func (s *repositoryService) FindHook(ctx context.Context, repo string, id string
 	path := fmt.Sprintf("2.0/repositories/%s/hooks/%s", repo, id)
 	out := new(hook)
 	res, err := s.client.do(ctx, "GET", path, nil, out)
-	return convertHook(out), res, wrapError(res, err)
+	return convertHook(out), res, err
 }
 
 // FindPerms returns the repository permissions.
@@ -172,7 +112,7 @@ func (s *repositoryService) FindPerms(ctx context.Context, repo string) (*scm.Pe
 	path := fmt.Sprintf("2.0/user/permissions/repositories?q=repository.full_name=%q", repo)
 	out := new(perms)
 	res, err := s.client.do(ctx, "GET", path, nil, out)
-	return convertPerms(out), res, wrapError(res, err)
+	return convertPerms(out), res, err
 }
 
 // List returns the user repository list.
@@ -183,11 +123,8 @@ func (s *repositoryService) List(ctx context.Context, opts scm.ListOptions) ([]*
 	}
 	out := new(repositories)
 	res, err := s.client.do(ctx, "GET", path, nil, &out)
-	if err != nil {
-		return nil, res, wrapError(res, err)
-	}
-	err = copyPagination(out.pagination, res)
-	return convertRepositoryList(out), res, wrapError(res, err)
+	copyPagination(out.pagination, res)
+	return convertRepositoryList(out), res, err
 }
 
 func (s *repositoryService) ListOrganisation(context.Context, string, scm.ListOptions) ([]*scm.Repository, *scm.Response, error) {
@@ -203,11 +140,8 @@ func (s *repositoryService) ListHooks(ctx context.Context, repo string, opts scm
 	path := fmt.Sprintf("2.0/repositories/%s/hooks?%s", repo, encodeListOptions(opts))
 	out := new(hooks)
 	res, err := s.client.do(ctx, "GET", path, nil, out)
-	if err != nil {
-		return nil, res, wrapError(res, err)
-	}
-	err = copyPagination(out.pagination, res)
-	return convertHookList(out), res, wrapError(res, err)
+	copyPagination(out.pagination, res)
+	return convertHookList(out), res, err
 }
 
 // ListStatus returns a list of commit statuses.
@@ -215,42 +149,32 @@ func (s *repositoryService) ListStatus(ctx context.Context, repo, ref string, op
 	path := fmt.Sprintf("2.0/repositories/%s/commit/%s/statuses?%s", repo, ref, encodeListOptions(opts))
 	out := new(statuses)
 	res, err := s.client.do(ctx, "GET", path, nil, out)
-	if err != nil {
-		return nil, res, wrapError(res, err)
-	}
-	err = copyPagination(out.pagination, res)
-	return convertStatusList(out), res, wrapError(res, err)
+	copyPagination(out.pagination, res)
+	return convertStatusList(out), res, err
 }
 
 // CreateHook creates a new repository webhook.
 func (s *repositoryService) CreateHook(ctx context.Context, repo string, input *scm.HookInput) (*scm.Hook, *scm.Response, error) {
-	targetText := input.Target
-	if input.Secret != "" {
-		target, err := url.Parse(input.Target)
-		if err != nil {
-			return nil, nil, err
-		}
-		params := target.Query()
-		params.Set("secret", input.Secret)
-		target.RawQuery = params.Encode()
-		targetText = target.String()
+	target, err := url.Parse(input.Target)
+	if err != nil {
+		return nil, nil, err
 	}
+	params := target.Query()
+	params.Set("secret", input.Secret)
+	target.RawQuery = params.Encode()
 
 	path := fmt.Sprintf("2.0/repositories/%s/hooks", repo)
 	in := new(hookInput)
-	in.URL = targetText
+	in.URL = target.String()
 	in.Active = true
 	in.Description = input.Name
-	if in.Description == "" {
-		in.Description = "my webhook"
-	}
 	in.Events = append(
 		input.NativeEvents,
 		convertHookEvents(input.Events)...,
 	)
 	out := new(hook)
 	res, err := s.client.do(ctx, "POST", path, in, out)
-	return convertHook(out), res, wrapError(res, err)
+	return convertHook(out), res, err
 }
 
 // CreateStatus creates a new commit status.
@@ -265,7 +189,7 @@ func (s *repositoryService) CreateStatus(ctx context.Context, repo, ref string, 
 	}
 	out := new(status)
 	res, err := s.client.do(ctx, "POST", path, in, out)
-	return convertStatus(out), res, wrapError(res, err)
+	return convertStatus(out), res, err
 }
 
 // DeleteHook deletes a repository webhook.
@@ -347,14 +271,12 @@ func convertHookEvents(from scm.HookEvents) []string {
 		events = append(events, "repo:push")
 	}
 	if from.PullRequest {
-		events = append(events, "pullrequest:created")
 		events = append(events, "pullrequest:updated")
-		events = append(events, "pullrequest:changes_request_created")
-		events = append(events, "pullrequest:changes_request_removed")
-		events = append(events, "pullrequest:approved")
 		events = append(events, "pullrequest:unapproved")
-		events = append(events, "pullrequest:fulfilled")
+		events = append(events, "pullrequest:approved")
 		events = append(events, "pullrequest:rejected")
+		events = append(events, "pullrequest:fulfilled")
+		events = append(events, "pullrequest:created")
 	}
 	if from.PullRequestComment {
 		events = append(events, "pullrequest:comment_created")
@@ -362,6 +284,7 @@ func convertHookEvents(from scm.HookEvents) []string {
 		events = append(events, "pullrequest:comment_deleted")
 	}
 	if from.Issue {
+		events = append(events, "issues")
 		events = append(events, "issue:created")
 		events = append(events, "issue:updated")
 	}

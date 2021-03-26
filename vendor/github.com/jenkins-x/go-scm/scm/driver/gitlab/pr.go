@@ -12,8 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mitchellh/copystructure"
-
 	"github.com/jenkins-x/go-scm/scm"
 )
 
@@ -25,14 +23,7 @@ func (s *pullService) Find(ctx context.Context, repo string, number int) (*scm.P
 	path := fmt.Sprintf("api/v4/projects/%s/merge_requests/%d", encode(repo), number)
 	out := new(pr)
 	res, err := s.client.do(ctx, "GET", path, nil, out)
-	if err != nil {
-		return nil, res, err
-	}
-	convRepo, convRes, err := s.convertPullRequest(ctx, out)
-	if err != nil {
-		return nil, convRes, err
-	}
-	return convRepo, res, nil
+	return convertPullRequest(out), res, err
 }
 
 func (s *pullService) FindComment(ctx context.Context, repo string, index, id int) (*scm.Comment, *scm.Response, error) {
@@ -46,14 +37,7 @@ func (s *pullService) List(ctx context.Context, repo string, opts scm.PullReques
 	path := fmt.Sprintf("api/v4/projects/%s/merge_requests?%s", encode(repo), encodePullRequestListOptions(opts))
 	out := []*pr{}
 	res, err := s.client.do(ctx, "GET", path, nil, &out)
-	if err != nil {
-		return nil, res, err
-	}
-	convRepos, convRes, err := s.convertPullRequestList(ctx, out)
-	if err != nil {
-		return nil, convRes, err
-	}
-	return convRepos, res, nil
+	return convertPullRequestList(out), res, err
 }
 
 func (s *pullService) ListChanges(ctx context.Context, repo string, number int, opts scm.ListOptions) ([]*scm.Change, *scm.Response, error) {
@@ -248,14 +232,7 @@ func (s *pullService) Create(ctx context.Context, repo string, input *scm.PullRe
 
 	out := new(pr)
 	res, err := s.client.do(ctx, "POST", path, in, out)
-	if err != nil {
-		return nil, res, err
-	}
-	convRepo, convRes, err := s.convertPullRequest(ctx, out)
-	if err != nil {
-		return nil, convRes, err
-	}
-	return convRepo, res, nil
+	return convertPullRequest(out), res, err
 }
 
 func (s *pullService) Update(ctx context.Context, repo string, number int, input *scm.PullRequestInput) (*scm.PullRequest, *scm.Response, error) {
@@ -270,23 +247,6 @@ func (s *pullService) Update(ctx context.Context, repo string, number int, input
 		updateOpts.TargetBranch = &input.Base
 	}
 	return s.updateMergeRequestField(ctx, repo, number, updateOpts)
-}
-
-func (s *pullService) SetMilestone(ctx context.Context, repo string, prID int, number int) (*scm.Response, error) {
-	updateOpts := &updateMergeRequestOptions{
-		MilestoneID: &number,
-	}
-	_, res, err := s.updateMergeRequestField(ctx, repo, prID, updateOpts)
-	return res, err
-}
-
-func (s *pullService) ClearMilestone(ctx context.Context, repo string, prID int) (*scm.Response, error) {
-	zeroVal := 0
-	updateOpts := &updateMergeRequestOptions{
-		MilestoneID: &zeroVal,
-	}
-	_, res, err := s.updateMergeRequestField(ctx, repo, prID, updateOpts)
-	return res, err
 }
 
 type updateMergeRequestOptions struct {
@@ -309,14 +269,7 @@ func (s *pullService) updateMergeRequestField(ctx context.Context, repo string, 
 
 	out := new(pr)
 	res, err := s.client.do(ctx, "PUT", path, input, out)
-	if err != nil {
-		return nil, res, err
-	}
-	convRepo, convRes, err := s.convertPullRequest(ctx, out)
-	if err != nil {
-		return nil, convRes, err
-	}
-	return convRepo, res, nil
+	return convertPullRequest(out), res, err
 }
 
 type pr struct {
@@ -367,26 +320,19 @@ type prInput struct {
 
 type pullRequestMergeRequest struct {
 	CommitMessage             string `json:"merge_commit_message,omitempty"`
-	SquashCommitMessage       string `json:"squash_commit_message,omitempty"`
-	Squash                    string `json:"squash,omitempty"`
-	RemoveSourceBranch        string `json:"should_remove_source_branch,omitempty"`
 	SHA                       string `json:"sha,omitempty"`
 	MergeWhenPipelineSucceeds string `json:"merge_when_pipeline_succeeds,omitempty"`
 }
 
-func (s *pullService) convertPullRequestList(ctx context.Context, from []*pr) ([]*scm.PullRequest, *scm.Response, error) {
+func convertPullRequestList(from []*pr) []*scm.PullRequest {
 	to := []*scm.PullRequest{}
 	for _, v := range from {
-		converted, res, err := s.convertPullRequest(ctx, v)
-		if err != nil {
-			return nil, res, err
-		}
-		to = append(to, converted)
+		to = append(to, convertPullRequest(v))
 	}
-	return to, nil, nil
+	return to
 }
 
-func (s *pullService) convertPullRequest(ctx context.Context, from *pr) (*scm.PullRequest, *scm.Response, error) {
+func convertPullRequest(from *pr) *scm.PullRequest {
 	// Diff refs only seem to be populated in more recent merge requests. Default
 	// to from.Sha for compatibility / consistency, but fallback to HeadSHA if
 	// it's not populated.
@@ -400,28 +346,6 @@ func (s *pullService) convertPullRequest(ctx context.Context, from *pr) (*scm.Pu
 	}
 	for _, a := range from.Assignees {
 		assignees = append(assignees, *convertUser(a))
-	}
-	var res *scm.Response
-	baseRepo, res, err := s.client.Repositories.Find(ctx, strconv.Itoa(from.TargetProjectID))
-	if err != nil {
-		return nil, res, err
-	}
-	var headRepo *scm.Repository
-	if from.TargetProjectID == from.SourceProjectID {
-		repoCopy, err := copystructure.Copy(baseRepo)
-		if err != nil {
-			return nil, nil, err
-		}
-		headRepo = repoCopy.(*scm.Repository)
-	} else {
-		headRepo, res, err = s.client.Repositories.Find(ctx, strconv.Itoa(from.SourceProjectID))
-		if err != nil {
-			return nil, res, err
-		}
-	}
-	sourceRepo, err := s.getSourceFork(ctx, from)
-	if err != nil {
-		return nil, res, err
 	}
 	return &scm.PullRequest{
 		Number:         from.Number,
@@ -442,29 +366,22 @@ func (s *pullService) convertPullRequest(ctx context.Context, from *pr) (*scm.Pu
 		Author:         *convertUser(&from.Author),
 		Assignees:      assignees,
 		Head: scm.PullRequestBranch{
-			Ref:  from.SourceBranch,
-			Sha:  headSHA,
-			Repo: *headRepo,
+			Ref: from.SourceBranch,
+			Sha: headSHA,
+			Repo: scm.Repository{
+				ID: strconv.Itoa(from.SourceProjectID),
+			},
 		},
 		Base: scm.PullRequestBranch{
-			Ref:  from.TargetBranch,
-			Sha:  from.DiffRefs.BaseSHA,
-			Repo: *baseRepo,
+			Ref: from.TargetBranch,
+			Sha: from.DiffRefs.BaseSHA,
+			Repo: scm.Repository{
+				ID: strconv.Itoa(from.TargetProjectID),
+			},
 		},
 		Created: from.Created,
 		Updated: from.Updated,
-		Fork:    sourceRepo.PathNamespace,
-	}, nil, nil
-}
-
-func (s *pullService) getSourceFork(ctx context.Context, from *pr) (repository, error) {
-	path := fmt.Sprintf("api/v4/projects/%d", from.SourceProjectID)
-	sourceRepo := repository{}
-	_, err := s.client.do(ctx, "GET", path, nil, &sourceRepo)
-	if err != nil {
-		return repository{}, err
 	}
-	return sourceRepo, nil
 }
 
 func convertPullRequestLabels(from []*string) []*scm.Label {

@@ -54,7 +54,6 @@ type hook struct {
 		URL         string `json:"url"`
 		Secret      string `json:"secret"`
 		ContentType string `json:"content_type"`
-		InsecureSSL string `json:"insecure_ssl"`
 	} `json:"config"`
 }
 
@@ -294,11 +293,6 @@ func (s *repositoryService) CreateHook(ctx context.Context, repo string, input *
 	in.Config.Secret = input.Secret
 	in.Config.ContentType = "json"
 	in.Config.URL = input.Target
-	if input.SkipVerify {
-		in.Config.InsecureSSL = "1"
-	} else {
-		in.Config.InsecureSSL = "0"
-	}
 	in.Events = append(
 		input.NativeEvents,
 		convertHookEvents(input.Events)...,
@@ -328,19 +322,12 @@ func (s *repositoryService) DeleteHook(ctx context.Context, repo string, id stri
 	return s.client.do(ctx, "DELETE", path, nil, nil)
 }
 
-func (s *repositoryService) Delete(ctx context.Context, repo string) (*scm.Response, error) {
-	path := fmt.Sprintf("repos/%s", repo)
-	return s.client.do(ctx, "DELETE", path, nil, nil)
-}
-
 // helper function to convert from the gogs repository list to
 // the common repository structure.
 func convertRepositoryList(from []*repository) []*scm.Repository {
 	to := []*scm.Repository{}
 	for _, v := range from {
-		if v != nil {
-			to = append(to, convertRepository(v))
-		}
+		to = append(to, convertRepository(v))
 	}
 	return to
 }
@@ -377,18 +364,11 @@ func convertHookList(from []*hook) []*scm.Hook {
 }
 
 func convertHook(from *hook) *scm.Hook {
-
-	skipVerify := false
-	if from.Config.InsecureSSL == "1" {
-		skipVerify = true
-	}
-
 	return &scm.Hook{
-		ID:         strconv.Itoa(from.ID),
-		Active:     from.Active,
-		Target:     from.Config.URL,
-		SkipVerify: skipVerify,
-		Events:     from.Events,
+		ID:     strconv.Itoa(from.ID),
+		Active: from.Active,
+		Target: from.Config.URL,
+		Events: from.Events,
 	}
 }
 
@@ -399,9 +379,6 @@ func convertHookEvents(from scm.HookEvents) []string {
 	}
 	if from.PullRequest {
 		events = append(events, "pull_request")
-	}
-	if from.Review {
-		events = append(events, "pull_request_review")
 	}
 	if from.PullRequestComment {
 		events = append(events, "pull_request_review_comment")
