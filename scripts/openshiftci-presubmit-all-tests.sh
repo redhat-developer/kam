@@ -21,6 +21,9 @@ sh $INSTALL_ARGOCD
 INSTALL_DOCKER="./scripts/install-docker-cli.sh"
 sh $INSTALL_DOCKER
 
+INSTALL_KUBECTL="./scripts/install-kubectl.sh"
+sh $INSTALL_KUBECTL
+
 export PATH="$PATH:$(pwd)/bin"
 
 # Copy kubeconfig to temporary kubeconfig file and grant
