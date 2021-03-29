@@ -14,7 +14,7 @@ require (
 	github.com/google/go-cmp v0.5.2
 	github.com/h2non/gock v1.0.9
 	github.com/hinshun/vt10x v0.0.0-20180809195222-d55458df857c // indirect
-	github.com/jenkins-x/go-scm v1.5.160
+	github.com/jenkins-x/go-scm v1.6.6
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mkmik/multierror v0.3.0

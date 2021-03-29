@@ -15,6 +15,14 @@ type organizationService struct {
 	client *wrapper
 }
 
+func (s *organizationService) Create(context.Context, *scm.OrganizationInput) (*scm.Organization, *scm.Response, error) {
+	return nil, nil, scm.ErrNotSupported
+}
+
+func (s *organizationService) Delete(context.Context, string) (*scm.Response, error) {
+	return nil, scm.ErrNotSupported
+}
+
 func (s *organizationService) IsMember(ctx context.Context, org string, user string) (bool, *scm.Response, error) {
 	return false, nil, scm.ErrNotSupported
 }
@@ -46,6 +54,18 @@ func (s *organizationService) List(ctx context.Context, _ scm.ListOptions) ([]*s
 	var out []*org
 	res, err := s.client.do(ctx, "GET", "api/v1/user/orgs", nil, &out)
 	return convertOrgList(out), res, err
+}
+
+func (s *organizationService) ListPendingInvitations(ctx context.Context, org string, opts scm.ListOptions) ([]*scm.OrganizationPendingInvite, *scm.Response, error) {
+	return nil, nil, scm.ErrNotSupported
+}
+
+func (s *organizationService) AcceptOrganizationInvitation(ctx context.Context, org string) (*scm.Response, error) {
+	return nil, scm.ErrNotSupported
+}
+
+func (s *organizationService) ListMemberships(ctx context.Context, opts scm.ListOptions) ([]*scm.Membership, *scm.Response, error) {
+	return nil, nil, scm.ErrNotSupported
 }
 
 //

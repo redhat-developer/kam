@@ -87,6 +87,7 @@ type (
 		PullRequest        bool
 		PullRequestComment bool
 		Push               bool
+		Review             bool
 		ReviewComment      bool
 		Tag                bool
 	}
@@ -175,6 +176,9 @@ type (
 
 		// FindUserPermission returns the user's permission level for a repo
 		FindUserPermission(ctx context.Context, repo string, user string) (string, *Response, error)
+
+		// Delete deletes a repository
+		Delete(ctx context.Context, repo string) (*Response, error)
 	}
 )
 

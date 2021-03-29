@@ -5,8 +5,9 @@
 package gitea
 
 import (
-	"code.gitea.io/sdk/gitea"
 	"context"
+
+	"code.gitea.io/sdk/gitea"
 	"github.com/jenkins-x/go-scm/scm"
 )
 
@@ -14,14 +15,33 @@ type userService struct {
 	client *wrapper
 }
 
+func (s *userService) CreateToken(_ context.Context, user string, name string) (*scm.UserToken, *scm.Response, error) {
+	out, resp, err := s.client.GiteaClient.CreateAccessToken(gitea.CreateAccessTokenOption{
+		Name: name,
+	})
+	if out == nil {
+		return nil, toSCMResponse(resp), err
+	}
+	token := &scm.UserToken{
+		ID:    out.ID,
+		Token: out.Token,
+	}
+	return token, toSCMResponse(resp), err
+}
+
+func (s *userService) DeleteToken(_ context.Context, id int64) (*scm.Response, error) {
+	resp, err := s.client.GiteaClient.DeleteAccessToken(id)
+	return toSCMResponse(resp), err
+}
+
 func (s *userService) Find(ctx context.Context) (*scm.User, *scm.Response, error) {
-	out, err := s.client.GiteaClient.GetMyUserInfo()
-	return convertGiteaUser(out), nil, err
+	out, resp, err := s.client.GiteaClient.GetMyUserInfo()
+	return convertUser(out), toSCMResponse(resp), err
 }
 
 func (s *userService) FindLogin(ctx context.Context, login string) (*scm.User, *scm.Response, error) {
-	out, err := s.client.GiteaClient.GetUserInfo(login)
-	return convertGiteaUser(out), nil, err
+	out, resp, err := s.client.GiteaClient.GetUserInfo(login)
+	return convertUser(out), toSCMResponse(resp), err
 }
 
 func (s *userService) FindEmail(ctx context.Context) (string, *scm.Response, error) {
@@ -41,26 +61,13 @@ func (s *userService) AcceptInvitation(context.Context, int64) (*scm.Response, e
 }
 
 //
-// native data structures
-//
-
-type user struct {
-	ID       int    `json:"id"`
-	Login    string `json:"login"`
-	Username string `json:"username"`
-	Fullname string `json:"full_name"`
-	Email    string `json:"email"`
-	Avatar   string `json:"avatar_url"`
-}
-
-//
 // native data structure conversion
 //
 
-func convertGiteaUsers(src []*gitea.User) []scm.User {
+func convertUsers(src []*gitea.User) []scm.User {
 	answer := []scm.User{}
 	for _, u := range src {
-		user := convertGiteaUser(u)
+		user := convertUser(u)
 		if user.Login != "" {
 			answer = append(answer, *user)
 		}
@@ -71,21 +78,7 @@ func convertGiteaUsers(src []*gitea.User) []scm.User {
 	return answer
 }
 
-func convertUsers(src []user) []scm.User {
-	answer := []scm.User{}
-	for _, u := range src {
-		user := convertUser(&u)
-		if user.Login != "" {
-			answer = append(answer, *user)
-		}
-	}
-	if len(answer) == 0 {
-		return nil
-	}
-	return answer
-}
-
-func convertGiteaUser(src *gitea.User) *scm.User {
+func convertUser(src *gitea.User) *scm.User {
 	if src == nil || src.UserName == "" {
 		return nil
 	}
@@ -96,19 +89,4 @@ func convertGiteaUser(src *gitea.User) *scm.User {
 		Email:  src.Email,
 		Avatar: src.AvatarURL,
 	}
-}
-func convertUser(src *user) *scm.User {
-	return &scm.User{
-		Login:  userLogin(src),
-		Avatar: src.Avatar,
-		Email:  src.Email,
-		Name:   src.Fullname,
-	}
-}
-
-func userLogin(src *user) string {
-	if src.Username != "" {
-		return src.Username
-	}
-	return src.Login
 }
