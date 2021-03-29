@@ -290,7 +290,7 @@ On installation of OpenShift GitOps, the operator sets up a ready-to-use Argo CD
 
 ![ArgoCD_Link](img/ArgoCD_Link.png)
 
-For the pre-created Argo CD instance under `openshift-gitops` project, you’ll find the password by switching to the Developer perspective, navigating to the `openshift-gitops` project, and looking under the "Secrets" tab to find the secret for `argocd-cluster-cluster`. Once you copy that secret to your clipboard, you can paste it into the Argo CD login page for password and use `admin` as the username. 
+For the pre-created Argo CD instance under `openshift-gitops` project, you’ll find the password by switching to the Developer perspective, navigating to the `openshift-gitops` project, and looking under the "Secrets" tab to find the secret for `openshift-gitops-cluster`. Once you copy that secret to your clipboard, you can paste it into the Argo CD login page for password and use `admin` as the username. 
 
 ![ArgoCD_ConsoleSecrets](img/ArgoCD_ConsoleSecrets.png)
 
@@ -301,7 +301,7 @@ For the pre-created Argo CD instance under `openshift-gitops` project, you’ll 
 Alternatively, you can fetch this password via the command line by running: 
 
 ```shell
-$ kubectl get secret argocd-cluster-cluster -n openshift-gitops -ojsonpath='{.data.admin\.password}' | base64 -d
+$ kubectl get secret openshift-gitops-cluster -n openshift-gitops -ojsonpath='{.data.admin\.password}' | base64 -d
 ```
 You should now be logged in and able to see the Argo CD UI, and deployed applications should be healthy and in-sync.
 

@@ -104,4 +104,4 @@ done
 echo "Completed OpenShift GitOps operator installation"
 
 echo "Provide cluster-admin access to argocd-application-controller service account"
-oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:openshift-gitops:argocd-cluster-argocd-application-controller
+oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:openshift-gitops:openshift-gitops-argocd-application-controller
