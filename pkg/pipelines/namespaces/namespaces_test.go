@@ -18,7 +18,7 @@ func TestCreate(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test-environment",
 			Annotations: map[string]string{
-				vcsURIAnnotation: testGitOpsRepoURL + "?ref=main",
+				vcsURIAnnotation: testGitOpsRepoURL + "?ref=HEAD",
 			},
 		},
 	}
