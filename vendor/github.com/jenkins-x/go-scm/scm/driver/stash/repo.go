@@ -161,7 +161,7 @@ func (s *repositoryService) Fork(ctx context.Context, input *scm.RepositoryInput
 }
 
 func (s *repositoryService) FindCombinedStatus(ctx context.Context, repo, ref string) (*scm.CombinedStatus, *scm.Response, error) {
-	path := fmt.Sprintf("rest/build-status/1.0/commits/%s?orderBy=oldest", ref)
+	path := fmt.Sprintf("rest/build-status/1.0/commits/%s?orderBy=oldest", url.PathEscape(ref))
 	out := new(statuses)
 	res, err := s.client.do(ctx, "GET", path, nil, &out)
 
@@ -203,7 +203,7 @@ func (s *repositoryService) FindCombinedStatus(ctx context.Context, repo, ref st
 
 func (s *repositoryService) FindUserPermission(ctx context.Context, repo string, user string) (string, *scm.Response, error) {
 	namespace, name := scm.Split(repo)
-	path := fmt.Sprintf("rest/api/1.0/projects/%s/repos/%s/permissions/users?filter=%s", namespace, name, user)
+	path := fmt.Sprintf("rest/api/1.0/projects/%s/repos/%s/permissions/users?filter=%s", namespace, name, url.QueryEscape(user))
 	out := new(participants)
 	res, err := s.client.do(ctx, "GET", path, nil, out)
 	if err != nil {
@@ -231,7 +231,7 @@ func (s *repositoryService) AddCollaborator(ctx context.Context, repo, user, per
 		return false, false, nil, fmt.Errorf("unknown permission '%s'", permission)
 	}
 	namespace, name := scm.Split(repo)
-	path := fmt.Sprintf("rest/api/1.0/projects/%s/repos/%s/permissions/users", namespace, name)
+	path := fmt.Sprintf("rest/api/1.0/projects/%s/repos/%s/permissions/users?&name=%s&permission=%s", namespace, name, user, apiPerm)
 	input := &addCollaboratorInput{
 		Name:       user,
 		Permission: apiPerm,
@@ -380,7 +380,7 @@ func (s *repositoryService) ListHooks(ctx context.Context, repo string, opts scm
 
 // ListStatus returns a list of commit statuses.
 func (s *repositoryService) ListStatus(ctx context.Context, _, ref string, opts scm.ListOptions) ([]*scm.Status, *scm.Response, error) {
-	path := fmt.Sprintf("rest/build-status/1.0/commits/%s?%s", ref, encodeListOptions(opts))
+	path := fmt.Sprintf("rest/build-status/1.0/commits/%s?%s", url.PathEscape(ref), encodeListOptions(opts))
 	out := new(statuses)
 	res, err := s.client.do(ctx, "GET", path, nil, &out)
 	if !out.pagination.LastPage.Bool {
@@ -411,7 +411,7 @@ func (s *repositoryService) CreateHook(ctx context.Context, repo string, input *
 // CreateStatus creates a new commit status.
 // reference: https://developer.atlassian.com/server/bitbucket/how-tos/updating-build-status-for-commits/
 func (s *repositoryService) CreateStatus(ctx context.Context, repo, ref string, input *scm.StatusInput) (*scm.Status, *scm.Response, error) {
-	path := fmt.Sprintf("rest/build-status/1.0/commits/%s", ref)
+	path := fmt.Sprintf("rest/build-status/1.0/commits/%s", url.PathEscape(ref))
 	in := status{
 		State: convertFromState(input.State),
 		Key:   input.Label,
@@ -433,6 +433,10 @@ func (s *repositoryService) DeleteHook(ctx context.Context, repo string, id stri
 	namespace, name := scm.Split(repo)
 	path := fmt.Sprintf("rest/api/1.0/projects/%s/repos/%s/webhooks/%s", namespace, name, id)
 	return s.client.do(ctx, "DELETE", path, nil, nil)
+}
+
+func (s *repositoryService) Delete(context.Context, string) (*scm.Response, error) {
+	return nil, scm.ErrNotSupported
 }
 
 // helper function to convert from the gogs repository list to
@@ -515,6 +519,7 @@ func convertHookEvents(from scm.HookEvents) []string {
 		events = append(events, "pr:deleted")
 		events = append(events, "pr:opened")
 		events = append(events, "pr:merged")
+		events = append(events, "pr:from_ref_updated")
 	}
 	if from.PullRequestComment {
 		events = append(events, "pr:comment:added")

@@ -7,9 +7,10 @@ package stash
 import (
 	"bytes"
 	"context"
-	"crypto/md5"
+	"crypto/md5" // #nosec
 	"encoding/hex"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/jenkins-x/go-scm/scm"
@@ -17,6 +18,14 @@ import (
 
 type userService struct {
 	client *wrapper
+}
+
+func (s *userService) CreateToken(context.Context, string, string) (*scm.UserToken, *scm.Response, error) {
+	return nil, nil, scm.ErrNotSupported
+}
+
+func (s *userService) DeleteToken(context.Context, int64) (*scm.Response, error) {
+	return nil, scm.ErrNotSupported
 }
 
 func (s *userService) Find(ctx context.Context) (*scm.User, *scm.Response, error) {
@@ -32,7 +41,7 @@ func (s *userService) Find(ctx context.Context) (*scm.User, *scm.Response, error
 }
 
 func (s *userService) FindLogin(ctx context.Context, login string) (*scm.User, *scm.Response, error) {
-	path := fmt.Sprintf("rest/api/1.0/users/%s", login)
+	path := fmt.Sprintf("rest/api/1.0/users/%s", url.PathEscape(login))
 	out := new(user)
 	res, err := s.client.do(ctx, "GET", path, nil, out)
 	return convertUser(out), res, err
@@ -48,11 +57,13 @@ func (s *userService) FindEmail(ctx context.Context) (string, *scm.Response, err
 }
 
 func (s *userService) ListInvitations(context.Context) ([]*scm.Invitation, *scm.Response, error) {
-	return nil, nil, scm.ErrNotSupported
+	// bitbucket server does not have an invite concept, so always return successfully
+	return []*scm.Invitation{}, &scm.Response{Status: 200}, nil
 }
 
 func (s *userService) AcceptInvitation(context.Context, int64) (*scm.Response, error) {
-	return nil, scm.ErrNotSupported
+	// bitbucket server does not have an invite concept, so always return successfully
+	return &scm.Response{Status: 200}, nil
 }
 
 type user struct {
@@ -83,8 +94,8 @@ func convertUser(from *user) *scm.User {
 }
 
 func avatarLink(email string) string {
-	hasher := md5.New()
-	hasher.Write([]byte(strings.ToLower(email)))
+	hasher := md5.New()                          // #nosec
+	hasher.Write([]byte(strings.ToLower(email))) // #nosec
 	emailHash := fmt.Sprintf("%v", hex.EncodeToString(hasher.Sum(nil)))
 	avatarURL := fmt.Sprintf("https://www.gravatar.com/avatar/%s.jpg", emailHash)
 	return avatarURL

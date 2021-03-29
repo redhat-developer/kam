@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -20,8 +21,9 @@ import (
 	"github.com/shurcooL/graphql"
 )
 
+// NewWebHookService creates a new instance of the webhook service without the rest of the client
 func NewWebHookService() scm.WebhookService {
-	return &webhookService{nil}
+	return &webhookService{nil, nil}
 }
 
 // New returns a new GitLab API client.
@@ -40,14 +42,22 @@ func New(uri string) (*scm.Client, error) {
 	client.Contents = &contentService{client}
 	client.Git = &gitService{client}
 	client.Issues = &issueService{client}
+	client.Releases = &releaseService{client}
+	client.Milestones = &milestoneService{client}
 	client.Organizations = &organizationService{client}
 	client.PullRequests = &pullService{client}
 	client.Repositories = &repositoryService{client}
 	client.Reviews = &reviewService{client}
-	client.Users = &userService{client}
-	client.Webhooks = &webhookService{client}
 
-	graphqlEndpoint := scm.UrlJoin(uri, "/api/graphql")
+	//add the user service to the webhook service so it can be used for fetching users
+	us := &userService{client}
+	client.Users = us
+	client.Webhooks = &webhookService{
+		client:      client,
+		userService: us,
+	}
+
+	graphqlEndpoint := scm.URLJoin(uri, "/api/graphql")
 	client.GraphQLURL, err = url.Parse(graphqlEndpoint)
 	if err != nil {
 		return nil, err
@@ -92,7 +102,7 @@ type wrapper struct {
 	*scm.Client
 }
 
-type gl_namespace struct {
+type gitlabNamespace struct {
 	ID                          int    `json:"id"`
 	Name                        string `json:"name"`
 	Path                        string `json:"path"`
@@ -103,15 +113,17 @@ type gl_namespace struct {
 }
 
 // findNamespaceByName will look up the namespace for the given name
-func (c *wrapper) findNamespaceByName(ctx context.Context, name string) (*gl_namespace, error) {
+func (c *wrapper) findNamespaceByName(ctx context.Context, name string) (*gitlabNamespace, error) {
 	in := url.Values{}
 	in.Set("search", name)
 	path := fmt.Sprintf("api/v4/namespaces?%s", in.Encode())
 
-	out := new(gl_namespace)
+	var out []*gitlabNamespace
 	_, err := c.do(ctx, "GET", path, nil, &out)
-
-	return out, err
+	if len(out) > 0 {
+		return out[0], err
+	}
+	return nil, err
 }
 
 // do wraps the Client.Do function by creating the Request and
@@ -159,9 +171,9 @@ func (c *wrapper) do(ctx context.Context, method, path string, in, out interface
 	// if an error is encountered, unmarshal and return the
 	// error response.
 	if res.Status > 300 {
-		err := new(Error)
-		json.NewDecoder(res.Body).Decode(err)
-		return res, err
+		return res, errors.New(
+			http.StatusText(res.Status),
+		)
 	}
 
 	if out == nil {

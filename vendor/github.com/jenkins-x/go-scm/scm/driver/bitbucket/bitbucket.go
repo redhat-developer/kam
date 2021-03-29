@@ -9,13 +9,16 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
+	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/jenkins-x/go-scm/scm"
 )
 
+// NewWebHookService creates a new instance of the webhook service without the rest of the client
 func NewWebHookService() scm.WebhookService {
 	return &webhookService{nil}
 }
@@ -36,6 +39,7 @@ func New(uri string) (*scm.Client, error) {
 	client.Contents = &contentService{client}
 	client.Git = &gitService{client}
 	client.Issues = &issueService{client}
+	client.Milestones = &milestoneService{client}
 	client.Organizations = &organizationService{client}
 	client.PullRequests = &pullService{&issueService{client}}
 	client.Repositories = &repositoryService{client}
@@ -69,7 +73,7 @@ func (c *wrapper) do(ctx context.Context, method, path string, in, out interface
 	// write it to the body of the request.
 	if in != nil {
 		buf := new(bytes.Buffer)
-		json.NewEncoder(buf).Encode(in)
+		json.NewEncoder(buf).Encode(in) // #nosec
 		req.Header = map[string][]string{
 			"Content-Type": {"application/json"},
 		}
@@ -88,9 +92,9 @@ func (c *wrapper) do(ctx context.Context, method, path string, in, out interface
 	if res.Status == 401 {
 		return res, scm.ErrNotAuthorized
 	} else if res.Status > 300 {
-		err := new(Error)
-		json.NewDecoder(res.Body).Decode(err)
-		return res, err
+		return res, errors.New(
+			http.StatusText(res.Status),
+		)
 	}
 
 	if out == nil {
@@ -100,8 +104,8 @@ func (c *wrapper) do(ctx context.Context, method, path string, in, out interface
 	// if raw output is expected, copy to the provided
 	// buffer and exit.
 	if w, ok := out.(io.Writer); ok {
-		io.Copy(w, res.Body)
-		return res, nil
+		_, err := io.Copy(w, res.Body)
+		return res, err
 	}
 
 	// if a json response is expected, parse and return

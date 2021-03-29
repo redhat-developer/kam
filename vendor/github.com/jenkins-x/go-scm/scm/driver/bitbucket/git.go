@@ -18,8 +18,9 @@ type gitService struct {
 }
 
 func (s *gitService) FindRef(ctx context.Context, repo, ref string) (string, *scm.Response, error) {
+	ref = strings.TrimPrefix(ref, "heads/")
 	commit, res, err := s.FindCommit(ctx, repo, ref)
-	if err != nil && res.Status != 404 {
+	if err != nil && res == nil || (res.Status != 404 && res.Status >= 300) {
 		return "", res, err
 	}
 	if commit != nil {
@@ -84,7 +85,10 @@ func (s *gitService) ListBranches(ctx context.Context, repo string, opts scm.Lis
 	path := fmt.Sprintf("2.0/repositories/%s/refs/branches?%s", repo, encodeListOptions(opts))
 	out := new(branches)
 	res, err := s.client.do(ctx, "GET", path, nil, out)
-	copyPagination(out.pagination, res)
+	if err != nil {
+		return nil, res, err
+	}
+	err = copyPagination(out.pagination, res)
 	return convertBranchList(out), res, err
 }
 
@@ -92,7 +96,10 @@ func (s *gitService) ListCommits(ctx context.Context, repo string, opts scm.Comm
 	path := fmt.Sprintf("2.0/repositories/%s/commits/%s?%s", repo, opts.Ref, encodeCommitListOptions(opts))
 	out := new(commits)
 	res, err := s.client.do(ctx, "GET", path, nil, out)
-	copyPagination(out.pagination, res)
+	if err != nil {
+		return nil, res, err
+	}
+	err = copyPagination(out.pagination, res)
 	return convertCommitList(out), res, err
 }
 
@@ -100,7 +107,10 @@ func (s *gitService) ListTags(ctx context.Context, repo string, opts scm.ListOpt
 	path := fmt.Sprintf("2.0/repositories/%s/refs/tags?%s", repo, encodeListOptions(opts))
 	out := new(branches)
 	res, err := s.client.do(ctx, "GET", path, nil, &out)
-	copyPagination(out.pagination, res)
+	if err != nil {
+		return nil, res, err
+	}
+	err = copyPagination(out.pagination, res)
 	return convertTagList(out), res, err
 }
 
@@ -108,7 +118,21 @@ func (s *gitService) ListChanges(ctx context.Context, repo, ref string, opts scm
 	path := fmt.Sprintf("2.0/repositories/%s/diffstat/%s?%s", repo, ref, encodeListOptions(opts))
 	out := new(diffstats)
 	res, err := s.client.do(ctx, "GET", path, nil, &out)
-	copyPagination(out.pagination, res)
+	if err != nil {
+		return nil, res, err
+	}
+	err = copyPagination(out.pagination, res)
+	return convertDiffstats(out), res, err
+}
+
+func (s *gitService) CompareCommits(ctx context.Context, repo, ref1, ref2 string, opts scm.ListOptions) ([]*scm.Change, *scm.Response, error) {
+	path := fmt.Sprintf("2.0/repositories/%s/diffstat/%s..%s?%s", repo, ref1, ref2, encodeListOptions(opts))
+	out := new(diffstats)
+	res, err := s.client.do(ctx, "GET", path, nil, &out)
+	if err != nil {
+		return nil, res, err
+	}
+	err = copyPagination(out.pagination, res)
 	return convertDiffstats(out), res, err
 }
 
