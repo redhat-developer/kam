@@ -2,13 +2,18 @@ package kamsuite
 
 import (
 	"bytes"
+	"context"
 	"fmt"
+	"log"
+	"net/url"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 
 	"github.com/cucumber/godog"
 	"github.com/cucumber/messages-go/v10"
+	"github.com/redhat-developer/kam/pkg/pipelines/git"
 )
 
 // FeatureContext defines godog.Suite steps for the test suite.
@@ -45,24 +50,24 @@ func FeatureContext(s *godog.Suite) {
 		// Checking it for local test
 		_, ci := os.LookupEnv("CI")
 		if !ci {
-			deleteGithubRepoStep1 := []string{"alias", "set", "repo-delete", `api -X DELETE "repos/$1"`}
-			deleteGithubRepoStep2 := []string{"repo-delete", strings.Split(strings.Split(os.Getenv("GITOPS_REPO_URL"), ".com/")[1], ".")[0]}
-			deleteGitlabRepoStep := []string{"repo", "delete", strings.Split(strings.Split(os.Getenv("GITOPS_REPO_URL"), ".com/")[1], ".")[0], "-y"}
-			ok, _ := executeGithubRepoDeleteCommad(deleteGithubRepoStep1)
-			if !ok {
-				os.Exit(1)
-			}
-			ok, errMessage := executeGithubRepoDeleteCommad(deleteGithubRepoStep2)
-			if !ok {
-				fmt.Println(errMessage)
-			}
-			ok, errMessage = executeGitlabRepoDeleteCommad(deleteGitlabRepoStep)
-			if !ok {
-				fmt.Println(errMessage)
+
+			re := regexp.MustCompile(`[a-z]+`)
+			scm := re.FindAllString(os.Getenv("GITOPS_REPO_URL"), 2)[1]
+
+			switch scm {
+			case "github":
+				deleteGithubRepository(os.Getenv("GITOPS_REPO_URL"), os.Getenv("GIT_ACCESS_TOKEN"))
+			case "gitlab":
+				deleteGitlabRepoStep := []string{"repo", "delete", strings.Split(strings.Split(os.Getenv("GITOPS_REPO_URL"), ".com/")[1], ".")[0], "-y"}
+				ok, errMessage := deleteGitlabRepository(deleteGitlabRepoStep)
+				if !ok {
+					fmt.Println(errMessage)
+				}
+			default:
+				fmt.Println("SCM is not supported")
 			}
 		}
 	})
-
 }
 
 func envVariableCheck() bool {
@@ -76,10 +81,17 @@ func envVariableCheck() bool {
 				return false
 			}
 		}
-		if strings.Contains(os.Getenv("GITOPS_REPO_URL"), "github") {
+
+		re := regexp.MustCompile(`[a-z]+`)
+		scm := re.FindAllString(os.Getenv("GITOPS_REPO_URL"), 2)[1]
+
+		switch scm {
+		case "github":
 			os.Setenv("GITHUB_TOKEN", os.Getenv("GIT_ACCESS_TOKEN"))
-		} else {
+		case "gitlab":
 			os.Setenv("GITLAB_TOKEN", os.Getenv("GIT_ACCESS_TOKEN"))
+		default:
+			fmt.Println("SCM is not supported")
 		}
 	} else {
 		if val == "prow" {
@@ -98,19 +110,7 @@ func envVariableCheck() bool {
 	return true
 }
 
-func executeGithubRepoDeleteCommad(arg []string) (bool, string) {
-	var stderr bytes.Buffer
-	cmd := exec.Command("gh", arg...)
-	fmt.Println("github command is : ", cmd.Args)
-	cmd.Stderr = &stderr
-	err := cmd.Run()
-	if err != nil {
-		return false, stderr.String()
-	}
-	return true, stderr.String()
-}
-
-func executeGitlabRepoDeleteCommad(arg []string) (bool, string) {
+func deleteGitlabRepository(arg []string) (bool, string) {
 	var stderr bytes.Buffer
 	cmd := exec.Command("glab", arg...)
 	fmt.Println("gitlab command is : ", cmd.Args)
@@ -120,4 +120,25 @@ func executeGitlabRepoDeleteCommad(arg []string) (bool, string) {
 		return false, stderr.String()
 	}
 	return true, stderr.String()
+}
+
+func deleteGithubRepository(repoURL, token string) {
+	repo, err := git.NewRepository(repoURL, token)
+	if err != nil {
+		log.Fatal(err)
+	}
+	parsed, err := url.Parse(repoURL)
+	if err != nil {
+		log.Fatalf("failed to parse repository URL %q: %v", repoURL, err)
+	}
+	repoName, err := git.GetRepoName(parsed)
+	if err != nil {
+		log.Fatal(err)
+	}
+	_, err = repo.Repositories.Delete(context.TODO(), repoName)
+	if err != nil {
+		log.Printf("unable to delete repository: %v", err)
+	} else {
+		log.Printf("Successfully deleted repository: %q", repoURL)
+	}
 }
