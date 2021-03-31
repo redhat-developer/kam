@@ -290,7 +290,7 @@ On installation of OpenShift GitOps, the operator sets up a ready-to-use Argo CD
 
 ![ArgoCD_Link](img/ArgoCD_Link.png)
 
-For the pre-created Argo CD instance under `openshift-gitops` project, you’ll find the password by switching to the Developer perspective, navigating to the `openshift-gitops` project, and looking under the "Secrets" tab to find the secret for `openshift-gitops-cluster`. Once you copy that secret to your clipboard, you can paste it into the Argo CD login page for password and use `admin` as the username. 
+For the pre-created Argo CD instance under `openshift-gitops` project, you’ll find the password to log into the Argo CD UI under the Workloads > Secrets tab and selecting `openshift-gitops-cluster`. Once on that page, you can copy the secret at the bottom of the page to your clipboard and paste it into the Argo CD login page to use as the password. Use `admin` as the username. 
 
 ![ArgoCD_ConsoleSecrets](img/ArgoCD_ConsoleSecrets.png)
 
