@@ -24,7 +24,7 @@ add
 ```
       --app-name string             Name of the application where the service will be added
       --env-name string             Name of the environment where the service will be added
-      --git-repo-url string         GitOps repository e.g. https://github.com/organisation/repository - only needed when you need to rebuild the source image for the environment
+      --git-repo-url string         Service repository URL e.g. https://github.com/organisation/repository - only needed when you need to rebuild the source image for the environment
   -h, --help                        help for service
       --image-repo string           Image registry of the form <registry>/<username>/<image name> or <project>/<app> which is used to push newly built images
       --insecure                    Set to true to use unencrypted secrets instead of sealed secrets.
