@@ -2,13 +2,18 @@ package kamsuite
 
 import (
 	"bytes"
+	"context"
 	"fmt"
+	"log"
+	"net/url"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 
 	"github.com/cucumber/godog"
 	"github.com/cucumber/messages-go/v10"
+	"github.com/redhat-developer/kam/pkg/pipelines/git"
 )
 
 // FeatureContext defines godog.Suite steps for the test suite.
@@ -27,20 +32,6 @@ func FeatureContext(s *godog.Suite) {
 
 	s.AfterSuite(func() {
 		fmt.Println("After suite")
-		// Checking it for local test
-		_, ci := os.LookupEnv("CI")
-		if !ci {
-			deleteGhRepoStep1 := []string{"alias", "set", "repo-delete", `api -X DELETE "repos/$1"`}
-			deleteGhRepoStep2 := []string{"repo-delete", strings.Split(strings.Split(os.Getenv("GITOPS_REPO_URL"), "github.com/")[1], ".")[0]}
-			ok, _ := executeGhRepoDeleteCommad(deleteGhRepoStep1)
-			if !ok {
-				os.Exit(1)
-			}
-			ok, errMessage := executeGhRepoDeleteCommad(deleteGhRepoStep2)
-			if !ok {
-				fmt.Println(errMessage)
-			}
-		}
 	})
 
 	s.BeforeFeature(func(this *messages.GherkinDocument) {
@@ -50,10 +41,37 @@ func FeatureContext(s *godog.Suite) {
 	s.AfterFeature(func(this *messages.GherkinDocument) {
 		fmt.Println("After feature")
 	})
+
+	s.BeforeScenario(func(this *messages.Pickle) {
+		fmt.Println("Before scenario")
+	})
+
+	s.AfterScenario(func(*messages.Pickle, error) {
+		// Checking it for local test
+		_, ci := os.LookupEnv("CI")
+		if !ci {
+
+			re := regexp.MustCompile(`[a-z]+`)
+			scm := re.FindAllString(os.Getenv("GITOPS_REPO_URL"), 2)[1]
+
+			switch scm {
+			case "github":
+				deleteGithubRepository(os.Getenv("GITOPS_REPO_URL"), os.Getenv("GIT_ACCESS_TOKEN"))
+			case "gitlab":
+				deleteGitlabRepoStep := []string{"repo", "delete", strings.Split(strings.Split(os.Getenv("GITOPS_REPO_URL"), ".com/")[1], ".")[0], "-y"}
+				ok, errMessage := deleteGitlabRepository(deleteGitlabRepoStep)
+				if !ok {
+					fmt.Println(errMessage)
+				}
+			default:
+				fmt.Println("SCM is not supported")
+			}
+		}
+	})
 }
 
 func envVariableCheck() bool {
-	envVars := []string{"SERVICE_REPO_URL", "GITOPS_REPO_URL", "IMAGE_REPO", "DOCKERCONFIGJSON_PATH", "GITHUB_TOKEN"}
+	envVars := []string{"SERVICE_REPO_URL", "GITOPS_REPO_URL", "IMAGE_REPO", "DOCKERCONFIGJSON_PATH", "GIT_ACCESS_TOKEN"}
 	val, ok := os.LookupEnv("CI")
 	if !ok {
 		for _, envVar := range envVars {
@@ -63,6 +81,18 @@ func envVariableCheck() bool {
 				return false
 			}
 		}
+
+		re := regexp.MustCompile(`[a-z]+`)
+		scm := re.FindAllString(os.Getenv("GITOPS_REPO_URL"), 2)[1]
+
+		switch scm {
+		case "github":
+			os.Setenv("GITHUB_TOKEN", os.Getenv("GIT_ACCESS_TOKEN"))
+		case "gitlab":
+			os.Setenv("GITLAB_TOKEN", os.Getenv("GIT_ACCESS_TOKEN"))
+		default:
+			fmt.Println("SCM is not supported")
+		}
 	} else {
 		if val == "prow" {
 			fmt.Printf("Running e2e test in OpenShift CI\n")
@@ -70,6 +100,7 @@ func envVariableCheck() bool {
 			os.Setenv("GITOPS_REPO_URL", "https://github.com/kam-bot/taxi-"+os.Getenv("PRNO"))
 			os.Setenv("IMAGE_REPO", "quay.io/kam-bot/taxi")
 			os.Setenv("DOCKERCONFIGJSON_PATH", os.Getenv("KAM_QUAY_DOCKER_CONF_SECRET_FILE"))
+			os.Setenv("GIT_ACCESS_TOKEN", os.Getenv("GITHUB_TOKEN"))
 		} else {
 			fmt.Printf("You cannot run e2e test locally against OpenShift CI\n")
 			return false
@@ -79,14 +110,35 @@ func envVariableCheck() bool {
 	return true
 }
 
-func executeGhRepoDeleteCommad(arg []string) (bool, string) {
+func deleteGitlabRepository(arg []string) (bool, string) {
 	var stderr bytes.Buffer
-	cmd := exec.Command("gh", arg...)
-	fmt.Println("gh command is : ", cmd.Args)
+	cmd := exec.Command("glab", arg...)
+	fmt.Println("gitlab command is : ", cmd.Args)
 	cmd.Stderr = &stderr
 	err := cmd.Run()
 	if err != nil {
 		return false, stderr.String()
 	}
 	return true, stderr.String()
+}
+
+func deleteGithubRepository(repoURL, token string) {
+	repo, err := git.NewRepository(repoURL, token)
+	if err != nil {
+		log.Fatal(err)
+	}
+	parsed, err := url.Parse(repoURL)
+	if err != nil {
+		log.Fatalf("failed to parse repository URL %q: %v", repoURL, err)
+	}
+	repoName, err := git.GetRepoName(parsed)
+	if err != nil {
+		log.Fatal(err)
+	}
+	_, err = repo.Repositories.Delete(context.TODO(), repoName)
+	if err != nil {
+		log.Printf("unable to delete repository: %v", err)
+	} else {
+		log.Printf("Successfully deleted repository: %q", repoURL)
+	}
 }
