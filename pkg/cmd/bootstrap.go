@@ -156,6 +156,9 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client, cm
 	promptForAll := !ui.UseDefaultValues()
 	// ask for sealed secrets only when default is absent, and consider insecure/secure cases
 	err := client.CheckIfSealedSecretsExists(defaultSealedSecretsServiceName)
+	if !cmd.Flag("insecure").Changed && promptForAll {
+		io.Insecure = ui.SelectInsecureSecrets(err)
+	}
 	if !io.Insecure && err != nil {
 		io.SealedSecretsService.Namespace = ui.EnterSealedSecretService(&io.SealedSecretsService)
 	}
