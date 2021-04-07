@@ -64,7 +64,7 @@ func TestBootstrapRepository_with_no_access_token(t *testing.T) {
 	refuteRepositoryCreated(t, fakeData)
 }
 
-func TestPushRepository(t *testing.T) {
+func TestPushRepositoryWithSetURL(t *testing.T) {
 	repo := "git@github.com:testing/testing.git"
 	opts := &BootstrapOptions{
 		OutputPath: "/tmp",
@@ -102,7 +102,12 @@ func TestPushRepository(t *testing.T) {
 		{
 			BaseDir: opts.OutputPath,
 			Command: "git",
-			Args:    []string{"remote", "add", "origin", repo},
+			Args:    []string{"remote", "show", "origin"},
+		},
+		{
+			BaseDir: opts.OutputPath,
+			Command: "git",
+			Args:    []string{"remote", "set-url", "origin", repo},
 		},
 		{
 			BaseDir: opts.OutputPath,
@@ -113,6 +118,64 @@ func TestPushRepository(t *testing.T) {
 	e.assertCommandsExecuted(t, want)
 }
 
+func TestPushRepositoryWithRemoteAdd(t *testing.T) {
+	repo := "git@github.com:testing/testing.git"
+	opts := &BootstrapOptions{
+		OutputPath: "/tmp",
+	}
+	outputs := [][]byte{
+		[]byte("Initialized empty Git repository in /tmp/.git/"),
+		[]byte(""),
+	}
+	e := newMockExecutor(outputs...)
+	testErr := errors.New("test error")
+	e.errors.push(testErr)
+	e.errors.push(nil)
+	e.errors.push(nil)
+	e.errors.push(nil)
+	e.errors.push(nil)
+	err := pushRepository(opts, repo, e)
+	assertNoError(t, err)
+
+	want := []execution{
+		{
+			BaseDir: opts.OutputPath,
+			Command: "git",
+			Args:    []string{"init", "."},
+		},
+		{
+			BaseDir: opts.OutputPath,
+			Command: "git",
+			Args:    []string{"add", "pipelines.yaml", "config", "environments"},
+		},
+		{
+			BaseDir: opts.OutputPath,
+			Command: "git",
+			Args:    []string{"commit", "-m", "Bootstrapped commit"},
+		},
+		{
+			BaseDir: opts.OutputPath,
+			Command: "git",
+			Args:    []string{"branch", "-m", "main"},
+		},
+		{
+			BaseDir: opts.OutputPath,
+			Command: "git",
+			Args:    []string{"remote", "show", "origin"},
+		},
+		{
+			BaseDir: opts.OutputPath,
+			Command: "git",
+			Args:    []string{"remote", "add", "origin", repo},
+		},
+		{
+			BaseDir: opts.OutputPath,
+			Command: "git",
+			Args:    []string{"push", "-u", "origin", "main"},
+		},
+	}
+	e.assertCommandsExecuted(t, want)
+}
 func TestPushRepository_handling_errors(t *testing.T) {
 	repo := "git@github.com:testing/testing.git"
 	opts := &BootstrapOptions{
