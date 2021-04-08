@@ -58,6 +58,13 @@ func BootstrapRepository(o *BootstrapOptions, f clientFactory, e executor) error
 	}
 	created, _, err := client.Repositories.Create(context.Background(), ri)
 	if err != nil {
+		repo := fmt.Sprintf("%s/%s", org, repoName)
+		if org == "" {
+			repo = fmt.Sprintf("%s/%s", currentUser.Login, repoName)
+		}
+		if _, resp, err := client.Repositories.Find(context.Background(), repo); err == nil && resp.Status == 200 {
+			return fmt.Errorf("failed to create repository, repo already exists")
+		}
 		return fmt.Errorf("failed to create repository %q in namespace %q: %w", repoName, org, err)
 	}
 	if err := pushRepository(o, created.CloneSSH, e); err != nil {
