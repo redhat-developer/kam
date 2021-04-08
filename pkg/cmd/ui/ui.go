@@ -153,6 +153,24 @@ func EnterSealedSecretService(sealedSecretService *types.NamespacedName) string 
 	return strings.TrimSpace(sealedNs)
 }
 
+// SelectInsecureSecrets, prompts the UI to ask to generate unsealed secrets or not
+func SelectInsecureSecrets(err error) bool {
+	var insecure, msg string
+	if err != nil {
+		msg = "Do you want to use 1) unsealed secrets or 2) sealed secrets and provide the details of the Sealed Secrets Operator installation?"
+	} else {
+		msg = "You are able to seal secrets. Select Sealed to continue or Unsealed to generate unsealed secrets, which is not recommended."
+	}
+	prompt := &survey.Select{
+		Message: msg,
+		Help:    "WARNING: Deploying the GitOps configuration without encrypting secrets is insecure and is not recommended",
+		Options: []string{"Sealed", "Unsealed"},
+		Default: "Sealed",
+	}
+	handleError(survey.AskOne(prompt, &insecure, survey.Required))
+	return insecure == "Unsealed"
+}
+
 // EnterGitHostAccessToken , it becomes necessary to add the personal access
 // token to access upstream git hosts.
 func EnterGitHostAccessToken(serviceRepo string) string {
