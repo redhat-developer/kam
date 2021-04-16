@@ -86,13 +86,13 @@ func pushRepository(o *BootstrapOptions, remote string, e executor) error {
 	if out, err := e.execute(o.OutputPath, "git", "branch", "-m", "main"); err != nil {
 		return fmt.Errorf("failed to switch to branch 'main' in repository in %q %q: %s", o.OutputPath, string(out), err)
 	}
-	if _, err := e.execute(o.OutputPath, "git", "remote", "show", "origin"); err != nil {
-		if out, err := e.execute(o.OutputPath, "git", "remote", "add", "origin", remote); err != nil {
-			return fmt.Errorf("failed to set remote 'origin' %q to repository in %q %q: %s", remote, o.OutputPath, string(out), err)
-		}
-	} else {
-		if out, err := e.execute(o.OutputPath, "git", "remote", "set-url", "origin", remote); err != nil {
-			return fmt.Errorf("failed to set url for existing remote 'origin' %q to repository in %q %q: %s", remote, o.OutputPath, string(out), err)
+	if out, err := e.execute(o.OutputPath, "git", "remote", "add", "origin", remote); err != nil {
+		if strings.Contains(string(out), "remote origin already exists") {
+			if out, err := e.execute(o.OutputPath, "git", "remote", "set-url", "origin", remote); err != nil {
+				return fmt.Errorf("failed to set url for existing remote 'origin' %q to repository in %q %q: %s", remote, o.OutputPath, string(out), err)
+			}
+		} else {
+			return fmt.Errorf("failed add remote 'origin' %q to repository in %q %q: %s", remote, o.OutputPath, string(out), err)
 		}
 	}
 	if out, err := e.execute(o.OutputPath, "git", "push", "-u", "origin", "main"); err != nil {
