@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"net/url"
+	"os"
+	"path/filepath"
 	"sync"
 	"testing"
 
@@ -113,27 +115,21 @@ func TestPushRepository(t *testing.T) {
 	e.assertCommandsExecuted(t, want)
 }
 
-func TestPushRepositoryWithSetURL(t *testing.T) {
+func TestPushRepositoryWithExistingGitDirectory(t *testing.T) {
 	repo := "git@github.com:testing/testing.git"
 	opts := &BootstrapOptions{
 		OutputPath: "/tmp",
 	}
 	outputs := [][]byte{
-		[]byte("remote origin already exists"),
-		[]byte(""),
-		[]byte(""),
-		[]byte(""),
 		[]byte("Initialized empty Git repository in /tmp/.git/"),
 	}
-	e := newMockExecutor(outputs...)
-	testErr := errors.New("test error")
-	e.errors.push(testErr)
-	e.errors.push(nil)
-	e.errors.push(nil)
-	e.errors.push(nil)
-	e.errors.push(nil)
 
-	err := pushRepository(opts, repo, e)
+	err := os.MkdirAll(filepath.Join(opts.OutputPath, ".git"), 0755)
+	assertNoError(t, err)
+
+	e := newMockExecutor(outputs...)
+
+	err = pushRepository(opts, repo, e)
 	assertNoError(t, err)
 
 	want := []execution{
@@ -161,11 +157,6 @@ func TestPushRepositoryWithSetURL(t *testing.T) {
 			BaseDir: opts.OutputPath,
 			Command: "git",
 			Args:    []string{"remote", "add", "origin", repo},
-		},
-		{
-			BaseDir: opts.OutputPath,
-			Command: "git",
-			Args:    []string{"remote", "set-url", "origin", repo},
 		},
 		{
 			BaseDir: opts.OutputPath,

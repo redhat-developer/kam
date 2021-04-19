@@ -4,10 +4,13 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/jenkins-x/go-scm/scm"
+	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
 )
 
 const defaultRepoDescription = "Bootstrapped GitOps Repository"
@@ -74,6 +77,12 @@ func BootstrapRepository(o *BootstrapOptions, f clientFactory, e executor) error
 }
 
 func pushRepository(o *BootstrapOptions, remote string, e executor) error {
+	exists, _ := ioutils.IsExisting(ioutils.NewFilesystem(), filepath.Join(o.OutputPath, ".git"))
+	if exists {
+		if err := os.RemoveAll(filepath.Join(o.OutputPath, ".git")); err != nil {
+			return fmt.Errorf("failed to remove existing .git folder in %q: %s", o.OutputPath, err)
+		}
+	}
 	if out, err := e.execute(o.OutputPath, "git", "init", "."); err != nil {
 		return fmt.Errorf("failed to initialize git repository in %q %q: %s", o.OutputPath, string(out), err)
 	}
@@ -87,13 +96,7 @@ func pushRepository(o *BootstrapOptions, remote string, e executor) error {
 		return fmt.Errorf("failed to switch to branch 'main' in repository in %q %q: %s", o.OutputPath, string(out), err)
 	}
 	if out, err := e.execute(o.OutputPath, "git", "remote", "add", "origin", remote); err != nil {
-		if strings.Contains(string(out), "remote origin already exists") {
-			if out, err := e.execute(o.OutputPath, "git", "remote", "set-url", "origin", remote); err != nil {
-				return fmt.Errorf("failed to set url for existing remote 'origin' %q to repository in %q %q: %s", remote, o.OutputPath, string(out), err)
-			}
-		} else {
-			return fmt.Errorf("failed add remote 'origin' %q to repository in %q %q: %s", remote, o.OutputPath, string(out), err)
-		}
+		return fmt.Errorf("failed add remote 'origin' %q to repository in %q %q: %s", remote, o.OutputPath, string(out), err)
 	}
 	if out, err := e.execute(o.OutputPath, "git", "push", "-u", "origin", "main"); err != nil {
 		return fmt.Errorf("failed push remote to repository %q %q: %s", remote, string(out), err)
