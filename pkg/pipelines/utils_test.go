@@ -119,6 +119,7 @@ func TestPushRepositoryWithExistingGitDirectory(t *testing.T) {
 	repo := "git@github.com:testing/testing.git"
 	opts := &BootstrapOptions{
 		OutputPath: "/tmp",
+		Overwrite:  true,
 	}
 	outputs := [][]byte{
 		[]byte("Initialized empty Git repository in /tmp/.git/"),
@@ -166,6 +167,7 @@ func TestPushRepositoryWithExistingGitDirectory(t *testing.T) {
 	}
 	e.assertCommandsExecuted(t, want)
 }
+
 func TestPushRepository_handling_errors(t *testing.T) {
 	repo := "git@github.com:testing/testing.git"
 	opts := &BootstrapOptions{

@@ -471,6 +471,11 @@ func checkPipelinesFileExists(appFs afero.Fs, outputPath string, overWrite bool)
 	if secretsFolderExists && !overWrite {
 		return fmt.Errorf("the secrets folder located as a sibling of the output folder %s already exists. Rerun with --overwrite", outputPath)
 	}
+
+	gitDirectoryExists, _ := ioutils.IsExisting(ioutils.NewFilesystem(), filepath.Join(outputPath, ".git"))
+	if gitDirectoryExists && !overWrite {
+		return fmt.Errorf(".git in output path already exists. If you want to replace your existing files, please rerun with --overwrite")
+	}
 	return nil
 }
 
