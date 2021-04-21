@@ -5,7 +5,7 @@ set -e
 
 # show commands
 set -x
-
+ls /var/run/kam-data/kam-test-secrets/
 export PATH=$PATH:$GOPATH/bin
 # set location for golangci-lint cache
 # otherwise /.cache is used, and it fails on permission denied
