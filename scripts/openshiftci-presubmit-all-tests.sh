@@ -8,12 +8,24 @@ set +x
 export GITHUB_TOKEN=`cat $KAM_GITHUB_TOKEN_FILE`
 export KUBEADMIN_PASSWORD=`cat $KUBEADMIN_PASSWORD_FILE`
 
+gitconfig=`cat <<'EOF'
+[user]
+name = Kam Bot
+email = kambotuser@gmail.com
+[credential "https://github.com"]
+username = kam-bot
+helper = "!f() { test \"$1\" = get && echo \"password=$(cat $KAM_GITHUB_TOKEN_FILE)\"; }; f"
+EOF
+`
+
 # show commands
 set -x
 export CI="prow"
 export PRNO="$(jq .refs.pulls[0].number <<< $(echo $JOB_SPEC))"
 make prepare-test-cluster
 make bin
+
+echo "$gitconfig" >> ~/.gitconfig
 
 INSTALL_ARGOCD="./scripts/install-argocd.sh"
 sh $INSTALL_ARGOCD
