@@ -3,7 +3,6 @@ package pipelines
 import (
 	"crypto/rand"
 	"crypto/rsa"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -392,8 +391,9 @@ func TestOverwriteFlagExistingGitDirectory(t *testing.T) {
 		ServiceRepoURL:       testSvcRepo,
 		ServiceWebhookSecret: "456",
 		OutputPath:           "/tmp",
+		PushToGit:            true,
 	}
-	err := os.MkdirAll(filepath.Join(params.OutputPath, ".git"), 0755)
+	err := fakeFs.MkdirAll(filepath.Join(params.OutputPath, ".git"), 0755)
 	assertNoError(t, err)
 
 	got := Bootstrap(params, fakeFs)

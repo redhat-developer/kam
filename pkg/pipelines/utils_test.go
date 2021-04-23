@@ -12,6 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/jenkins-x/go-scm/scm"
 	"github.com/jenkins-x/go-scm/scm/driver/fake"
+	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
 	"github.com/redhat-developer/kam/test"
 )
 
@@ -27,6 +28,7 @@ func TestBootstrapRepository_with_personal_account(t *testing.T) {
 		},
 		factory,
 		newMockExecutor(),
+		ioutils.NewMemoryFilesystem(),
 	)
 	assertNoError(t, err)
 
@@ -45,6 +47,7 @@ func TestBootstrapRepository_with_org(t *testing.T) {
 		},
 		factory,
 		newMockExecutor(),
+		ioutils.NewMemoryFilesystem(),
 	)
 	assertNoError(t, err)
 	assertRepositoryCreated(t, fakeData, "testing", "test-repo")
@@ -61,6 +64,7 @@ func TestBootstrapRepository_with_no_access_token(t *testing.T) {
 		},
 		factory,
 		newMockExecutor(),
+		ioutils.NewMemoryFilesystem(),
 	)
 	assertNoError(t, err)
 	refuteRepositoryCreated(t, fakeData)
@@ -77,7 +81,7 @@ func TestPushRepository(t *testing.T) {
 	}
 	e := newMockExecutor(outputs...)
 
-	err := pushRepository(opts, repo, e)
+	err := pushRepository(opts, repo, e, ioutils.NewMemoryFilesystem())
 	assertNoError(t, err)
 
 	want := []execution{
@@ -130,7 +134,7 @@ func TestPushRepositoryWithExistingGitDirectory(t *testing.T) {
 
 	e := newMockExecutor(outputs...)
 
-	err = pushRepository(opts, repo, e)
+	err = pushRepository(opts, repo, e, ioutils.NewMemoryFilesystem())
 	assertNoError(t, err)
 
 	want := []execution{
@@ -181,7 +185,7 @@ func TestPushRepository_handling_errors(t *testing.T) {
 	e.errors.push(nil)
 	e.errors.push(testErr)
 
-	err := pushRepository(opts, repo, e)
+	err := pushRepository(opts, repo, e, ioutils.NewMemoryFilesystem())
 	test.AssertErrorMatch(t, "test error", err)
 
 	want := []execution{

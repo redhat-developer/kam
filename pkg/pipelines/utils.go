@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 
 	"github.com/jenkins-x/go-scm/scm"
 	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
+	"github.com/spf13/afero"
 )
 
 const defaultRepoDescription = "Bootstrapped GitOps Repository"
@@ -23,7 +23,7 @@ type executor interface {
 
 // BootstrapRepository creates a new empty Git repository in the upstream git
 // hosting service from the GitOpsRepoURL.
-func BootstrapRepository(o *BootstrapOptions, f clientFactory, e executor) error {
+func BootstrapRepository(o *BootstrapOptions, f clientFactory, e executor, appFs afero.Fs) error {
 	if o.GitHostAccessToken == "" {
 		return nil
 	}
@@ -70,15 +70,15 @@ func BootstrapRepository(o *BootstrapOptions, f clientFactory, e executor) error
 		}
 		return fmt.Errorf("failed to create repository %q in namespace %q: %w", repoName, org, err)
 	}
-	if err := pushRepository(o, created.CloneSSH, e); err != nil {
+	if err := pushRepository(o, created.CloneSSH, e, appFs); err != nil {
 		return fmt.Errorf("failed to push bootstrapped resources: %s", err)
 	}
 	return err
 }
 
-func pushRepository(o *BootstrapOptions, remote string, e executor) error {
-	if exists, _ := ioutils.IsExisting(ioutils.NewFilesystem(), filepath.Join(o.OutputPath, ".git")); exists {
-		if err := os.RemoveAll(filepath.Join(o.OutputPath, ".git")); err != nil {
+func pushRepository(o *BootstrapOptions, remote string, e executor, appFs afero.Fs) error {
+	if exists, _ := ioutils.IsExisting(appFs, filepath.Join(o.OutputPath, ".git")); exists {
+		if err := appFs.RemoveAll(filepath.Join(o.OutputPath, ".git")); err != nil {
 			return fmt.Errorf("failed to remove existing .git folder in %q: %s", o.OutputPath, err)
 		}
 	}

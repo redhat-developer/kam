@@ -73,7 +73,6 @@ var (
 // BootstrapParameters encapsulates the parameters for the kam pipelines init command.
 type BootstrapParameters struct {
 	*pipelines.BootstrapOptions
-	PushToGit   bool // records whether or not the repository should be pushed to git.
 	Interactive bool
 }
 
@@ -235,7 +234,12 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client, cm
 		io.OutputPath = filepath.Join(".", repoName)
 	}
 	io.OutputPath, io.Overwrite = ui.VerifyOutputPath(io.OutputPath, io.Overwrite, outputPathOverridden, promptForAll)
-
+	if !io.Overwrite && io.PushToGit {
+		exists := ui.VerifyGitPath(io.OutputPath)
+		if exists {
+			return fmt.Errorf("the .git folder in output path %s already exists. Delete or rename the .git folder and try again", io.OutputPath)
+		}
+	}
 	if !io.Overwrite {
 		exists := ui.VerifySecretsPath(io.OutputPath)
 		if exists {
@@ -382,12 +386,13 @@ func (io *BootstrapParameters) Validate() error {
 // Run runs the project Bootstrap command.
 func (io *BootstrapParameters) Run() error {
 	log.Progressf("\nCompleting Bootstrap process\n")
-	err := pipelines.Bootstrap(io.BootstrapOptions, ioutils.NewFilesystem())
+	appFs := ioutils.NewFilesystem()
+	err := pipelines.Bootstrap(io.BootstrapOptions, appFs)
 	if err != nil {
 		return err
 	}
 	if io.PushToGit {
-		err = pipelines.BootstrapRepository(io.BootstrapOptions, factory.FromRepoURL, pipelines.NewCmdExecutor())
+		err = pipelines.BootstrapRepository(io.BootstrapOptions, factory.FromRepoURL, pipelines.NewCmdExecutor(), appFs)
 		if err != nil {
 			return fmt.Errorf("failed to create the gitops repository: %q: %w", io.GitOpsRepoURL, err)
 		}

@@ -108,6 +108,12 @@ func VerifyOutputPath(originalPath string, overwrite, outputPathOverridden, prom
 	return outputPath, doOverwrite
 }
 
+func VerifyGitPath(outputPath string) bool {
+	exists, err := ioutils.IsExisting(ioutils.NewFilesystem(), filepath.Join(outputPath, ".git"))
+	handleError(err)
+	return exists
+}
+
 func VerifySecretsPath(outputPath string) bool {
 	exists, err := ioutils.IsExisting(ioutils.NewFilesystem(), filepath.Join(outputPath, "..", "secrets"))
 	handleError(err)
