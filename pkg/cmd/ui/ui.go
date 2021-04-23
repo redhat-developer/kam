@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
+	"github.com/spf13/afero"
 	"gopkg.in/AlecAivazis/survey.v1"
 
 	"k8s.io/apimachinery/pkg/types"
@@ -80,7 +81,7 @@ func EnterImageRepoExternalRepository() string {
 }
 
 // VerifyOutputPath allows the user to specify the path where the gitops configuration must reside locally in a UI prompt.
-func VerifyOutputPath(originalPath string, overwrite, outputPathOverridden, promptForPath bool) (string, bool) {
+func VerifyOutputPath(appFs afero.Fs, originalPath string, overwrite, outputPathOverridden, promptForPath bool) (string, bool) {
 	var outputPath = originalPath
 	var doOverwrite = overwrite
 	prompt := &survey.Input{
@@ -93,7 +94,7 @@ func VerifyOutputPath(originalPath string, overwrite, outputPathOverridden, prom
 		outputPath = strings.TrimSpace(outputPath)
 	}
 	for true {
-		exists, err := ioutils.IsExisting(ioutils.NewFilesystem(), filepath.Join(outputPath, "pipelines.yaml"))
+		exists, err := ioutils.IsExisting(appFs, filepath.Join(outputPath, "pipelines.yaml"))
 		handleError(err)
 		if !exists || overwrite {
 			break
@@ -108,14 +109,8 @@ func VerifyOutputPath(originalPath string, overwrite, outputPathOverridden, prom
 	return outputPath, doOverwrite
 }
 
-func VerifyGitPath(outputPath string) bool {
-	exists, err := ioutils.IsExisting(ioutils.NewFilesystem(), filepath.Join(outputPath, ".git"))
-	handleError(err)
-	return exists
-}
-
-func VerifySecretsPath(outputPath string) bool {
-	exists, err := ioutils.IsExisting(ioutils.NewFilesystem(), filepath.Join(outputPath, "..", "secrets"))
+func PathExists(appFs afero.Fs, path string) bool {
+	exists, err := ioutils.IsExisting(appFs, path)
 	handleError(err)
 	return exists
 }

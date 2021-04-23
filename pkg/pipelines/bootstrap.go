@@ -467,14 +467,12 @@ func checkPipelinesFileExists(appFs afero.Fs, outputPath string, overWrite bool,
 	if overWrite {
 		return nil
 	}
-
+	checkList := []string{pipelinesFile}
 	if pushToGit {
-		if err := errorIfFileExists(appFs, outputPath, ".git"); err != nil {
-			return err
-		}
+		checkList = append(checkList, ".git")
 	}
 
-	if err := errorIfFileExists(appFs, outputPath, pipelinesFile); err != nil {
+	if err := errorIfFileExists(appFs, outputPath, checkList...); err != nil {
 		return err
 	}
 
