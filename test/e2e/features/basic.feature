@@ -18,3 +18,7 @@ Feature: Basic test
     Scenario: KAM bootstrap command should fail if any one mandatory flag --git-host-access-token is missing
         When executing "kam bootstrap --service-repo-url $SERVICE_REPO_URL --gitops-repo-url $GITOPS_REPO_URL" fails
         Then exitcode should not equal "0"
+
+    Scenario: Execute KAM bootstrap command with flag --push-to-git
+        When executing "kam bootstrap --service-repo-url $SERVICE_REPO_URL --gitops-repo-url $GITOPS_REPO_URL --image-repo $IMAGE_REPO --dockercfgjson $DOCKERCONFIGJSON_PATH --git-host-access-token $GIT_ACCESS_TOKEN --output bootstrap --overwrite --push-to-git=true" succeeds
+        Then stderr should be empty
