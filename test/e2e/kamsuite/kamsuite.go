@@ -66,6 +66,9 @@ func FeatureContext(s *godog.Suite) {
 			default:
 				fmt.Println("SCM is not supported")
 			}
+		} else {
+			// Delete github repo created by CI test flow
+			deleteGithubRepository(os.Getenv("GITOPS_REPO_URL"), os.Getenv("GIT_ACCESS_TOKEN"))
 		}
 	})
 }
