@@ -15,7 +15,9 @@ export PRNO="$(jq .refs.pulls[0].number <<< $(echo $JOB_SPEC))"
 
 mkdir -p $HOME/.ssh && chmod 0700 $HOME/.ssh
 cp $KAM_SSH_PRIVATE_KEY_FILE $HOME/.ssh/
-chmod +x $HOME/.ssh/id_rsa
+chmod 600 $HOME/.ssh/id_rsa
+echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > $HOME/.ssh/config
+chmod 600 $HOME/.ssh/config
 
 make prepare-test-cluster
 make bin

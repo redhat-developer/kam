@@ -47,6 +47,7 @@ func FeatureContext(s *godog.Suite) {
 	})
 
 	s.AfterScenario(func(*messages.Pickle, error) {
+		fmt.Println("After scenario")
 		// Checking it for local test
 		_, ci := os.LookupEnv("CI")
 		if !ci {
