@@ -92,7 +92,7 @@ type BootstrapOptions struct {
 	PrivateRepoDriver        string               // Records the type of the GitOpsRepoURL driver if not a well-known host.
 	CommitStatusTracker      bool                 // If true, this is a "private repository", i.e. requires authentication to clone the repository.
 	Insecure                 bool                 // If true, use unencrypted, unsealed secrets. By default, sealed secrets are generated.
-	PushToGit                bool                 // records whether or not the repository should be pushed to git.
+	PushToGit                bool                 // If true, gitops repository is pushed to remote git repository.
 }
 
 // PolicyRules to be bound to service account
