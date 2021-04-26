@@ -1,0 +1,9 @@
+FROM registry.ci.openshift.org/openshift/release:golang-1.14
+
+RUN yum -y install dnf httpd-tools sudo
+
+#Add a user with userid 8877 and name nonroot
+RUN groupadd --gid 8877 ciuser && useradd --home-dir /home/ciuser --create-home --uid 8877 --gid 8877 ciuser
+
+#Run Container as nonroot
+USER ciuser
