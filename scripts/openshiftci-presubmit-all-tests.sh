@@ -12,6 +12,11 @@ export KUBEADMIN_PASSWORD=`cat $KUBEADMIN_PASSWORD_FILE`
 set -x
 export CI="prow"
 export PRNO="$(jq .refs.pulls[0].number <<< $(echo $JOB_SPEC))"
+
+mkdir -p $HOME/.ssh && chmod 0700 $HOME/.ssh
+cp $KAM_SSH_PRIVATE_KEY_FILE $HOME/.ssh/
+chmod +x $HOME/.ssh/id_rsa
+
 make prepare-test-cluster
 make bin
 
