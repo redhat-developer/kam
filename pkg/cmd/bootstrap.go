@@ -73,7 +73,6 @@ var (
 // BootstrapParameters encapsulates the parameters for the kam pipelines init command.
 type BootstrapParameters struct {
 	*pipelines.BootstrapOptions
-	PushToGit   bool // records whether or not the repository should be pushed to git.
 	Interactive bool
 }
 
@@ -234,12 +233,14 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client, cm
 		}
 		io.OutputPath = filepath.Join(".", repoName)
 	}
-	io.OutputPath, io.Overwrite = ui.VerifyOutputPath(io.OutputPath, io.Overwrite, outputPathOverridden, promptForAll)
-
+	appFs := ioutils.NewFilesystem()
+	io.OutputPath, io.Overwrite = ui.VerifyOutputPath(appFs, io.OutputPath, io.Overwrite, outputPathOverridden, promptForAll)
 	if !io.Overwrite {
-		exists := ui.VerifySecretsPath(io.OutputPath)
-		if exists {
+		if ui.PathExists(appFs, filepath.Join(io.OutputPath, "..", "secrets")) {
 			return fmt.Errorf("the secrets folder located as a sibling of the output folder %s already exists. Delete or rename the secrets folder and try again", io.OutputPath)
+		}
+		if io.PushToGit && ui.PathExists(appFs, filepath.Join(io.OutputPath, ".git")) {
+			return fmt.Errorf("the .git folder in output path %s already exists. Delete or rename the .git folder and try again", io.OutputPath)
 		}
 	}
 	return nil
@@ -382,12 +383,13 @@ func (io *BootstrapParameters) Validate() error {
 // Run runs the project Bootstrap command.
 func (io *BootstrapParameters) Run() error {
 	log.Progressf("\nCompleting Bootstrap process\n")
-	err := pipelines.Bootstrap(io.BootstrapOptions, ioutils.NewFilesystem())
+	appFs := ioutils.NewFilesystem()
+	err := pipelines.Bootstrap(io.BootstrapOptions, appFs)
 	if err != nil {
 		return err
 	}
 	if io.PushToGit {
-		err = pipelines.BootstrapRepository(io.BootstrapOptions, factory.FromRepoURL, pipelines.NewCmdExecutor())
+		err = pipelines.BootstrapRepository(io.BootstrapOptions, factory.FromRepoURL, pipelines.NewCmdExecutor(), appFs)
 		if err != nil {
 			return fmt.Errorf("failed to create the gitops repository: %q: %w", io.GitOpsRepoURL, err)
 		}

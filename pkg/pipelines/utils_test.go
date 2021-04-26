@@ -4,12 +4,15 @@ import (
 	"bytes"
 	"errors"
 	"net/url"
+	"os"
+	"path/filepath"
 	"sync"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/jenkins-x/go-scm/scm"
 	"github.com/jenkins-x/go-scm/scm/driver/fake"
+	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
 	"github.com/redhat-developer/kam/test"
 )
 
@@ -25,6 +28,7 @@ func TestBootstrapRepository_with_personal_account(t *testing.T) {
 		},
 		factory,
 		newMockExecutor(),
+		ioutils.NewMemoryFilesystem(),
 	)
 	assertNoError(t, err)
 
@@ -43,6 +47,7 @@ func TestBootstrapRepository_with_org(t *testing.T) {
 		},
 		factory,
 		newMockExecutor(),
+		ioutils.NewMemoryFilesystem(),
 	)
 	assertNoError(t, err)
 	assertRepositoryCreated(t, fakeData, "testing", "test-repo")
@@ -59,6 +64,7 @@ func TestBootstrapRepository_with_no_access_token(t *testing.T) {
 		},
 		factory,
 		newMockExecutor(),
+		ioutils.NewMemoryFilesystem(),
 	)
 	assertNoError(t, err)
 	refuteRepositoryCreated(t, fakeData)
@@ -75,7 +81,60 @@ func TestPushRepository(t *testing.T) {
 	}
 	e := newMockExecutor(outputs...)
 
-	err := pushRepository(opts, repo, e)
+	err := pushRepository(opts, repo, e, ioutils.NewMemoryFilesystem())
+	assertNoError(t, err)
+
+	want := []execution{
+		{
+			BaseDir: opts.OutputPath,
+			Command: "git",
+			Args:    []string{"init", "."},
+		},
+		{
+			BaseDir: opts.OutputPath,
+			Command: "git",
+			Args:    []string{"add", "pipelines.yaml", "config", "environments"},
+		},
+		{
+			BaseDir: opts.OutputPath,
+			Command: "git",
+			Args:    []string{"commit", "-m", "Bootstrapped commit"},
+		},
+		{
+			BaseDir: opts.OutputPath,
+			Command: "git",
+			Args:    []string{"branch", "-m", "main"},
+		},
+		{
+			BaseDir: opts.OutputPath,
+			Command: "git",
+			Args:    []string{"remote", "add", "origin", repo},
+		},
+		{
+			BaseDir: opts.OutputPath,
+			Command: "git",
+			Args:    []string{"push", "-u", "origin", "main"},
+		},
+	}
+	e.assertCommandsExecuted(t, want)
+}
+
+func TestPushRepositoryWithExistingGitDirectory(t *testing.T) {
+	repo := "git@github.com:testing/testing.git"
+	opts := &BootstrapOptions{
+		OutputPath: "/tmp",
+		Overwrite:  true,
+	}
+	outputs := [][]byte{
+		[]byte("Initialized empty Git repository in /tmp/.git/"),
+	}
+
+	err := os.MkdirAll(filepath.Join(opts.OutputPath, ".git"), 0755)
+	assertNoError(t, err)
+
+	e := newMockExecutor(outputs...)
+
+	err = pushRepository(opts, repo, e, ioutils.NewMemoryFilesystem())
 	assertNoError(t, err)
 
 	want := []execution{
@@ -126,7 +185,7 @@ func TestPushRepository_handling_errors(t *testing.T) {
 	e.errors.push(nil)
 	e.errors.push(testErr)
 
-	err := pushRepository(opts, repo, e)
+	err := pushRepository(opts, repo, e, ioutils.NewMemoryFilesystem())
 	test.AssertErrorMatch(t, "test error", err)
 
 	want := []execution{

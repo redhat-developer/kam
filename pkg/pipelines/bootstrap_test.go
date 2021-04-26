@@ -3,6 +3,7 @@ package pipelines
 import (
 	"crypto/rand"
 	"crypto/rsa"
+	"path/filepath"
 	"testing"
 
 	ssv1alpha1 "github.com/bitnami-labs/sealed-secrets/pkg/apis/sealed-secrets/v1alpha1"
@@ -372,6 +373,38 @@ func TestOverwriteFlag(t *testing.T) {
 	if diff := cmp.Diff(want, got.Error()); diff != "" {
 		t.Fatalf("overwrite failed:\n%s", diff)
 	}
+}
+
+func TestOverwriteFlagExistingGitDirectory(t *testing.T) {
+	defer func(f secrets.PublicKeyFunc) {
+		secrets.DefaultPublicKeyFunc = f
+	}(secrets.DefaultPublicKeyFunc)
+
+	secrets.DefaultPublicKeyFunc = makeTestKey(t)
+	fakeFs := ioutils.NewMemoryFilesystem()
+	params := &BootstrapOptions{
+		Prefix:               "tst-",
+		GitOpsRepoURL:        testGitOpsRepo,
+		ImageRepo:            "image/repo",
+		GitOpsWebhookSecret:  "123",
+		GitHostAccessToken:   "test-token",
+		ServiceRepoURL:       testSvcRepo,
+		ServiceWebhookSecret: "456",
+		OutputPath:           "/tmp",
+		PushToGit:            true,
+	}
+	err := fakeFs.MkdirAll(filepath.Join(params.OutputPath, ".git"), 0755)
+	assertNoError(t, err)
+
+	got := Bootstrap(params, fakeFs)
+	want := ".git in output path already exists. If you want to replace your existing files, please rerun with --overwrite"
+	if diff := cmp.Diff(want, got.Error()); diff != "" {
+		t.Fatalf("overwrite failed:\n%s", diff)
+	}
+
+	params.Overwrite = true
+	err = Bootstrap(params, fakeFs)
+	fatalIfError(t, err)
 }
 
 func TestCreateManifest(t *testing.T) {

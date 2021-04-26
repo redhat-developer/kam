@@ -92,6 +92,7 @@ type BootstrapOptions struct {
 	PrivateRepoDriver        string               // Records the type of the GitOpsRepoURL driver if not a well-known host.
 	CommitStatusTracker      bool                 // If true, this is a "private repository", i.e. requires authentication to clone the repository.
 	Insecure                 bool                 // If true, use unencrypted, unsealed secrets. By default, sealed secrets are generated.
+	PushToGit                bool                 // If true, gitops repository is pushed to remote git repository.
 }
 
 // PolicyRules to be bound to service account
@@ -133,7 +134,7 @@ var (
 // Bootstrap is the entry-point from the CLI for bootstrapping the GitOps
 // configuration.
 func Bootstrap(o *BootstrapOptions, appFs afero.Fs) error {
-	err := checkPipelinesFileExists(appFs, o.OutputPath, o.Overwrite)
+	err := checkPipelinesFileExists(appFs, o.OutputPath, o.Overwrite, o.PushToGit)
 	if err != nil {
 		return err
 	}
@@ -461,15 +462,34 @@ func defaultPipelines(r scm.Repository) *config.Pipelines {
 }
 
 // Checks whether the pipelines.yaml is present in the output path specified.
-func checkPipelinesFileExists(appFs afero.Fs, outputPath string, overWrite bool) error {
-	exists, _ := ioutils.IsExisting(appFs, filepath.Join(outputPath, pipelinesFile))
-	if exists && !overWrite {
-		return fmt.Errorf("pipelines.yaml in output path already exists. If you want to replace your existing files, please rerun with --overwrite")
+func checkPipelinesFileExists(appFs afero.Fs, outputPath string, overWrite bool, pushToGit bool) error {
+
+	if overWrite {
+		return nil
+	}
+	checkList := []string{pipelinesFile}
+	if pushToGit {
+		checkList = append(checkList, ".git")
 	}
 
-	secretsFolderExists, _ := ioutils.IsExisting(ioutils.NewFilesystem(), filepath.Join(outputPath, "..", "secrets"))
-	if secretsFolderExists && !overWrite {
+	if err := errorIfFileExists(appFs, outputPath, checkList...); err != nil {
+		return err
+	}
+
+	secretsFolderExists, _ := ioutils.IsExisting(appFs, filepath.Join(outputPath, "..", "secrets"))
+	if secretsFolderExists {
 		return fmt.Errorf("the secrets folder located as a sibling of the output folder %s already exists. Rerun with --overwrite", outputPath)
+	}
+
+	return nil
+}
+
+func errorIfFileExists(appFs afero.Fs, outputPath string, files ...string) error {
+	for _, file := range files {
+		exists, _ := ioutils.IsExisting(appFs, filepath.Join(outputPath, file))
+		if exists {
+			return fmt.Errorf("%s in output path already exists. If you want to replace your existing files, please rerun with --overwrite", file)
+		}
 	}
 	return nil
 }
