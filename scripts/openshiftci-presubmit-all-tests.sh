@@ -15,10 +15,10 @@ export PRNO="$(jq .refs.pulls[0].number <<< $(echo $JOB_SPEC))"
 
 mkdir -p $HOME/.ssh && chmod 0700 $HOME/.ssh
 cp $KAM_SSH_PRIVATE_KEY_FILE $HOME/.ssh/
-chmod 600 $HOME/.ssh/id_rsa
+cp $KAM_SSH_PUBLIC_KEY_FILE $HOME/.ssh/
 echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > $HOME/.ssh/config
 chmod 600 $HOME/.ssh/config
-ls $HOME/.ssh/
+
 # mkdir -p /.ssh && chmod 0700 /.ssh
 # cp $KAM_SSH_PRIVATE_KEY_FILE /.ssh/
 # chmod 600 /.ssh/id_rsa
