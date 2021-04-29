@@ -22,6 +22,7 @@ env
 cat $HOME/.ssh/config
 cat /etc/ssh/ssh_config
 ls ~/.ssh/
+ssh-keygen -q -t rsa -N '' <<< ""$'\n'"y" 2>&1 >/dev/null
 ssh -T git@github.com
 
 # mkdir -p /.ssh && chmod 0700 /.ssh
