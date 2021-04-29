@@ -18,8 +18,10 @@ cp $KAM_SSH_PRIVATE_KEY_FILE $HOME/.ssh/
 cp $KAM_SSH_PUBLIC_KEY_FILE $HOME/.ssh/
 echo -e "Host github.com\n\tStrictHostKeyChecking no\n\tIdentityFile ~/.ssh/id_rsa\n" > $HOME/.ssh/config
 chmod 600 $HOME/.ssh/config
+env
 cat $HOME/.ssh/config
 cat /etc/ssh/ssh_config
+ls ~/.ssh/
 ssh -T git@github.com
 
 # mkdir -p /.ssh && chmod 0700 /.ssh
