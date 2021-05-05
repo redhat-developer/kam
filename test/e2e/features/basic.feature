@@ -26,4 +26,5 @@ Feature: Basic test
         Then executing "git add ." succeeds
         Then executing "git commit -m 'Initial commit.'" succeeds
         Then executing "git remote add origin $GITOPS_REPO_URL" succeeds
-        Then executing "git push -u $GITOPS_REPO_URL main" succeeds
+        Then executing "git branch -M main" succeeds
+        Then executing "git push -u origin main" succeeds
