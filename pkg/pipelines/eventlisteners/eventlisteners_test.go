@@ -10,6 +10,7 @@ import (
 )
 
 func TestGenerateEventListener(t *testing.T) {
+	name := "ci-dryrun-from-push-template"
 	validEventListener := triggersv1.EventListener{
 		TypeMeta: eventListenerTypeMeta,
 		ObjectMeta: metav1.ObjectMeta{
@@ -45,7 +46,7 @@ func TestGenerateEventListener(t *testing.T) {
 						},
 					},
 					Template: &triggersv1.EventListenerTemplate{
-						Name: "ci-dryrun-from-push-template",
+						Ref: &name,
 					},
 				},
 			},

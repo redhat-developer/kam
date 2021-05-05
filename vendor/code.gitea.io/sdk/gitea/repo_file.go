@@ -116,19 +116,12 @@ type FileDeleteResponse struct {
 	Verification *PayloadCommitVerification `json:"verification"`
 }
 
-// pathEscapeSegments escapes segments of a path while not escaping forward slash
-func pathEscapeSegments(path string) string {
-	slice := strings.Split(path, "/")
-	for index := range slice {
-		slice[index] = url.PathEscape(slice[index])
-	}
-	escapedPath := strings.Join(slice, "/")
-	return escapedPath
-}
-
 // GetFile downloads a file of repository, ref can be branch/tag/commit.
 // e.g.: ref -> master, filepath -> README.md (no leading slash)
 func (c *Client) GetFile(owner, repo, ref, filepath string) ([]byte, *Response, error) {
+	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
+		return nil, nil, err
+	}
 	filepath = pathEscapeSegments(filepath)
 	if c.checkServerVersionGreaterThanOrEqual(version1_14_0) != nil {
 		ref = pathEscapeSegments(ref)
@@ -166,17 +159,23 @@ func (c *Client) ListContents(owner, repo, ref, filepath string) ([]*ContentsRes
 }
 
 func (c *Client) getDirOrFileContents(owner, repo, ref, filepath string) ([]byte, *Response, error) {
+	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
+		return nil, nil, err
+	}
 	filepath = pathEscapeSegments(strings.TrimPrefix(filepath, "/"))
 	return c.getResponse("GET", fmt.Sprintf("/repos/%s/%s/contents/%s?ref=%s", owner, repo, filepath, url.QueryEscape(ref)), jsonHeader, nil)
 }
 
 // CreateFile create a file in a repository
 func (c *Client) CreateFile(owner, repo, filepath string, opt CreateFileOptions) (*FileResponse, *Response, error) {
-	filepath = pathEscapeSegments(filepath)
 	var err error
 	if opt.BranchName, err = c.setDefaultBranchForOldVersions(owner, repo, opt.BranchName); err != nil {
 		return nil, nil, err
 	}
+	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
+		return nil, nil, err
+	}
+	filepath = pathEscapeSegments(filepath)
 
 	body, err := json.Marshal(&opt)
 	if err != nil {
@@ -189,11 +188,15 @@ func (c *Client) CreateFile(owner, repo, filepath string, opt CreateFileOptions)
 
 // UpdateFile update a file in a repository
 func (c *Client) UpdateFile(owner, repo, filepath string, opt UpdateFileOptions) (*FileResponse, *Response, error) {
-	filepath = pathEscapeSegments(filepath)
 	var err error
 	if opt.BranchName, err = c.setDefaultBranchForOldVersions(owner, repo, opt.BranchName); err != nil {
 		return nil, nil, err
 	}
+
+	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
+		return nil, nil, err
+	}
+	filepath = pathEscapeSegments(filepath)
 
 	body, err := json.Marshal(&opt)
 	if err != nil {
@@ -206,11 +209,14 @@ func (c *Client) UpdateFile(owner, repo, filepath string, opt UpdateFileOptions)
 
 // DeleteFile delete a file from repository
 func (c *Client) DeleteFile(owner, repo, filepath string, opt DeleteFileOptions) (*Response, error) {
-	filepath = pathEscapeSegments(filepath)
 	var err error
 	if opt.BranchName, err = c.setDefaultBranchForOldVersions(owner, repo, opt.BranchName); err != nil {
 		return nil, err
 	}
+	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
+		return nil, err
+	}
+	filepath = pathEscapeSegments(filepath)
 
 	body, err := json.Marshal(&opt)
 	if err != nil {

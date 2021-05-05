@@ -82,6 +82,9 @@ type EditUserOption struct {
 
 // AdminEditUser modify user informations
 func (c *Client) AdminEditUser(user string, opt EditUserOption) (*Response, error) {
+	if err := escapeValidatePathSegments(&user); err != nil {
+		return nil, err
+	}
 	body, err := json.Marshal(&opt)
 	if err != nil {
 		return nil, err
@@ -92,12 +95,18 @@ func (c *Client) AdminEditUser(user string, opt EditUserOption) (*Response, erro
 
 // AdminDeleteUser delete one user according name
 func (c *Client) AdminDeleteUser(user string) (*Response, error) {
+	if err := escapeValidatePathSegments(&user); err != nil {
+		return nil, err
+	}
 	_, resp, err := c.getResponse("DELETE", fmt.Sprintf("/admin/users/%s", user), nil, nil)
 	return resp, err
 }
 
 // AdminCreateUserPublicKey adds a public key for the user
 func (c *Client) AdminCreateUserPublicKey(user string, opt CreateKeyOption) (*PublicKey, *Response, error) {
+	if err := escapeValidatePathSegments(&user); err != nil {
+		return nil, nil, err
+	}
 	body, err := json.Marshal(&opt)
 	if err != nil {
 		return nil, nil, err
@@ -109,6 +118,9 @@ func (c *Client) AdminCreateUserPublicKey(user string, opt CreateKeyOption) (*Pu
 
 // AdminDeleteUserPublicKey deletes a user's public key
 func (c *Client) AdminDeleteUserPublicKey(user string, keyID int) (*Response, error) {
+	if err := escapeValidatePathSegments(&user); err != nil {
+		return nil, err
+	}
 	_, resp, err := c.getResponse("DELETE", fmt.Sprintf("/admin/users/%s/keys/%d", user, keyID), nil, nil)
 	return resp, err
 }

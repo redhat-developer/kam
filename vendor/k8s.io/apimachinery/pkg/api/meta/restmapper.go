@@ -65,6 +65,9 @@ type DefaultRESTMapper struct {
 }
 
 func (m *DefaultRESTMapper) String() string {
+	if m == nil {
+		return "<nil>"
+	}
 	return fmt.Sprintf("DefaultRESTMapper{kindToPluralResource=%v}", m.kindToPluralResource)
 }
 
@@ -115,7 +118,6 @@ func (m *DefaultRESTMapper) AddSpecific(kind schema.GroupVersionKind, plural, si
 // callers to use the RESTMapper they mean.
 var unpluralizedSuffixes = []string{
 	"endpoints",
-	"securitycontextconstraints",
 }
 
 // UnsafeGuessKindToResource converts Kind to a resource name.

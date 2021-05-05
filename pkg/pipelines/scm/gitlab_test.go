@@ -65,12 +65,13 @@ func TestCreatePushBindingForGitlab(t *testing.T) {
 func TestCreateCDTriggersForGitLab(t *testing.T) {
 	repo, err := NewRepository("http://gitlab.com/org/test")
 	assertNoError(t, err)
+	name := "test-template"
 	want := triggersv1.EventListenerTrigger{
 		Name: "test",
 		Bindings: []*triggersv1.EventListenerBinding{
 			{Ref: "test-binding"},
 		},
-		Template: &triggersv1.EventListenerTemplate{Name: "test-template"},
+		Template: &triggersv1.EventListenerTemplate{Ref: &name},
 		Interceptors: []*triggersv1.EventInterceptor{
 			{
 				GitLab: &triggersv1.GitLabInterceptor{

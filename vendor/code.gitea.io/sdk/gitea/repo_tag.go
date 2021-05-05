@@ -24,6 +24,9 @@ type ListRepoTagsOptions struct {
 
 // ListRepoTags list all the branches of one repository
 func (c *Client) ListRepoTags(user, repo string, opt ListRepoTagsOptions) ([]*Tag, *Response, error) {
+	if err := escapeValidatePathSegments(&user, &repo); err != nil {
+		return nil, nil, err
+	}
 	opt.setDefaults()
 	tags := make([]*Tag, 0, opt.PageSize)
 	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/repos/%s/%s/tags?%s", user, repo, opt.getURLQuery().Encode()), nil, nil, &tags)
@@ -32,6 +35,9 @@ func (c *Client) ListRepoTags(user, repo string, opt ListRepoTagsOptions) ([]*Ta
 
 // DeleteTag deletes a tag from a repository, if no release refers to it
 func (c *Client) DeleteTag(user, repo string, tag string) (*Response, error) {
+	if err := escapeValidatePathSegments(&user, &repo, &tag); err != nil {
+		return nil, err
+	}
 	if err := c.checkServerVersionGreaterThanOrEqual(version1_14_0); err != nil {
 		return nil, err
 	}

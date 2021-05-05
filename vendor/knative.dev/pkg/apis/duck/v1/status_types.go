@@ -20,7 +20,7 @@ import (
 	"context"
 
 	"knative.dev/pkg/apis"
-	"knative.dev/pkg/apis/duck"
+	"knative.dev/pkg/apis/duck/ducktypes"
 	"knative.dev/pkg/kmeta"
 )
 
@@ -29,8 +29,8 @@ import (
 // Conditions is a simple wrapper around apis.Conditions to implement duck.Implementable.
 type Conditions apis.Conditions
 
-// Conditions is an Implementable "duck type".
-var _ duck.Implementable = (*Conditions)(nil)
+// Conditions is an Implementable duck type.
+var _ ducktypes.Implementable = (*Conditions)(nil)
 
 // Status shows how we expect folks to embed Conditions in
 // their Status field.
@@ -66,18 +66,15 @@ func (s *Status) SetConditions(c apis.Conditions) {
 	s.Conditions = Conditions(c)
 }
 
-// In order for Conditions to be Implementable, KResource must be Populatable.
-var _ duck.Populatable = (*KResource)(nil)
-
 // Ensure KResource satisfies apis.Listable
 var _ apis.Listable = (*KResource)(nil)
 
 // GetFullType implements duck.Implementable
-func (*Conditions) GetFullType() duck.Populatable {
+func (*Conditions) GetFullType() ducktypes.Populatable {
 	return &KResource{}
 }
 
-// GetCondition fetches the condition of the specified type.
+// GetCondition fetches a copy of the condition of the specified type.
 func (s *Status) GetCondition(t apis.ConditionType) *apis.Condition {
 	for _, cond := range s.Conditions {
 		if cond.Type == t {
@@ -92,15 +89,15 @@ func (s *Status) GetCondition(t apis.ConditionType) *apis.Condition {
 // By default apis.ConditionReady and apis.ConditionSucceeded will be copied over to the
 // sink. Other conditions types are tested against a list of predicates. If any of the predicates
 // return true the condition type will be copied to the sink
-func (source *Status) ConvertTo(ctx context.Context, sink *Status, predicates ...func(apis.ConditionType) bool) {
-	sink.ObservedGeneration = source.ObservedGeneration
-	if source.Annotations != nil {
+func (s *Status) ConvertTo(ctx context.Context, sink *Status, predicates ...func(apis.ConditionType) bool) {
+	sink.ObservedGeneration = s.ObservedGeneration
+	if s.Annotations != nil {
 		// This will deep copy the map.
-		sink.Annotations = kmeta.UnionMaps(source.Annotations)
+		sink.Annotations = kmeta.UnionMaps(s.Annotations)
 	}
 
-	conditions := make(apis.Conditions, 0, len(source.Conditions))
-	for _, c := range source.Conditions {
+	conditions := make(apis.Conditions, 0, len(s.Conditions))
+	for _, c := range s.Conditions {
 
 		// Copy over the "happy" condition, which is the only condition that
 		// we can reliably transfer.

@@ -28,11 +28,13 @@ func (s *webhookService) Parse(req *http.Request, fn scm.SecretFunc) (scm.Webhoo
 		return nil, err
 	}
 
+	guid := req.Header.Get("X-Gogs-Delivery")
+
 	var hook scm.Webhook
 	event := req.Header.Get("X-Gogs-Event")
 	switch event {
 	case "push":
-		hook, err = s.parsePushHook(data)
+		hook, err = s.parsePushHook(data, guid)
 	case "create":
 		hook, err = s.parseCreateHook(data)
 	case "delete":
@@ -40,9 +42,11 @@ func (s *webhookService) Parse(req *http.Request, fn scm.SecretFunc) (scm.Webhoo
 	case "issues":
 		hook, err = s.parseIssueHook(data)
 	case "issue_comment":
-		hook, err = s.parseIssueCommentHook(data)
+		hook, err = s.parseIssueCommentHook(data, guid)
 	case "pull_request":
 		hook, err = s.parsePullRequestHook(data)
+	case "release":
+		hook, err = s.parseReleaseHook(data)
 	default:
 		return nil, scm.UnknownWebhook{Event: event}
 	}
@@ -72,10 +76,12 @@ func (s *webhookService) Parse(req *http.Request, fn scm.SecretFunc) (scm.Webhoo
 	return hook, nil
 }
 
-func (s *webhookService) parsePushHook(data []byte) (scm.Webhook, error) {
+func (s *webhookService) parsePushHook(data []byte, guid string) (scm.Webhook, error) {
 	dst := new(pushHook)
 	err := json.Unmarshal(data, dst)
-	return convertPushHook(dst), err
+	hook := convertPushHook(dst)
+	hook.GUID = guid
+	return hook, err
 }
 
 func (s *webhookService) parseCreateHook(data []byte) (scm.Webhook, error) {
@@ -110,19 +116,29 @@ func (s *webhookService) parseIssueHook(data []byte) (scm.Webhook, error) {
 	return convertIssueHook(dst), err
 }
 
-func (s *webhookService) parseIssueCommentHook(data []byte) (scm.Webhook, error) {
+func (s *webhookService) parseIssueCommentHook(data []byte, guid string) (scm.Webhook, error) {
 	dst := new(issueHook)
 	err := json.Unmarshal(data, dst)
 	if dst.Issue.PullRequest != nil {
-		return convertPullRequestCommentHook(dst), err
+		hook := convertPullRequestCommentHook(dst)
+		hook.GUID = guid
+		return hook, err
 	}
-	return convertIssueCommentHook(dst), err
+	hook := convertIssueCommentHook(dst)
+	hook.GUID = guid
+	return hook, err
 }
 
 func (s *webhookService) parsePullRequestHook(data []byte) (scm.Webhook, error) {
 	dst := new(pullRequestHook)
 	err := json.Unmarshal(data, dst)
 	return convertPullRequestHook(dst), err
+}
+
+func (s *webhookService) parseReleaseHook(data []byte) (scm.Webhook, error) {
+	dst := new(releaseHook)
+	err := json.Unmarshal(data, dst)
+	return convertReleaseHook(dst), err
 }
 
 //
@@ -167,6 +183,14 @@ type (
 		PullRequest pullRequest `json:"pull_request"`
 		Repository  repository  `json:"repository"`
 		Sender      user        `json:"sender"`
+	}
+
+	// gogs release webhook payload
+	releaseHook struct {
+		Action     string     `json:"action"`
+		Release    release    `json:"release"`
+		Repository repository `json:"repository"`
+		Sender     user       `json:"sender"`
 	}
 )
 
@@ -275,6 +299,15 @@ func convertIssueCommentHook(dst *issueHook) *scm.IssueCommentHook {
 		Comment: *convertIssueComment(&dst.Comment),
 		Repo:    *convertRepository(&dst.Repository),
 		Sender:  *convertUser(&dst.Sender),
+	}
+}
+
+func convertReleaseHook(dst *releaseHook) *scm.ReleaseHook {
+	return &scm.ReleaseHook{
+		Action:  convertAction(dst.Action),
+		Repo:    *convertRepository(&dst.Repository),
+		Sender:  *convertUser(&dst.Sender),
+		Release: *convertRelease(&dst.Release),
 	}
 }
 

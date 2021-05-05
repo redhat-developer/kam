@@ -140,6 +140,9 @@ func (c *Client) ListIssues(opt ListIssueOption) ([]*Issue, *Response, error) {
 
 // ListRepoIssues returns all issues for a given repository
 func (c *Client) ListRepoIssues(owner, repo string, opt ListIssueOption) ([]*Issue, *Response, error) {
+	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
+		return nil, nil, err
+	}
 	opt.setDefaults()
 	issues := make([]*Issue, 0, opt.PageSize)
 
@@ -161,6 +164,9 @@ func (c *Client) ListRepoIssues(owner, repo string, opt ListIssueOption) ([]*Iss
 
 // GetIssue returns a single issue for a given repository
 func (c *Client) GetIssue(owner, repo string, index int64) (*Issue, *Response, error) {
+	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
+		return nil, nil, err
+	}
 	issue := new(Issue)
 	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/repos/%s/%s/issues/%d", owner, repo, index), nil, nil, issue)
 	if e := c.checkServerVersionGreaterThanOrEqual(version1_12_0); e != nil && issue.Repository != nil {
@@ -197,6 +203,9 @@ func (opt CreateIssueOption) Validate() error {
 
 // CreateIssue create a new issue for a given repository
 func (c *Client) CreateIssue(owner, repo string, opt CreateIssueOption) (*Issue, *Response, error) {
+	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
+		return nil, nil, err
+	}
 	if err := opt.Validate(); err != nil {
 		return nil, nil, err
 	}
@@ -236,6 +245,9 @@ func (opt EditIssueOption) Validate() error {
 
 // EditIssue modify an existing issue for a given repository
 func (c *Client) EditIssue(owner, repo string, index int64, opt EditIssueOption) (*Issue, *Response, error) {
+	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
+		return nil, nil, err
+	}
 	if err := opt.Validate(); err != nil {
 		return nil, nil, err
 	}
@@ -253,6 +265,8 @@ func (c *Client) EditIssue(owner, repo string, index int64, opt EditIssueOption)
 
 func (c *Client) issueBackwardsCompatibility(issue *Issue) {
 	if c.checkServerVersionGreaterThanOrEqual(version1_12_0) != nil {
+		c.mutex.RLock()
 		issue.HTMLURL = fmt.Sprintf("%s/%s/issues/%d", c.url, issue.Repository.FullName, issue.Index)
+		c.mutex.RUnlock()
 	}
 }

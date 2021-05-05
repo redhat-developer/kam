@@ -39,8 +39,6 @@ type TriggerSpec struct {
 }
 
 type TriggerSpecTemplate struct {
-	// Deprecated: Use Ref instead
-	Name       string               `json:"name"`
 	Ref        *string              `json:"ref,omitempty"`
 	APIVersion string               `json:"apiversion,omitempty"`
 	Spec       *TriggerTemplateSpec `json:"spec,omitempty"`
@@ -61,10 +59,6 @@ type TriggerSpecBinding struct {
 
 	// Kind can only be provided if Ref is also provided. Defaults to TriggerBinding
 	Kind TriggerBindingKind `json:"kind,omitempty"`
-
-	// Spec is the deprecated  way of embedding TriggerBindings.
-	// TODO(#782): Remove deprecated syntax.
-	Spec *TriggerBindingSpec `json:"spec,omitempty"`
 
 	// APIVersion of the binding ref
 	APIVersion string `json:"apiversion,omitempty"`

@@ -79,6 +79,6 @@ func (r *repository) createTrigger(name, filters, template string, bindings []st
 			createEventInterceptor(filters, r.path),
 		},
 		Bindings: createBindings(bindings),
-		Template: createListenerTemplate(template),
+		Template: createListenerTemplate(&template),
 	}
 }

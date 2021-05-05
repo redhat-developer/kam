@@ -1,6 +1,7 @@
 package secrets
 
 import (
+	"context"
 	"crypto/rsa"
 	"errors"
 	"fmt"
@@ -141,7 +142,7 @@ func openCertCluster(c clientv1.ServicesGetter, service types.NamespacedName) (i
 	f, err := c.
 		Services(service.Namespace).
 		ProxyGet("http", service.Name, "", "/v1/cert.pem", nil).
-		Stream()
+		Stream(context.Background())
 	if err != nil {
 		return nil, fmt.Errorf("cannot fetch certificate: %v", err)
 	}

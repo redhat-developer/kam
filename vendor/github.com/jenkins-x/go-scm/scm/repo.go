@@ -30,6 +30,7 @@ type (
 		Perm      *Perm
 		Branch    string
 		Private   bool
+		Archived  bool
 		Clone     string
 		CloneSSH  string
 		Link      string
@@ -82,11 +83,14 @@ type (
 	// HookEvents represents supported hook events.
 	HookEvents struct {
 		Branch             bool
+		Deployment         bool
+		DeploymentStatus   bool
 		Issue              bool
 		IssueComment       bool
 		PullRequest        bool
 		PullRequestComment bool
 		Push               bool
+		Release            bool
 		Review             bool
 		ReviewComment      bool
 		Tag                bool

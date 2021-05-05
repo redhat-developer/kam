@@ -206,6 +206,7 @@ type (
 		Issue        Issue
 		Comment      Comment
 		Sender       User
+		GUID         string
 		Installation *InstallationRef
 	}
 
@@ -246,6 +247,7 @@ type (
 	ReleaseHook struct {
 		Action       Action
 		Repo         Repository
+		Release      Release
 		Sender       User
 		Label        Label
 		Installation *InstallationRef
@@ -313,6 +315,7 @@ type (
 		PullRequest  PullRequest
 		Comment      Comment
 		Sender       User
+		GUID         string
 		Installation *InstallationRef
 	}
 
