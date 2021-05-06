@@ -13,6 +13,8 @@ import (
 
 	"github.com/cucumber/godog"
 	"github.com/cucumber/messages-go/v10"
+	"github.com/jenkins-x/go-scm/scm"
+	"github.com/jenkins-x/go-scm/scm/factory"
 	"github.com/redhat-developer/kam/pkg/pipelines/git"
 )
 
@@ -22,6 +24,9 @@ func FeatureContext(s *godog.Suite) {
 	// KAM related steps
 	s.Step(`^directory "([^"]*)" should exist$`,
 		DirectoryShouldExist)
+
+	s.Step(`^repositry "([^"]*)" is created$`,
+		CreateRepositry)
 
 	s.BeforeSuite(func() {
 		fmt.Println("Before suite")
@@ -47,25 +52,21 @@ func FeatureContext(s *godog.Suite) {
 	})
 
 	s.AfterScenario(func(*messages.Pickle, error) {
-		// Checking it for local test
-		_, ci := os.LookupEnv("CI")
-		if !ci {
+		fmt.Println("After scenario")
+		re := regexp.MustCompile(`[a-z]+`)
+		scm := re.FindAllString(os.Getenv("GITOPS_REPO_URL"), 2)[1]
 
-			re := regexp.MustCompile(`[a-z]+`)
-			scm := re.FindAllString(os.Getenv("GITOPS_REPO_URL"), 2)[1]
-
-			switch scm {
-			case "github":
-				deleteGithubRepository(os.Getenv("GITOPS_REPO_URL"), os.Getenv("GIT_ACCESS_TOKEN"))
-			case "gitlab":
-				deleteGitlabRepoStep := []string{"repo", "delete", strings.Split(strings.Split(os.Getenv("GITOPS_REPO_URL"), ".com/")[1], ".")[0], "-y"}
-				ok, errMessage := deleteGitlabRepository(deleteGitlabRepoStep)
-				if !ok {
-					fmt.Println(errMessage)
-				}
-			default:
-				fmt.Println("SCM is not supported")
+		switch scm {
+		case "github":
+			deleteGithubRepository(os.Getenv("GITOPS_REPO_URL"), os.Getenv("GIT_ACCESS_TOKEN"))
+		case "gitlab":
+			deleteGitlabRepoStep := []string{"repo", "delete", strings.Split(strings.Split(os.Getenv("GITOPS_REPO_URL"), ".com/")[1], ".")[0], "-y"}
+			ok, errMessage := deleteGitlabRepository(deleteGitlabRepoStep)
+			if !ok {
+				fmt.Println(errMessage)
 			}
+		default:
+			fmt.Println("SCM is not supported")
 		}
 	})
 }
@@ -141,4 +142,29 @@ func deleteGithubRepository(repoURL, token string) {
 	} else {
 		log.Printf("Successfully deleted repository: %q", repoURL)
 	}
+}
+
+func CreateRepositry(rawURL string) error {
+	parsed, err := url.Parse(rawURL)
+	if err != nil {
+		return err
+	}
+	parsed.User = url.UserPassword("kam-bot", os.Getenv("GITHUB_TOKEN"))
+	fmt.Println(parsed.String())
+	client, err := factory.FromRepoURL(parsed.String())
+	if err != nil {
+		return err
+	}
+
+	ri := &scm.RepositoryInput{
+		Private:     true,
+		Description: "repocreate",
+		Namespace:   "kam-bot",
+		Name:        "taxi-" + os.Getenv("PRNO"),
+	}
+	_, _, err = client.Repositories.Create(context.Background(), ri)
+	if err != nil {
+		return err
+	}
+	return nil
 }
