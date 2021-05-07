@@ -20,7 +20,7 @@ Feature: Basic test
         Then exitcode should not equal "0"
 
     Scenario: Bringing the bootstrapped environment up
-        Given repositry "$GITOPS_REPO_URL" is created
+        Given gitops repositry is created
         When executing "kam bootstrap --service-repo-url $SERVICE_REPO_URL --gitops-repo-url $GITOPS_REPO_URL --image-repo $IMAGE_REPO --dockercfgjson $DOCKERCONFIGJSON_PATH --git-host-access-token $GIT_ACCESS_TOKEN --output bootstrapresources --overwrite" succeeds
         Then executing "cd bootstrapresources" succeeds
         Then executing "git init ." succeeds

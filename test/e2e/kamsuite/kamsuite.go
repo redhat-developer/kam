@@ -25,8 +25,8 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^directory "([^"]*)" should exist$`,
 		DirectoryShouldExist)
 
-	s.Step(`^repositry "([^"]*)" is created$`,
-		CreateRepositry)
+	s.Step(`^gitops repositry is created$`,
+		createRepositry)
 
 	s.BeforeSuite(func() {
 		fmt.Println("Before suite")
@@ -144,13 +144,14 @@ func deleteGithubRepository(repoURL, token string) {
 	}
 }
 
-func CreateRepositry(rawURL string) error {
-	parsed, err := url.Parse(rawURL)
+func createRepositry() error {
+	repoName := strings.Split(os.Getenv("GITOPS_REPO_URL"), "/")[4]
+	parsed, err := url.Parse(os.Getenv("GITOPS_REPO_URL"))
 	if err != nil {
 		return err
 	}
-	parsed.User = url.UserPassword("kam-bot", os.Getenv("GITHUB_TOKEN"))
-	fmt.Println(parsed.String())
+
+	parsed.User = url.UserPassword("", os.Getenv("GITHUB_TOKEN"))
 	client, err := factory.FromRepoURL(parsed.String())
 	if err != nil {
 		return err
@@ -159,12 +160,13 @@ func CreateRepositry(rawURL string) error {
 	ri := &scm.RepositoryInput{
 		Private:     true,
 		Description: "repocreate",
-		Namespace:   "kam-bot",
-		Name:        "taxi-" + os.Getenv("PRNO"),
+		Namespace:   "",
+		Name:        repoName,
 	}
 	_, _, err = client.Repositories.Create(context.Background(), ri)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
