@@ -167,5 +167,6 @@ func createRepository() error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
