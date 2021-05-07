@@ -25,8 +25,8 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^directory "([^"]*)" should exist$`,
 		DirectoryShouldExist)
 
-	s.Step(`^gitops repositry is created$`,
-		createRepositry)
+	s.Step(`^gitops repository is created$`,
+		createRepository)
 
 	s.BeforeSuite(func() {
 		fmt.Println("Before suite")
@@ -144,7 +144,7 @@ func deleteGithubRepository(repoURL, token string) {
 	}
 }
 
-func createRepositry() error {
+func createRepository() error {
 	repoName := strings.Split(os.Getenv("GITOPS_REPO_URL"), "/")[4]
 	parsed, err := url.Parse(os.Getenv("GITOPS_REPO_URL"))
 	if err != nil {
