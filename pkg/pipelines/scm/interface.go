@@ -1,6 +1,8 @@
 package scm
 
 import (
+	res "github.com/redhat-developer/kam/pkg/pipelines/resources"
+	pipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	triggersv1 "github.com/tektoncd/triggers/pkg/apis/triggers/v1alpha1"
 )
 
@@ -18,4 +20,10 @@ type Repository interface {
 
 	// Git Repository URL
 	URL() string
+
+	AddCommitStatusTask(path, ns string, output res.Resources)
+
+	AddFinallyTaskToPipeline(*pipelinev1.Pipeline)
+
+	AddFinallyTaskParams(*triggersv1.TriggerTemplate) error
 }

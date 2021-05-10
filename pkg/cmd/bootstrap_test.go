@@ -105,41 +105,6 @@ func TestAddSuffixWithBootstrap(t *testing.T) {
 	}
 }
 
-func TestValidateCommitStatusTracker(t *testing.T) {
-	completeTests := []struct {
-		name                string
-		gitRepo             string
-		commitStatusTracker bool
-		gitAccessToken      string
-		wantErr             string
-	}{
-		{"statusTracker true/ GitAccessToken absent", "username1/testRepo1", true, "", "--git-host-access-token is required if commit-status-tracker is enabled"},
-		{"statusTracker true/ GitAccessToken present", "username2/testRepo2", true, "abc123", ""},
-		{"statusTracker false/ GitAccessToken present", "username3/testRepo3", false, "abc123", ""},
-		{"statusTracker false/ GitAccessToken present", "username3/testRepo3", false, "abc123", ""},
-	}
-
-	for _, tt := range completeTests {
-		o := BootstrapParameters{
-			BootstrapOptions: &pipelines.BootstrapOptions{
-				GitOpsRepoURL:       tt.gitRepo,
-				CommitStatusTracker: tt.commitStatusTracker,
-				GitHostAccessToken:  tt.gitAccessToken,
-			},
-		}
-
-		got := o.Validate()
-		gotErr := ""
-		if got != nil {
-			gotErr = got.Error()
-		}
-		if diff := cmp.Diff(tt.wantErr, gotErr); diff != "" {
-			t.Fatalf("Validate() for case %s didn't match: %s\n", tt.name, diff)
-		}
-	}
-
-}
-
 func TestValidateBootstrapParameter(t *testing.T) {
 	optionTests := []struct {
 		name    string
@@ -174,72 +139,6 @@ func TestValidateBootstrapParameter(t *testing.T) {
 	}
 }
 
-func TestValidatePairFlags(t *testing.T) {
-	optionTests := []struct {
-		name          string
-		token         string
-		statustracker bool
-		keyring       bool
-		errMsg        string
-	}{
-		{"--save-token-keyring set and --git-host-access-token missing", "", false, true, "--git-host-access-token is required if --save-token-keyring is enabled"},
-		{"--commit-status-tracker set and --git-host-access-token missing", "", true, false, "--git-host-access-token is required if commit-status-tracker is enabled"},
-		{"--commit-status-tracker/--save-token-keyring set and --git-host-access-token present", "abc123", true, true, ""},
-		{"--commit-status-tracker/--save-token-keyring not-set and --git-host-access-token absent", "", false, false, ""},
-	}
-
-	for _, tt := range optionTests {
-		o := BootstrapParameters{
-			BootstrapOptions: &pipelines.BootstrapOptions{
-				GitOpsRepoURL:       gitOpsURL,
-				ServiceRepoURL:      serviceURL,
-				ImageRepo:           "io/test/repo",
-				GitHostAccessToken:  tt.token,
-				CommitStatusTracker: tt.statustracker,
-				SaveTokenKeyRing:    tt.keyring,
-			},
-		}
-		err := o.Validate()
-
-		if err != nil && tt.errMsg == "" {
-			t.Errorf("Validate() %#v got an unexpected error: %s", tt.name, err)
-			continue
-		}
-
-		if !matchError(t, tt.errMsg, err) {
-			t.Errorf("Validate() %#v failed to match error: got %s, want %s", tt.name, err, tt.errMsg)
-		}
-	}
-}
-
-func TestValidateMandatoryFlags(t *testing.T) {
-	optionTests := []struct {
-		name                string
-		gitRepo             string
-		serviceRepo         string
-		imagerepo           string
-		commitStatusTracker bool
-		gitToken            string
-		errMsg              string
-	}{
-		{"missing gitops-repo-url", "", "https://github.com/example/repo.git", "registry/username/repo", false, "", `required flag(s) "gitops-repo-url" not set`},
-		{"missing service-repo-url", "https://github.com/example/repo.git", "", "registry/username/repo", false, "", `required flag(s) "service-repo-url" not set`},
-	}
-
-	for _, tt := range optionTests {
-		o := BootstrapParameters{
-			BootstrapOptions: &pipelines.BootstrapOptions{
-				GitOpsRepoURL:  tt.gitRepo,
-				ServiceRepoURL: tt.serviceRepo,
-				ImageRepo:      tt.imagerepo,
-			},
-		}
-		err := nonInteractiveMode(&o, &utility.Client{})
-		if tt.errMsg != err.Error() {
-			t.Fatalf("nonInteractiveMode() %#v failed to match error: got %s, want %s", tt.name, err, tt.errMsg)
-		}
-	}
-}
 func TestCheckSpinner(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -554,18 +453,18 @@ func TestMissingFlags(t *testing.T) {
 	}{
 		{
 			"Required flags are present",
-			map[string]string{"gitops-repo-url": "value-1", "service-repo-url": "value-2"},
+			map[string]string{"gitops-repo-url": "value-1", "service-repo-url": "value-2", "git-host-access-token": "123"},
 			nil,
 		},
 		{
 			"A required flag is absent",
-			map[string]string{"gitops-repo-url": "value-1", "service-repo-url": ""},
+			map[string]string{"gitops-repo-url": "value-1", "service-repo-url": "", "git-host-access-token": "123"},
 			missingFlagErr([]string{`"service-repo-url"`}),
 		},
 		{
 			"Multiple required flags are absent",
 			map[string]string{"gitops-repo-url": "", "service-repo-url": ""},
-			missingFlagErr([]string{`"service-repo-url"`, `"gitops-repo-url"`}),
+			missingFlagErr([]string{`"service-repo-url"`, `"gitops-repo-url"`, `"git-host-access-token"`}),
 		},
 	}
 	for _, test := range tests {

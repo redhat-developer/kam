@@ -117,6 +117,7 @@ func CreateCIPipeline(name types.NamespacedName, stageNamespace string) *pipelin
 			Tasks: []pipelinev1.PipelineTask{
 				createCIPipelineTask("apply-source"),
 			},
+			Params: paramSpecs("REPO", "COMMIT_SHA"),
 		},
 	}
 }
@@ -167,6 +168,32 @@ func createDevCDDeployImageTask(name, devNamespace, deploymentPath string) pipel
 			createTaskParam("PATHTODEPLOYMENT", deploymentPath),
 			createTaskParam("YAMLPATHTOIMAGE", "spec.template.spec.containers[0].image"),
 			createTaskParam("NAMESPACE", devNamespace),
+		},
+	}
+}
+
+func createPendingCommitStatusTask(name string) pipelinev1.PipelineTask {
+	return pipelinev1.PipelineTask{
+		Name:    name,
+		TaskRef: createTaskRef(name, pipelinev1.NamespacedTaskKind),
+		Params: []pipelinev1.Param{
+			createTaskParam("REPO", "$(params.REPO)"),
+			createTaskParam("COMMIT_SHA", "$(params.COMMIT_SHA)"),
+			createTaskParam("DESCRIPTION", "The build has started"),
+			createTaskParam("STATE", "pending"),
+		},
+	}
+}
+
+func createFinallyCommitStatusTask(name string) pipelinev1.PipelineTask {
+	return pipelinev1.PipelineTask{
+		Name:    "final-commit-status",
+		TaskRef: createTaskRef(name, pipelinev1.NamespacedTaskKind),
+		Params: []pipelinev1.Param{
+			createTaskParam("REPO", "$(params.REPO)"),
+			createTaskParam("COMMIT_SHA", "$(params.COMMIT_SHA)"),
+			createTaskParam("DESCRIPTION", "The build is completed"),
+			createTaskParam("STATE", "$(tasks.apply-source.status)"),
 		},
 	}
 }
