@@ -29,3 +29,19 @@ Feature: Basic test
         Then executing "git remote add origin $GITOPS_REPO_URL" succeeds
         Then executing "git branch -M main" succeeds
         Then executing "git push -u origin main" succeeds
+        Then executing "cd .." succeeds
+
+    Scenario: Bringing the deployment infrastructure up
+        Given gitops repository is created
+        When executing "kam bootstrap --service-repo-url $SERVICE_REPO_URL --gitops-repo-url $GITOPS_REPO_URL --image-repo $IMAGE_REPO --dockercfgjson $DOCKERCONFIGJSON_PATH --git-host-access-token $GIT_ACCESS_TOKEN --output bootstrapresources --overwrite" succeeds
+        Then executing "cd bootstrapresources" succeeds
+        Then executing "git init ." succeeds
+        Then executing "git add ." succeeds
+        Then executing "git commit -m 'Initial commit.'" succeeds
+        Then executing "git remote add origin $GITOPS_REPO_URL" succeeds
+        Then executing "git branch -M main" succeeds
+        Then executing "git push -u origin main" succeeds
+        Then executing "oc apply -k config/argocd/" succeeds
+        Then login argocd API server
+        
+

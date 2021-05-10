@@ -28,6 +28,9 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^gitops repository is created$`,
 		createRepository)
 
+	s.Step(`^login argocd API server$`,
+		loginArgoAPIServerLogin)
+
 	s.BeforeSuite(func() {
 		fmt.Println("Before suite")
 		if !envVariableCheck() {
@@ -169,4 +172,56 @@ func createRepository() error {
 	}
 
 	return nil
+}
+
+func loginArgoAPIServerLogin() error {
+	argocdPath, err := exec.LookPath("argocd")
+	if err != nil {
+		return err
+	}
+
+	argocdServer := argocdAPIServer()
+	argocdPassword := argocdAPIServerPassword()
+
+	cmd := exec.Command(argocdPath, "login", "--username", "admin", "--password", argocdPassword, argocdServer, "--insecure")
+	err = cmd.Run()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func argocdAPIServer() string {
+	var stderr, stdout bytes.Buffer
+	ocPath, err := exec.LookPath("oc")
+	if err != nil {
+		fmt.Errorf("Error is", err)
+	}
+	cmd := exec.Command(ocPath, "get", "routes", "-n", "openshift-gitops",
+		"-o", "jsonpath='{.items[?(@.metadata.name==\"openshift-gitops-server\")].spec.host}{\"\n\"}')")
+	cmd.Stderr = &stderr
+	cmd.Stdout = &stdout
+	err = cmd.Run()
+	if err != nil {
+		fmt.Errorf(stderr.String())
+	}
+
+	return stdout.String()
+}
+
+func argocdAPIServerPassword() string {
+	var stderr, stdout bytes.Buffer
+	ocPath, err := exec.LookPath("oc")
+	if err != nil {
+		fmt.Errorf("Error is", err)
+	}
+	cmd := exec.Command(ocPath, "get", "secret", "openshift-gitops-cluster", "-n", "openshift-gitops", "-ojsonpath='{.data.admin\\.password}'", "|", "base64", "-d")
+	cmd.Stderr = &stderr
+	cmd.Stdout = &stdout
+	err = cmd.Run()
+	if err != nil {
+		fmt.Errorf(stderr.String())
+	}
+
+	return stdout.String()
 }
