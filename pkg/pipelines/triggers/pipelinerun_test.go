@@ -36,7 +36,7 @@ func TestCreateDevCIPipelineRun(t *testing.T) {
 	want := pipelinev1.PipelineRun{
 		TypeMeta: pipelineRunTypeMeta,
 		ObjectMeta: meta.ObjectMeta(
-			meta.NamespacedName("", "app-ci-pipeline-run-$(uid)")),
+			meta.NamespacedName("", "app-ci-$(uid)")),
 		Spec: pipelinev1.PipelineRunSpec{
 			ServiceAccountName: sName,
 			PipelineRef:        createPipelineRef("app-ci-pipeline"),
@@ -93,7 +93,7 @@ func TestCreateStageCIPipelineRun(t *testing.T) {
 	want := pipelinev1.PipelineRun{
 		TypeMeta: pipelineRunTypeMeta,
 		ObjectMeta: meta.ObjectMeta(
-			meta.NamespacedName("", "ci-dryrun-from-push-pipeline-$(uid)")),
+			meta.NamespacedName("", "ci-dryrun-from-push-$(uid)")),
 		Spec: pipelinev1.PipelineRunSpec{
 			ServiceAccountName: sName,
 			PipelineRef:        createPipelineRef("ci-dryrun-from-push-pipeline"),

@@ -16,7 +16,7 @@ var (
 	routeTypeMeta = meta.TypeMeta("Route", "route.openshift.io/v1")
 )
 
-const defaultRoutePort = 8080
+const defaultRoutePort = 8000
 
 // GenerateRoute generates an OpenShift route for the EventListener.
 //
