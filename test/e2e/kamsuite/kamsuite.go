@@ -3,8 +3,8 @@ package kamsuite
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"fmt"
-	"io"
 	"log"
 	"net/url"
 	"os"
@@ -176,7 +176,7 @@ func createRepository() error {
 }
 
 func loginArgoAPIServerLogin() error {
-	argocdPath, err := exec.LookPath("argocd")
+	argocdPath, err := executableBinaryPath("argocd")
 	if err != nil {
 		return err
 	}
@@ -225,40 +225,24 @@ func argocdAPIServer() (string, error) {
 }
 
 func argocdAPIServerPassword() (string, error) {
+	var stdout bytes.Buffer
 	ocPath, err := executableBinaryPath("oc")
 	if err != nil {
 		return "", err
 	}
 
-	cmd1 := exec.Command(ocPath, "get", "secret", "openshift-gitops-cluster", "-n", "openshift-gitops", "-o", "jsonpath='{.data.admin\\.password}'")
-	cmd2 := exec.Command("base64", "-d")
+	cmd := exec.Command(ocPath, "get", "secret", "openshift-gitops-cluster", "-n", "openshift-gitops", "-o", "jsonpath='{.data.admin\\.password}'")
 
-	r, w := io.Pipe()
-	cmd1.Stdout = w
-	cmd2.Stdin = r
-
-	var b2, stderr bytes.Buffer
-	cmd2.Stdout = &b2
-	cmd2.Stderr = &stderr
-
-	if err = cmd1.Start(); err != nil {
+	cmd.Stdout = &stdout
+	err = cmd.Run()
+	if err != nil {
 		return "", err
 	}
 
-	if err = cmd2.Start(); err != nil {
+	data, err := base64.StdEncoding.DecodeString(strings.Trim(stdout.String(), "'"))
+	if err != nil {
 		return "", err
 	}
 
-	if err = cmd1.Wait(); err != nil {
-		return "", err
-	}
-
-	if err = w.Close(); err != nil {
-		return "", err
-	}
-	if err = cmd2.Wait(); err != nil {
-		return "", err
-	}
-
-	return b2.String(), nil
+	return string(data), nil
 }
