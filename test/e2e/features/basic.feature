@@ -33,8 +33,8 @@ Feature: Basic test
 
     Scenario: Bringing the deployment infrastructure up
         Given gitops repository is created
-        When executing "kam bootstrap --service-repo-url $SERVICE_REPO_URL --gitops-repo-url $GITOPS_REPO_URL --image-repo $IMAGE_REPO --dockercfgjson $DOCKERCONFIGJSON_PATH --git-host-access-token $GIT_ACCESS_TOKEN --output bootstrapresources --overwrite" succeeds
-        Then executing "cd bootstrapresources" succeeds
+        When executing "kam bootstrap --service-repo-url $SERVICE_REPO_URL --gitops-repo-url $GITOPS_REPO_URL --image-repo $IMAGE_REPO --dockercfgjson $DOCKERCONFIGJSON_PATH --git-host-access-token $GIT_ACCESS_TOKEN --output bootstrap --overwrite" succeeds
+        Then executing "cd bootstrap" succeeds
         Then executing "git init ." succeeds
         Then executing "git add ." succeeds
         Then executing "git commit -m 'Initial commit.'" succeeds
