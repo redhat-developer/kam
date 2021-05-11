@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"net/url"
 	"os"
@@ -180,8 +181,15 @@ func loginArgoAPIServerLogin() error {
 		return err
 	}
 
-	argocdServer := argocdAPIServer()
-	argocdPassword := argocdAPIServerPassword()
+	argocdServer, err := argocdAPIServer()
+	if err != nil {
+		return err
+	}
+
+	argocdPassword, err := argocdAPIServerPassword()
+	if err != nil {
+		return err
+	}
 
 	cmd := exec.Command(argocdPath, "login", "--username", "admin", "--password", argocdPassword, argocdServer, "--insecure")
 	err = cmd.Run()
@@ -191,37 +199,66 @@ func loginArgoAPIServerLogin() error {
 	return nil
 }
 
-func argocdAPIServer() string {
-	var stderr, stdout bytes.Buffer
-	ocPath, err := exec.LookPath("oc")
+func executableBinaryPath(executable string) (string, error) {
+	path, err := exec.LookPath(executable)
 	if err != nil {
-		fmt.Errorf("Error is", err)
+		return "", err
 	}
-	cmd := exec.Command(ocPath, "get", "routes", "-n", "openshift-gitops",
-		"-o", "jsonpath='{.items[?(@.metadata.name==\"openshift-gitops-server\")].spec.host}{\"\n\"}')")
-	cmd.Stderr = &stderr
-	cmd.Stdout = &stdout
-	err = cmd.Run()
-	if err != nil {
-		fmt.Errorf(stderr.String())
-	}
-
-	return stdout.String()
+	return path, nil
 }
 
-func argocdAPIServerPassword() string {
-	var stderr, stdout bytes.Buffer
-	ocPath, err := exec.LookPath("oc")
+func argocdAPIServer() (string, error) {
+	var stdout bytes.Buffer
+
+	ocPath, err := executableBinaryPath("oc")
 	if err != nil {
-		fmt.Errorf("Error is", err)
+		return "", err
 	}
-	cmd := exec.Command(ocPath, "get", "secret", "openshift-gitops-cluster", "-n", "openshift-gitops", "-ojsonpath='{.data.admin\\.password}'", "|", "base64", "-d")
-	cmd.Stderr = &stderr
+	cmd := exec.Command(ocPath, "get", "routes", "-n", "openshift-gitops",
+		"-o", "jsonpath='{.items[?(@.metadata.name==\"openshift-gitops-server\")].spec.host}'")
 	cmd.Stdout = &stdout
 	err = cmd.Run()
 	if err != nil {
-		fmt.Errorf(stderr.String())
+		return "", err
+	}
+	return strings.Trim(stdout.String(), "'"), nil
+}
+
+func argocdAPIServerPassword() (string, error) {
+	ocPath, err := executableBinaryPath("oc")
+	if err != nil {
+		return "", err
 	}
 
-	return stdout.String()
+	cmd1 := exec.Command(ocPath, "get", "secret", "openshift-gitops-cluster", "-n", "openshift-gitops", "-o", "jsonpath='{.data.admin\\.password}'")
+	cmd2 := exec.Command("base64", "-d")
+
+	r, w := io.Pipe()
+	cmd1.Stdout = w
+	cmd2.Stdin = r
+
+	var b2, stderr bytes.Buffer
+	cmd2.Stdout = &b2
+	cmd2.Stderr = &stderr
+
+	if err = cmd1.Start(); err != nil {
+		return "", err
+	}
+
+	if err = cmd2.Start(); err != nil {
+		return "", err
+	}
+
+	if err = cmd1.Wait(); err != nil {
+		return "", err
+	}
+
+	if err = w.Close(); err != nil {
+		return "", err
+	}
+	if err = cmd2.Wait(); err != nil {
+		return "", err
+	}
+
+	return b2.String(), nil
 }

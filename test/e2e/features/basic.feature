@@ -43,5 +43,3 @@ Feature: Basic test
         Then executing "git push -u origin main" succeeds
         Then executing "oc apply -k config/argocd/" succeeds
         Then login argocd API server
-        
-
