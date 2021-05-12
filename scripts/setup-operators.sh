@@ -80,7 +80,7 @@ metadata:
   labels:
     operators.coreos.com/openshift-gitops-operator.openshift-operators: ''
 spec:
-  channel: preview
+  channel: stable
   installPlanApproval: Automatic
   name: openshift-gitops-operator
   source: redhat-operators
