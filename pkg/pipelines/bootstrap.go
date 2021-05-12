@@ -611,32 +611,13 @@ func createCICDResources(fs afero.Fs, repo scm.Repository, pipelineConfig *confi
 		return nil, otherOutputs, err
 	}
 	outputs[gitopsTasksPath] = tasks.CreateDeployFromSourceTask(cicdNamespace, script)
-	repo.AddCommitStatusTask(commitStatusTaskPath, cicdNamespace, outputs)
-
-	ciPipeline := pipelines.CreateCIPipeline(meta.NamespacedName(cicdNamespace, "ci-dryrun-from-push-pipeline"), cicdNamespace)
-	repo.AddFinallyTaskToPipeline(ciPipeline)
-	outputs[ciPipelinesPath] = ciPipeline
-
-	appCIPipeline := pipelines.CreateAppCIPipeline(meta.NamespacedName(cicdNamespace, "app-ci-pipeline"))
+	outputs[commitStatusTaskPath] = tasks.CreateCommitStatusTask(cicdNamespace)
+	outputs[ciPipelinesPath] = pipelines.CreateCIPipeline(meta.NamespacedName(cicdNamespace, "ci-dryrun-from-push-pipeline"), cicdNamespace)
+	outputs[appCiPipelinesPath] = pipelines.CreateAppCIPipeline(meta.NamespacedName(cicdNamespace, "app-ci-pipeline"))
 	pushBinding, pushBindingName := repo.CreatePushBinding(cicdNamespace)
-	repo.AddFinallyTaskToPipeline(appCIPipeline)
-	outputs[appCiPipelinesPath] = appCIPipeline
-
 	outputs[filepath.Join("06-bindings", pushBindingName+".yaml")] = pushBinding
-	pushTemplate := triggers.CreateCIDryRunTemplate(cicdNamespace, saName)
-	err = repo.AddFinallyTaskParams(&pushTemplate)
-	if err != nil {
-		return nil, nil, err
-	}
-	outputs[pushTemplatePath] = pushTemplate
-
-	appCIPushTemplate := triggers.CreateDevCIBuildPRTemplate(cicdNamespace, saName)
-	err = repo.AddFinallyTaskParams(&appCIPushTemplate)
-	if err != nil {
-		return nil, nil, err
-	}
-	outputs[appCIPushTemplatePath] = appCIPushTemplate
-
+	outputs[pushTemplatePath] = triggers.CreateCIDryRunTemplate(cicdNamespace, saName)
+	outputs[appCIPushTemplatePath] = triggers.CreateDevCIBuildPRTemplate(cicdNamespace, saName)
 	outputs[eventListenerPath] = eventlisteners.Generate(repo, cicdNamespace, saName, eventlisteners.GitOpsWebhookSecret)
 	log.Success("OpenShift Pipelines resources created")
 	route, err := eventlisteners.GenerateRoute(cicdNamespace)

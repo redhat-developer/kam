@@ -36,11 +36,15 @@ func CreateAppCIPipeline(name types.NamespacedName) *pipelinev1.Pipeline {
 				"COMMIT_MESSAGE",
 				"GIT_REPO"),
 			Tasks: []pipelinev1.PipelineTask{
+				createCommitStatusPipelineTask("set-pending-status", "pending", "The build has started"),
 				createGitCloneTask("clone-source"),
 				createBuildImageTask("build-image", "clone-source"),
 			},
 			Workspaces: []pipelinev1.PipelineWorkspaceDeclaration{
 				{Name: pipelineWorkspace, Description: "This workspace will receive the cloned git repo."},
+			},
+			Finally: []pipelinev1.PipelineTask{
+				createCommitStatusPipelineTask("set-final-status", "$(tasks.build-image.status)", "The build is complete"),
 			},
 		},
 	}
@@ -74,7 +78,7 @@ func createGitCloneTask(name string) pipelinev1.PipelineTask {
 			createTaskParam("url", "$(params.GIT_REPO)"),
 			createTaskParam("revision", "$(params.GIT_REF)"),
 		},
-		RunAfter: []string{"set-commit-status"},
+		RunAfter: []string{"set-pending-status"},
 	}
 }
 
@@ -116,9 +120,13 @@ func CreateCIPipeline(name types.NamespacedName, stageNamespace string) *pipelin
 			},
 
 			Tasks: []pipelinev1.PipelineTask{
+				createCommitStatusPipelineTask("set-pending-status", "pending", "The build has started"),
 				createCIPipelineTask("apply-source"),
 			},
-			Params: paramSpecs("REPO", "COMMIT_SHA"),
+			Params: paramSpecs("REPO", "COMMIT_SHA", "GIT_REPO"),
+			Finally: []pipelinev1.PipelineTask{
+				createCommitStatusPipelineTask("set-final-status", "$(tasks.apply-source.status)", "The build is complete"),
+			},
 		},
 	}
 }
@@ -151,7 +159,7 @@ func createCIPipelineTask(taskName string) pipelinev1.PipelineTask {
 		Params: []pipelinev1.Param{
 			createTaskParam("DRYRUN", "true"),
 		},
-		RunAfter: []string{"set-commit-status"},
+		RunAfter: []string{"set-pending-status"},
 	}
 }
 
@@ -174,28 +182,16 @@ func createDevCDDeployImageTask(name, devNamespace, deploymentPath string) pipel
 	}
 }
 
-func createPendingCommitStatusTask(name string) pipelinev1.PipelineTask {
+func createCommitStatusPipelineTask(name, state, desc string) pipelinev1.PipelineTask {
 	return pipelinev1.PipelineTask{
 		Name:    name,
-		TaskRef: createTaskRef(name, pipelinev1.NamespacedTaskKind),
+		TaskRef: createTaskRef("set-commit-status", pipelinev1.NamespacedTaskKind),
 		Params: []pipelinev1.Param{
 			createTaskParam("REPO", "$(params.REPO)"),
+			createTaskParam("GIT_REPO", "$(params.GIT_REPO)"),
 			createTaskParam("COMMIT_SHA", "$(params.COMMIT_SHA)"),
-			createTaskParam("DESCRIPTION", "The build has started"),
-			createTaskParam("STATE", "pending"),
-		},
-	}
-}
-
-func createFinallyCommitStatusTask(name string) pipelinev1.PipelineTask {
-	return pipelinev1.PipelineTask{
-		Name:    "final-commit-status",
-		TaskRef: createTaskRef(name, pipelinev1.NamespacedTaskKind),
-		Params: []pipelinev1.Param{
-			createTaskParam("REPO", "$(params.REPO)"),
-			createTaskParam("COMMIT_SHA", "$(params.COMMIT_SHA)"),
-			createTaskParam("DESCRIPTION", "The build is completed"),
-			createTaskParam("STATE", "$(tasks.apply-source.status)"),
+			createTaskParam("DESCRIPTION", desc),
+			createTaskParam("STATE", state),
 		},
 	}
 }

@@ -124,6 +124,7 @@ func CreateCIDryRunTemplate(ns, saName string) triggersv1.TriggerTemplate {
 				createTemplateParamSpecDefault(GitRef, "The git revision", "master"),
 				createTemplateParamSpec(GitCommitID, "The specific commit SHA"),
 				createTemplateParamSpec("gitrepositoryurl", "The git repository url"),
+				createTemplateParamSpec("fullname", "The repository name for this PullRequest"),
 			},
 			ResourceTemplates: []triggersv1.TriggerResourceTemplate{
 				{

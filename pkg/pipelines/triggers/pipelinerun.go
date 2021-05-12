@@ -83,6 +83,11 @@ func createCIPipelineRun(saName string) pipelinev1.PipelineRun {
 			ServiceAccountName: saName,
 			PipelineRef:        createPipelineRef("ci-dryrun-from-push-pipeline"),
 			Resources:          createResources(),
+			Params: []pipelinev1.Param{
+				createPipelineBindingParam("REPO", "$(tt.params.fullname)"),
+				createPipelineBindingParam("GIT_REPO", "$(tt.params.gitrepositoryurl)"),
+				createPipelineBindingParam("COMMIT_SHA", "$(tt.params.io.openshift.build.commit.id)"),
+			},
 		},
 	}
 }

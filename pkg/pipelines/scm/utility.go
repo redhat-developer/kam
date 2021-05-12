@@ -3,11 +3,9 @@ package scm
 import (
 	"fmt"
 	"net/url"
-	"reflect"
 	"strings"
 
 	"github.com/jenkins-x/go-scm/scm/factory"
-	pipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	triggersv1 "github.com/tektoncd/triggers/pkg/apis/triggers/v1alpha1"
 )
 
@@ -108,94 +106,4 @@ func HostnameFromURL(rawURL string) (string, error) {
 		return "", err
 	}
 	return strings.ToLower(u.Host), nil
-}
-
-func createPendingCommitStatusTask(name string) pipelinev1.PipelineTask {
-	return pipelinev1.PipelineTask{
-		Name:    name,
-		TaskRef: createTaskRef(name, pipelinev1.NamespacedTaskKind),
-		Params: []pipelinev1.Param{
-			createTaskParam("REPO", "$(params.REPO)"),
-			createTaskParam("COMMIT_SHA", "$(params.COMMIT_SHA)"),
-			createTaskParam("DESCRIPTION", "The build has started"),
-			createTaskParam("STATE", "pending"),
-		},
-	}
-}
-
-func createFinallyCommitStatusTask(name, task string) pipelinev1.PipelineTask {
-	return pipelinev1.PipelineTask{
-		Name:    "final-commit-status",
-		TaskRef: createTaskRef(name, pipelinev1.NamespacedTaskKind),
-		Params: []pipelinev1.Param{
-			createTaskParam("REPO", "$(params.REPO)"),
-			createTaskParam("COMMIT_SHA", "$(params.COMMIT_SHA)"),
-			createTaskParam("DESCRIPTION", "The build is completed"),
-			createTaskParam("STATE", task),
-		},
-	}
-}
-
-func createTaskRef(name string, kind pipelinev1.TaskKind) *pipelinev1.TaskRef {
-	return &pipelinev1.TaskRef{
-		Name: name,
-		Kind: kind,
-	}
-}
-
-func createTaskParam(name, value string) pipelinev1.Param {
-	return pipelinev1.Param{
-		Name: name,
-
-		Value: pipelinev1.ArrayOrString{
-			Type:      pipelinev1.ParamTypeString,
-			StringVal: value,
-		},
-	}
-}
-
-func prependTask(tasks []pipelinev1.PipelineTask, task pipelinev1.PipelineTask) []pipelinev1.PipelineTask {
-	temp := []pipelinev1.PipelineTask{task}
-	return append(temp, tasks...)
-}
-
-func addTemplateParamIfMissing(template *triggersv1.TriggerTemplate, newParam triggersv1.ParamSpec) {
-	found := false
-	for _, param := range template.Spec.Params {
-		if param == newParam {
-			found = true
-		}
-	}
-	if !found {
-		template.Spec.Params = append(template.Spec.Params, newParam)
-	}
-}
-
-func createTemplateParamSpec(name, description string) triggersv1.ParamSpec {
-	return triggersv1.ParamSpec{
-		Name:        name,
-		Description: description,
-	}
-}
-
-func createPipelineBindingParam(name, value string) pipelinev1.Param {
-	return pipelinev1.Param{
-		Name: name,
-		Value: pipelinev1.ArrayOrString{
-			StringVal: value,
-			Type:      pipelinev1.ParamTypeString,
-		},
-	}
-}
-
-func addPRParamIfMissing(pr *pipelinev1.PipelineRun, newParam pipelinev1.Param) {
-	found := false
-	for _, param := range pr.Spec.Params {
-		if reflect.DeepEqual(param, newParam) {
-			found = true
-		}
-	}
-	if !found {
-		pr.Spec.Params = append(pr.Spec.Params, newParam)
-	}
 }

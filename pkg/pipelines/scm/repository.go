@@ -2,9 +2,7 @@ package scm
 
 import (
 	"github.com/redhat-developer/kam/pkg/pipelines/meta"
-	res "github.com/redhat-developer/kam/pkg/pipelines/resources"
 	"github.com/redhat-developer/kam/pkg/pipelines/triggers"
-	pipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	triggersv1 "github.com/tektoncd/triggers/pkg/apis/triggers/v1alpha1"
 )
 
@@ -27,9 +25,6 @@ type triggerSpec interface {
 	pushEventFilters() string
 	eventInterceptor(secretNamespace, secretName string) *triggersv1.EventInterceptor
 	pushBindingName() string
-	addCommitStatusTask(path, ns string, output res.Resources)
-	addFinallyTaskToPipeline(*pipelinev1.Pipeline)
-	addFinallyTaskParams(*triggersv1.TriggerTemplate) error
 }
 
 // NewRepository returns a suitable Repository instance
@@ -86,16 +81,4 @@ func (r *repository) createTrigger(name, filters, template string, bindings []st
 		Bindings: createBindings(bindings),
 		Template: createListenerTemplate(template),
 	}
-}
-
-func (r *repository) AddCommitStatusTask(path, ns string, output res.Resources) {
-	r.spec.addCommitStatusTask(path, ns, output)
-}
-
-func (r *repository) AddFinallyTaskToPipeline(pipeline *pipelinev1.Pipeline) {
-	r.spec.addFinallyTaskToPipeline(pipeline)
-}
-
-func (r *repository) AddFinallyTaskParams(template *triggersv1.TriggerTemplate) error {
-	return r.spec.addFinallyTaskParams(template)
 }

@@ -4,9 +4,7 @@ import (
 	"net/url"
 	"strings"
 
-	res "github.com/redhat-developer/kam/pkg/pipelines/resources"
 	"github.com/redhat-developer/kam/pkg/pipelines/triggers"
-	pipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	triggersv1 "github.com/tektoncd/triggers/pkg/apis/triggers/v1alpha1"
 )
 
@@ -72,16 +70,4 @@ func (r *gitlabSpec) eventInterceptor(secretNamespace, secretName string) *trigg
 			},
 		},
 	}
-}
-
-func (r *gitlabSpec) addCommitStatusTask(path, ns string, output res.Resources) {
-	return
-}
-
-func (r *gitlabSpec) addFinallyTaskToPipeline(pipeline *pipelinev1.Pipeline) {
-	return
-}
-
-func (r *gitlabSpec) addFinallyTaskParams(template *triggersv1.TriggerTemplate) error {
-	return nil
 }
