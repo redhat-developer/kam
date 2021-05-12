@@ -2,10 +2,6 @@
 
 Manage an environment in GitOps
 
-### Synopsis
-
-Manage an environment in GitOps
-
 ```
 kam environment [flags]
 ```

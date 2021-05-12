@@ -1,6 +1,7 @@
 package utility
 
 import (
+	"context"
 	"strings"
 
 	"github.com/openshift/odo/pkg/log"
@@ -82,7 +83,7 @@ func NewClient() (*Client, error) {
 
 // CheckIfSealedSecretsExists checks if sealed secrets is installed
 func (c *Client) CheckIfSealedSecretsExists(secret types.NamespacedName) error {
-	_, err := c.KubeClient.CoreV1().Services(secret.Namespace).Get(secret.Name, v1.GetOptions{})
+	_, err := c.KubeClient.CoreV1().Services(secret.Namespace).Get(context.Background(), secret.Name, v1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -91,7 +92,7 @@ func (c *Client) CheckIfSealedSecretsExists(secret types.NamespacedName) error {
 
 // CheckIfArgoCDExists checks if ArgoCD operator is installed
 func (c *Client) CheckIfArgoCDExists(ns string) error {
-	csvList, err := c.OperatorClient.ClusterServiceVersions(ns).List(v1.ListOptions{})
+	csvList, err := c.OperatorClient.ClusterServiceVersions(ns).List(context.Background(), v1.ListOptions{})
 	if err != nil {
 		return err
 	}
@@ -105,7 +106,7 @@ func (c *Client) CheckIfArgoCDExists(ns string) error {
 
 // CheckIfPipelinesExists checks is OpenShift pipelines operator is installed
 func (c *Client) CheckIfPipelinesExists(ns string) error {
-	_, err := c.KubeClient.AppsV1().Deployments(ns).Get("openshift-pipelines-operator", v1.GetOptions{})
+	_, err := c.KubeClient.AppsV1().Deployments(ns).Get(context.Background(), "openshift-pipelines-operator", v1.GetOptions{})
 	if err != nil {
 		return err
 	}

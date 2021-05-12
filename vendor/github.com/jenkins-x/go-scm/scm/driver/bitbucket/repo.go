@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/url"
+	"sort"
 	"strings"
 	"time"
 
@@ -71,6 +72,16 @@ type repositoryService struct {
 	client *wrapper
 }
 
+type participants struct {
+	pagination
+	Values []*participant `json:"values"`
+}
+
+type participant struct {
+	User       user   `json:"user"`
+	Permission string `json:"permission"`
+}
+
 func (s *repositoryService) Create(ctx context.Context, input *scm.RepositoryInput) (*scm.Repository, *scm.Response, error) {
 	workspace := input.Namespace
 	if workspace == "" {
@@ -122,7 +133,42 @@ func (s *repositoryService) Fork(context.Context, *scm.RepositoryInput, string) 
 }
 
 func (s *repositoryService) FindCombinedStatus(ctx context.Context, repo, ref string) (*scm.CombinedStatus, *scm.Response, error) {
-	return nil, nil, scm.ErrNotSupported
+	statusList, resp, err := s.ListStatus(ctx, repo, ref, scm.ListOptions{})
+	if err != nil {
+		return nil, resp, errors.Wrapf(err, "failed to list statuses")
+	}
+
+	combinedState := scm.StateUnknown
+
+	byContext := make(map[string]*scm.Status)
+	for _, s := range statusList {
+		byContext[s.Target] = s
+	}
+
+	keys := make([]string, 0, len(byContext))
+	for k := range byContext {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	var statuses []*scm.Status
+	for _, k := range keys {
+		s := byContext[k]
+		statuses = append(statuses, s)
+	}
+
+	for _, s := range statuses {
+		// If we've still got a default state, or the state of the current status is worse than the current state, set it.
+		if combinedState == scm.StateUnknown || combinedState > s.State {
+			combinedState = s.State
+		}
+	}
+
+	combined := &scm.CombinedStatus{
+		State:    0,
+		Sha:      ref,
+		Statuses: statuses,
+	}
+	return combined, resp, nil
 }
 
 func (s *repositoryService) FindUserPermission(ctx context.Context, repo string, user string) (string, *scm.Response, error) {
@@ -135,12 +181,45 @@ func (s *repositoryService) AddCollaborator(ctx context.Context, repo, user, per
 }
 
 func (s *repositoryService) IsCollaborator(ctx context.Context, repo, user string) (bool, *scm.Response, error) {
-	// TODO lets fake out this method for now
-	return true, nil, nil
+	// repo format: Workspace-slug/repository-slug
+	workspace, repository := scm.Split(repo)
+	path := fmt.Sprintf("/2.0/workspaces/%s/permissions/repositories/%s?q=user.username=\"%s\"", workspace, repository, user)
+	out := new(participants)
+	res, err := s.client.do(ctx, "GET", path, nil, out)
+
+	if err != nil {
+		return false, res, err
+	}
+
+	if len(out.Values) == 0 {
+		return false, res, err
+	}
+
+	if out.Values[0].Permission == "write" || out.Values[0].Permission == "admin" {
+		return true, res, err
+	}
+
+	return false, res, err
 }
 
 func (s *repositoryService) ListCollaborators(ctx context.Context, repo string, ops scm.ListOptions) ([]scm.User, *scm.Response, error) {
-	return nil, nil, nil
+	namespace, name := scm.Split(repo)
+	path := fmt.Sprintf("/2.0/workspaces/%s/permissions/repositories/%s?q=permission!=\"%s\"", namespace, name, "read")
+	out := new(participants)
+	res, err := s.client.do(ctx, "GET", path, nil, out)
+	if err != nil {
+		return nil, res, wrapError(res, err)
+	}
+	err = copyPagination(out.pagination, res)
+	return convertParticipants(out), res, wrapError(res, err)
+}
+
+func convertParticipants(participants *participants) []scm.User {
+	answer := []scm.User{}
+	for _, p := range participants.Values {
+		answer = append(answer, *convertUser(&p.User))
+	}
+	return answer
 }
 
 func (s *repositoryService) ListLabels(context.Context, string, scm.ListOptions) ([]*scm.Label, *scm.Response, error) {

@@ -29,7 +29,7 @@ func createDevCIPipelineRun(saName string) pipelinev1.PipelineRun {
 	return pipelinev1.PipelineRun{
 		TypeMeta: pipelineRunTypeMeta,
 		ObjectMeta: meta.ObjectMeta(
-			meta.NamespacedName("", "app-ci-pipeline-run-$(uid)")),
+			meta.NamespacedName("", "app-ci-$(uid)")),
 		Spec: pipelinev1.PipelineRunSpec{
 			ServiceAccountName: saName,
 			PipelineRef:        createPipelineRef("app-ci-pipeline"),
@@ -78,7 +78,7 @@ func createCIPipelineRun(saName string) pipelinev1.PipelineRun {
 	return pipelinev1.PipelineRun{
 		TypeMeta: pipelineRunTypeMeta,
 		ObjectMeta: meta.ObjectMeta(
-			meta.NamespacedName("", "ci-dryrun-from-push-pipeline-$(uid)")),
+			meta.NamespacedName("", "ci-dryrun-from-push-$(uid)")),
 		Spec: pipelinev1.PipelineRunSpec{
 			ServiceAccountName: saName,
 			PipelineRef:        createPipelineRef("ci-dryrun-from-push-pipeline"),

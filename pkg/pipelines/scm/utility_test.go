@@ -19,10 +19,11 @@ func TestCreateListenerBinding(t *testing.T) {
 }
 
 func TestCreateListenerTemplate(t *testing.T) {
+	name := "sample"
 	validListenerTemplate := &triggersv1.EventListenerTemplate{
-		Name: "sample",
+		Ref: &name,
 	}
-	listenerTemplate := createListenerTemplate("sample")
+	listenerTemplate := createListenerTemplate(&name)
 	if diff := cmp.Diff(validListenerTemplate, listenerTemplate); diff != "" {
 		t.Fatalf("createListenerTemplate() failed:\n%s", diff)
 	}

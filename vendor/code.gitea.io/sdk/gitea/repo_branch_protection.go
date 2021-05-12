@@ -95,6 +95,9 @@ type ListBranchProtectionsOptions struct {
 
 // ListBranchProtections list branch protections for a repo
 func (c *Client) ListBranchProtections(owner, repo string, opt ListBranchProtectionsOptions) ([]*BranchProtection, *Response, error) {
+	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
+		return nil, nil, err
+	}
 	if err := c.checkServerVersionGreaterThanOrEqual(version1_12_0); err != nil {
 		return nil, nil, err
 	}
@@ -107,6 +110,9 @@ func (c *Client) ListBranchProtections(owner, repo string, opt ListBranchProtect
 
 // GetBranchProtection gets a branch protection
 func (c *Client) GetBranchProtection(owner, repo, name string) (*BranchProtection, *Response, error) {
+	if err := escapeValidatePathSegments(&owner, &repo, &name); err != nil {
+		return nil, nil, err
+	}
 	if err := c.checkServerVersionGreaterThanOrEqual(version1_12_0); err != nil {
 		return nil, nil, err
 	}
@@ -117,6 +123,9 @@ func (c *Client) GetBranchProtection(owner, repo, name string) (*BranchProtectio
 
 // CreateBranchProtection creates a branch protection for a repo
 func (c *Client) CreateBranchProtection(owner, repo string, opt CreateBranchProtectionOption) (*BranchProtection, *Response, error) {
+	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
+		return nil, nil, err
+	}
 	if err := c.checkServerVersionGreaterThanOrEqual(version1_12_0); err != nil {
 		return nil, nil, err
 	}
@@ -131,6 +140,9 @@ func (c *Client) CreateBranchProtection(owner, repo string, opt CreateBranchProt
 
 // EditBranchProtection edits a branch protection for a repo
 func (c *Client) EditBranchProtection(owner, repo, name string, opt EditBranchProtectionOption) (*BranchProtection, *Response, error) {
+	if err := escapeValidatePathSegments(&owner, &repo, &name); err != nil {
+		return nil, nil, err
+	}
 	if err := c.checkServerVersionGreaterThanOrEqual(version1_12_0); err != nil {
 		return nil, nil, err
 	}
@@ -145,6 +157,9 @@ func (c *Client) EditBranchProtection(owner, repo, name string, opt EditBranchPr
 
 // DeleteBranchProtection deletes a branch protection for a repo
 func (c *Client) DeleteBranchProtection(owner, repo, name string) (*Response, error) {
+	if err := escapeValidatePathSegments(&owner, &repo, &name); err != nil {
+		return nil, err
+	}
 	if err := c.checkServerVersionGreaterThanOrEqual(version1_12_0); err != nil {
 		return nil, err
 	}

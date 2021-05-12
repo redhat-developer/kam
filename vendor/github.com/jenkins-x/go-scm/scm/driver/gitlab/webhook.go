@@ -48,6 +48,8 @@ func (s *webhookService) Parse(req *http.Request, fn scm.SecretFunc) (scm.Webhoo
 		hook, err = parsePullRequestHook(data)
 	case "Note Hook":
 		hook, err = parseCommentHook(s, data)
+	case "Release Hook":
+		hook, err = parseReleaseHook(s, data)
 	default:
 		return nil, scm.UnknownWebhook{Event: event}
 	}
@@ -132,9 +134,20 @@ func parseCommentHook(s *webhookService, data []byte) (scm.Webhook, error) {
 	switch kind {
 	case "MergeRequest":
 		return convertMergeRequestCommentHook(s, src)
+	case "Issue":
+		return convertIssueCommentHook(s, src)
 	default:
 		return nil, scm.UnknownWebhook{Event: kind}
 	}
+}
+
+func parseReleaseHook(s *webhookService, data []byte) (scm.Webhook, error) {
+	src := new(releaseHook)
+	err := json.Unmarshal(data, src)
+	if err != nil {
+		return nil, err
+	}
+	return convertReleaseHook(src)
 }
 
 func convertPushHook(src *pushHook) *scm.PushHook {
@@ -168,8 +181,9 @@ func convertPushHook(src *pushHook) *scm.PushHook {
 		},
 	}
 	if len(src.Commits) > 0 {
-		dst.Commit.Message = src.Commits[0].Message
-		dst.Commit.Link = src.Commits[0].URL
+		// get the last commit (most recent)
+		dst.Commit.Message = src.Commits[len(src.Commits)-1].Message
+		dst.Commit.Link = src.Commits[len(src.Commits)-1].URL
 	}
 	return dst
 }
@@ -294,6 +308,43 @@ func convertPullRequestHook(src *pullRequestHook) *scm.PullRequestHook {
 	}
 }
 
+func convertIssueCommentHook(s *webhookService, src *commentHook) (*scm.IssueCommentHook, error) {
+	commentAuthor, err := s.userService.FindLoginByID(context.TODO(), src.ObjectAttributes.AuthorID)
+	if err != nil {
+		return nil, fmt.Errorf("unable to find comment author %w", err)
+	}
+
+	repo := *convertRepositoryHook(&src.Project)
+	createdAt, _ := time.Parse("2006-01-02 15:04:05 MST", src.ObjectAttributes.CreatedAt)
+	updatedAt, _ := time.Parse("2006-01-02 15:04:05 MST", src.ObjectAttributes.UpdatedAt)
+
+	issue := scm.Issue{
+		Number:      src.Issue.Iid,
+		Title:       src.Issue.Title,
+		Body:        src.Issue.Description,
+		Author:      *commentAuthor,
+		Created:     createdAt,
+		Updated:     updatedAt,
+		Closed:      src.Issue.State != "opened",
+		PullRequest: false,
+	}
+
+	hook := &scm.IssueCommentHook{
+		Action: scm.ActionCreate,
+		Repo:   repo,
+		Issue:  issue,
+		Comment: scm.Comment{
+			ID:      src.ObjectAttributes.ID,
+			Body:    src.ObjectAttributes.Note,
+			Author:  *commentAuthor,
+			Created: createdAt,
+			Updated: updatedAt,
+		},
+		Sender: *commentAuthor,
+	}
+	return hook, nil
+}
+
 func convertMergeRequestCommentHook(s *webhookService, src *commentHook) (*scm.PullRequestCommentHook, error) {
 
 	// There are two users needed here: the comment author and the MergeRequest author.
@@ -379,6 +430,43 @@ func convertRepositoryHook(from *project) *scm.Repository {
 		Link:      from.WebURL,
 		Branch:    from.DefaultBranch,
 		Private:   false, // TODO how do we correctly set Private vs Public?
+	}
+}
+
+func convertReleaseHook(from *releaseHook) (*scm.ReleaseHook, error) {
+	created, err := time.Parse("2006-01-02 15:04:05 MST", from.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	released, err := time.Parse("2006-01-02 15:04:05 MST", from.ReleasedAt)
+	if err != nil {
+		return nil, err
+	}
+
+	return &scm.ReleaseHook{
+		Action: convertAction(from.Action),
+		Repo:   *convertRepositoryHook(&from.Project),
+		Release: scm.Release{
+			ID:          from.ID,
+			Title:       from.Name,
+			Description: from.Description,
+			Link:        from.URL,
+			Tag:         from.Tag,
+			Commitish:   from.Commit.ID,
+			Created:     created,
+			Published:   released,
+		},
+	}, nil
+}
+
+func convertAction(src string) (action scm.Action) {
+	switch src {
+	case "create":
+		return scm.ActionCreate
+	case "open":
+		return scm.ActionOpen
+	default:
+		return
 	}
 }
 
@@ -557,6 +645,34 @@ type (
 			HumanTotalTimeSpent interface{} `json:"human_total_time_spent"`
 			HumanTimeEstimate   interface{} `json:"human_time_estimate"`
 		} `json:"merge_request"`
+		Issue struct {
+			ID          int      `json:"id"`
+			Title       string   `json:"title"`
+			AssigneeIDs []string `json:"assignee_ids"`
+			AssigneeID  string   `json:"assignee_id"`
+			AuthorID    int      `json:"author_id"`
+			ProjectID   int      `json:"project_id"`
+			CreatedAt   string   `json:"created_at"`
+			UpdatedAt   string   `json:"updated_at"`
+			Position    int      `json:"position"`
+			BranchName  string   `json:"branch_name"`
+			Description string   `json:"description"`
+			MilestoneID string   `json:"milestone_id"`
+			State       string   `json:"state"`
+			Iid         int      `json:"iid"`
+			Labels      []struct {
+				ID          int    `json:"id"`
+				Title       string `json:"title"`
+				Color       string `json:"color"`
+				ProjectID   int    `json:"project_id"`
+				CreatedAt   string `json:"created_at"`
+				UpdatedAt   string `json:"updated_at"`
+				Template    bool   `json:"template"`
+				Description string `json:"description"`
+				LabelType   string `json:"type"`
+				GroupID     int    `json:"group_id"`
+			} `json:"labels"`
+		} `json:"issue"`
 	}
 
 	tagHook struct {
@@ -605,6 +721,7 @@ type (
 			Name      string `json:"name"`
 			Username  string `json:"username"`
 			AvatarURL string `json:"avatar_url"`
+			Email     string `json:"email"`
 		} `json:"user"`
 		Project          project `json:"project"`
 		ObjectAttributes struct {
@@ -641,7 +758,7 @@ type (
 			ID          int         `json:"id"`
 			Title       string      `json:"title"`
 			Color       string      `json:"color"`
-			ProjectID   int         `json:"project_id"`
+			ProjectID   string      `json:"project_id"`
 			CreatedAt   string      `json:"created_at"`
 			UpdatedAt   string      `json:"updated_at"`
 			Template    bool        `json:"template"`
@@ -740,5 +857,43 @@ type (
 			Description string `json:"description"`
 			Homepage    string `json:"homepage"`
 		} `json:"repository"`
+	}
+
+	releaseHook struct {
+		ID          int     `json:"id"`
+		CreatedAt   string  `json:"created_at"`
+		Description string  `json:"description"`
+		Name        string  `json:"name"`
+		ReleasedAt  string  `json:"released_at"`
+		Tag         string  `json:"tag"`
+		ObjectKind  string  `json:"object_kind"`
+		Project     project `json:"project"`
+		URL         string  `json:"url"`
+		Action      string  `json:"action"`
+		Assets      struct {
+			Count int `json:"count"`
+			Links []struct {
+				ID       int    `json:"id"`
+				External bool   `json:"external"`
+				LinkType string `json:"link_type"`
+				Name     string `json:"name"`
+				URL      string `json:"url"`
+			} `json:"links"`
+			Sources []struct {
+				Format string `json:"format"`
+				URL    string `json:"url"`
+			} `json:"sources"`
+		} `json:"assets"`
+		Commit struct {
+			ID        string `json:"id"`
+			Message   string `json:"message"`
+			Title     string `json:"title"`
+			Timestamp string `json:"timestamp"`
+			URL       string `json:"url"`
+			Author    struct {
+				Name  string `json:"name"`
+				Email string `json:"email"`
+			} `json:"author"`
+		} `json:"commit"`
 	}
 )

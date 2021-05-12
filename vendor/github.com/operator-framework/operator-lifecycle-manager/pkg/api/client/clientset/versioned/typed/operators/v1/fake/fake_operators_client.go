@@ -1,5 +1,5 @@
 /*
-Copyright 2020 Red Hat, Inc.
+Copyright Red Hat, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,6 +26,14 @@ import (
 
 type FakeOperatorsV1 struct {
 	*testing.Fake
+}
+
+func (c *FakeOperatorsV1) Operators() v1.OperatorInterface {
+	return &FakeOperators{c}
+}
+
+func (c *FakeOperatorsV1) OperatorConditions(namespace string) v1.OperatorConditionInterface {
+	return &FakeOperatorConditions{c, namespace}
 }
 
 func (c *FakeOperatorsV1) OperatorGroups(namespace string) v1.OperatorGroupInterface {

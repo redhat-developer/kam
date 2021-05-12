@@ -63,6 +63,9 @@ type CommitAffectedFiles struct {
 
 // GetSingleCommit returns a single commit
 func (c *Client) GetSingleCommit(user, repo, commitID string) (*Commit, *Response, error) {
+	if err := escapeValidatePathSegments(&user, &repo, &commitID); err != nil {
+		return nil, nil, err
+	}
 	commit := new(Commit)
 	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/repos/%s/%s/git/commits/%s", user, repo, commitID), nil, nil, &commit)
 	return commit, resp, err
@@ -86,6 +89,9 @@ func (opt *ListCommitOptions) QueryEncode() string {
 
 // ListRepoCommits return list of commits from a repo
 func (c *Client) ListRepoCommits(user, repo string, opt ListCommitOptions) ([]*Commit, *Response, error) {
+	if err := escapeValidatePathSegments(&user, &repo); err != nil {
+		return nil, nil, err
+	}
 	link, _ := url.Parse(fmt.Sprintf("/repos/%s/%s/commits", user, repo))
 	opt.setDefaults()
 	commits := make([]*Commit, 0, opt.PageSize)

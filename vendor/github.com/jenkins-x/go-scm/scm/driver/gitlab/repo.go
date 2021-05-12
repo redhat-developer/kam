@@ -381,6 +381,9 @@ func (s *repositoryService) CreateHook(ctx context.Context, repo string, input *
 	if input.Events.Tag || hasStarEvents {
 		params.Set("tag_push_events", "true")
 	}
+	if input.Events.Release || hasStarEvents {
+		params.Set("releases_events", "true")
+	}
 
 	path := fmt.Sprintf("api/v4/projects/%s/hooks?%s", encode(repo), params.Encode())
 	out := new(hook)
@@ -394,7 +397,14 @@ func (s *repositoryService) CreateStatus(ctx context.Context, repo, ref string, 
 	params.Set("name", input.Label)
 	params.Set("target_url", input.Target)
 	params.Set("description", input.Desc)
-	path := fmt.Sprintf("api/v4/projects/%s/statuses/%s?%s", encode(repo), ref, params.Encode())
+	var repoID string
+	// TODO to add a cache to reduce unnecessary network request
+	if repository, response, err := s.Find(ctx, repo); err == nil {
+		repoID = repository.ID
+	} else {
+		return nil, response, errors.Errorf("cannot found repository %s, %v", repo, err)
+	}
+	path := fmt.Sprintf("api/v4/projects/%s/statuses/%s?%s", repoID, ref, params.Encode())
 	out := new(status)
 	res, err := s.client.do(ctx, "POST", path, nil, out)
 	return convertStatus(out), res, err

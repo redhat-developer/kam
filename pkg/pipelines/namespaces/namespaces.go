@@ -1,6 +1,7 @@
 package namespaces
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/redhat-developer/kam/pkg/pipelines/clientconfig"
@@ -72,7 +73,7 @@ func GetClientSet() (*kubernetes.Clientset, error) {
 
 // Exists returns true if the given namespace exists
 func Exists(clientSet kubernetes.Interface, name string) (bool, error) {
-	_, err := clientSet.CoreV1().Namespaces().Get(name, metav1.GetOptions{})
+	_, err := clientSet.CoreV1().Namespaces().Get(context.Background(), name, metav1.GetOptions{})
 	if err != nil {
 		return false, nil
 	}

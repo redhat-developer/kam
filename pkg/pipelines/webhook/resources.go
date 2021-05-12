@@ -1,6 +1,8 @@
 package webhook
 
 import (
+	"context"
+
 	routeclientset "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
 	"github.com/pkg/errors"
 	"github.com/redhat-developer/kam/pkg/pipelines/clientconfig"
@@ -35,7 +37,7 @@ func newResources() (*resources, error) {
 }
 
 func (r *resources) getWebhookSecret(ns, secetName, key string) (string, error) {
-	secret, err := r.kubeClient.CoreV1().Secrets(ns).Get(secetName, metav1.GetOptions{})
+	secret, err := r.kubeClient.CoreV1().Secrets(ns).Get(context.Background(), secetName, metav1.GetOptions{})
 	if err != nil {
 		return "", errors.Wrapf(err, "unable to get the secret %s", secret)
 	}
@@ -46,7 +48,7 @@ func (r *resources) getWebhookSecret(ns, secetName, key string) (string, error) 
 // getListenerAddress returns TLS is configured, external address host and port
 // Event Listener exposed by OpenShift route.
 func (r *resources) getListenerAddress(ns, routeName string) (bool, string, error) {
-	route, err := r.routeClient.Routes(ns).Get(routeName, metav1.GetOptions{})
+	route, err := r.routeClient.Routes(ns).Get(context.Background(), routeName, metav1.GetOptions{})
 	if err != nil {
 		return false, "", err
 	}

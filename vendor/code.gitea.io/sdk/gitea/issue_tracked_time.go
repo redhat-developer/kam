@@ -55,6 +55,9 @@ func (opt *ListTrackedTimesOptions) QueryEncode() string {
 
 // ListRepoTrackedTimes list tracked times of a repository
 func (c *Client) ListRepoTrackedTimes(owner, repo string, opt ListTrackedTimesOptions) ([]*TrackedTime, *Response, error) {
+	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
+		return nil, nil, err
+	}
 	link, _ := url.Parse(fmt.Sprintf("/repos/%s/%s/times", owner, repo))
 	opt.setDefaults()
 	link.RawQuery = opt.QueryEncode()
@@ -90,6 +93,9 @@ func (opt AddTimeOption) Validate() error {
 
 // AddTime adds time to issue with the given index
 func (c *Client) AddTime(owner, repo string, index int64, opt AddTimeOption) (*TrackedTime, *Response, error) {
+	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
+		return nil, nil, err
+	}
 	if err := opt.Validate(); err != nil {
 		return nil, nil, err
 	}
@@ -106,6 +112,9 @@ func (c *Client) AddTime(owner, repo string, index int64, opt AddTimeOption) (*T
 
 // ListIssueTrackedTimes list tracked times of a single issue for a given repository
 func (c *Client) ListIssueTrackedTimes(owner, repo string, index int64, opt ListTrackedTimesOptions) ([]*TrackedTime, *Response, error) {
+	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
+		return nil, nil, err
+	}
 	link, _ := url.Parse(fmt.Sprintf("/repos/%s/%s/issues/%d/times", owner, repo, index))
 	opt.setDefaults()
 	link.RawQuery = opt.QueryEncode()
@@ -116,12 +125,18 @@ func (c *Client) ListIssueTrackedTimes(owner, repo string, index int64, opt List
 
 // ResetIssueTime reset tracked time of a single issue for a given repository
 func (c *Client) ResetIssueTime(owner, repo string, index int64) (*Response, error) {
+	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
+		return nil, err
+	}
 	_, resp, err := c.getResponse("DELETE", fmt.Sprintf("/repos/%s/%s/issues/%d/times", owner, repo, index), jsonHeader, nil)
 	return resp, err
 }
 
 // DeleteTime delete a specific tracked time by id of a single issue for a given repository
 func (c *Client) DeleteTime(owner, repo string, index, timeID int64) (*Response, error) {
+	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
+		return nil, err
+	}
 	_, resp, err := c.getResponse("DELETE", fmt.Sprintf("/repos/%s/%s/issues/%d/times/%d", owner, repo, index, timeID), jsonHeader, nil)
 	return resp, err
 }

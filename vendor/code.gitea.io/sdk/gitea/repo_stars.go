@@ -16,6 +16,9 @@ type ListStargazersOptions struct {
 
 // ListRepoStargazers list a repository's stargazers
 func (c *Client) ListRepoStargazers(user, repo string, opt ListStargazersOptions) ([]*User, *Response, error) {
+	if err := escapeValidatePathSegments(&user, &repo); err != nil {
+		return nil, nil, err
+	}
 	opt.setDefaults()
 	stargazers := make([]*User, 0, opt.PageSize)
 	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/repos/%s/%s/stargazers?%s", user, repo, opt.getURLQuery().Encode()), nil, nil, &stargazers)
@@ -24,6 +27,9 @@ func (c *Client) ListRepoStargazers(user, repo string, opt ListStargazersOptions
 
 // GetStarredRepos returns the repos that the given user has starred
 func (c *Client) GetStarredRepos(user string) ([]*Repository, *Response, error) {
+	if err := escapeValidatePathSegments(&user); err != nil {
+		return nil, nil, err
+	}
 	repos := make([]*Repository, 0, 10)
 	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/users/%s/starred", user), jsonHeader, nil, &repos)
 	return repos, resp, err
@@ -38,6 +44,9 @@ func (c *Client) GetMyStarredRepos() ([]*Repository, *Response, error) {
 
 // IsRepoStarring returns whether the authenticated user has starred the repo or not
 func (c *Client) IsRepoStarring(user, repo string) (bool, *Response, error) {
+	if err := escapeValidatePathSegments(&user, &repo); err != nil {
+		return false, nil, err
+	}
 	_, resp, err := c.getResponse("GET", fmt.Sprintf("/user/starred/%s/%s", user, repo), jsonHeader, nil)
 	if resp != nil {
 		switch resp.StatusCode {
@@ -54,6 +63,9 @@ func (c *Client) IsRepoStarring(user, repo string) (bool, *Response, error) {
 
 // StarRepo star specified repo as the authenticated user
 func (c *Client) StarRepo(user, repo string) (*Response, error) {
+	if err := escapeValidatePathSegments(&user, &repo); err != nil {
+		return nil, err
+	}
 	_, resp, err := c.getResponse("PUT", fmt.Sprintf("/user/starred/%s/%s", user, repo), jsonHeader, nil)
 	if resp != nil {
 		switch resp.StatusCode {
@@ -68,6 +80,9 @@ func (c *Client) StarRepo(user, repo string) (*Response, error) {
 
 // UnStarRepo remove star to specified repo as the authenticated user
 func (c *Client) UnStarRepo(user, repo string) (*Response, error) {
+	if err := escapeValidatePathSegments(&user, &repo); err != nil {
+		return nil, err
+	}
 	_, resp, err := c.getResponse("DELETE", fmt.Sprintf("/user/starred/%s/%s", user, repo), jsonHeader, nil)
 	if resp != nil {
 		switch resp.StatusCode {

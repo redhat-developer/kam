@@ -31,7 +31,10 @@ func (c *Client) CheckServerVersionConstraint(constraint string) error {
 		return err
 	}
 	if !check.Check(c.serverVersion) {
-		return fmt.Errorf("gitea server at %s does not satisfy version constraint %s", c.url, constraint)
+		c.mutex.RLock()
+		url := c.url
+		c.mutex.RUnlock()
+		return fmt.Errorf("gitea server at %s does not satisfy version constraint %s", url, constraint)
 	}
 	return nil
 }
@@ -51,7 +54,10 @@ func (c *Client) checkServerVersionGreaterThanOrEqual(v *version.Version) error 
 	}
 
 	if !c.serverVersion.GreaterThanOrEqual(v) {
-		return fmt.Errorf("gitea server at %s is older than %s", c.url, v.Original())
+		c.mutex.RLock()
+		url := c.url
+		c.mutex.RUnlock()
+		return fmt.Errorf("gitea server at %s is older than %s", url, v.Original())
 	}
 	return nil
 }

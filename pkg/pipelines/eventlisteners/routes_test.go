@@ -19,8 +19,7 @@ func TestGenerateRoute(t *testing.T) {
 			"namespace":         "cicd-environment",
 		},
 		"spec": map[string]interface{}{
-			"host": "",
-			"port": map[string]interface{}{"targetPort": float64(8080)},
+			"port": map[string]interface{}{"targetPort": float64(8000)},
 			"to": map[string]interface{}{
 				"kind":   "Service",
 				"name":   "el-cicd-event-listener",
@@ -55,7 +54,7 @@ func TestCreateRoute(t *testing.T) {
 			},
 			Port: &routev1.RoutePort{
 				TargetPort: intstr.IntOrString{
-					IntVal: 8080,
+					IntVal: 8000,
 				},
 			},
 			WildcardPolicy: routev1.WildcardPolicyNone,

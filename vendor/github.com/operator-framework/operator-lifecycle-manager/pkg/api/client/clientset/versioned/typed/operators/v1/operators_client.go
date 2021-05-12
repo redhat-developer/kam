@@ -1,5 +1,5 @@
 /*
-Copyright 2020 Red Hat, Inc.
+Copyright Red Hat, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,19 +19,29 @@ limitations under the License.
 package v1
 
 import (
-	v1 "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1"
+	v1 "github.com/operator-framework/api/pkg/operators/v1"
 	"github.com/operator-framework/operator-lifecycle-manager/pkg/api/client/clientset/versioned/scheme"
 	rest "k8s.io/client-go/rest"
 )
 
 type OperatorsV1Interface interface {
 	RESTClient() rest.Interface
+	OperatorsGetter
+	OperatorConditionsGetter
 	OperatorGroupsGetter
 }
 
 // OperatorsV1Client is used to interact with features provided by the operators.coreos.com group.
 type OperatorsV1Client struct {
 	restClient rest.Interface
+}
+
+func (c *OperatorsV1Client) Operators() OperatorInterface {
+	return newOperators(c)
+}
+
+func (c *OperatorsV1Client) OperatorConditions(namespace string) OperatorConditionInterface {
+	return newOperatorConditions(c, namespace)
 }
 
 func (c *OperatorsV1Client) OperatorGroups(namespace string) OperatorGroupInterface {
