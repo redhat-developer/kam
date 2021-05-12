@@ -176,24 +176,33 @@ func createRepository() error {
 }
 
 func loginArgoAPIServerLogin() error {
+	var stderr bytes.Buffer
 	argocdPath, err := executableBinaryPath("argocd")
 	if err != nil {
+		fmt.Println("++++++++++++++++")
 		return err
 	}
 
 	argocdServer, err := argocdAPIServer()
 	if err != nil {
+		fmt.Println("++++))))))))))++++")
 		return err
 	}
 
 	argocdPassword, err := argocdAPIServerPassword()
 	if err != nil {
+		fmt.Println("++++((((((((((+++++")
 		return err
 	}
 
+	fmt.Println(argocdServer)
+	fmt.Println(argocdPassword)
+
 	cmd := exec.Command(argocdPath, "login", "--username", "admin", "--password", argocdPassword, argocdServer, "--insecure")
+	cmd.Stderr = &stderr
 	err = cmd.Run()
 	if err != nil {
+		fmt.Println(stderr.String())
 		return err
 	}
 	return nil
@@ -225,7 +234,7 @@ func argocdAPIServer() (string, error) {
 }
 
 func argocdAPIServerPassword() (string, error) {
-	var stdout bytes.Buffer
+	var stdout, stderr bytes.Buffer
 	ocPath, err := executableBinaryPath("oc")
 	if err != nil {
 		return "", err
@@ -234,13 +243,16 @@ func argocdAPIServerPassword() (string, error) {
 	cmd := exec.Command(ocPath, "get", "secret", "openshift-gitops-cluster", "-n", "openshift-gitops", "-o", "jsonpath='{.data.admin\\.password}'")
 
 	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
 	err = cmd.Run()
 	if err != nil {
+		fmt.Println(stderr.String())
 		return "", err
 	}
 
 	data, err := base64.StdEncoding.DecodeString(strings.Trim(stdout.String(), "'"))
 	if err != nil {
+		fmt.Println(err.Error())
 		return "", err
 	}
 
