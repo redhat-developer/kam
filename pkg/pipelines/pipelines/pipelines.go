@@ -74,6 +74,7 @@ func createGitCloneTask(name string) pipelinev1.PipelineTask {
 			createTaskParam("url", "$(params.GIT_REPO)"),
 			createTaskParam("revision", "$(params.GIT_REF)"),
 		},
+		RunAfter: []string{"set-commit-status"},
 	}
 }
 
@@ -150,6 +151,7 @@ func createCIPipelineTask(taskName string) pipelinev1.PipelineTask {
 		Params: []pipelinev1.Param{
 			createTaskParam("DRYRUN", "true"),
 		},
+		RunAfter: []string{"set-commit-status"},
 	}
 }
 

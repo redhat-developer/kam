@@ -14,8 +14,15 @@ import os
 import http.client
 status_url = "$(params.API_PATH_PREFIX)" + "/repos/$(params.REPO)/" + \
 	"statuses/$(params.COMMIT_SHA)"
+state = "$(params.STATE)"
+if state == 'Failed':
+	state = 'failure'
+elif state == 'Succeeded':
+	state = 'success'
+else:
+	state = 'pending'
 data = {
-	"state": "$(params.STATE)",
+	"state": state,
 	"description": "$(params.DESCRIPTION)",
 	"context": "$(params.CONTEXT)"
 }
