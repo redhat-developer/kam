@@ -34,7 +34,7 @@ func TestWriteResources(t *testing.T) {
 		errMsg string
 	}{
 		{"Path with ~", "~/manifest", ""},
-		{"Path without ~", filepath.Join(path, "manifest/gitops"), ""},
+		{"Path without ~", filepath.ToSlash(filepath.Join(path, "manifest", "gitops")), ""},
 		{"Path without permission", "/", "failed to MkDirAll for /test/myfile.yaml"},
 	}
 
@@ -45,10 +45,10 @@ func TestWriteResources(t *testing.T) {
 				t.Fatalf("error mismatch: got %v, want %v", err, tt.errMsg)
 			}
 			if tt.path[0] == '~' {
-				tt.path = filepath.Join(path, strings.Split(tt.path, "~")[1])
+				tt.path = filepath.ToSlash(filepath.Join(path, strings.Split(tt.path, "~")[1]))
 			}
 			if err == nil {
-				assertResourceExists(t, filepath.Join(tt.path, "test/myfile.yaml"), sampleYAML)
+				assertResourceExists(t, filepath.Join(tt.path, "test", "myfile.yaml"), sampleYAML)
 			}
 		})
 	}

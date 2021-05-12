@@ -219,18 +219,18 @@ type testVisitor struct {
 }
 
 func (v *testVisitor) Service(app *Application, env *Environment, svc *Service) error {
-	v.paths = append(v.paths, filepath.Join(env.Name, "apps", app.Name, "services", svc.Name))
-	v.pipelineServices = append(v.pipelineServices, filepath.Join("cicd", env.Name, svc.Name))
+	v.paths = append(v.paths, filepath.ToSlash(filepath.Join(env.Name, "apps", app.Name, "services", svc.Name)))
+	v.pipelineServices = append(v.pipelineServices, filepath.ToSlash(filepath.Join("cicd", env.Name, svc.Name)))
 	return nil
 }
 func (v *testVisitor) Application(env *Environment, app *Application) error {
-	v.paths = append(v.paths, filepath.Join(env.Name, "apps", app.Name))
+	v.paths = append(v.paths, filepath.ToSlash(filepath.Join(env.Name, "apps", app.Name)))
 	return nil
 }
 func (v *testVisitor) Environment(env *Environment) error {
 	if env.Name == "cicd" {
 		v.paths = append(v.paths, v.pipelineServices...)
 	}
-	v.paths = append(v.paths, filepath.Join("envs", env.Name))
+	v.paths = append(v.paths, filepath.ToSlash(filepath.Join("envs", env.Name)))
 	return nil
 }

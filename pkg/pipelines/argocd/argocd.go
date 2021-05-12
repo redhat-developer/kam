@@ -104,9 +104,9 @@ type argocdBuilder struct {
 }
 
 func (b *argocdBuilder) Application(env *config.Environment, app *config.Application) error {
-	basePath := filepath.Join(config.PathForArgoCD())
+	basePath := filepath.ToSlash(filepath.Join(filepath.Join(config.PathForArgoCD())))
 	argoFiles := res.Resources{}
-	filename := filepath.Join(basePath, env.Name+"-"+app.Name+"-app.yaml")
+	filename := filepath.ToSlash(filepath.Join(basePath, env.Name+"-"+app.Name+"-app.yaml"))
 
 	argoFiles[filename] = makeApplication(app, env.Name+"-"+app.Name, b.argoNS,
 		defaultProject,
@@ -118,9 +118,9 @@ func (b *argocdBuilder) Application(env *config.Environment, app *config.Applica
 }
 
 func (b *argocdBuilder) Environment(env *config.Environment) error {
-	basePath := filepath.Join(config.PathForArgoCD())
+	basePath := filepath.ToSlash(filepath.Join(filepath.Join(config.PathForArgoCD())))
 	argoFiles := res.Resources{}
-	filename := filepath.Join(basePath, env.Name+"-env-app.yaml")
+	filename := filepath.ToSlash(filepath.Join(basePath, env.Name+"-env-app.yaml"))
 
 	argoFiles[filename] = makeApplication(
 		nil,
@@ -137,16 +137,16 @@ func argoCDConfigResources(cfg *config.Config, repoURL string, files res.Resourc
 	if cfg.ArgoCD.Namespace == "" {
 		return nil
 	}
-	basePath := filepath.Join(config.PathForArgoCD())
-	filename := filepath.Join(basePath, "kustomization.yaml")
-	files[filepath.Join(basePath, "argo-app.yaml")] =
+	basePath := filepath.ToSlash(filepath.Join(config.PathForArgoCD()))
+	filename := filepath.ToSlash(filepath.Join(basePath, "kustomization.yaml"))
+	files[filepath.ToSlash(filepath.Join(basePath, "argo-app.yaml"))] =
 		ignoreDifferences(makeApplication(nil, "argo-app", cfg.ArgoCD.Namespace,
 			defaultProject, cfg.ArgoCD.Namespace, defaultServer,
 			&argoappv1.ApplicationSource{RepoURL: repoURL, Path: basePath}))
 	if cfg.Pipelines != nil {
-		files[filepath.Join(basePath, "cicd-app.yaml")] = ignoreDifferences(
+		files[filepath.ToSlash(filepath.Join(basePath, "cicd-app.yaml"))] = ignoreDifferences(
 			makeApplication(nil, "cicd-app", cfg.ArgoCD.Namespace, defaultProject, cfg.Pipelines.Name, defaultServer,
-				&argoappv1.ApplicationSource{RepoURL: repoURL, Path: filepath.Join(config.PathForPipelines(cfg.Pipelines), "overlays")}))
+				&argoappv1.ApplicationSource{RepoURL: repoURL, Path: filepath.ToSlash(filepath.Join(config.PathForPipelines(cfg.Pipelines), "overlays"))}))
 	}
 	resourceNames := []string{}
 	for k := range files {
@@ -161,7 +161,7 @@ func makeAppSource(env *config.Environment, app *config.Application, repoURL str
 	if app.ConfigRepo == nil {
 		return &argoappv1.ApplicationSource{
 			RepoURL: repoURL,
-			Path:    filepath.Join(config.PathForApplication(env, app), "overlays"),
+			Path:    filepath.ToSlash(filepath.Join(config.PathForApplication(env, app), "overlays")),
 		}
 	}
 	return &argoappv1.ApplicationSource{
@@ -172,8 +172,8 @@ func makeAppSource(env *config.Environment, app *config.Application, repoURL str
 }
 
 func makeEnvSource(env *config.Environment, repoURL string) *argoappv1.ApplicationSource {
-	envPath := filepath.Join(config.PathForEnvironment(env), "env")
-	envBasePath := filepath.Join(envPath, "overlays")
+	envPath := filepath.ToSlash(filepath.Join(config.PathForEnvironment(env), "env"))
+	envBasePath := filepath.ToSlash(filepath.Join(envPath, "overlays"))
 	return &argoappv1.ApplicationSource{
 		RepoURL: repoURL,
 		Path:    envBasePath,

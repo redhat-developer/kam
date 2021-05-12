@@ -28,7 +28,7 @@ func TestBuildEventListener(t *testing.T) {
 		},
 		GitOpsURL: "http://github.com/org/gitops.git",
 	}
-	cicdPath := filepath.Join("config", "test-cicd")
+	cicdPath := filepath.ToSlash(filepath.Join("config", "test-cicd"))
 	got, err := buildEventListenerResources(testRepoName, m)
 	assertNoError(t, err)
 	want := res.Resources{
@@ -51,7 +51,7 @@ func TestBuildEventListenerWithServiceWithNoURL(t *testing.T) {
 			testEnv(testService(), "dev"),
 		},
 	}
-	cicdPath := filepath.Join("config", "test-cicd")
+	cicdPath := filepath.ToSlash(filepath.Join("config", "test-cicd"))
 	gitOpsRepo := "http://github.com/org/gitops.git"
 	got, err := buildEventListenerResources(gitOpsRepo, m)
 	assertNoError(t, err)

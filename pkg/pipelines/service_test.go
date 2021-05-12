@@ -410,7 +410,7 @@ func TestAddServiceFilePaths(t *testing.T) {
 
 	fakeFs := ioutils.NewMemoryFilesystem()
 	outputPath := afero.GetTempDir(fakeFs, "test")
-	pipelinesPath := filepath.Join(outputPath, pipelinesFile)
+	pipelinesPath := filepath.Join(outputPath, pipelinesFile) // Don't call filepath.ToSlash
 	m := buildManifest(true, true)
 	b, err := yaml.Marshal(m)
 	assertNoError(t, err)
@@ -441,7 +441,7 @@ func TestAddServiceFilePaths(t *testing.T) {
 	for _, path := range wantedPaths {
 		t.Run(fmt.Sprintf("checking path %s already exists", path), func(rt *testing.T) {
 			// The inmemory version of Afero doesn't return errors
-			exists, _ := fakeFs.Exists(filepath.Join(outputPath, path))
+			exists, _ := fakeFs.Exists(filepath.Join(outputPath, path)) // Don't call filepath.ToSlash
 			if !exists {
 				t.Fatalf("The file is not present at : %v", path)
 			}
@@ -454,7 +454,7 @@ func TestAddServiceFolderPaths(t *testing.T) {
 
 	fakeFs := ioutils.NewMemoryFilesystem()
 	outputPath := afero.GetTempDir(fakeFs, "test")
-	pipelinesPath := filepath.Join(outputPath, pipelinesFile)
+	pipelinesPath := filepath.Join(outputPath, pipelinesFile) // Don't call filepath.ToSlash
 	m := buildManifest(true, true)
 	b, err := yaml.Marshal(m)
 	assertNoError(t, err)
@@ -475,7 +475,7 @@ func TestAddServiceFolderPaths(t *testing.T) {
 	for _, path := range wantedPaths {
 		t.Run(fmt.Sprintf("checking path %s already exists", path), func(rt *testing.T) {
 			// The inmemory version of Afero doesn't return errors
-			exists, _ := fakeFs.DirExists(filepath.Join(outputPath, path))
+			exists, _ := fakeFs.DirExists(filepath.Join(outputPath, path)) // Don't call filepath.ToSlash
 			if !exists {
 				t.Fatalf("The directory does not exist at path : %v", path)
 			}
@@ -566,7 +566,7 @@ func TestAddServiceWithImageWithNoPipelines(t *testing.T) {
 
 	fakeFs := ioutils.NewMemoryFilesystem()
 	outputPath := afero.GetTempDir(fakeFs, "test")
-	pipelinesPath := filepath.Join(outputPath, pipelinesFile)
+	pipelinesPath := filepath.Join(outputPath, pipelinesFile) // Don't call filepath.ToSlash
 	m := buildManifest(true, true)
 	m.Environments = append(m.Environments, &config.Environment{
 		Name: "staging",
@@ -591,7 +591,7 @@ func TestAddServiceWithImageWithNoPipelines(t *testing.T) {
 	for _, path := range wantedPaths {
 		t.Run(fmt.Sprintf("checking path %s already exists", path), func(rt *testing.T) {
 			// The inmemory version of Afero doesn't return errors
-			exists, _ := fakeFs.DirExists(filepath.Join(outputPath, path))
+			exists, _ := fakeFs.DirExists(filepath.Join(outputPath, path)) // Don't call filepath.ToSlash
 			if !exists {
 				t.Fatalf("The directory does not exist at path : %v", path)
 			}
@@ -604,7 +604,7 @@ func TestAddServiceWithoutImage(t *testing.T) {
 
 	fakeFs := ioutils.NewMemoryFilesystem()
 	outputPath := afero.GetTempDir(fakeFs, "test")
-	pipelinesPath := filepath.Join(outputPath, pipelinesFile)
+	pipelinesPath := filepath.ToSlash(filepath.Join(outputPath, pipelinesFile))
 	m := buildManifest(true, true)
 	m.Environments = append(m.Environments, &config.Environment{
 		Name: "staging",
@@ -630,11 +630,11 @@ func TestAddServiceWithoutImage(t *testing.T) {
 
 	for path, resource := range files {
 		t.Run(fmt.Sprintf("checking path %s already exists", path), func(rt *testing.T) {
-			filePath := filepath.Join(outputPath, path)
+			filePath := filepath.Join(outputPath, path) // Don't call filepath.ToSlash
 			exists, err := fakeFs.Exists(filePath)
 			assertNoError(t, err)
 			if !exists {
-				t.Fatalf("The file does not exist at path : %s", filepath.Join(outputPath, path))
+				t.Fatalf("The file does not exist at path : %s", filepath.Join(outputPath, path)) // Don't call filepath.ToSlash
 			}
 			got, err := fakeFs.ReadFile(filePath)
 			assertNoError(t, err)

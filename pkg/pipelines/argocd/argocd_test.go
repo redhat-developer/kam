@@ -37,8 +37,8 @@ var (
 		},
 	}
 
-	testEnvPath     = filepath.Join(config.PathForEnvironment(testEnv), "env")
-	testEnvBasePath = filepath.Join(testEnvPath, "overlays")
+	testEnvPath     = filepath.ToSlash(filepath.Join(config.PathForEnvironment(testEnv), "env"))
+	testEnvBasePath = filepath.ToSlash(filepath.Join(testEnvPath, "overlays"))
 )
 
 func TestBuildCreatesArgoCD(t *testing.T) {
@@ -86,7 +86,7 @@ func TestBuildCreatesArgoCD(t *testing.T) {
 			Spec: argoappv1.ApplicationSpec{
 				Source: argoappv1.ApplicationSource{
 					RepoURL: testRepoURL,
-					Path:    filepath.Join(config.PathForApplication(testEnv, testApp), "overlays"),
+					Path:    filepath.ToSlash(filepath.Join(config.PathForApplication(testEnv, testApp), "overlays")),
 				},
 				Destination: argoappv1.ApplicationDestination{
 					Server:    defaultServer,

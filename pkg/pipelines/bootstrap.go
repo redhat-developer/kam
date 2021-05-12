@@ -281,12 +281,12 @@ func bootstrapResources(o *BootstrapOptions, appFs afero.Fs) (res.Resources, res
 	if cfg == nil {
 		return nil, nil, errors.New("failed to find a pipeline configuration - unable to continue bootstrap")
 	}
-	secretFilename := filepath.Join("03-secrets", secretName+".yaml")
+	secretFilename := filepath.ToSlash(filepath.Join("03-secrets", secretName+".yaml"))
 	if !o.Insecure {
-		secretsPath := filepath.Join(config.PathForPipelines(cfg), "base", secretFilename)
+		secretsPath := filepath.ToSlash(filepath.Join(config.PathForPipelines(cfg), "base", secretFilename))
 		bootstrapped[secretsPath] = hookSecret
 	} else {
-		secretFilename = filepath.Join("secrets", secretName+".yaml")
+		secretFilename = filepath.ToSlash(filepath.Join("secrets", secretName+".yaml"))
 		otherResources[secretFilename] = opaqueSecret
 	}
 	bindingName, imageRepoBindingFilename, svcImageBinding := createSvcImageBinding(cfg, devEnv, appName, serviceName, imageRepo, !isInternalRegistry)
@@ -624,7 +624,7 @@ func createCICDResources(fs afero.Fs, repo scm.Repository, pipelineConfig *confi
 	outputs[ciPipelinesPath] = pipelines.CreateCIPipeline(meta.NamespacedName(cicdNamespace, "ci-dryrun-from-push-pipeline"), cicdNamespace)
 	outputs[appCiPipelinesPath] = pipelines.CreateAppCIPipeline(meta.NamespacedName(cicdNamespace, "app-ci-pipeline"))
 	pushBinding, pushBindingName := repo.CreatePushBinding(cicdNamespace)
-	outputs[filepath.Join("06-bindings", pushBindingName+".yaml")] = pushBinding
+	outputs[filepath.ToSlash(filepath.Join("06-bindings", pushBindingName+".yaml"))] = pushBinding
 	outputs[pushTemplatePath] = triggers.CreateCIDryRunTemplate(cicdNamespace, saName)
 	outputs[appCIPushTemplatePath] = triggers.CreateDevCIBuildPRTemplate(cicdNamespace, saName)
 	outputs[eventListenerPath] = eventlisteners.Generate(repo, cicdNamespace, saName, eventlisteners.GitOpsWebhookSecret)

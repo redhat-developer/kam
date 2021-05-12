@@ -17,7 +17,7 @@ import (
 func TestAddEnv(t *testing.T) {
 	fakeFs := ioutils.NewMemoryFilesystem()
 	gitopsPath := afero.GetTempDir(fakeFs, "test")
-	pipelinesFile := filepath.Join(gitopsPath, pipelinesFile)
+	pipelinesFile := filepath.ToSlash(filepath.Join(gitopsPath, pipelinesFile))
 	envParameters := EnvParameters{
 		PipelinesFolderPath: gitopsPath,
 		EnvName:             "dev",
@@ -36,7 +36,7 @@ func TestAddEnv(t *testing.T) {
 	for _, path := range wantedPaths {
 		t.Run(fmt.Sprintf("checking path %s already exists", path), func(rt *testing.T) {
 			// The inmemory version of Afero doesn't return errors
-			exists, _ := fakeFs.Exists(filepath.Join(gitopsPath, path))
+			exists, _ := fakeFs.Exists(filepath.Join(gitopsPath, path)) // Don't call filepath.ToSlash
 			if !exists {
 				t.Fatalf("The file is not present at path : %v", path)
 			}
@@ -59,7 +59,7 @@ func TestAddEnv(t *testing.T) {
 func TestAddEnvWithClusterProvided(t *testing.T) {
 	fakeFs := ioutils.NewMemoryFilesystem()
 	gitopsPath := afero.GetTempDir(fakeFs, "test")
-	pipelinesFilePath := filepath.Join(gitopsPath, pipelinesFile)
+	pipelinesFilePath := filepath.ToSlash(filepath.Join(gitopsPath, pipelinesFile))
 	envParameters := EnvParameters{
 		PipelinesFolderPath: gitopsPath,
 		EnvName:             "dev",
@@ -79,7 +79,7 @@ func TestAddEnvWithClusterProvided(t *testing.T) {
 	for _, path := range wantedPaths {
 		t.Run(fmt.Sprintf("checking path %s already exists", path), func(rt *testing.T) {
 			// The inmemory version of Afero doesn't return errors
-			exists, _ := fakeFs.Exists(filepath.Join(gitopsPath, path))
+			exists, _ := fakeFs.Exists(filepath.Join(gitopsPath, path)) // Don't call filepath.ToSlash
 			if !exists {
 				t.Fatalf("The file is not present at path : %v", path)
 			}
@@ -106,7 +106,7 @@ func TestAddEnvWithExistingName(t *testing.T) {
 	fakeFs := ioutils.NewMemoryFilesystem()
 	gitopsPath := afero.GetTempDir(fakeFs, "test")
 
-	pipelinesFile := filepath.Join(gitopsPath, pipelinesFile)
+	pipelinesFile := filepath.ToSlash(filepath.Join(gitopsPath, pipelinesFile))
 	envParameters := EnvParameters{
 		PipelinesFolderPath: gitopsPath,
 		EnvName:             "dev",
