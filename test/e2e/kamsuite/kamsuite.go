@@ -198,7 +198,7 @@ func loginArgoAPIServerLogin() error {
 	fmt.Println(argocdServer)
 	fmt.Println(argocdPassword)
 
-	cmd := exec.Command(argocdPath, "login", "--username", "admin", "--password", argocdPassword, argocdServer, "--insecure")
+	cmd := exec.Command(argocdPath, "login", "--username", "admin", "--password", argocdPassword, argocdServer, "--grpc-web", "--insecure")
 	cmd.Stderr = &stderr
 	err = cmd.Run()
 	if err != nil {
