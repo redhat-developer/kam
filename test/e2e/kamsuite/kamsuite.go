@@ -176,7 +176,7 @@ func createRepository() error {
 }
 
 func loginArgoAPIServerLogin() error {
-	var stderr, stdout bytes.Buffer
+	var stderr, stderr1, stdout bytes.Buffer
 	argocdPath, err := executableBinaryPath("argocd")
 	if err != nil {
 		fmt.Println("++++++++++++++++")
@@ -201,8 +201,10 @@ func loginArgoAPIServerLogin() error {
 
 	cmd1 := exec.Command(ocPath, "get", "pod", "openshift-gitops")
 	cmd1.Stdout = &stdout
+	cmd1.Stderr = &stderr1
 	err = cmd1.Run()
 	if err != nil {
+		fmt.Println(stderr1.String())
 		return err
 	}
 	fmt.Println(stdout.String())
