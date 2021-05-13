@@ -199,7 +199,7 @@ func loginArgoAPIServerLogin() error {
 	fmt.Println(argocdServer)
 	fmt.Println(argocdPassword)
 
-	cmd1 := exec.Command(ocPath, "get", "pod", "openshift-gitops")
+	cmd1 := exec.Command(ocPath, "get", "pod", "-n", "openshift-gitops")
 	cmd1.Stdout = &stdout
 	cmd1.Stderr = &stderr1
 	err = cmd1.Run()
