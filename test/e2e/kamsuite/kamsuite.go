@@ -197,10 +197,14 @@ func loginArgoAPIServerLogin() error {
 		return err
 	}
 
+	// TODO: Replace it with a better logic
+	time.Sleep(60 * time.Second)
+
 	cmd := exec.Command(argocdPath, "login", "--username", "admin", "--password", argocdPassword, argocdServer, "--grpc-web", "--insecure")
 	cmd.Stderr = &stderr
 	err = cmd.Run()
 	if err != nil {
+		fmt.Println(stderr.String())
 		return err
 	}
 	return nil
