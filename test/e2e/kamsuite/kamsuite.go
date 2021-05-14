@@ -11,12 +11,17 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/cucumber/godog"
 	"github.com/cucumber/messages-go/v10"
 	"github.com/jenkins-x/go-scm/scm"
 	"github.com/jenkins-x/go-scm/scm/factory"
 	"github.com/redhat-developer/kam/pkg/pipelines/git"
+)
+
+const (
+	podStatus = "oc get pods -n openshift-gitops -l app.kubernetes.io/name=openshift-gitops-server -o jsonpath='{.items[*].status.phase}'"
 )
 
 // FeatureContext defines godog.Suite steps for the test suite.
@@ -176,44 +181,26 @@ func createRepository() error {
 }
 
 func loginArgoAPIServerLogin() error {
-	var stderr, stderr1, stdout bytes.Buffer
+	var stderr bytes.Buffer
 	argocdPath, err := executableBinaryPath("argocd")
 	if err != nil {
-		fmt.Println("++++++++++++++++")
 		return err
 	}
-	ocPath, _ := executableBinaryPath("oc")
 
 	argocdServer, err := argocdAPIServer()
 	if err != nil {
-		fmt.Println("++++))))))))))++++")
 		return err
 	}
 
 	argocdPassword, err := argocdAPIServerPassword()
 	if err != nil {
-		fmt.Println("++++((((((((((+++++")
 		return err
 	}
-
-	fmt.Println(argocdServer)
-	fmt.Println(argocdPassword)
-
-	cmd1 := exec.Command(ocPath, "get", "pod", "-n", "openshift-gitops")
-	cmd1.Stdout = &stdout
-	cmd1.Stderr = &stderr1
-	err = cmd1.Run()
-	if err != nil {
-		fmt.Println(stderr1.String())
-		return err
-	}
-	fmt.Println(stdout.String())
 
 	cmd := exec.Command(argocdPath, "login", "--username", "admin", "--password", argocdPassword, argocdServer, "--grpc-web", "--insecure")
 	cmd.Stderr = &stderr
 	err = cmd.Run()
 	if err != nil {
-		fmt.Println(stderr.String())
 		return err
 	}
 	return nil
@@ -234,6 +221,14 @@ func argocdAPIServer() (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	jsonPathString := []string{"get", "pods", "-n", "openshift-gitops",
+		"-l", "app.kubernetes.io/name=openshift-gitops-server",
+		"-o", "jsonpath='{.items[*].status.phase}'"}
+	if waitForPodStatusMatch(24, ocPath, "Running", jsonPathString); err != nil {
+		return "", err
+	}
+
 	cmd := exec.Command(ocPath, "get", "routes", "-n", "openshift-gitops",
 		"-o", "jsonpath='{.items[?(@.metadata.name==\"openshift-gitops-server\")].spec.host}'")
 	cmd.Stdout = &stdout
@@ -257,15 +252,31 @@ func argocdAPIServerPassword() (string, error) {
 	cmd.Stderr = &stderr
 	err = cmd.Run()
 	if err != nil {
-		fmt.Println(stderr.String())
 		return "", err
 	}
 
 	data, err := base64.StdEncoding.DecodeString(strings.Trim(stdout.String(), "'"))
 	if err != nil {
-		fmt.Println(err.Error())
 		return "", err
 	}
 
 	return string(data), nil
+}
+
+func waitForPodStatusMatch(retryCount int, program string, matchString string, arg []string) error {
+	var stderr, stdout bytes.Buffer
+	cmd := exec.Command(program, arg...)
+
+	cmd.Stderr = &stderr
+	cmd.Stdout = &stdout
+
+	for i := 0; i < retryCount; i++ {
+		err := cmd.Run()
+		if err == nil && strings.Contains(stdout.String(), matchString) {
+			return nil
+		}
+		time.Sleep(5 * time.Second)
+	}
+
+	return fmt.Errorf("Error is : %v", stderr.String())
 }
