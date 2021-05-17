@@ -37,6 +37,12 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^login argocd API server$`,
 		loginArgoAPIServerLogin)
 
+	s.Step(`^application "([^"]*)" should be in "([^"]*)" state$`,
+		applicationState)
+
+	s.Step(`^Wait for "(\d*)" seconds$`,
+		waitForTime)
+
 	s.BeforeSuite(func() {
 		fmt.Println("Before suite")
 		if !envVariableCheck() {
@@ -180,6 +186,19 @@ func createRepository() error {
 	return nil
 }
 
+func waitForTime(wait int) error {
+	time.Sleep(time.Duration(wait) * time.Second)
+	return nil
+}
+
+func applicationState(appName string, appState string) error {
+	err := argoAppStatusMatch(appState, appName)
+	if err != nil {
+		return fmt.Errorf("Error is : %v", err)
+	}
+	return nil
+}
+
 func loginArgoAPIServerLogin() error {
 	var stderr bytes.Buffer
 	argocdPath, err := executableBinaryPath("argocd")
@@ -196,9 +215,6 @@ func loginArgoAPIServerLogin() error {
 	if err != nil {
 		return err
 	}
-
-	// TODO: Replace it with a better logic
-	time.Sleep(60 * time.Second)
 
 	cmd := exec.Command(argocdPath, "login", "--username", "admin", "--password", argocdPassword, argocdServer, "--grpc-web", "--insecure")
 	cmd.Stderr = &stderr
@@ -226,11 +242,13 @@ func argocdAPIServer() (string, error) {
 		return "", err
 	}
 
-	jsonPathString := []string{"get", "pods", "-n", "openshift-gitops",
-		"-l", "app.kubernetes.io/name=openshift-gitops-server",
-		"-o", "jsonpath='{.items[*].status.phase}'"}
-	if waitForPodStatusMatch(24, ocPath, "Running", jsonPathString); err != nil {
-		return "", err
+	deployments := []string{"openshift-gitops-server", "openshift-gitops-repo-server",
+		"openshift-gitops-redis", "openshift-gitops-applicationset-controller", "kam", "cluster"}
+
+	for deployment := range deployments {
+		if waitForDeploymentsUpAndRunning("openshift-gitops", deployments[deployment]); err != nil {
+			return "", err
+		}
 	}
 
 	cmd := exec.Command(ocPath, "get", "routes", "-n", "openshift-gitops",
@@ -267,20 +285,40 @@ func argocdAPIServerPassword() (string, error) {
 	return string(data), nil
 }
 
-func waitForPodStatusMatch(retryCount int, program string, matchString string, arg []string) error {
+func waitForDeploymentsUpAndRunning(namespace string, deploymentName string) error {
 	var stderr, stdout bytes.Buffer
-	cmd := exec.Command(program, arg...)
+	ocPath, err := executableBinaryPath("oc")
+	if err != nil {
+		return err
+	}
+	cmd := exec.Command(ocPath, "rollout", "status", "deployment", deploymentName, "-n", namespace)
 
 	cmd.Stderr = &stderr
 	cmd.Stdout = &stdout
+	err = cmd.Run()
+	if err == nil && strings.Contains(stdout.String(), "successfully rolled out") {
+		return nil
+	}
+	return fmt.Errorf("Error is : %v", stderr.String())
+}
 
-	for i := 0; i < retryCount; i++ {
-		err := cmd.Run()
-		if err == nil && strings.Contains(stdout.String(), matchString) {
-			return nil
-		}
-		time.Sleep(5 * time.Second)
+func argoAppStatusMatch(matchString string, appName string) error {
+	var stdout, stderr bytes.Buffer
+	argocdPath, err := executableBinaryPath("argocd")
+	if err != nil {
+		return err
 	}
 
+	appList := []string{"app", "list"}
+	cmd := exec.Command(argocdPath, appList...)
+	cmd.Stdout = &stdout
+	if err = cmd.Run(); err != nil {
+		return err
+	}
+	re, _ := regexp.Compile(appName + ".+")
+	appDetailsString := re.FindString(stdout.String())
+	if strings.Contains(appDetailsString, matchString) {
+		return nil
+	}
 	return fmt.Errorf("Error is : %v", stderr.String())
 }
