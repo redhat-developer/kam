@@ -315,6 +315,7 @@ func argoAppStatusMatch(matchString string, appName string) error {
 	if err = cmd.Run(); err != nil {
 		return err
 	}
+	fmt.Println(stdout.String())
 	re, _ := regexp.Compile(appName + ".+")
 	appDetailsString := re.FindString(stdout.String())
 	if strings.Contains(appDetailsString, matchString) {
