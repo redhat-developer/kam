@@ -173,7 +173,7 @@ func createRepository() error {
 	}
 
 	ri := &scm.RepositoryInput{
-		Private:     true,
+		Private:     false,
 		Description: "repocreate",
 		Namespace:   "",
 		Name:        repoName,

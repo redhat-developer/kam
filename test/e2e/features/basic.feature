@@ -43,9 +43,9 @@ Feature: Basic test
         Then executing "git push -u origin main" succeeds
         Then executing "oc apply -k config/argocd/" succeeds
         Then login argocd API server
-        And Wait for "120" seconds
+        And Wait for "90" seconds
         Then application "argo-app" should be in "Synced" state
-        And application "cicd-app" should be in "Synced" state
         And application "dev-app-taxi" should be in "Synced" state
         And application "dev-env" should be in "Synced" state
         And application "stage-env" should be in "Synced" state
+        And application "cicd-app" should be in "Synced" state
