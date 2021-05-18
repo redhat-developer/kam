@@ -68,21 +68,21 @@ func FeatureContext(s *godog.Suite) {
 
 	s.AfterScenario(func(*messages.Pickle, error) {
 		fmt.Println("After scenario")
-		re := regexp.MustCompile(`[a-z]+`)
-		scm := re.FindAllString(os.Getenv("GITOPS_REPO_URL"), 2)[1]
+		// re := regexp.MustCompile(`[a-z]+`)
+		// scm := re.FindAllString(os.Getenv("GITOPS_REPO_URL"), 2)[1]
 
-		switch scm {
-		case "github":
-			deleteGithubRepository(os.Getenv("GITOPS_REPO_URL"), os.Getenv("GIT_ACCESS_TOKEN"))
-		case "gitlab":
-			deleteGitlabRepoStep := []string{"repo", "delete", strings.Split(strings.Split(os.Getenv("GITOPS_REPO_URL"), ".com/")[1], ".")[0], "-y"}
-			ok, errMessage := deleteGitlabRepository(deleteGitlabRepoStep)
-			if !ok {
-				fmt.Println(errMessage)
-			}
-		default:
-			fmt.Println("SCM is not supported")
-		}
+		// switch scm {
+		// case "github":
+		// 	deleteGithubRepository(os.Getenv("GITOPS_REPO_URL"), os.Getenv("GIT_ACCESS_TOKEN"))
+		// case "gitlab":
+		// 	deleteGitlabRepoStep := []string{"repo", "delete", strings.Split(strings.Split(os.Getenv("GITOPS_REPO_URL"), ".com/")[1], ".")[0], "-y"}
+		// 	ok, errMessage := deleteGitlabRepository(deleteGitlabRepoStep)
+		// 	if !ok {
+		// 		fmt.Println(errMessage)
+		// 	}
+		// default:
+		// 	fmt.Println("SCM is not supported")
+		// }
 	})
 }
 
