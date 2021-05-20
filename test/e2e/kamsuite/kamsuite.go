@@ -113,7 +113,7 @@ func envVariableCheck() bool {
 		if val == "prow" {
 			fmt.Printf("Running e2e test in OpenShift CI\n")
 			os.Setenv("SERVICE_REPO_URL", "https://github.com/kam-bot/taxi")
-			os.Setenv("GITOPS_REPO_URL", "https://github.com/kam-bot/taxi-"+os.Getenv("PRNO")+".git")
+			os.Setenv("GITOPS_REPO_URL", "https://github.com/kam-bot/taxi-"+os.Getenv("PRNO"))
 			os.Setenv("IMAGE_REPO", "quay.io/kam-bot/taxi")
 			os.Setenv("DOCKERCONFIGJSON_PATH", os.Getenv("KAM_QUAY_DOCKER_CONF_SECRET_FILE"))
 			os.Setenv("GIT_ACCESS_TOKEN", os.Getenv("GITHUB_TOKEN"))
@@ -316,6 +316,19 @@ func argoAppStatusMatch(matchString string, appName string) error {
 		return err
 	}
 	fmt.Println(stdout.String())
+
+	apps := []string{"argo-app", "dev-app-taxi", "dev-env"}
+
+	for app := range apps {
+		appList := []string{"app", "get", apps[app]}
+		cmd := exec.Command(argocdPath, appList...)
+		cmd.Stdout = &stdout
+		if err = cmd.Run(); err != nil {
+			return err
+		}
+		fmt.Println(stdout.String())
+	}
+
 	re, _ := regexp.Compile(appName + ".+")
 	appDetailsString := re.FindString(stdout.String())
 	if strings.Contains(appDetailsString, matchString) {
