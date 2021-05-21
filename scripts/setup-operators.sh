@@ -69,6 +69,39 @@ EOF
 create_sealed_secrets_operator_instance
 echo "Completed sealed-secrets operator instance creation"
 
+echo "Starting openshift-pipelines operator installation"
+install_openshift_pipelines_operator() {
+oc create -f - <<EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: openshift-pipelines-operator-rh
+  namespace: openshift-operators
+  labels:
+    operators.coreos.com/openshift-pipelines-operator-rh.openshift-operators: ''
+spec:
+  channel: stable
+  name: openshift-pipelines-operator-rh
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+EOF
+}
+
+install_openshift_pipelines_operator
+# pipelines operator status
+count=0
+while [ "$count" -lt "15" ];
+do
+    operator_status=`oc get csv -n openshift-operators | grep openshift-pipelines-operator`
+    if [[ $operator_status == *"Succeeded"* ]]; then
+        break
+    else
+        count=`expr $count + 1`
+        sleep 10
+    fi
+done
+echo "Completed openshift-pipelines operator installation"
+
 echo "Starting OpenShift GitOps operator installation"
 install_openshift_gitops_operator(){
 oc create -f - <<EOF
