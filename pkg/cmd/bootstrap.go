@@ -310,7 +310,7 @@ func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client,
 		}
 	}
 
-	spinner.Start("Checking if ArgoCD is installed with the default configuration", false)
+	spinner.Start("Checking if Argo CD is installed with the default configuration", false)
 	if err := client.CheckIfArgoCDExists(argocd.ArgoCDNamespace); err != nil {
 		warnIfNotFound(spinner, "Please install OpenShift GitOps Operator from OperatorHub", err)
 		if !apierrors.IsNotFound(err) {
@@ -321,7 +321,7 @@ func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client,
 
 	spinner.Start("Checking if OpenShift Pipelines Operator is installed with the default configuration", false)
 	if err := client.CheckIfPipelinesExists(pipelinesOperatorNS); err != nil {
-		warnIfNotFound(spinner, "Please install OpenShift GitOps Operator from OperatorHub", err)
+		warnIfNotFound(spinner, "Please install OpenShift Pipelines Operator from OperatorHub", err)
 		if !apierrors.IsNotFound(err) {
 			return fmt.Errorf("failed to check for OpenShift Pipelines Operator: %w", err)
 		}
