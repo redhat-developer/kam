@@ -14,7 +14,7 @@ var (
 	routeTypeMeta = meta.TypeMeta("Route", "route.openshift.io/v1")
 )
 
-const defaultRoutePort = 8080
+const defaultRoutePortName = "http"
 
 // NewFromService creates and returns an OpenShift route preconfigured for the
 // provided Service.
@@ -48,15 +48,15 @@ func createRoute(svc *corev1.Service) routev1.Route {
 				svc.Name,
 				100,
 			),
-			Port:           createRoutePort(svc.Spec.Ports[0].Port),
+			Port:           createRoutePort(svc.Spec.Ports[0].Name),
 			WildcardPolicy: routev1.WildcardPolicyNone,
 		},
 	}
 }
 
-func createRoutePort(port int32) *routev1.RoutePort {
+func createRoutePort(portName string) *routev1.RoutePort {
 	return &routev1.RoutePort{
-		TargetPort: intstr.FromInt(int(port)),
+		TargetPort: intstr.FromString(portName),
 	}
 }
 

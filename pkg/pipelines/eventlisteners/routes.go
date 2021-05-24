@@ -16,7 +16,7 @@ var (
 	routeTypeMeta = meta.TypeMeta("Route", "route.openshift.io/v1")
 )
 
-const defaultRoutePort = 8000
+const defaultRoutePortName = "http-listener"
 
 // GenerateRoute generates an OpenShift route for the EventListener.
 //
@@ -47,17 +47,15 @@ func createRoute(ns string) routev1.Route {
 				"el-cicd-event-listener",
 				100,
 			),
-			Port:           createRoutePort(defaultRoutePort),
+			Port:           createRoutePort(defaultRoutePortName),
 			WildcardPolicy: routev1.WildcardPolicyNone,
 		},
 	}
 }
 
-func createRoutePort(port int32) *routev1.RoutePort {
+func createRoutePort(portName string) *routev1.RoutePort {
 	return &routev1.RoutePort{
-		TargetPort: intstr.IntOrString{
-			IntVal: port,
-		},
+		TargetPort: intstr.FromString(portName),
 	}
 }
 
