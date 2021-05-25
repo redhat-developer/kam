@@ -3,6 +3,7 @@ package kamsuite
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"fmt"
 	"log"
 	"net/url"
@@ -10,6 +11,7 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/cucumber/godog"
 	"github.com/cucumber/messages-go/v10"
@@ -27,6 +29,15 @@ func FeatureContext(s *godog.Suite) {
 
 	s.Step(`^gitops repository is created$`,
 		createRepository)
+
+	s.Step(`^login argocd API server$`,
+		loginArgoAPIServerLogin)
+
+	s.Step(`^application "([^"]*)" should be in "([^"]*)" state$`,
+		applicationState)
+
+	s.Step(`^Wait for "(\d*)" seconds$`,
+		waitForTime)
 
 	s.BeforeSuite(func() {
 		fmt.Println("Before suite")
@@ -158,7 +169,7 @@ func createRepository() error {
 	}
 
 	ri := &scm.RepositoryInput{
-		Private:     true,
+		Private:     false,
 		Description: "repocreate",
 		Namespace:   "",
 		Name:        repoName,
@@ -169,4 +180,142 @@ func createRepository() error {
 	}
 
 	return nil
+}
+
+func waitForTime(wait int) error {
+	time.Sleep(time.Duration(wait) * time.Second)
+	return nil
+}
+
+func applicationState(appName string, appState string) error {
+	err := argoAppStatusMatch(appState, appName)
+	if err != nil {
+		return fmt.Errorf("Error is : %v", err)
+	}
+	return nil
+}
+
+func loginArgoAPIServerLogin() error {
+	var stderr bytes.Buffer
+	argocdPath, err := executableBinaryPath("argocd")
+	if err != nil {
+		return err
+	}
+
+	argocdServer, err := argocdAPIServer()
+	if err != nil {
+		return err
+	}
+
+	argocdPassword, err := argocdAPIServerPassword()
+	if err != nil {
+		return err
+	}
+
+	cmd := exec.Command(argocdPath, "login", "--username", "admin", "--password", argocdPassword, argocdServer, "--grpc-web", "--insecure")
+	cmd.Stderr = &stderr
+	err = cmd.Run()
+	if err != nil {
+		fmt.Println(stderr.String())
+		return err
+	}
+	return nil
+}
+
+func executableBinaryPath(executable string) (string, error) {
+	path, err := exec.LookPath(executable)
+	if err != nil {
+		return "", err
+	}
+	return path, nil
+}
+
+func argocdAPIServer() (string, error) {
+	var stdout bytes.Buffer
+
+	ocPath, err := executableBinaryPath("oc")
+	if err != nil {
+		return "", err
+	}
+
+	deployments := []string{"openshift-gitops-server", "openshift-gitops-repo-server",
+		"openshift-gitops-redis", "openshift-gitops-applicationset-controller", "kam", "cluster"}
+
+	for deployment := range deployments {
+		if waitForDeploymentsUpAndRunning("openshift-gitops", deployments[deployment]); err != nil {
+			return "", err
+		}
+	}
+
+	cmd := exec.Command(ocPath, "get", "routes", "-n", "openshift-gitops",
+		"-o", "jsonpath='{.items[?(@.metadata.name==\"openshift-gitops-server\")].spec.host}'")
+	cmd.Stdout = &stdout
+	err = cmd.Run()
+	if err != nil {
+		return "", err
+	}
+	return strings.Trim(stdout.String(), "'"), nil
+}
+
+func argocdAPIServerPassword() (string, error) {
+	var stdout, stderr bytes.Buffer
+	ocPath, err := executableBinaryPath("oc")
+	if err != nil {
+		return "", err
+	}
+
+	cmd := exec.Command(ocPath, "get", "secret", "openshift-gitops-cluster", "-n", "openshift-gitops", "-o", "jsonpath='{.data.admin\\.password}'")
+
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err = cmd.Run()
+	if err != nil {
+		return "", err
+	}
+
+	data, err := base64.StdEncoding.DecodeString(strings.Trim(stdout.String(), "'"))
+	if err != nil {
+		return "", err
+	}
+
+	return string(data), nil
+}
+
+func waitForDeploymentsUpAndRunning(namespace string, deploymentName string) error {
+	var stderr, stdout bytes.Buffer
+	ocPath, err := executableBinaryPath("oc")
+	if err != nil {
+		return err
+	}
+	cmd := exec.Command(ocPath, "rollout", "status", "deployment", deploymentName, "-n", namespace)
+
+	cmd.Stderr = &stderr
+	cmd.Stdout = &stdout
+	err = cmd.Run()
+	if err == nil && strings.Contains(stdout.String(), "successfully rolled out") {
+		return nil
+	}
+	return fmt.Errorf("Error is : %v", stderr.String())
+}
+
+func argoAppStatusMatch(matchString string, appName string) error {
+	var stdout, stderr bytes.Buffer
+	argocdPath, err := executableBinaryPath("argocd")
+	if err != nil {
+		return err
+	}
+
+	appList := []string{"app", "list"}
+	cmd := exec.Command(argocdPath, appList...)
+	cmd.Stdout = &stdout
+	if err = cmd.Run(); err != nil {
+		return err
+	}
+
+	re, _ := regexp.Compile(appName + ".+")
+	appDetailsString := re.FindString(stdout.String())
+	if strings.Contains(appDetailsString, matchString) {
+		return nil
+	}
+	return fmt.Errorf("Error is : %v", stderr.String())
 }
