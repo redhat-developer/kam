@@ -33,7 +33,6 @@ import (
 	"github.com/redhat-developer/kam/pkg/pipelines/routes"
 	"github.com/redhat-developer/kam/pkg/pipelines/scm"
 	"github.com/redhat-developer/kam/pkg/pipelines/secrets"
-	"github.com/redhat-developer/kam/pkg/pipelines/statustracker"
 	"github.com/redhat-developer/kam/pkg/pipelines/tasks"
 	"github.com/redhat-developer/kam/pkg/pipelines/triggers"
 	"github.com/redhat-developer/kam/pkg/pipelines/yaml"
@@ -49,11 +48,11 @@ const (
 	serviceAccountPath    = "02-rolebindings/pipeline-service-account.yaml"
 	sealedSecretRolePath  = "02-rolebindings/sealed-secrets-aggregate-to-admin.yaml"
 	argocdAdminRolePath   = "02-rolebindings/argocd-admin.yaml"
-	secretsPath           = "03-secrets/gitops-webhook-secret.yaml"     //nolint:gosec
-	authTokenPath         = "03-secrets/git-host-access-token.yaml"     // nolint:gosec
-	basicAuthTokenPath    = "03-secrets/git-host-basic-auth-token.yaml" // nolint:gosec
+	secretsPath           = "03-secrets/gitops-webhook-secret.yaml" //nolint:gosec
+	authTokenPath         = "03-secrets/git-host-access-token.yaml" // nolint:gosec
 	dockerConfigPath      = "03-secrets/docker-config.yaml"
 	gitopsTasksPath       = "04-tasks/deploy-from-source-task.yaml"
+	commitStatusTaskPath  = "04-tasks/set-commit-status-task.yaml"
 	ciPipelinesPath       = "05-pipelines/ci-dryrun-from-push-pipeline.yaml"
 	appCiPipelinesPath    = "05-pipelines/app-ci-pipeline.yaml"
 	pushTemplatePath      = "07-templates/ci-dryrun-from-push-template.yaml"
@@ -62,6 +61,8 @@ const (
 	routePath             = "09-routes/gitops-webhook-event-listener.yaml"
 
 	dockerSecretName = "regcred"
+
+	authTokenSecretName = "git-host-access-token"
 
 	saName              = "pipeline"
 	roleBindingName     = "pipelines-service-role-binding"
@@ -84,13 +85,12 @@ type BootstrapOptions struct {
 	ImageRepo                string               // This is where built images are pushed to.
 	OutputPath               string               // Where to write the bootstrapped files to?
 	SealedSecretsService     types.NamespacedName // SealedSecrets Services name
-	GitHostAccessToken       string               // The auth token to use to send commit-status notifications, and access private repositories.
+	GitHostAccessToken       string               // The auth token to use to access repositories.
 	Overwrite                bool                 // This allows to overwrite if there is an existing gitops repository
 	ServiceRepoURL           string               // This is the full URL to your GitHub repository for your app source.
 	SaveTokenKeyRing         bool                 // If true, the access-token will be saved in the keyring
 	ServiceWebhookSecret     string               // This is the secret for authenticating hooks from your app source.
 	PrivateRepoDriver        string               // Records the type of the GitOpsRepoURL driver if not a well-known host.
-	CommitStatusTracker      bool                 // If true, this is a "private repository", i.e. requires authentication to clone the repository.
 	Insecure                 bool                 // If true, use unencrypted, unsealed secrets. By default, sealed secrets are generated.
 	PushToGit                bool                 // If true, gitops repository is pushed to remote git repository.
 }
@@ -212,7 +212,6 @@ func bootstrapResources(o *BootstrapOptions, appFs afero.Fs) (res.Resources, res
 	if !isInternalRegistry {
 		log.Progressf("  Path to config.json: %s", o.DockerConfigJSONFilename)
 	}
-	log.Progressf("  Commit status tracker: %s", strconv.FormatBool(o.CommitStatusTracker))
 	log.Progressf("  Output folder: %s", o.OutputPath)
 	log.Progressf("  Overwrite output folder: %s", strconv.FormatBool(o.Overwrite))
 	log.Progressf("  Insecure: %s", strconv.FormatBool(o.Insecure))
@@ -600,15 +599,6 @@ func createCICDResources(fs afero.Fs, repo scm.Repository, pipelineConfig *confi
 		}
 	}
 
-	if o.CommitStatusTracker {
-		trackerResources, err := statustracker.Resources(cicdNamespace, o.GitOpsRepoURL, o.PrivateRepoDriver)
-		if err != nil {
-			return nil, nil, err
-		}
-		outputs = res.Merge(outputs, trackerResources)
-		log.Success("Pipelines tracker has been configured")
-	}
-
 	// aggregate sealed secrets cluster role to OpenShift admin cluster role
 	// we can remove this file when it's fixed in upstream Sealed Secrets operator
 	outputs[sealedSecretRolePath] = aggregateSealedSecretsToAdmin()
@@ -621,6 +611,7 @@ func createCICDResources(fs afero.Fs, repo scm.Repository, pipelineConfig *confi
 		return nil, otherOutputs, err
 	}
 	outputs[gitopsTasksPath] = tasks.CreateDeployFromSourceTask(cicdNamespace, script)
+	outputs[commitStatusTaskPath] = tasks.CreateCommitStatusTask(cicdNamespace)
 	outputs[ciPipelinesPath] = pipelines.CreateCIPipeline(meta.NamespacedName(cicdNamespace, "ci-dryrun-from-push-pipeline"), cicdNamespace)
 	outputs[appCiPipelinesPath] = pipelines.CreateAppCIPipeline(meta.NamespacedName(cicdNamespace, "app-ci-pipeline"))
 	pushBinding, pushBindingName := repo.CreatePushBinding(cicdNamespace)
@@ -696,46 +687,22 @@ func aggregateSealedSecretsToAdmin() *v1rbac.ClusterRole {
 }
 
 func generateSecrets(outputs res.Resources, otherOutputs res.Resources, sa *corev1.ServiceAccount, ns string, o *BootstrapOptions) error {
-	if o.CommitStatusTracker {
-		if !o.Insecure {
-			tokenSecret, err := secrets.CreateSealedSecret(meta.NamespacedName(
-				ns, statustracker.CommitStatusTrackerSecret), o.SealedSecretsService, o.GitHostAccessToken, "token")
-			if err != nil {
-				return fmt.Errorf("failed to generate access token Secret: %w", err)
-			}
-			outputs[authTokenPath] = tokenSecret
-			outputs[serviceAccountPath] = roles.AddSecretToSA(sa, tokenSecret.Name)
-		} else {
-			tokenSecret, err := secrets.CreateUnsealedSecret(meta.NamespacedName(
-				ns, statustracker.CommitStatusTrackerSecret), o.SealedSecretsService, o.GitHostAccessToken, "token")
-			if err != nil {
-				return fmt.Errorf("failed to generate unencrypted Secret: %w", err)
-			}
-			otherOutputs[filepath.Join("secrets", "git-host-access-token.yaml")] = tokenSecret
-			outputs[serviceAccountPath] = roles.AddSecretToSA(sa, tokenSecret.Name)
-		}
-	}
-	secretTargetHost, err := repoURL(o.ServiceRepoURL)
-	if err != nil {
-		return fmt.Errorf("failed to parse the Service Repo URL %q: %w", o.ServiceRepoURL, err)
-	}
 	if !o.Insecure {
-		basicAuthSecret, err := secrets.CreateSealedBasicAuthSecret(meta.NamespacedName(
-			ns, "git-host-basic-auth-token"), o.SealedSecretsService, o.GitHostAccessToken, meta.AddAnnotations(map[string]string{
-			"tekton.dev/git-0": secretTargetHost,
-		}))
+		tokenSecret, err := secrets.CreateSealedSecret(meta.NamespacedName(
+			ns, authTokenSecretName), o.SealedSecretsService, o.GitHostAccessToken, "token")
 		if err != nil {
-			return fmt.Errorf("failed to generate basic auth token Secret: %w", err)
+			return fmt.Errorf("failed to generate access token Secret: %w", err)
 		}
-		outputs[basicAuthTokenPath] = basicAuthSecret
-		outputs[serviceAccountPath] = roles.AddSecretToSA(sa, basicAuthSecret.Name)
+		outputs[authTokenPath] = tokenSecret
+		outputs[serviceAccountPath] = roles.AddSecretToSA(sa, tokenSecret.Name)
 	} else {
-		basicAuthSecret := secrets.CreateUnsealedBasicAuthSecret(meta.NamespacedName(
-			ns, "git-host-basic-auth-token"), o.SealedSecretsService, o.GitHostAccessToken, meta.AddAnnotations(map[string]string{
-			"tekton.dev/git-0": secretTargetHost,
-		}))
-		otherOutputs[filepath.Join("secrets", "git-host-basic-auth-token.yaml")] = basicAuthSecret
-		outputs[serviceAccountPath] = roles.AddSecretToSA(sa, basicAuthSecret.Name)
+		tokenSecret, err := secrets.CreateUnsealedSecret(meta.NamespacedName(
+			ns, authTokenSecretName), o.SealedSecretsService, o.GitHostAccessToken, "token")
+		if err != nil {
+			return fmt.Errorf("failed to generate unencrypted Secret: %w", err)
+		}
+		otherOutputs[filepath.Join("secrets", "git-host-access-token.yaml")] = tokenSecret
+		outputs[serviceAccountPath] = roles.AddSecretToSA(sa, tokenSecret.Name)
 	}
 	return nil
 }

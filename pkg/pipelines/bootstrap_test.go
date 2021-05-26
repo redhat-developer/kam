@@ -20,7 +20,6 @@ import (
 	"github.com/redhat-developer/kam/pkg/pipelines/routes"
 	"github.com/redhat-developer/kam/pkg/pipelines/scm"
 	"github.com/redhat-developer/kam/pkg/pipelines/secrets"
-	"github.com/redhat-developer/kam/pkg/pipelines/statustracker"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -49,7 +48,6 @@ func TestBootstrapManifest(t *testing.T) {
 		GitHostAccessToken:   "test-token",
 		ServiceRepoURL:       testSvcRepo,
 		ServiceWebhookSecret: "456",
-		CommitStatusTracker:  true,
 	}
 	r, otherResources, err := bootstrapResources(params, ioutils.NewMemoryFilesystem())
 	fatalIfError(t, err)
@@ -133,19 +131,16 @@ func TestBootstrapManifest(t *testing.T) {
 		"01-namespaces/cicd-environment.yaml",
 		"01-namespaces/image-environment.yaml",
 		"02-rolebindings/argocd-admin.yaml",
-		"02-rolebindings/commit-status-tracker-role.yaml",
-		"02-rolebindings/commit-status-tracker-rolebinding.yaml",
-		"02-rolebindings/commit-status-tracker-service-account.yaml",
 		"02-rolebindings/internal-registry-image-binding.yaml",
 		"02-rolebindings/pipeline-service-account.yaml",
 		"02-rolebindings/pipeline-service-role.yaml",
 		"02-rolebindings/pipeline-service-rolebinding.yaml",
 		"02-rolebindings/sealed-secrets-aggregate-to-admin.yaml",
 		"03-secrets/git-host-access-token.yaml",
-		"03-secrets/git-host-basic-auth-token.yaml",
 		"03-secrets/gitops-webhook-secret.yaml",
 		"03-secrets/webhook-secret-tst-dev-http-api.yaml",
 		"04-tasks/deploy-from-source-task.yaml",
+		"04-tasks/set-commit-status-task.yaml",
 		"05-pipelines/app-ci-pipeline.yaml",
 		"05-pipelines/ci-dryrun-from-push-pipeline.yaml",
 		"06-bindings/github-push-binding.yaml",
@@ -154,7 +149,6 @@ func TestBootstrapManifest(t *testing.T) {
 		"07-templates/ci-dryrun-from-push-template.yaml",
 		"08-eventlisteners/cicd-event-listener.yaml",
 		"09-routes/gitops-webhook-event-listener.yaml",
-		"10-commit-status-tracker/operator.yaml",
 	}
 	k := r["config/tst-cicd/base/kustomization.yaml"].(res.Kustomization)
 	if diff := cmp.Diff(wantResources, k.Resources); diff != "" {
@@ -177,13 +171,12 @@ func TestBootstrapManifestWithInsecureSecrets(t *testing.T) {
 		GitHostAccessToken:   "test-token",
 		ServiceRepoURL:       testSvcRepo,
 		ServiceWebhookSecret: "456",
-		CommitStatusTracker:  true,
 		Insecure:             true,
 	}
 	r, otherResources, err := bootstrapResources(params, ioutils.NewMemoryFilesystem())
 	fatalIfError(t, err)
 
-	otherResourcesNotEmpty := 4
+	otherResourcesNotEmpty := 3
 	if diff := cmp.Diff(otherResourcesNotEmpty, len(otherResources)); diff != "" {
 		t.Fatalf("other resources is empty:\n%s", diff)
 	}
@@ -272,15 +265,13 @@ func TestBootstrapManifestWithInsecureSecrets(t *testing.T) {
 		"01-namespaces/cicd-environment.yaml",
 		"01-namespaces/image-environment.yaml",
 		"02-rolebindings/argocd-admin.yaml",
-		"02-rolebindings/commit-status-tracker-role.yaml",
-		"02-rolebindings/commit-status-tracker-rolebinding.yaml",
-		"02-rolebindings/commit-status-tracker-service-account.yaml",
 		"02-rolebindings/internal-registry-image-binding.yaml",
 		"02-rolebindings/pipeline-service-account.yaml",
 		"02-rolebindings/pipeline-service-role.yaml",
 		"02-rolebindings/pipeline-service-rolebinding.yaml",
 		"02-rolebindings/sealed-secrets-aggregate-to-admin.yaml",
 		"04-tasks/deploy-from-source-task.yaml",
+		"04-tasks/set-commit-status-task.yaml",
 		"05-pipelines/app-ci-pipeline.yaml",
 		"05-pipelines/ci-dryrun-from-push-pipeline.yaml",
 		"06-bindings/github-push-binding.yaml",
@@ -289,7 +280,6 @@ func TestBootstrapManifestWithInsecureSecrets(t *testing.T) {
 		"07-templates/ci-dryrun-from-push-template.yaml",
 		"08-eventlisteners/cicd-event-listener.yaml",
 		"09-routes/gitops-webhook-event-listener.yaml",
-		"10-commit-status-tracker/operator.yaml",
 	}
 	k := r["config/tst-cicd/base/kustomization.yaml"].(res.Kustomization)
 	if diff := cmp.Diff(wantResources, k.Resources); diff != "" {
@@ -312,7 +302,6 @@ func TestBootstrapCreatesRepository(t *testing.T) {
 		GitHostAccessToken:   "test-token",
 		ServiceRepoURL:       testSvcRepo,
 		ServiceWebhookSecret: "456",
-		CommitStatusTracker:  true,
 	}
 	err := Bootstrap(params, ioutils.NewMemoryFilesystem())
 	fatalIfError(t, err)
@@ -502,7 +491,6 @@ func TestGenerateSecrets(t *testing.T) {
 		SealedSecretsService: meta.NamespacedName("sealed-secrets", "secrets"),
 		GitHostAccessToken:   "abc123",
 		ServiceRepoURL:       "https://gl.example.com/my-org/my-project.git",
-		CommitStatusTracker:  true,
 	}
 
 	err := generateSecrets(outputs, otherOutputs, sa, ns, o)
@@ -513,43 +501,21 @@ func TestGenerateSecrets(t *testing.T) {
 		ObjectMeta: meta.ObjectMeta(
 			types.NamespacedName{Name: "test-sa", Namespace: "test-ns"},
 		),
-		Secrets: []corev1.ObjectReference{{Name: statustracker.CommitStatusTrackerSecret}, {Name: "git-host-basic-auth-token"}},
+		Secrets: []corev1.ObjectReference{{Name: authTokenSecretName}},
 	}
 	if diff := cmp.Diff(wantSA, outputs[serviceAccountPath]); diff != "" {
 		t.Fatalf("generatedSecrets failed to update the ServiceAccount:\n%s", diff)
 	}
 
-	wantBasicAuthSecret := &ssv1alpha1.SealedSecret{
-		TypeMeta: meta.TypeMeta("SealedSecret", "bitnami.com/v1alpha1"),
-		ObjectMeta: meta.ObjectMeta(
-			types.NamespacedName{Name: "git-host-basic-auth-token", Namespace: "test-ns"},
-		),
-		Spec: ssv1alpha1.SealedSecretSpec{
-			Template: ssv1alpha1.SecretTemplateSpec{
-				ObjectMeta: meta.ObjectMeta(
-					types.NamespacedName{Name: "git-host-basic-auth-token", Namespace: "test-ns"},
-					meta.AddAnnotations(
-						map[string]string{
-							"tekton.dev/git-0": "https://gl.example.com",
-						}),
-				),
-				Type: corev1.SecretTypeBasicAuth,
-			},
-		},
-	}
-	if diff := cmp.Diff(wantBasicAuthSecret, outputs[basicAuthTokenPath],
-		cmpopts.IgnoreFields(ssv1alpha1.SealedSecret{}, "Spec.EncryptedData", "ObjectMeta.Annotations")); diff != "" {
-		t.Fatalf("generatedSecrets failed to create basic auth token secret:\n%s", diff)
-	}
 	wantAuthSecret := &ssv1alpha1.SealedSecret{
 		TypeMeta: meta.TypeMeta("SealedSecret", "bitnami.com/v1alpha1"),
 		ObjectMeta: meta.ObjectMeta(
-			types.NamespacedName{Name: statustracker.CommitStatusTrackerSecret, Namespace: "test-ns"},
+			types.NamespacedName{Name: authTokenSecretName, Namespace: "test-ns"},
 		),
 		Spec: ssv1alpha1.SealedSecretSpec{
 			Template: ssv1alpha1.SecretTemplateSpec{
 				ObjectMeta: meta.ObjectMeta(
-					types.NamespacedName{Name: statustracker.CommitStatusTrackerSecret, Namespace: "test-ns"},
+					types.NamespacedName{Name: authTokenSecretName, Namespace: "test-ns"},
 				),
 				Type: corev1.SecretTypeOpaque,
 			},
@@ -558,60 +524,6 @@ func TestGenerateSecrets(t *testing.T) {
 	if diff := cmp.Diff(wantAuthSecret, outputs[authTokenPath],
 		cmpopts.IgnoreFields(ssv1alpha1.SealedSecret{}, "Spec.EncryptedData", "ObjectMeta.Annotations")); diff != "" {
 		t.Fatalf("generatedSecrets failed to create auth token secret:\n%s", diff)
-	}
-}
-
-func TestGenerateSecretsWithNoCommitStatusTracker(t *testing.T) {
-	defer stubDefaultPublicKeyFunc(t)()
-	ns := "test-ns"
-	outputs := res.Resources{}
-	otherOutputs := res.Resources{}
-	sa := roles.CreateServiceAccount(meta.NamespacedName("test-ns", "test-sa"))
-	o := &BootstrapOptions{
-		SealedSecretsService: meta.NamespacedName("sealed-secrets", "secrets"),
-		GitHostAccessToken:   "abc123",
-		ServiceRepoURL:       "https://gl.example.com/my-org/my-project.git",
-		CommitStatusTracker:  false,
-	}
-
-	err := generateSecrets(outputs, otherOutputs, sa, ns, o)
-	fatalIfError(t, err)
-
-	wantSA := &corev1.ServiceAccount{
-		TypeMeta: meta.TypeMeta("ServiceAccount", "v1"),
-		ObjectMeta: meta.ObjectMeta(
-			types.NamespacedName{Name: "test-sa", Namespace: "test-ns"},
-		),
-		Secrets: []corev1.ObjectReference{{Name: "git-host-basic-auth-token"}},
-	}
-	if diff := cmp.Diff(wantSA, outputs[serviceAccountPath]); diff != "" {
-		t.Fatalf("generatedSecrets failed to update the ServiceAccount:\n%s", diff)
-	}
-
-	wantBasicAuthSecret := &ssv1alpha1.SealedSecret{
-		TypeMeta: meta.TypeMeta("SealedSecret", "bitnami.com/v1alpha1"),
-		ObjectMeta: meta.ObjectMeta(
-			types.NamespacedName{Name: "git-host-basic-auth-token", Namespace: "test-ns"},
-		),
-		Spec: ssv1alpha1.SealedSecretSpec{
-			Template: ssv1alpha1.SecretTemplateSpec{
-				ObjectMeta: meta.ObjectMeta(
-					types.NamespacedName{Name: "git-host-basic-auth-token", Namespace: "test-ns"},
-					meta.AddAnnotations(
-						map[string]string{
-							"tekton.dev/git-0": "https://gl.example.com",
-						}),
-				),
-				Type: corev1.SecretTypeBasicAuth,
-			},
-		},
-	}
-	if diff := cmp.Diff(wantBasicAuthSecret, outputs[basicAuthTokenPath],
-		cmpopts.IgnoreFields(ssv1alpha1.SealedSecret{}, "Spec.EncryptedData", "ObjectMeta.Annotations")); diff != "" {
-		t.Fatalf("generatedSecrets failed to create basic auth token secret:\n%s", diff)
-	}
-	if outputs[authTokenPath] != nil {
-		t.Fatalf("auth token secret for commit status tracker generated: %#v", outputs[authTokenPath])
 	}
 }
 

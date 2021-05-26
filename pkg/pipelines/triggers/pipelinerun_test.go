@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	pipelinev1alpha1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	pipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -98,6 +99,11 @@ func TestCreateStageCIPipelineRun(t *testing.T) {
 			ServiceAccountName: sName,
 			PipelineRef:        createPipelineRef("ci-dryrun-from-push-pipeline"),
 			Resources:          createResources(),
+			Params: []v1beta1.Param{
+				createPipelineBindingParam("REPO", "$(tt.params.fullname)"),
+				createPipelineBindingParam("GIT_REPO", "$(tt.params.gitrepositoryurl)"),
+				createPipelineBindingParam("COMMIT_SHA", "$(tt.params.io.openshift.build.commit.id)"),
+			},
 		},
 	}
 	template := createCIPipelineRun(sName)

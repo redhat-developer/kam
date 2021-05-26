@@ -78,7 +78,7 @@ func TestCreateDevCIBuildPRTemplate(t *testing.T) {
 				},
 				{
 					Name:        "fullname",
-					Description: "The GitHub repository for this PullRequest.",
+					Description: "The repository name for this PullRequest.",
 				},
 				{
 					Name:        "imageRepo",
@@ -161,6 +161,7 @@ func TestCreateCIDryRunTemplate(t *testing.T) {
 				{Name: GitRef, Description: "The git revision", Default: strPtr("master")},
 				{Name: "io.openshift.build.commit.id", Description: "The specific commit SHA"},
 				{Name: "gitrepositoryurl", Description: "The git repository url"},
+				{Name: "fullname", Description: "The repository name for this PullRequest"},
 			},
 			ResourceTemplates: []triggersv1.TriggerResourceTemplate{
 				{

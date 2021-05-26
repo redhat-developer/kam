@@ -73,7 +73,7 @@ func CreateDevCIBuildPRTemplate(ns, saName string) triggersv1.TriggerTemplate {
 				createTemplateParamSpec(GitCommitAuthor, "The name of the github user handle that made the commit"),
 				createTemplateParamSpec(GitCommitMessage, "The commit message"),
 				createTemplateParamSpec("gitrepositoryurl", "The git repository URL."),
-				createTemplateParamSpec("fullname", "The GitHub repository for this PullRequest."),
+				createTemplateParamSpec("fullname", "The repository name for this PullRequest."),
 				createTemplateParamSpec("imageRepo", "The repository to push built images to."),
 				createTemplateParamSpec("tlsVerify", "Enable image repository TLS certification verification."),
 				createTemplateParamSpec("build_extra_args", "Extra parameters passed for the push command when pushing images."),
@@ -124,6 +124,7 @@ func CreateCIDryRunTemplate(ns, saName string) triggersv1.TriggerTemplate {
 				createTemplateParamSpecDefault(GitRef, "The git revision", "master"),
 				createTemplateParamSpec(GitCommitID, "The specific commit SHA"),
 				createTemplateParamSpec("gitrepositoryurl", "The git repository url"),
+				createTemplateParamSpec("fullname", "The repository name for this PullRequest"),
 			},
 			ResourceTemplates: []triggersv1.TriggerResourceTemplate{
 				{

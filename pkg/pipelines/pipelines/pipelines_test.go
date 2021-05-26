@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	pipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"k8s.io/apimachinery/pkg/types"
 
@@ -71,6 +72,7 @@ func TestCreateAppCIPipeline(t *testing.T) {
 				{Name: pipelineWorkspace, Description: "This workspace will receive the cloned git repo."},
 			},
 			Tasks: []pipelinev1.PipelineTask{
+				createCommitStatusPipelineTask("set-pending-status", "pending", "The build has started"),
 
 				{
 					Name:    "clone-source",
@@ -82,6 +84,7 @@ func TestCreateAppCIPipeline(t *testing.T) {
 					Workspaces: []pipelinev1.WorkspacePipelineTaskBinding{
 						{Name: "output", Workspace: pipelineWorkspace},
 					},
+					RunAfter: []string{"set-pending-status"},
 				},
 
 				{
@@ -103,6 +106,9 @@ func TestCreateAppCIPipeline(t *testing.T) {
 						createTaskParam("IMAGE", "$(params.IMAGE)"),
 					},
 				},
+			},
+			Finally: []v1beta1.PipelineTask{
+				createCommitStatusPipelineTask("set-final-status", "$(tasks.build-image.status)", "The build is complete"),
 			},
 		},
 	}

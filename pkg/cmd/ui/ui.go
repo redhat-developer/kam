@@ -249,20 +249,6 @@ func SelectOptionOverwrite(currentPath string) bool {
 	return overwrite == "yes"
 }
 
-// SetupCommitStatusTracker allows users the option to select if they
-// want to incorporate the feature of the commit status tracker through the UI prompt.
-func SetupCommitStatusTracker() bool {
-	var optionCommitStatusTracker string
-	prompt := &survey.Select{
-		Message: "Do you want to enable commit-status-tracker?",
-		Help:    "commit-status-tracker reports the completion status of OpenShift pipeline runs to your git host on success or failure",
-		Options: []string{"yes", "no"},
-	}
-	err := survey.AskOne(prompt, &optionCommitStatusTracker, survey.Required)
-	handleError(err)
-	return optionCommitStatusTracker == "yes"
-}
-
 // SelectPrivateRepoDriver lets users choose the driver for their git hosting
 // service.
 func SelectPrivateRepoDriver() string {
