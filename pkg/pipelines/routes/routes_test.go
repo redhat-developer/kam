@@ -40,7 +40,7 @@ func TestNewFromService(t *testing.T) {
 			"namespace":         testNS,
 		},
 		"spec": map[string]interface{}{
-			"port": map[string]interface{}{"targetPort": float64(8080)},
+			"port": map[string]interface{}{"targetPort": defaultRoutePortName},
 			"to": map[string]interface{}{
 				"kind":   "Service",
 				"name":   testName,
@@ -74,9 +74,7 @@ func TestCreateRoute(t *testing.T) {
 				Weight: &weight,
 			},
 			Port: &routev1.RoutePort{
-				TargetPort: intstr.IntOrString{
-					IntVal: 8080,
-				},
+				TargetPort: intstr.FromString(defaultRoutePortName),
 			},
 			WildcardPolicy: routev1.WildcardPolicyNone,
 		},
@@ -89,11 +87,9 @@ func TestCreateRoute(t *testing.T) {
 
 func TestCreateRoutePort(t *testing.T) {
 	validRoutePort := &routev1.RoutePort{
-		TargetPort: intstr.IntOrString{
-			IntVal: 8080,
-		},
+		TargetPort: intstr.FromString(defaultRoutePortName),
 	}
-	routePort := createRoutePort(8080)
+	routePort := createRoutePort(defaultRoutePortName)
 	if diff := cmp.Diff(routePort, validRoutePort); diff != "" {
 		t.Fatalf("createRoutePort() failed:\n%s", diff)
 	}
