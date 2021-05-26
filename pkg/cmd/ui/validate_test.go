@@ -76,6 +76,29 @@ func TestAccessToken(t *testing.T) {
 	}
 }
 
+func TestAccessTokenForEnterpriseGitLab(t *testing.T) {
+	mockurl := "https://gitlab.cee.redhat.com/example/test.git"
+	validator := makeAccessTokenCheck(mockurl)
+	cmdTests := []struct {
+		desc     string
+		argument string
+		wantErr  string
+	}{
+		{"Access Token is incorrect",
+			"demo-token",
+			`unable to identify driver from hostname: gitlab.cee.redhat.com. Check that the --private-repo-driver option is provided.`},
+	}
+
+	for _, tt := range cmdTests {
+		t.Run(tt.desc, func(t *testing.T) {
+			err := validator(tt.argument)
+			if err.Error() != tt.wantErr {
+				t.Errorf("got %s, want %s", err, tt.wantErr)
+			}
+		})
+	}
+}
+
 func TestValidateURL(t *testing.T) {
 
 	validator := makeURLValidatorCheck()

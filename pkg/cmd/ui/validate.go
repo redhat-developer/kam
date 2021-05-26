@@ -96,7 +96,7 @@ func ValidateAccessToken(input interface{}, serviceRepo string) error {
 	if s, ok := input.(string); ok {
 		repo, err := git.NewRepository(serviceRepo, s)
 		if err != nil {
-			return err
+			return fmt.Errorf("%w. %s", err, "Check that the --private-repo-driver option is provided.")
 		}
 		parsedURL, err := url.Parse(serviceRepo)
 		if err != nil {
