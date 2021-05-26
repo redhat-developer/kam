@@ -129,7 +129,7 @@ func (vv *validateVisitor) Application(env *Environment, app *Application) error
 
 func (vv *validateVisitor) Service(app *Application, env *Environment, svc *Service) error {
 	svcPath := yamlPath(PathForService(app, env, svc.Name))
-	svcRelativePath := yamlPath(filepath.Join(env.Name, svc.Name))
+	svcRelativePath := yamlPath(filepath.ToSlash(filepath.Join(env.Name, svc.Name)))
 	if svc.SourceURL != "" {
 		previous, ok := vv.serviceURLs[svc.SourceURL]
 		if !ok {

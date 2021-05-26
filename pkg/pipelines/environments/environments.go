@@ -68,7 +68,7 @@ func Build(fs afero.Fs, m *config.Manifest, saName string, o AppLinks) (res.Reso
 }
 
 func (b *envBuilder) Application(env *config.Environment, app *config.Application) error {
-	appPath := filepath.Join(config.PathForApplication(env, app))
+	appPath := filepath.ToSlash(filepath.Join(config.PathForApplication(env, app)))
 	appFiles, err := filesForApplication(env, b.repoPath, appPath, app)
 	if err != nil {
 		return err
@@ -89,8 +89,8 @@ func (b *envBuilder) Service(app *config.Application, env *config.Environment, s
 	if b.pipelinesConfig == nil {
 		return nil
 	}
-	envBasePath := filepath.Join(config.PathForEnvironment(env), "env", "base")
-	envBindingPath := filepath.Join(envBasePath, fmt.Sprintf("%s-rolebinding.yaml", env.Name))
+	envBasePath := filepath.ToSlash(filepath.Join(config.PathForEnvironment(env), "env", "base"))
+	envBindingPath := filepath.ToSlash(filepath.Join(envBasePath, fmt.Sprintf("%s-rolebinding.yaml", env.Name)))
 	if _, ok := b.files[envBindingPath]; !ok {
 		b.files[envBindingPath] = createRoleBinding(env, b.pipelinesConfig.Name, b.saName)
 	}
@@ -98,19 +98,19 @@ func (b *envBuilder) Service(app *config.Application, env *config.Environment, s
 }
 
 func (b *envBuilder) Environment(env *config.Environment) error {
-	envPath := filepath.Join(config.PathForEnvironment(env), "env")
-	basePath := filepath.Join(envPath, "base")
+	envPath := filepath.ToSlash(filepath.Join(config.PathForEnvironment(env), "env"))
+	basePath := filepath.ToSlash(filepath.Join(envPath, "base"))
 	envFiles := filesForEnvironment(basePath, env, b.gitOpsRepoURL)
 	kustomizedFilenames, err := ListFiles(b.fs, basePath)
 	if err != nil {
 		return fmt.Errorf("failed to list initial files for %s: %s", basePath, err)
 	}
-	envBindingPath := filepath.Join(basePath, fmt.Sprintf("%s-rolebinding.yaml", env.Name))
+	envBindingPath := filepath.ToSlash(filepath.Join(basePath, fmt.Sprintf("%s-rolebinding.yaml", env.Name)))
 	if _, ok := b.files[envBindingPath]; ok {
 		envFiles[envBindingPath] = b.files[envBindingPath]
 	}
 
-	argocdAdminPath := filepath.Join(basePath, "argocd-admin.yaml")
+	argocdAdminPath := filepath.ToSlash(filepath.Join(basePath, "argocd-admin.yaml"))
 	if _, ok := b.files[argocdAdminPath]; !ok {
 		envFiles[argocdAdminPath] = argocd.MakeApplicationControllerAdmin(env.Name)
 	}
@@ -119,7 +119,7 @@ func (b *envBuilder) Environment(env *config.Environment) error {
 		kustomizedFilenames[filepath.Base(k)] = true
 	}
 
-	kustomizationPath := filepath.Join(basePath, kustomization)
+	kustomizationPath := filepath.ToSlash(filepath.Join(basePath, kustomization))
 	relApps, err := appsFromEnvironment(env, kustomizationPath, b.appLinks)
 	if err != nil {
 		return err
@@ -128,33 +128,33 @@ func (b *envBuilder) Environment(env *config.Environment) error {
 		Bases:     relApps,
 		Resources: kustomizedFilenames.Items(),
 	}
-	overlaysPath := filepath.Join(envPath, "overlays")
+	overlaysPath := filepath.ToSlash(filepath.Join(envPath, "overlays"))
 	relPath, err := filepath.Rel(overlaysPath, basePath)
 	if err != nil {
 		return err
 	}
-	envFiles[filepath.Join(overlaysPath, kustomization)] = &res.Kustomization{Bases: []string{relPath}}
+	envFiles[filepath.ToSlash(filepath.Join(overlaysPath, kustomization))] = &res.Kustomization{Bases: []string{filepath.ToSlash(relPath)}}
 	b.files = res.Merge(envFiles, b.files)
 	return nil
 }
 
 func filesForEnvironment(basePath string, env *config.Environment, gitOpsRepoURL string) res.Resources {
 	envFiles := res.Resources{}
-	filename := filepath.Join(basePath, fmt.Sprintf("%s-environment.yaml", env.Name))
+	filename := filepath.ToSlash(filepath.Join(basePath, fmt.Sprintf("%s-environment.yaml", env.Name)))
 	envFiles[filename] = namespaces.Create(env.Name, gitOpsRepoURL)
 	return envFiles
 }
 
 func filesForApplication(env *config.Environment, fullname, appPath string, app *config.Application) (res.Resources, error) {
 	envFiles := res.Resources{}
-	basePath := filepath.Join(appPath, "base")
-	overlaysPath := filepath.Join(appPath, "overlays")
-	overlaysFile := filepath.Join(overlaysPath, kustomization)
+	basePath := filepath.ToSlash(filepath.Join(appPath, "base"))
+	overlaysPath := filepath.ToSlash(filepath.Join(appPath, "overlays"))
+	overlaysFile := filepath.ToSlash(filepath.Join(overlaysPath, kustomization))
 	overlayRel, err := filepath.Rel(overlaysPath, basePath)
 	if err != nil {
 		return nil, err
 	}
-	baseKustomization := filepath.Join(appPath, "base", kustomization)
+	baseKustomization := filepath.ToSlash(filepath.Join(appPath, "base", kustomization))
 	relServices := []string{}
 	for _, v := range app.Services {
 		svcPath := config.PathForService(app, env, v.Name)
@@ -162,20 +162,20 @@ func filesForApplication(env *config.Environment, fullname, appPath string, app 
 		if err != nil {
 			return nil, err
 		}
-		relServices = append(relServices, relService)
+		relServices = append(relServices, filepath.ToSlash(relService))
 	}
 
-	envFiles[filepath.Join(appPath, kustomization)] = &res.Kustomization{
+	envFiles[filepath.ToSlash(filepath.Join(appPath, kustomization))] = &res.Kustomization{
 		Bases: []string{"overlays"},
 		CommonLabels: map[string]string{
 			vcsSourceLabel: fullname,
 		},
 	}
-	envFiles[filepath.Join(appPath, "base", kustomization)] = &res.Kustomization{
+	envFiles[filepath.ToSlash(filepath.Join(appPath, "base", kustomization))] = &res.Kustomization{
 		Bases: relServices,
 	}
 	envFiles[overlaysFile] = &res.Kustomization{
-		Bases: []string{overlayRel},
+		Bases: []string{filepath.ToSlash(overlayRel)},
 	}
 	return envFiles, nil
 }
@@ -187,16 +187,16 @@ func createRoleBinding(env *config.Environment, cicdNS, saName string) *v1.RoleB
 
 func filesForService(svcPath string) (res.Resources, error) {
 	envFiles := res.Resources{}
-	basePath := filepath.Join(svcPath, "base")
-	overlaysPath := filepath.Join(svcPath, "overlays")
-	overlaysFile := filepath.Join(overlaysPath, kustomization)
+	basePath := filepath.ToSlash(filepath.Join(svcPath, "base"))
+	overlaysPath := filepath.ToSlash(filepath.Join(svcPath, "overlays"))
+	overlaysFile := filepath.ToSlash(filepath.Join(overlaysPath, kustomization))
 	overlayRel, err := filepath.Rel(overlaysPath, basePath)
 	if err != nil {
 		return nil, err
 	}
-	envFiles[filepath.Join(svcPath, kustomization)] = &res.Kustomization{Bases: []string{"overlays"}}
-	envFiles[filepath.Join(svcPath, "base", kustomization)] = &res.Kustomization{Bases: []string{"./config"}}
-	envFiles[overlaysFile] = &res.Kustomization{Bases: []string{overlayRel}}
+	envFiles[filepath.ToSlash(filepath.Join(svcPath, kustomization))] = &res.Kustomization{Bases: []string{"overlays"}}
+	envFiles[filepath.ToSlash(filepath.Join(svcPath, "base", kustomization))] = &res.Kustomization{Bases: []string{"./config"}}
+	envFiles[overlaysFile] = &res.Kustomization{Bases: []string{filepath.ToSlash(overlayRel)}}
 
 	return envFiles, nil
 }

@@ -90,7 +90,7 @@ func setupGitOpsTree(t *testing.T, fs afero.Fs, base string, withArgoCD bool) {
 
 func executeScript(t *testing.T, fs afero.Fs, baseDir, script string) string {
 	t.Helper()
-	scriptPath := filepath.Join(baseDir, "dryrun_script.sh")
+	scriptPath := filepath.Join(baseDir, "dryrun_script.sh") // Don't call filepath.ToSlash
 	err := afero.WriteFile(fs, scriptPath, []byte(script), 0777)
 	assertNoError(t, err)
 	cmd := exec.Command(scriptPath)

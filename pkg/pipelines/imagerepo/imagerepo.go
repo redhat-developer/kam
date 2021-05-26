@@ -70,8 +70,8 @@ func CreateInternalRegistryResources(cfg *config.PipelinesConfig, sa *corev1.Ser
 	resources := res.Resources{}
 	filenames := []string{}
 
-	filename := filepath.Join("01-namespaces", fmt.Sprintf("%s-environment.yaml", namespace))
-	namespacePath := filepath.Join(config.PathForPipelines(cfg), "base", filename)
+	filename := filepath.ToSlash(filepath.Join("01-namespaces", fmt.Sprintf("%s-environment.yaml", namespace)))
+	namespacePath := filepath.ToSlash(filepath.Join(config.PathForPipelines(cfg), "base", filename))
 	resources[namespacePath] = namespaces.Create(namespace, gitOpsRepoURL)
 	filenames = append(filenames, filename)
 
@@ -81,7 +81,7 @@ func CreateInternalRegistryResources(cfg *config.PipelinesConfig, sa *corev1.Ser
 
 func createInternalRegistryRoleBinding(cfg *config.PipelinesConfig, ns string, sa *corev1.ServiceAccount) (string, res.Resources) {
 	roleBindingName := fmt.Sprintf("internal-registry-%s-binding", ns)
-	roleBindingFilname := filepath.Join("02-rolebindings", fmt.Sprintf("%s.yaml", roleBindingName))
-	roleBindingPath := filepath.Join(config.PathForPipelines(cfg), "base", roleBindingFilname)
+	roleBindingFilname := filepath.ToSlash(filepath.Join("02-rolebindings", fmt.Sprintf("%s.yaml", roleBindingName)))
+	roleBindingPath := filepath.ToSlash(filepath.Join(config.PathForPipelines(cfg), "base", roleBindingFilname))
 	return roleBindingFilname, res.Resources{roleBindingPath: roles.CreateRoleBinding(meta.NamespacedName(ns, roleBindingName), sa, "ClusterRole", "edit")}
 }

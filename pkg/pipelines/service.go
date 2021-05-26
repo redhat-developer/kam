@@ -51,7 +51,7 @@ func AddService(o *AddServiceOptions, appFs afero.Fs) error {
 	if err != nil {
 		return err
 	}
-	_, err = yaml.WriteResources(appFs, filepath.Join(o.PipelinesFolderPath, ".."), otherResources)
+	_, err = yaml.WriteResources(appFs, filepath.Join(o.PipelinesFolderPath, ".."), otherResources) // Don't call filepath.ToSlash
 	if err != nil {
 		return err
 	}
@@ -61,7 +61,7 @@ func AddService(o *AddServiceOptions, appFs afero.Fs) error {
 	}
 	cfg := m.GetPipelinesConfig()
 	if cfg != nil {
-		base := filepath.Join(o.PipelinesFolderPath, config.PathForPipelines(cfg), "base")
+		base := filepath.ToSlash(filepath.Join(o.PipelinesFolderPath, config.PathForPipelines(cfg), "base"))
 		err = updateKustomization(appFs, base)
 		if err != nil {
 			return err
@@ -114,11 +114,11 @@ func serviceResources(m *config.Manifest, appFs afero.Fs, o *AddServiceOptions) 
 			},
 		}
 		if !o.Insecure {
-			secretFilename := filepath.Join("03-secrets", secretName+".yaml")
-			secretsPath := filepath.Join(config.PathForPipelines(cfg), "base", secretFilename)
+			secretFilename := filepath.ToSlash(filepath.Join("03-secrets", secretName+".yaml"))
+			secretsPath := filepath.ToSlash(filepath.Join(config.PathForPipelines(cfg), "base", secretFilename))
 			files[secretsPath] = hookSecret
 		} else {
-			secretFilename := filepath.Join("secrets", secretName+".yaml")
+			secretFilename := filepath.ToSlash(filepath.Join("secrets", secretName+".yaml"))
 			otherResources[secretFilename] = opaqueSecret
 		}
 
@@ -164,7 +164,7 @@ func serviceResources(m *config.Manifest, appFs afero.Fs, o *AddServiceOptions) 
 		return nil, nil, err
 	}
 
-	files[filepath.Base(filepath.Join(o.PipelinesFolderPath, pipelinesFile))] = m
+	files[filepath.Base(filepath.Join(o.PipelinesFolderPath, pipelinesFile))] = m // Don't call filepath.ToSlash
 	built, err := buildResources(appFs, m)
 	if err != nil {
 		return nil, nil, err
@@ -227,11 +227,11 @@ func makeSvcImageBindingName(envName, appName, svcName string) string {
 }
 
 func makeSvcImageBindingFilename(bindingName string) string {
-	return filepath.Join("06-bindings", bindingName+".yaml")
+	return filepath.ToSlash(filepath.Join("06-bindings", bindingName+".yaml"))
 }
 
 func makeImageBindingPath(cfg *config.PipelinesConfig, imageRepoBindingFilename string) string {
-	return filepath.Join(config.PathForPipelines(cfg), "base", imageRepoBindingFilename)
+	return filepath.ToSlash(filepath.Join(config.PathForPipelines(cfg), "base", imageRepoBindingFilename))
 }
 
 func createSvcImageBinding(cfg *config.PipelinesConfig, env *config.Environment, appName, svcName, imageRepo string, isTLSVerify bool) (string, string, res.Resources) {
