@@ -490,4 +490,4 @@ being executed.
 
 ![PipelineRun doing a dry run of the configuration](img/pipelinerun-dryrun.png)
 
-This validates that the YAML can be applied, by executing `oc apply -k --dry-run`.
+This validates that the YAML can be applied, by executing `oc apply -k config/argocd/ --dry-run=client`.
