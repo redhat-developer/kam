@@ -48,8 +48,6 @@ The `kam bootstrap` [command](../../commands/kam_bootstrap.md) also provides an 
 
 During an interactive mode session, choose to use default values or not. If default values are chosen, prompts will appear to allow you to enter any required values that haven't already been provided from the command line. This is the quickest way to generate a bootstrapped GitOps configuration.
 
-The `kam bootstrap` [command](../../commands/kam_bootstrap.md) also provides an interactive mode, which is triggered by running without any parameters, and will generate the GitOps directory and the required resources.
-
 In the event of using a self-hosted _GitHub Enterprise_ or _GitLab Community/Enterprise Edition_ if the driver name isn't evident from the repository URL, use the `--private-repo-driver` flag to select _github_ or _gitlab_.
 
 For more details see the [Argo CD documentation](https://argoproj.github.io/argo-cd/user-guide/private-repositories).
