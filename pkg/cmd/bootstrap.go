@@ -14,7 +14,6 @@ import (
 	"github.com/openshift/odo/pkg/log"
 	"github.com/spf13/cobra"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/types"
 	ktemplates "k8s.io/kubectl/pkg/util/templates"
 
 	"github.com/redhat-developer/kam/pkg/cmd/genericclioptions"
@@ -25,7 +24,6 @@ import (
 	"github.com/redhat-developer/kam/pkg/pipelines/argocd"
 	"github.com/redhat-developer/kam/pkg/pipelines/imagerepo"
 	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
-	"github.com/redhat-developer/kam/pkg/pipelines/secrets"
 )
 
 const (
@@ -48,7 +46,7 @@ var (
 		"github",
 		"gitlab",
 	}
-	defaultSealedSecretsServiceName = types.NamespacedName{Namespace: secrets.SealedSecretsNS, Name: secrets.SealedSecretsController}
+	//defaultSealedSecretsServiceName = types.NamespacedName{Namespace: secrets.SealedSecretsNS, Name: secrets.SealedSecretsController}
 )
 
 func (d drivers) supported(s string) bool {
@@ -154,13 +152,13 @@ func initiateInteractiveMode(io *BootstrapParameters, client *utility.Client, cm
 	// Prompt if user wants to use all default values and only be prompted with required or other necessary questions
 	promptForAll := !ui.UseDefaultValues()
 	// ask for sealed secrets only when default is absent, and consider insecure/secure cases
-	err := client.CheckIfSealedSecretsExists(defaultSealedSecretsServiceName)
-	if !cmd.Flag("insecure").Changed && promptForAll {
-		io.Insecure = ui.SelectInsecureSecrets(err)
-	}
-	if !io.Insecure && err != nil {
-		io.SealedSecretsService.Namespace = ui.EnterSealedSecretService(&io.SealedSecretsService)
-	}
+	// err := client.CheckIfSealedSecretsExists(defaultSealedSecretsServiceName)
+	// if !cmd.Flag("insecure").Changed && promptForAll {
+	// 	io.Insecure = ui.SelectInsecureSecrets(err)
+	// }
+	// if !io.Insecure && err != nil {
+	// 	io.SealedSecretsService.Namespace = ui.EnterSealedSecretService(&io.SealedSecretsService)
+	// }
 	if io.GitOpsRepoURL == "" {
 		io.GitOpsRepoURL = ui.EnterGitRepo()
 	}
@@ -285,30 +283,30 @@ func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client,
 	// in case custom Sealed Secrets namespace/service name are provided, try them first
 	// We do not add Sealed Secret Operator to missingDeps since we this dependency can be resolved
 	// by optional flags or interactive user inputs.
-	if !io.Insecure && ((io.BootstrapOptions.SealedSecretsService.Namespace != "" && io.BootstrapOptions.SealedSecretsService.Namespace != defaultSealedSecretsServiceName.Namespace) ||
-		(io.BootstrapOptions.SealedSecretsService.Name != "" && (io.BootstrapOptions.SealedSecretsService.Name != defaultSealedSecretsServiceName.Name))) {
+	// if !io.Insecure && ((io.BootstrapOptions.SealedSecretsService.Namespace != "" && io.BootstrapOptions.SealedSecretsService.Namespace != defaultSealedSecretsServiceName.Namespace) ||
+	// 	(io.BootstrapOptions.SealedSecretsService.Name != "" && (io.BootstrapOptions.SealedSecretsService.Name != defaultSealedSecretsServiceName.Name))) {
 
-		spinner.Start("Checking if Sealed Secrets is installed with custom configuration", false)
-		if err := checkAndSetSealedSecretsConfig(io, client, io.BootstrapOptions.SealedSecretsService); err != nil {
-			warnIfNotFound(spinner, "Provided Sealed Secrets namespace/name are not valid. Please verify", err)
-			if !apierrors.IsNotFound(err) {
-				return fmt.Errorf("failed to check for Sealed Secrets Operator: %w", err)
-			}
-		}
-	} else {
-		if io.Insecure {
-			utility.DisplayUnsealedSecretsWarning()
-		} else {
-			spinner.Start("Checking if Sealed Secrets is installed with the default configuration", false)
-			if err := checkAndSetSealedSecretsConfig(io, client, defaultSealedSecretsServiceName); err != nil {
-				// use default configuration to interact with Sealed Secrets
-				warnIfNotFound(spinner, "The Sealed Secrets Controller was not detected", err)
-				if !apierrors.IsNotFound(err) {
-					return fmt.Errorf("failed to check for Sealed Secrets Operator: %w", err)
-				}
-			}
-		}
-	}
+	// 	spinner.Start("Checking if Sealed Secrets is installed with custom configuration", false)
+	// 	if err := checkAndSetSealedSecretsConfig(io, client, io.BootstrapOptions.SealedSecretsService); err != nil {
+	// 		warnIfNotFound(spinner, "Provided Sealed Secrets namespace/name are not valid. Please verify", err)
+	// 		if !apierrors.IsNotFound(err) {
+	// 			return fmt.Errorf("failed to check for Sealed Secrets Operator: %w", err)
+	// 		}
+	// 	}
+	// } else {
+	// if io.Insecure {
+	utility.DisplayUnsealedSecretsWarning()
+	// 	} else {
+	// 		spinner.Start("Checking if Sealed Secrets is installed with the default configuration", false)
+	// 		if err := checkAndSetSealedSecretsConfig(io, client, defaultSealedSecretsServiceName); err != nil {
+	// 			// use default configuration to interact with Sealed Secrets
+	// 			warnIfNotFound(spinner, "The Sealed Secrets Controller was not detected", err)
+	// 			if !apierrors.IsNotFound(err) {
+	// 				return fmt.Errorf("failed to check for Sealed Secrets Operator: %w", err)
+	// 			}
+	// 		}
+	// 	}
+	// }
 
 	spinner.Start("Checking if Argo CD is installed with the default configuration", false)
 	if err := client.CheckIfArgoCDExists(argocd.ArgoCDNamespace); err != nil {
@@ -335,16 +333,16 @@ func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client,
 }
 
 // check and remember the given Sealed Secrets configuration if is available otherwise return the error
-func checkAndSetSealedSecretsConfig(io *BootstrapParameters, client *utility.Client, sealedConfig types.NamespacedName) error {
+// func checkAndSetSealedSecretsConfig(io *BootstrapParameters, client *utility.Client, sealedConfig types.NamespacedName) error {
 
-	if err := client.CheckIfSealedSecretsExists(sealedConfig); err != nil {
-		return err
-	} else {
-		io.SealedSecretsService = sealedConfig
-	}
+// 	if err := client.CheckIfSealedSecretsExists(sealedConfig); err != nil {
+// 		return err
+// 	} else {
+// 		io.SealedSecretsService = sealedConfig
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 func warnIfNotFound(spinner utility.Status, warningMsg string, err error) {
 	if apierrors.IsNotFound(err) {
@@ -415,8 +413,8 @@ func NewCmdBootstrap(name, fullName string) *cobra.Command {
 	bootstrapCmd.Flags().StringVarP(&o.Prefix, "prefix", "p", "", "Add a prefix to the environment names(Dev, stage,prod,cicd etc.) to distinguish and identify individual environments")
 	bootstrapCmd.Flags().StringVar(&o.DockerConfigJSONFilename, "dockercfgjson", "~/.docker/config.json", "Filepath to config.json which authenticates the image push to the desired image registry ")
 	bootstrapCmd.Flags().StringVar(&o.ImageRepo, "image-repo", "", "Image repository of the form <registry>/<username>/<repository> or <project>/<app> which is used to push newly built images")
-	bootstrapCmd.Flags().StringVar(&o.SealedSecretsService.Namespace, "sealed-secrets-ns", secrets.SealedSecretsNS, "Namespace in which the Sealed Secrets operator is installed, automatically generated secrets are encrypted with this operator")
-	bootstrapCmd.Flags().StringVar(&o.SealedSecretsService.Name, "sealed-secrets-svc", secrets.SealedSecretsController, "Name of the Sealed Secrets Services that encrypts secrets")
+	//bootstrapCmd.Flags().StringVar(&o.SealedSecretsService.Namespace, "sealed-secrets-ns", secrets.SealedSecretsNS, "Namespace in which the Sealed Secrets operator is installed, automatically generated secrets are encrypted with this operator")
+	//bootstrapCmd.Flags().StringVar(&o.SealedSecretsService.Name, "sealed-secrets-svc", secrets.SealedSecretsController, "Name of the Sealed Secrets Services that encrypts secrets")
 	bootstrapCmd.Flags().StringVar(&o.GitHostAccessToken, "git-host-access-token", "", "Used to authenticate repository clones. Access token is encrypted and stored on local file system by keyring, will be updated/reused.")
 	bootstrapCmd.Flags().BoolVar(&o.Overwrite, "overwrite", false, "Overwrites previously existing GitOps configuration (if any) on the local filesystem")
 	bootstrapCmd.Flags().StringVar(&o.ServiceRepoURL, "service-repo-url", "", "Provide the URL for your Service repository e.g. https://github.com/organisation/service.git")
@@ -425,7 +423,7 @@ func NewCmdBootstrap(name, fullName string) *cobra.Command {
 	bootstrapCmd.Flags().StringVar(&o.PrivateRepoDriver, "private-repo-driver", "", "If your Git repositories are on a custom domain, please indicate which driver to use github or gitlab")
 	bootstrapCmd.Flags().BoolVar(&o.PushToGit, "push-to-git", false, "If true, automatically creates and populates the gitops-repo-url with the generated resources")
 	bootstrapCmd.Flags().BoolVar(&o.Interactive, "interactive", false, "If true, enable prompting for most options if not already specified on the command line")
-	bootstrapCmd.Flags().BoolVar(&o.Insecure, "insecure", false, "Set to true to use unencrypted secrets instead of sealed secrets.")
+	//	bootstrapCmd.Flags().BoolVar(&o.Insecure, "insecure", false, "Set to true to use unencrypted secrets instead of sealed secrets.")
 	return bootstrapCmd
 }
 

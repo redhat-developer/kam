@@ -7,8 +7,9 @@ import (
 	"regexp"
 	"testing"
 
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/google/go-cmp/cmp"
 	v1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
@@ -16,12 +17,8 @@ import (
 	"github.com/redhat-developer/kam/pkg/cmd/utility"
 	"github.com/redhat-developer/kam/pkg/pipelines"
 	"github.com/redhat-developer/kam/pkg/pipelines/argocd"
-	"github.com/redhat-developer/kam/pkg/pipelines/secrets"
 	appv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes/fake"
 )
 
@@ -179,14 +176,13 @@ func TestDependenciesWithNothingInstalled(t *testing.T) {
 	fakeClient := newFakeClient(nil, nil)
 
 	wantMsg := `
-Checking if Sealed Secrets is installed with the default configuration [The Sealed Secrets Controller was not detected]
 Checking if Argo CD is installed with the default configuration [Please install OpenShift GitOps Operator from OperatorHub]
 Checking if OpenShift Pipelines Operator is installed with the default configuration [Please install OpenShift Pipelines Operator from OperatorHub]`
 
 	buff := &bytes.Buffer{}
 	fakeSpinner := &mockSpinner{writer: buff}
 	err := checkBootstrapDependencies(
-		&BootstrapParameters{BootstrapOptions: &pipelines.BootstrapOptions{SealedSecretsService: types.NamespacedName{Namespace: secrets.SealedSecretsNS, Name: secrets.SealedSecretsController}}},
+		&BootstrapParameters{BootstrapOptions: &pipelines.BootstrapOptions{}},
 		fakeClient, fakeSpinner)
 	wantErr := fmt.Sprintf("failed to satisfy the required dependencies: %s, %s", gitopsOperatorName, pipelinesOperatorName)
 
@@ -195,10 +191,9 @@ Checking if OpenShift Pipelines Operator is installed with the default configura
 }
 
 func TestDependenciesWithAllInstalled(t *testing.T) {
-	fakeClient := newFakeClient([]runtime.Object{defaultSealedSecretsService(), pipelinesOperator()}, []runtime.Object{argoCDCSV()})
+	fakeClient := newFakeClient([]runtime.Object{pipelinesOperator()}, []runtime.Object{argoCDCSV()})
 
 	wantMsg := `
-Checking if Sealed Secrets is installed with the default configuration
 Checking if Argo CD is installed with the default configuration
 Checking if OpenShift Pipelines Operator is installed with the default configuration`
 
@@ -208,103 +203,102 @@ Checking if OpenShift Pipelines Operator is installed with the default configura
 	err := checkBootstrapDependencies(wizardParams, fakeClient, fakeSpinner)
 
 	assertError(t, err, "")
-	if wizardParams.SealedSecretsService.Name != secrets.SealedSecretsController && wizardParams.SealedSecretsService.Namespace != secrets.SealedSecretsNS {
-		t.Fatalf("Expected sealed secrets to be set")
-	}
+	// if wizardParams.SealedSecretsService.Name != secrets.SealedSecretsController && wizardParams.SealedSecretsService.Namespace != secrets.SealedSecretsNS {
+	// 	t.Fatalf("Expected sealed secrets to be set")
+	// }
 	assertMessage(t, buff.String(), wantMsg)
 }
 
-func TestDependenciesWithAllInstalledDifferentSealedSecretsService(t *testing.T) {
-	// use a custom sealed secret service
-	fakeClient := newFakeClient([]runtime.Object{customSealedSecretsService(), pipelinesOperator()}, []runtime.Object{argoCDCSV()})
+// func TestDependenciesWithAllInstalledDifferentSealedSecretsService(t *testing.T) {
+// 	// use a custom sealed secret service
+// 	fakeClient := newFakeClient([]runtime.Object{customSealedSecretsService(), pipelinesOperator()}, []runtime.Object{argoCDCSV()})
 
-	// expect negative Sealed Secrets check
-	wantMsg := `
-Checking if Sealed Secrets is installed with the default configuration [The Sealed Secrets Controller was not detected]
-Checking if Argo CD is installed with the default configuration
-Checking if OpenShift Pipelines Operator is installed with the default configuration`
+// 	// expect negative Sealed Secrets check
+// 	wantMsg := `
+// Checking if Sealed Secrets is installed with the default configuration [The Sealed Secrets Controller was not detected]
+// Checking if Argo CD is installed with the default configuration
+// Checking if OpenShift Pipelines Operator is installed with the default configuration`
 
-	buff := &bytes.Buffer{}
-	fakeSpinner := &mockSpinner{writer: buff}
-	// NO parameter for the custom sealed secret service defined
-	wizardParams := &BootstrapParameters{BootstrapOptions: &pipelines.BootstrapOptions{}}
-	err := checkBootstrapDependencies(wizardParams, fakeClient, fakeSpinner)
+// 	buff := &bytes.Buffer{}
+// 	fakeSpinner := &mockSpinner{writer: buff}
+// 	// NO parameter for the custom sealed secret service defined
+// 	wizardParams := &BootstrapParameters{BootstrapOptions: &pipelines.BootstrapOptions{}}
+// 	err := checkBootstrapDependencies(wizardParams, fakeClient, fakeSpinner)
 
-	assertError(t, err, "")
-	assertMessage(t, buff.String(), wantMsg)
-}
+// 	assertError(t, err, "")
+// 	assertMessage(t, buff.String(), wantMsg)
+// }
 
-func TestDependenciesWithAllInstalledCustomSealedSecretsService(t *testing.T) {
-	// use a custom sealed secret service
-	fakeClient := newFakeClient([]runtime.Object{customSealedSecretsService(), pipelinesOperator()}, []runtime.Object{argoCDCSV()})
+// func TestDependenciesWithAllInstalledCustomSealedSecretsService(t *testing.T) {
+// 	// use a custom sealed secret service
+// 	fakeClient := newFakeClient([]runtime.Object{customSealedSecretsService(), pipelinesOperator()}, []runtime.Object{argoCDCSV()})
 
-	// expect checking and finding the custom Sealed Secrets config
-	wantMsg := `
-Checking if Sealed Secrets is installed with custom configuration
-Checking if Argo CD is installed with the default configuration
-Checking if OpenShift Pipelines Operator is installed with the default configuration`
+// 	// expect checking and finding the custom Sealed Secrets config
+// 	wantMsg := `
+// Checking if Sealed Secrets is installed with custom configuration
+// Checking if Argo CD is installed with the default configuration
+// Checking if OpenShift Pipelines Operator is installed with the default configuration`
 
-	buff := &bytes.Buffer{}
-	fakeSpinner := &mockSpinner{writer: buff}
-	// set parameter for the custom sealed secret service
-	wizardParams := &BootstrapParameters{BootstrapOptions: &pipelines.BootstrapOptions{SealedSecretsService: types.NamespacedName{Namespace: customSealedSecretsNS, Name: customSealedSecretsController}}}
-	err := checkBootstrapDependencies(wizardParams, fakeClient, fakeSpinner)
+// 	buff := &bytes.Buffer{}
+// 	fakeSpinner := &mockSpinner{writer: buff}
+// 	// set parameter for the custom sealed secret service
+// 	wizardParams := &BootstrapParameters{BootstrapOptions: &pipelines.BootstrapOptions{SealedSecretsService: types.NamespacedName{Namespace: customSealedSecretsNS, Name: customSealedSecretsController}}}
+// 	err := checkBootstrapDependencies(wizardParams, fakeClient, fakeSpinner)
 
-	assertError(t, err, "")
-	if wizardParams.SealedSecretsService.Name != customSealedSecretsController && wizardParams.SealedSecretsService.Namespace != customSealedSecretsNS {
-		t.Fatalf("Expected sealed secrets to be set")
-	}
-	assertMessage(t, buff.String(), wantMsg)
-}
+// 	assertError(t, err, "")
+// 	if wizardParams.SealedSecretsService.Name != customSealedSecretsController && wizardParams.SealedSecretsService.Namespace != customSealedSecretsNS {
+// 		t.Fatalf("Expected sealed secrets to be set")
+// 	}
+// 	assertMessage(t, buff.String(), wantMsg)
+// }
 
-func TestDependenciesWithAllInstalledCustomSealedSecretsServiceButDefaultIsInstalled(t *testing.T) {
-	// use a DEFAULT sealed secret service
-	fakeClient := newFakeClient([]runtime.Object{defaultSealedSecretsService(), pipelinesOperator()}, []runtime.Object{argoCDCSV()})
+// func TestDependenciesWithAllInstalledCustomSealedSecretsServiceButDefaultIsInstalled(t *testing.T) {
+// 	// use a DEFAULT sealed secret service
+// 	fakeClient := newFakeClient([]runtime.Object{defaultSealedSecretsService(), pipelinesOperator()}, []runtime.Object{argoCDCSV()})
 
-	// expect checking custom Sealed Secrets, but unsuccessful
-	wantMsg := `
-Checking if Sealed Secrets is installed with custom configuration [Provided Sealed Secrets namespace/name are not valid. Please verify]
-Checking if Argo CD is installed with the default configuration
-Checking if OpenShift Pipelines Operator is installed with the default configuration`
+// 	// expect checking custom Sealed Secrets, but unsuccessful
+// 	wantMsg := `
+// Checking if Sealed Secrets is installed with custom configuration [Provided Sealed Secrets namespace/name are not valid. Please verify]
+// Checking if Argo CD is installed with the default configuration
+// Checking if OpenShift Pipelines Operator is installed with the default configuration`
 
-	buff := &bytes.Buffer{}
-	fakeSpinner := &mockSpinner{writer: buff}
-	// set parameter for the custom sealed secret service
-	wizardParams := &BootstrapParameters{BootstrapOptions: &pipelines.BootstrapOptions{SealedSecretsService: types.NamespacedName{Namespace: customSealedSecretsNS, Name: customSealedSecretsController}}}
-	err := checkBootstrapDependencies(wizardParams, fakeClient, fakeSpinner)
+// 	buff := &bytes.Buffer{}
+// 	fakeSpinner := &mockSpinner{writer: buff}
+// 	// set parameter for the custom sealed secret service
+// 	wizardParams := &BootstrapParameters{BootstrapOptions: &pipelines.BootstrapOptions{SealedSecretsService: types.NamespacedName{Namespace: customSealedSecretsNS, Name: customSealedSecretsController}}}
+// 	err := checkBootstrapDependencies(wizardParams, fakeClient, fakeSpinner)
 
-	assertError(t, err, "")
-	assertMessage(t, buff.String(), wantMsg)
-	// not the default Sealed Secrets are expected
-	if wizardParams.SealedSecretsService.Name == secrets.SealedSecretsController || wizardParams.SealedSecretsService.Namespace == secrets.SealedSecretsNS {
-		t.Fatalf("Expected sealed secrets to be set")
-	}
-}
+// 	assertError(t, err, "")
+// 	assertMessage(t, buff.String(), wantMsg)
+// 	// not the default Sealed Secrets are expected
+// 	if wizardParams.SealedSecretsService.Name == secrets.SealedSecretsController || wizardParams.SealedSecretsService.Namespace == secrets.SealedSecretsNS {
+// 		t.Fatalf("Expected sealed secrets to be set")
+// 	}
+// }
 
-func TestDependenciesWithAllInstalledCustomSealedSecretsServiceButNotMatched(t *testing.T) {
-	// use an OTHER sealed secret service
-	fakeClient := newFakeClient([]runtime.Object{customSealedSecretsServiceOther(), pipelinesOperator()}, []runtime.Object{argoCDCSV()})
+// func TestDependenciesWithAllInstalledCustomSealedSecretsServiceButNotMatched(t *testing.T) {
+// 	// use an OTHER sealed secret service
+// 	fakeClient := newFakeClient([]runtime.Object{customSealedSecretsServiceOther(), pipelinesOperator()}, []runtime.Object{argoCDCSV()})
 
-	wantMsg := `
-Checking if Sealed Secrets is installed with custom configuration [Provided Sealed Secrets namespace/name are not valid. Please verify]
-Checking if Argo CD is installed with the default configuration
-Checking if OpenShift Pipelines Operator is installed with the default configuration`
+// 	wantMsg := `
+// Checking if Sealed Secrets is installed with custom configuration [Provided Sealed Secrets namespace/name are not valid. Please verify]
+// Checking if Argo CD is installed with the default configuration
+// Checking if OpenShift Pipelines Operator is installed with the default configuration`
 
-	buff := &bytes.Buffer{}
-	fakeSpinner := &mockSpinner{writer: buff}
-	// set parameter for the custom sealed secret service
-	wizardParams := &BootstrapParameters{BootstrapOptions: &pipelines.BootstrapOptions{SealedSecretsService: types.NamespacedName{Namespace: customSealedSecretsNS, Name: customSealedSecretsController}}}
-	err := checkBootstrapDependencies(wizardParams, fakeClient, fakeSpinner)
+// 	buff := &bytes.Buffer{}
+// 	fakeSpinner := &mockSpinner{writer: buff}
+// 	// set parameter for the custom sealed secret service
+// 	wizardParams := &BootstrapParameters{BootstrapOptions: &pipelines.BootstrapOptions{SealedSecretsService: types.NamespacedName{Namespace: customSealedSecretsNS, Name: customSealedSecretsController}}}
+// 	err := checkBootstrapDependencies(wizardParams, fakeClient, fakeSpinner)
 
-	assertError(t, err, "")
-	assertMessage(t, buff.String(), wantMsg)
-}
+// 	assertError(t, err, "")
+// 	assertMessage(t, buff.String(), wantMsg)
+// }
 
 func TestDependenciesWithNoArgoCD(t *testing.T) {
-	fakeClient := newFakeClient([]runtime.Object{defaultSealedSecretsService(), pipelinesOperator()}, nil)
+	fakeClient := newFakeClient([]runtime.Object{pipelinesOperator()}, nil)
 
 	wantMsg := `
-Checking if Sealed Secrets is installed with the default configuration
 Checking if Argo CD is installed with the default configuration [Please install OpenShift GitOps Operator from OperatorHub]
 Checking if OpenShift Pipelines Operator is installed with the default configuration`
 
@@ -321,10 +315,9 @@ Checking if OpenShift Pipelines Operator is installed with the default configura
 }
 
 func TestDependenciesWithNoPipelines(t *testing.T) {
-	fakeClient := newFakeClient([]runtime.Object{defaultSealedSecretsService()}, []runtime.Object{argoCDCSV()})
+	fakeClient := newFakeClient([]runtime.Object{}, []runtime.Object{argoCDCSV()})
 
 	wantMsg := `
-Checking if Sealed Secrets is installed with the default configuration
 Checking if Argo CD is installed with the default configuration
 Checking if OpenShift Pipelines Operator is installed with the default configuration [Please install OpenShift Pipelines Operator from OperatorHub]`
 
@@ -358,32 +351,32 @@ func assertMessage(t *testing.T, got, want string) {
 	}
 }
 
-func defaultSealedSecretsService() *corev1.Service {
-	return &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      secrets.SealedSecretsController,
-			Namespace: secrets.SealedSecretsNS,
-		},
-	}
-}
+// func defaultSealedSecretsService() *corev1.Service {
+// 	return &corev1.Service{
+// 		ObjectMeta: metav1.ObjectMeta{
+// 			Name:      secrets.SealedSecretsController,
+// 			Namespace: secrets.SealedSecretsNS,
+// 		},
+// 	}
+// }
 
-func customSealedSecretsService() *corev1.Service {
-	return &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      customSealedSecretsController,
-			Namespace: customSealedSecretsNS,
-		},
-	}
-}
+// func customSealedSecretsService() *corev1.Service {
+// 	return &corev1.Service{
+// 		ObjectMeta: metav1.ObjectMeta{
+// 			Name:      customSealedSecretsController,
+// 			Namespace: customSealedSecretsNS,
+// 		},
+// 	}
+// }
 
-func customSealedSecretsServiceOther() *corev1.Service {
-	return &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "dummy-controller-do-not-use-value",
-			Namespace: "dummy-ns-do-not-use-value",
-		},
-	}
-}
+// func customSealedSecretsServiceOther() *corev1.Service {
+// 	return &corev1.Service{
+// 		ObjectMeta: metav1.ObjectMeta{
+// 			Name:      "dummy-controller-do-not-use-value",
+// 			Namespace: "dummy-ns-do-not-use-value",
+// 		},
+// 	}
+// }
 
 func pipelinesOperator() *appv1.Deployment {
 	return &appv1.Deployment{
