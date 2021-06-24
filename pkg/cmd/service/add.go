@@ -66,7 +66,9 @@ func (o *AddServiceOptions) Run() error {
 	if err != nil {
 		return err
 	}
-	log.Successf("Created Service %s successfully at environment %s.", o.ServiceName, o.EnvName)
+
+	log.Successf("Created Service %s successfully at environment %s.\n", o.ServiceName, o.EnvName)
+	log.Info(" WARNING: Generated secrets are not encrypted. Deploying the GitOps configuration without encrypting secrets is insecure and is not recommended.\n For more information on secret management see: https://github.com/redhat-developer/kam/tree/master/docs/journey/day1#secrets\n")
 	return nil
 }
 

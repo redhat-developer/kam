@@ -432,8 +432,9 @@ func NewCmdBootstrap(name, fullName string) *cobra.Command {
 func nextSteps() {
 	log.Success("Bootstrapped OpenShift resources successfully\n\n",
 		"Next Steps:\n",
-		"Please refer to https://github.com/redhat-developer/kam/tree/master/docs to get started.",
+		"Please refer to https://github.com/redhat-developer/kam/tree/master/docs to get started.\n",
 	)
+	log.Info(" WARNING: Generated secrets are not encrypted. Deploying the GitOps configuration without encrypting secrets is insecure and is not recommended.\n For more information on secret management see: https://github.com/redhat-developer/kam/tree/master/docs/journey/day1#secrets\n")
 }
 
 func isKnownDriver(repoURL string) bool {
