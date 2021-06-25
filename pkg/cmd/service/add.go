@@ -2,7 +2,6 @@ package service
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/openshift/odo/pkg/log"
 
@@ -13,7 +12,6 @@ import (
 	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
 	"github.com/spf13/cobra"
 
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	ktemplates "k8s.io/kubectl/pkg/util/templates"
 )
 
@@ -28,10 +26,6 @@ var (
 	addLongDesc  = ktemplates.LongDesc(`Add a Service to an environment in GitOps`)
 	addShortDesc = `Add a new service`
 )
-
-// var (
-// 	defaultSealedSecretsServiceName = types.NamespacedName{Namespace: secrets.SealedSecretsNS, Name: secrets.SealedSecretsController}
-// )
 
 // AddServiceOptions encapsulates the parameters for service add command
 type AddServiceOptions struct {
@@ -51,55 +45,22 @@ func (o *AddServiceOptions) Validate() error {
 
 // Run runs the project bootstrap command.
 func (o *AddServiceOptions) Run() error {
-	client, err := utility.NewClient()
-	if err != nil {
-		return err
-	}
-	if err := checkServiceDependencies(o, client, log.NewStatus(os.Stdout)); err != nil {
-		return err
-	}
+	// client, err := utility.NewClient()
+	// if err != nil {
+	// 	return err
+	// }
+	// if err := checkServiceDependencies(o, client, log.NewStatus(os.Stdout)); err != nil {
+	// 	return err
+	// }
+	utility.DisplayUnsealedSecretsWarning()
 
-	err = pipelines.AddService(o.AddServiceOptions, ioutils.NewFilesystem())
+	err := pipelines.AddService(o.AddServiceOptions, ioutils.NewFilesystem())
 
 	if err != nil {
 		return err
 	}
 	log.Successf("Created Service %s successfully at environment %s.", o.ServiceName, o.EnvName)
 	return nil
-}
-
-func checkServiceDependencies(io *AddServiceOptions, client *utility.Client, spinner utility.Status) error {
-	spinner.Start("Checking if Sealed Secrets is installed with default configuration", false)
-	// if io.Insecure {
-	utility.DisplayUnsealedSecretsWarning()
-	// } else {
-	// 	if err := checkAndSetSealedSecretsConfig(io, client, defaultSealedSecretsServiceName); err != nil {
-
-	// 		warnIfNotFound(spinner, "The Sealed Secrets Operator was not detected", err)
-	// 		if !apierrors.IsNotFound(err) {
-	// 			return fmt.Errorf("failed to check for Sealed Secrets Operator: %w", err)
-	// 		}
-	// 	}
-	// }
-	spinner.End(true)
-	return nil
-}
-
-// check and remember the given Sealed Secrets configuration if is available otherwise return the error
-// func checkAndSetSealedSecretsConfig(io *AddServiceOptions, client *utility.Client, sealedConfig types.NamespacedName) error {
-// 	if err := client.CheckIfSealedSecretsExists(sealedConfig); err != nil {
-// 		return err
-// 	} else {
-// 		io.SealedSecretsService = sealedConfig
-// 	}
-// 	return nil
-// }
-
-func warnIfNotFound(spinner utility.Status, warningMsg string, err error) {
-	if apierrors.IsNotFound(err) {
-		spinner.WarningStatus(warningMsg)
-	}
-	spinner.End(false)
 }
 
 func newCmdAdd(name, fullName string) *cobra.Command {
@@ -122,10 +83,6 @@ func newCmdAdd(name, fullName string) *cobra.Command {
 	cmd.Flags().StringVar(&o.EnvName, "env-name", "", "Name of the environment where the service will be added")
 	cmd.Flags().StringVar(&o.ImageRepo, "image-repo", "", "Image registry of the form <registry>/<username>/<image name> or <project>/<app> which is used to push newly built images")
 	cmd.Flags().StringVar(&o.PipelinesFolderPath, "pipelines-folder", ".", "Folder path to retrieve manifest, eg. /test where manifest exists at /test/pipelines.yaml")
-
-	// cmd.Flags().StringVar(&o.SealedSecretsService.Namespace, "sealed-secrets-ns", secrets.SealedSecretsNS, "Namespace in which the Sealed Secrets operator is installed, automatically generated secrets are encrypted with this operator")
-	// cmd.Flags().StringVar(&o.SealedSecretsService.Name, "sealed-secrets-svc", secrets.SealedSecretsController, "Name of the Sealed Secrets services that encrypts secrets")
-	// cmd.Flags().BoolVar(&o.Insecure, "insecure", false, "Set to true to use unencrypted secrets instead of sealed secrets.")
 
 	// required flags
 	_ = cmd.MarkFlagRequired("service-name")

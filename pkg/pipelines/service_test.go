@@ -112,7 +112,6 @@ import (
 // }
 
 func TestServiceResourcesAndUnsealedSecretsWithCICD(t *testing.T) {
-	// defer stubDefaultPublicKeyFunc(t)()
 	fakeFs := ioutils.NewMemoryFilesystem()
 	m := buildManifest(true, false)
 	hookSecret, err := secrets.CreateUnsealedSecret(
@@ -126,7 +125,6 @@ func TestServiceResourcesAndUnsealedSecretsWithCICD(t *testing.T) {
 		"secrets/webhook-secret-test-dev-test.yaml": hookSecret,
 	}
 	want := res.Resources{
-		//"config/cicd/base/03-secrets/webhook-secret-test-dev-test.yaml": hookSecret,
 		"environments/test-dev/apps/test-app/base/kustomization.yaml": &res.Kustomization{
 			Bases: []string{"../services/test-svc", "../services/test"}},
 		"environments/test-dev/apps/test-app/kustomization.yaml": &res.Kustomization{
@@ -190,7 +188,6 @@ func TestServiceResourcesAndUnsealedSecretsWithCICD(t *testing.T) {
 		PipelinesFolderPath: pipelinesFile,
 		WebhookSecret:       "123",
 		ServiceName:         "test",
-		// Insecure:            true,
 	})
 	assertNoError(t, err)
 	if diff := cmp.Diff(got, want, cmpopts.IgnoreMapEntries(func(k string, v interface{}) bool {
@@ -208,7 +205,6 @@ func TestServiceResourcesAndUnsealedSecretsWithCICD(t *testing.T) {
 }
 
 func TestServiceResourcesWithArgoCD(t *testing.T) {
-	// defer stubDefaultPublicKeyFunc(t)()
 	fakeFs := ioutils.NewMemoryFilesystem()
 	m := buildManifest(false, true)
 
@@ -400,8 +396,6 @@ func TestAddServiceWithoutApp(t *testing.T) {
 
 //retest this one
 func TestAddServiceFilePaths(t *testing.T) {
-	// defer stubDefaultPublicKeyFunc(t)()
-
 	fakeFs := ioutils.NewMemoryFilesystem()
 	outputPath := afero.GetTempDir(fakeFs, "test")
 	pipelinesPath := filepath.Join(outputPath, pipelinesFile) // Don't call filepath.ToSlash
@@ -444,8 +438,6 @@ func TestAddServiceFilePaths(t *testing.T) {
 }
 
 func TestAddServiceFolderPaths(t *testing.T) {
-	// defer stubDefaultPublicKeyFunc(t)()
-
 	fakeFs := ioutils.NewMemoryFilesystem()
 	outputPath := afero.GetTempDir(fakeFs, "test")
 	pipelinesPath := filepath.Join(outputPath, pipelinesFile) // Don't call filepath.ToSlash
@@ -479,7 +471,6 @@ func TestAddServiceFolderPaths(t *testing.T) {
 
 //test this again here the secret is created in sibling directory
 func TestServiceWithArgoCD(t *testing.T) {
-	// defer stubDefaultPublicKeyFunc(t)()
 	fakeFs := ioutils.NewMemoryFilesystem()
 	m := buildManifest(true, true)
 	want := res.Resources{
@@ -557,8 +548,6 @@ func TestServiceWithArgoCD(t *testing.T) {
 }
 
 func TestAddServiceWithImageWithNoPipelines(t *testing.T) {
-	// defer stubDefaultPublicKeyFunc(t)()
-
 	fakeFs := ioutils.NewMemoryFilesystem()
 	outputPath := afero.GetTempDir(fakeFs, "test")
 	pipelinesPath := filepath.Join(outputPath, pipelinesFile) // Don't call filepath.ToSlash
@@ -595,8 +584,6 @@ func TestAddServiceWithImageWithNoPipelines(t *testing.T) {
 }
 
 func TestAddServiceWithoutImage(t *testing.T) {
-	// defer stubDefaultPublicKeyFunc(t)()
-
 	fakeFs := ioutils.NewMemoryFilesystem()
 	outputPath := afero.GetTempDir(fakeFs, "test")
 	pipelinesPath := filepath.ToSlash(filepath.Join(outputPath, pipelinesFile))
@@ -735,18 +722,3 @@ func TestCreateSvcImageBinding(t *testing.T) {
 		t.Errorf("resources failed: %v", diff)
 	}
 }
-
-// func stubDefaultPublicKeyFunc(t *testing.T) func() {
-// 	origDefaultPublicKeyFunc := secrets.DefaultPublicKeyFunc
-// 	secrets.DefaultPublicKeyFunc = func(types.NamespacedName) (*rsa.PublicKey, error) {
-// 		key, err := rsa.GenerateKey(rand.Reader, 2048)
-// 		if err != nil {
-// 			t.Fatalf("failed to generate a private RSA key: %s", err)
-// 		}
-// 		return &key.PublicKey, nil
-// 	}
-
-// 	return func() {
-// 		secrets.DefaultPublicKeyFunc = origDefaultPublicKeyFunc
-// 	}
-// }

@@ -8,8 +8,6 @@ import (
 	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
 	"github.com/spf13/afero"
 	"gopkg.in/AlecAivazis/survey.v1"
-
-	"k8s.io/apimachinery/pkg/types"
 )
 
 // EnterGitRepo allows the user to specify the git repository in a prompt.
@@ -127,49 +125,6 @@ func EnterGitWebhookSecret(repoURL string) string {
 	err := survey.AskOne(prompt, &gitWebhookSecret, makeSecretValidator())
 	handleError(err)
 	return gitWebhookSecret
-}
-
-// enterSealedSecretService , if the secret isnt installed using the operator it is necessary to manually add the sealed-secrets-controller name through this UI prompt.
-func enterSealedSecretService() string {
-	var sealedSecret string
-	prompt := &survey.Input{
-		Message: "Name of the Sealed Secrets Service that encrypts secrets",
-		Help:    "If you have a custom installation of the Sealed Secrets operator, we need to know where to communicate with it to seal your secrets.",
-	}
-	err := survey.AskOne(prompt, &sealedSecret, survey.Required)
-	handleError(err)
-	return sealedSecret
-}
-
-// EnterSealedSecretService , prompts the UI to ask for the sealed-secrets-namespaces
-func EnterSealedSecretService(sealedSecretService *types.NamespacedName) string {
-	var sealedNs string
-	prompt := &survey.Input{
-		Message: "Provide a namespace in which the Sealed Secrets operator is installed, automatically generated secrets are encrypted with this operator?",
-		Help:    "If you have a custom installation of the Sealed Secrets operator, we need to know how to communicate with it to seal your secrets",
-	}
-
-	err := survey.AskOne(prompt, &sealedNs, makeSealedSecretsService(sealedSecretService))
-	handleError(err)
-	return strings.TrimSpace(sealedNs)
-}
-
-// SelectInsecureSecrets, prompts the UI to ask to generate unsealed secrets or not
-func SelectInsecureSecrets(err error) bool {
-	var insecure, msg string
-	if err != nil {
-		msg = "Do you want to use 1) unsealed secrets or 2) sealed secrets and provide the details of the Sealed Secrets Operator installation?"
-	} else {
-		msg = "You are able to seal secrets. Select Sealed to continue or Unsealed to generate unsealed secrets, which is not recommended."
-	}
-	prompt := &survey.Select{
-		Message: msg,
-		Help:    "WARNING: Deploying the GitOps configuration without encrypting secrets is insecure and is not recommended",
-		Options: []string{"Sealed", "Unsealed"},
-		Default: "Sealed",
-	}
-	handleError(survey.AskOne(prompt, &insecure, survey.Required))
-	return insecure == "Unsealed"
 }
 
 // EnterGitHostAccessToken , it becomes necessary to add the personal access

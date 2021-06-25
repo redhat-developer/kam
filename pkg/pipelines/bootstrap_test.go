@@ -155,11 +155,6 @@ var Config = &config.Config{ArgoCD: testArgoCDConfig, Pipelines: testpipelineCon
 
 //retest this one
 func TestBootstrapManifestWithInsecureSecrets(t *testing.T) {
-	// defer func(f secrets.PublicKeyFunc) {
-	// 	secrets.DefaultPublicKeyFunc = f
-	// }(secrets.DefaultPublicKeyFunc)
-
-	// secrets.DefaultPublicKeyFunc = makeTestKey(t)
 
 	params := &BootstrapOptions{
 		Prefix:               "tst-",
@@ -199,7 +194,6 @@ func TestBootstrapManifestWithInsecureSecrets(t *testing.T) {
 	}
 
 	want := res.Resources{
-		// "config/tst-cicd/base/03-secrets/webhook-secret-tst-dev-http-api.yaml": hookSecret,
 		"environments/tst-dev/apps/app-http-api/services/http-api/base/config/100-deployment.yaml": deployment.Create(
 			"app-http-api", "tst-dev", "http-api", bootstrapImage,
 			deployment.ContainerPort(8080)),
@@ -283,12 +277,6 @@ func TestBootstrapManifestWithInsecureSecrets(t *testing.T) {
 }
 
 func TestBootstrapCreatesRepository(t *testing.T) {
-	// defer func(f secrets.PublicKeyFunc) {
-	// 	secrets.DefaultPublicKeyFunc = f
-	// }(secrets.DefaultPublicKeyFunc)
-
-	// secrets.DefaultPublicKeyFunc = makeTestKey(t)
-
 	params := &BootstrapOptions{
 		Prefix:               "tst-",
 		GitOpsRepoURL:        testGitOpsRepo,
@@ -334,11 +322,6 @@ func TestApplicationFromRepo(t *testing.T) {
 }
 
 func TestOverwriteFlag(t *testing.T) {
-	// defer func(f secrets.PublicKeyFunc) {
-	// 	secrets.DefaultPublicKeyFunc = f
-	// }(secrets.DefaultPublicKeyFunc)
-
-	// secrets.DefaultPublicKeyFunc = makeTestKey(t)
 	fakeFs := ioutils.NewMemoryFilesystem()
 	params := &BootstrapOptions{
 		Prefix:               "tst-",
@@ -360,11 +343,6 @@ func TestOverwriteFlag(t *testing.T) {
 }
 
 func TestOverwriteFlagExistingGitDirectory(t *testing.T) {
-	// defer func(f secrets.PublicKeyFunc) {
-	// 	secrets.DefaultPublicKeyFunc = f
-	// }(secrets.DefaultPublicKeyFunc)
-
-	// secrets.DefaultPublicKeyFunc = makeTestKey(t)
 	fakeFs := ioutils.NewMemoryFilesystem()
 	params := &BootstrapOptions{
 		Prefix:               "tst-",
@@ -410,7 +388,6 @@ func TestInitialFiles(t *testing.T) {
 	gitOpsWebhook := "123"
 	o := BootstrapOptions{Prefix: prefix, GitOpsWebhookSecret: gitOpsWebhook, DockerConfigJSONFilename: ""}
 
-	// defer stubDefaultPublicKeyFunc(t)()
 	fakeFs := ioutils.NewMemoryFilesystem()
 	repo, err := scm.NewRepository(gitOpsURL)
 	assertNoError(t, err)
@@ -433,10 +410,6 @@ func TestInitialFiles(t *testing.T) {
 		t.Fatalf("outputs didn't match: %s\n", diff)
 	}
 }
-
-// func ignoreSecrets(k string, v interface{}) bool {
-// 	return k == "config/tst-cicd/base/03-secrets/gitops-webhook-secret.yaml"
-// }
 
 func TestGetCICDKustomization(t *testing.T) {
 	want := res.Resources{
@@ -475,52 +448,6 @@ func TestAddPrefixToResources(t *testing.T) {
 		t.Fatalf("addPrefixToResources failed, diff %s\n", diff)
 	}
 }
-
-// func TestGenerateSecrets(t *testing.T) {
-// 	defer stubDefaultPublicKeyFunc(t)()
-// 	ns := "test-ns"
-// 	outputs := res.Resources{}
-// 	otherOutputs := res.Resources{}
-// 	sa := roles.CreateServiceAccount(meta.NamespacedName("test-ns", "test-sa"))
-// 	o := &BootstrapOptions{
-// 		SealedSecretsService: meta.NamespacedName("sealed-secrets", "secrets"),
-// 		GitHostAccessToken:   "abc123",
-// 		ServiceRepoURL:       "https://gl.example.com/my-org/my-project.git",
-// 	}
-
-// 	err := generateSecrets(outputs, otherOutputs, sa, ns, o)
-// 	fatalIfError(t, err)
-
-// 	wantSA := &corev1.ServiceAccount{
-// 		TypeMeta: meta.TypeMeta("ServiceAccount", "v1"),
-// 		ObjectMeta: meta.ObjectMeta(
-// 			types.NamespacedName{Name: "test-sa", Namespace: "test-ns"},
-// 		),
-// 		Secrets: []corev1.ObjectReference{{Name: authTokenSecretName}},
-// 	}
-// 	if diff := cmp.Diff(wantSA, outputs[serviceAccountPath]); diff != "" {
-// 		t.Fatalf("generatedSecrets failed to update the ServiceAccount:\n%s", diff)
-// 	}
-
-// 	wantAuthSecret := &ssv1alpha1.SealedSecret{
-// 		TypeMeta: meta.TypeMeta("SealedSecret", "bitnami.com/v1alpha1"),
-// 		ObjectMeta: meta.ObjectMeta(
-// 			types.NamespacedName{Name: authTokenSecretName, Namespace: "test-ns"},
-// 		),
-// 		Spec: ssv1alpha1.SealedSecretSpec{
-// 			Template: ssv1alpha1.SecretTemplateSpec{
-// 				ObjectMeta: meta.ObjectMeta(
-// 					types.NamespacedName{Name: authTokenSecretName, Namespace: "test-ns"},
-// 				),
-// 				Type: corev1.SecretTypeOpaque,
-// 			},
-// 		},
-// 	}
-// 	if diff := cmp.Diff(wantAuthSecret, outputs[authTokenPath],
-// 		cmpopts.IgnoreFields(ssv1alpha1.SealedSecret{}, "Spec.EncryptedData", "ObjectMeta.Annotations")); diff != "" {
-// 		t.Fatalf("generatedSecrets failed to create auth token secret:\n%s", diff)
-// 	}
-// }
 
 func fatalIfError(t *testing.T, err error) {
 	t.Helper()

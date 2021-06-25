@@ -11,10 +11,6 @@ github.com/PuerkitoBio/purell
 github.com/PuerkitoBio/urlesc
 # github.com/antlr/antlr4 v0.0.0-20200503195918-621b933c7a7f
 github.com/antlr/antlr4/runtime/Go/antlr
-# github.com/bitnami-labs/sealed-secrets v0.15.0
-## explicit
-github.com/bitnami-labs/sealed-secrets/pkg/apis/sealed-secrets/v1alpha1
-github.com/bitnami-labs/sealed-secrets/pkg/crypto
 # github.com/blang/semver/v4 v4.0.0
 github.com/blang/semver/v4
 # github.com/bluekeyes/go-gitdiff v0.4.0
@@ -268,15 +264,6 @@ github.com/tektoncd/triggers/pkg/apis/triggers/v1alpha1
 github.com/zalando/go-keyring
 github.com/zalando/go-keyring/secret_service
 # golang.org/x/crypto v0.0.0-20210415154028-4f45737414dc
-golang.org/x/crypto/blowfish
-golang.org/x/crypto/chacha20
-golang.org/x/crypto/curve25519
-golang.org/x/crypto/ed25519
-golang.org/x/crypto/ed25519/internal/edwards25519
-golang.org/x/crypto/internal/subtle
-golang.org/x/crypto/poly1305
-golang.org/x/crypto/ssh
-golang.org/x/crypto/ssh/internal/bcrypt_pbkdf
 golang.org/x/crypto/ssh/terminal
 # golang.org/x/net v0.0.0-20210415231046-e915ea6b2b7d
 golang.org/x/net/context
@@ -289,7 +276,6 @@ golang.org/x/net/idna
 golang.org/x/oauth2
 golang.org/x/oauth2/internal
 # golang.org/x/sys v0.0.0-20210330210617-4fbd30eecc44
-golang.org/x/sys/cpu
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/plan9
 golang.org/x/sys/unix

@@ -9,10 +9,8 @@ import (
 
 	"github.com/redhat-developer/kam/pkg/cmd/utility"
 	"github.com/redhat-developer/kam/pkg/pipelines/git"
-	"github.com/redhat-developer/kam/pkg/pipelines/namespaces"
 	"gopkg.in/AlecAivazis/survey.v1"
 	"gopkg.in/AlecAivazis/survey.v1/terminal"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/klog"
 )
@@ -28,12 +26,6 @@ func makePrefixValidator() survey.Validator {
 func makeSecretValidator() survey.Validator {
 	return func(input interface{}) error {
 		return validateSecretLength(input)
-	}
-}
-
-func makeSealedSecretsService(sealedSecretService *types.NamespacedName) survey.Validator {
-	return func(input interface{}) error {
-		return validateSealedSecretService(input, sealedSecretService)
 	}
 }
 
@@ -111,28 +103,6 @@ func ValidateAccessToken(input interface{}, serviceRepo string) error {
 			return fmt.Errorf("The token passed is incorrect for repository %s", repoName)
 		}
 		return nil
-	}
-	return nil
-}
-
-// validateSealedSecretService validates to see if the sealed secret service is present in the correct namespace.
-func validateSealedSecretService(input interface{}, sealedSecretService *types.NamespacedName) error {
-	if s, ok := input.(string); ok {
-		client, err := utility.NewClient()
-		if err != nil {
-			return err
-		}
-		clientSet, err := namespaces.GetClientSet()
-		if err != nil {
-			return err
-		}
-		exists, _ := namespaces.Exists(clientSet, s)
-		if !exists {
-			return fmt.Errorf("The namespace %s is not found on the cluster", s)
-		}
-		sealedSecretService.Namespace = s
-		sealedSecretService.Name = enterSealedSecretService()
-		return client.CheckIfSealedSecretsExists(*sealedSecretService)
 	}
 	return nil
 }

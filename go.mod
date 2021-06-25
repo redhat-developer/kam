@@ -3,7 +3,6 @@ module github.com/redhat-developer/kam
 go 1.16
 
 require (
-	github.com/bitnami-labs/sealed-secrets v0.15.0
 	github.com/code-ready/clicumber v0.0.0-20210201104241-cecb794bdf9a
 	github.com/cucumber/godog v0.9.0
 	github.com/cucumber/messages-go/v10 v10.0.3

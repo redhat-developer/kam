@@ -30,8 +30,6 @@ type AddServiceOptions struct {
 	PipelinesFolderPath string
 	ServiceName         string
 	WebhookSecret       string
-	// SealedSecretsService types.NamespacedName // SealedSecrets service name
-	// Insecure             bool
 }
 
 // AddService is the entry-point from the CLI for adding new services.
@@ -89,18 +87,11 @@ func serviceResources(m *config.Manifest, appFs afero.Fs, o *AddServiceOptions) 
 	// add the secret only if CI/CD env is present
 	if cfg != nil {
 		secretName := secrets.MakeServiceWebhookSecretName(o.EnvName, svc.Name)
-		// var hookSecret *ssv1alpha1.SealedSecret
 		var opaqueSecret *corev1.Secret
 		var err error
-		// if !o.Insecure {
-		// 	hookSecret, err = secrets.CreateSealedSecret(
-		// 		meta.NamespacedName(cfg.Name, secretName), o.SealedSecretsService, o.WebhookSecret,
-		// 		eventlisteners.WebhookSecretKey)
-		// } else {
 		opaqueSecret, err = secrets.CreateUnsealedSecret(
 			meta.NamespacedName(cfg.Name, secretName), o.WebhookSecret,
 			eventlisteners.WebhookSecretKey)
-		// }
 		if err != nil {
 			return nil, nil, err
 		}
@@ -111,14 +102,8 @@ func serviceResources(m *config.Manifest, appFs afero.Fs, o *AddServiceOptions) 
 				Namespace: cfg.Name,
 			},
 		}
-		// if !o.Insecure {
-		// 	secretFilename := filepath.ToSlash(filepath.Join("03-secrets", secretName+".yaml"))
-		// 	secretsPath := filepath.ToSlash(filepath.Join(config.PathForPipelines(cfg), "base", secretFilename))
-		// 	files[secretsPath] = hookSecret
-		// } else {
 		secretFilename := filepath.ToSlash(filepath.Join("secrets", secretName+".yaml"))
 		otherResources[secretFilename] = opaqueSecret
-		// }
 
 		if m.Config.Pipelines != nil {
 			// add the default pipelines if they're absent
