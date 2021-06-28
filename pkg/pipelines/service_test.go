@@ -21,97 +21,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// func TestServiceResourcesWithCICD(t *testing.T) {
-// 	defer stubDefaultPublicKeyFunc(t)()
-// 	fakeFs := ioutils.NewMemoryFilesystem()
-// 	m := buildManifest(true, false)
-// 	hookSecret, err := secrets.CreateSealedSecret(
-// 		meta.NamespacedName(
-// 			"cicd", "webhook-secret-test-dev-test"),
-// 		meta.NamespacedName("test-ns", "service"),
-// 		"123",
-// 		eventlisteners.WebhookSecretKey)
-// 	assertNoError(t, err)
-
-// 	want := res.Resources{
-// 		"config/cicd/base/03-secrets/webhook-secret-test-dev-test.yaml": hookSecret,
-// 		"environments/test-dev/apps/test-app/base/kustomization.yaml": &res.Kustomization{
-// 			Bases: []string{"../services/test-svc", "../services/test"}},
-// 		"environments/test-dev/apps/test-app/kustomization.yaml": &res.Kustomization{
-// 			Bases:        []string{"overlays"},
-// 			CommonLabels: map[string]string{"app.openshift.io/vcs-source": "org/test"},
-// 		},
-// 		"environments/test-dev/apps/test-app/overlays/kustomization.yaml": &res.Kustomization{
-// 			Bases: []string{"../base"}},
-// 		"pipelines.yaml": &config.Manifest{
-// 			Config: &config.Config{
-// 				Pipelines: &config.PipelinesConfig{
-// 					Name: "cicd",
-// 				},
-// 			},
-// 			GitOpsURL: "http://github.com/org/test",
-// 			Environments: []*config.Environment{
-// 				{
-// 					Name: "test-dev",
-// 					Apps: []*config.Application{
-// 						{
-// 							Name: "test-app",
-// 							Services: []*config.Service{
-// 								{
-// 									Name:      "test-svc",
-// 									SourceURL: "https://github.com/myproject/test-svc",
-// 									Webhook: &config.Webhook{
-// 										Secret: &config.Secret{
-// 											Name:      "webhook-secret-test-dev-test-svc",
-// 											Namespace: "cicd",
-// 										},
-// 									},
-// 								},
-// 								{
-// 									Name:      "test",
-// 									SourceURL: "http://github.com/org/test",
-// 									Webhook: &config.Webhook{
-// 										Secret: &config.Secret{
-// 											Name:      "webhook-secret-test-dev-test",
-// 											Namespace: "cicd",
-// 										},
-// 									},
-// 									Pipelines: &config.Pipelines{
-// 										Integration: &config.TemplateBinding{Bindings: []string{"test-dev-test-app-test-binding", "github-push-binding"}},
-// 									},
-// 								},
-// 							},
-// 						},
-// 					},
-// 					Pipelines: &config.Pipelines{
-// 						Integration: &config.TemplateBinding{Template: "app-ci-template", Bindings: []string{"github-push-binding"}},
-// 					},
-// 				},
-// 			},
-// 		},
-// 	}
-
-// 	got, otherResources, err := serviceResources(m, fakeFs, &AddServiceOptions{
-// 		AppName:             "test-app",
-// 		EnvName:             "test-dev",
-// 		GitRepoURL:          "http://github.com/org/test",
-// 		PipelinesFolderPath: pipelinesFile,
-// 		WebhookSecret:       "123",
-// 		ServiceName:         "test",
-// 	})
-// 	assertNoError(t, err)
-// 	if diff := cmp.Diff(got, want, cmpopts.IgnoreMapEntries(func(k string, v interface{}) bool {
-// 		_, ok := want[k]
-// 		return !ok
-// 	})); diff != "" {
-// 		t.Fatalf("serviceResources() failed: %v", diff)
-// 	}
-// 	if diff := cmp.Diff(0, len(otherResources)); diff != "" {
-// 		t.Fatalf("other resources is not empty:\n%s", diff)
-// 	}
-// }
-
-func TestServiceResourcesAndUnsealedSecretsWithCICD(t *testing.T) {
+func TestServiceResourcesWithCICD(t *testing.T) {
 	fakeFs := ioutils.NewMemoryFilesystem()
 	m := buildManifest(true, false)
 	hookSecret, err := secrets.CreateUnsealedSecret(
@@ -394,7 +304,6 @@ func TestAddServiceWithoutApp(t *testing.T) {
 	}
 }
 
-//retest this one
 func TestAddServiceFilePaths(t *testing.T) {
 	fakeFs := ioutils.NewMemoryFilesystem()
 	outputPath := afero.GetTempDir(fakeFs, "test")
@@ -411,7 +320,6 @@ func TestAddServiceFilePaths(t *testing.T) {
 		"environments/test-dev/apps/new-app/services/test/base/kustomization.yaml",
 		"environments/test-dev/apps/new-app/services/test/overlays/kustomization.yaml",
 		"environments/test-dev/apps/new-app/services/test/kustomization.yaml",
-		// "config/cicd/base/03-secrets/webhook-secret-test-dev-test.yaml",
 		"config/cicd/base/kustomization.yaml",
 		"pipelines.yaml",
 		"config/argocd/test-dev-test-app-app.yaml",
@@ -469,7 +377,6 @@ func TestAddServiceFolderPaths(t *testing.T) {
 	}
 }
 
-//test this again here the secret is created in sibling directory
 func TestServiceWithArgoCD(t *testing.T) {
 	fakeFs := ioutils.NewMemoryFilesystem()
 	m := buildManifest(true, true)

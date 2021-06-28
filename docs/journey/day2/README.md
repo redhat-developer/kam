@@ -157,11 +157,9 @@ The new Service/Application will be deployed by Argo CD. An Argo CD application 
 
 In the CI/CD Environment, a couple of resources are added or modified.
 
-A Webhook secret resource is generated, if the Sealed Secrets Operator is available:
+An unencryped secret is generated into  the `secrets` folder that is a sibling of the folder that contains the `pipelines.yaml` file (or the parent of the `config` folder)
 
-* `config/cicd/base/03-secrets/webhook-secret-<env>-<service>.yaml`
-
-If the Sealed Secrets Operator is not installed, then an unencryped secret is generated into  the `secrets` folder that is a sibling of the folder that contains the `pipelines.yaml` file (or the parent of the `config` folder)
+* `secrets/webhook-secret-<env>-<service>.yaml`
 
 The Event Listener is modified as below to add a `trigger` for the new Service's source repository to trigger continous integration:
 

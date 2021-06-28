@@ -45,15 +45,6 @@ func (o *AddServiceOptions) Validate() error {
 
 // Run runs the project bootstrap command.
 func (o *AddServiceOptions) Run() error {
-	// client, err := utility.NewClient()
-	// if err != nil {
-	// 	return err
-	// }
-	// if err := checkServiceDependencies(o, client, log.NewStatus(os.Stdout)); err != nil {
-	// 	return err
-	// }
-	utility.DisplayUnsealedSecretsWarning()
-
 	err := pipelines.AddService(o.AddServiceOptions, ioutils.NewFilesystem())
 
 	if err != nil {

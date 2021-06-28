@@ -1,8 +1,6 @@
 package pipelines
 
 import (
-	"crypto/rand"
-	"crypto/rsa"
 	"path/filepath"
 	"testing"
 
@@ -18,7 +16,6 @@ import (
 	"github.com/redhat-developer/kam/pkg/pipelines/routes"
 	"github.com/redhat-developer/kam/pkg/pipelines/scm"
 	"github.com/redhat-developer/kam/pkg/pipelines/secrets"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 const (
@@ -30,131 +27,8 @@ var testpipelineConfig = &config.PipelinesConfig{Name: "tst-cicd"}
 var testArgoCDConfig = &config.ArgoCDConfig{Namespace: "tst-argocd"}
 var Config = &config.Config{ArgoCD: testArgoCDConfig, Pipelines: testpipelineConfig}
 
-// func TestBootstrapManifest(t *testing.T) {
-// 	defer func(f secrets.PublicKeyFunc) {
-// 		secrets.DefaultPublicKeyFunc = f
-// 	}(secrets.DefaultPublicKeyFunc)
-
-// 	secrets.DefaultPublicKeyFunc = makeTestKey(t)
-
-// 	params := &BootstrapOptions{
-// 		Prefix:               "tst-",
-// 		GitOpsRepoURL:        testGitOpsRepo,
-// 		ImageRepo:            "image/repo",
-// 		GitOpsWebhookSecret:  "123",
-// 		GitHostAccessToken:   "test-token",
-// 		ServiceRepoURL:       testSvcRepo,
-// 		ServiceWebhookSecret: "456",
-// 	}
-// 	r, otherResources, err := bootstrapResources(params, ioutils.NewMemoryFilesystem())
-// 	fatalIfError(t, err)
-// 	log.Println(otherResources)
-// 	if diff := cmp.Diff(3, len(otherResources)); diff != "" {
-// 		t.Fatalf("other resources is not empty:\n%s", diff)
-// 	}
-
-// 	// hookSecret, err := secrets.CreateSealedSecret(
-// 	// 	meta.NamespacedName("tst-cicd", "webhook-secret-tst-dev-http-api"),
-// 	// 	meta.NamespacedName("test-ns", "service"), "456", eventlisteners.WebhookSecretKey)
-// 	// if err != nil {
-// 	// 	t.Fatal(err)
-// 	// }
-
-// 	svc := createBootstrapService("app-http-api", "tst-dev", "http-api")
-// 	route, err := routes.NewFromService(svc)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	want := res.Resources{
-// 		// "config/tst-cicd/base/03-secrets/webhook-secret-tst-dev-http-api.yaml": hookSecret,
-// 		"environments/tst-dev/apps/app-http-api/services/http-api/base/config/100-deployment.yaml": deployment.Create(
-// 			"app-http-api", "tst-dev", "http-api", bootstrapImage,
-// 			deployment.ContainerPort(8080)),
-// 		"environments/tst-dev/apps/app-http-api/services/http-api/base/config/200-service.yaml": svc,
-// 		"environments/tst-dev/apps/app-http-api/services/http-api/base/config/300-route.yaml":   route,
-// 		"environments/tst-dev/apps/app-http-api/services/http-api/base/config/kustomization.yaml": &res.Kustomization{
-// 			Resources: []string{"100-deployment.yaml", "200-service.yaml", "300-route.yaml"}},
-// 		pipelinesFile: &config.Manifest{
-// 			Version:   version,
-// 			GitOpsURL: "https://github.com/my-org/gitops.git",
-// 			Environments: []*config.Environment{
-// 				{
-// 					Pipelines: &config.Pipelines{
-// 						Integration: &config.TemplateBinding{
-// 							Template: "app-ci-template",
-// 							Bindings: []string{"github-push-binding"},
-// 						},
-// 					},
-// 					Name: "tst-dev",
-
-// 					Apps: []*config.Application{
-// 						{
-// 							Name: "app-http-api",
-// 							Services: []*config.Service{
-// 								{
-// 									Name:      "http-api",
-// 									SourceURL: testSvcRepo,
-// 									Webhook: &config.Webhook{
-// 										Secret: &config.Secret{
-// 											Name:      "webhook-secret-tst-dev-http-api",
-// 											Namespace: "tst-cicd",
-// 										},
-// 									},
-// 									Pipelines: &config.Pipelines{
-// 										Integration: &config.TemplateBinding{Bindings: []string{"tst-dev-app-http-api-http-api-binding", "github-push-binding"}},
-// 									},
-// 								},
-// 							},
-// 						},
-// 					},
-// 				},
-// 				{Name: "tst-stage"},
-// 			},
-// 			Config: &config.Config{
-// 				Pipelines: &config.PipelinesConfig{Name: "tst-cicd"},
-// 				ArgoCD:    &config.ArgoCDConfig{Namespace: argocd.ArgoCDNamespace},
-// 			},
-// 		},
-// 	}
-
-// 	if diff := cmp.Diff(want, r, cmpopts.IgnoreMapEntries(func(k string, v interface{}) bool {
-// 		_, ok := want[k]
-// 		return !ok
-// 	})); diff != "" {
-// 		t.Fatalf("bootstrapped resources:\n%s", diff)
-// 	}
-
-// 	wantResources := []string{
-// 		"01-namespaces/cicd-environment.yaml",
-// 		"01-namespaces/image-environment.yaml",
-// 		"02-rolebindings/argocd-admin.yaml",
-// 		"02-rolebindings/internal-registry-image-binding.yaml",
-// 		"02-rolebindings/pipeline-service-account.yaml",
-// 		"02-rolebindings/pipeline-service-role.yaml",
-// 		"02-rolebindings/pipeline-service-rolebinding.yaml",
-// 		// "02-rolebindings/sealed-secrets-aggregate-to-admin.yaml",
-// 		// "03-secrets/git-host-access-token.yaml",
-// 		// "03-secrets/gitops-webhook-secret.yaml",
-// 		// "03-secrets/webhook-secret-tst-dev-http-api.yaml",
-// 		"04-tasks/deploy-from-source-task.yaml",
-// 		"04-tasks/set-commit-status-task.yaml",
-// 		"05-pipelines/app-ci-pipeline.yaml",
-// 		"05-pipelines/ci-dryrun-from-push-pipeline.yaml",
-// 		"06-bindings/github-push-binding.yaml",
-// 		"06-bindings/tst-dev-app-http-api-http-api-binding.yaml",
-// 		"07-templates/app-ci-build-from-push-template.yaml",
-// 		"07-templates/ci-dryrun-from-push-template.yaml",
-// 		"08-eventlisteners/cicd-event-listener.yaml",
-// 		"09-routes/gitops-webhook-event-listener.yaml",
-// 	}
-// 	k := r["config/tst-cicd/base/kustomization.yaml"].(res.Kustomization)
-// 	if diff := cmp.Diff(wantResources, k.Resources); diff != "" {
-// 		t.Fatalf("base kustomization failed:\n%s\n", diff)
-// 	}
-// }
-
 //retest this one
-func TestBootstrapManifestWithInsecureSecrets(t *testing.T) {
+func TestBootstrapManifest(t *testing.T) {
 
 	params := &BootstrapOptions{
 		Prefix:               "tst-",
@@ -453,15 +327,5 @@ func fatalIfError(t *testing.T, err error) {
 	t.Helper()
 	if err != nil {
 		t.Fatal(err)
-	}
-}
-
-func makeTestKey(t *testing.T) func(service types.NamespacedName) (*rsa.PublicKey, error) {
-	return func(service types.NamespacedName) (*rsa.PublicKey, error) {
-		key, err := rsa.GenerateKey(rand.Reader, 2048)
-		if err != nil {
-			t.Fatalf("failed to generate a private RSA key: %s", err)
-		}
-		return &key.PublicKey, nil
 	}
 }

@@ -15,11 +15,6 @@ You need to have the following installed in the OCP 4.x cluster.
 
 * [OpenShift GitOps Operator](prerequisites/gitops_operator.md)
 * [OpenShift Pipelines Operator](prerequisites/pipelines_operator.md)
-* [Sealed Secrets Operator](prerequisites/sealed_secrets.md)
-    * If you opt to not install the Sealed Secrets Operator, the `kam bootstrap` and `kam service add` commands will generate unencrypted or unsealed secrets in the `secrets` folder that is a sibling folder of the designated output folder that contains the GitOps configuration files.
-    * The `secrets` folder will not be staged for commit via Git, since it is outside of the designated output folder.  This is necessary so that the unencrypted secrets are not inadvertantly pushed to GitHub.
-    * If you opt to not install the Sealed Secrets Operator, make sure to push the unsealed secrets in the secrets folder to your cluster.
-    * WARNING: using unsealed unencrypted secrets is not recommended.
     
 
 And, you will need these:
