@@ -270,7 +270,6 @@ func setAccessToken(io *BootstrapParameters) error {
 func checkBootstrapDependencies(io *BootstrapParameters, client *utility.Client, spinner utility.Status) error {
 	missingDeps := []string{}
 	log.Progressf("\nChecking dependencies\n")
-	utility.DisplayUnsealedSecretsWarning()
 
 	spinner.Start("Checking if Argo CD is installed with the default configuration", false)
 	if err := client.CheckIfArgoCDExists(argocd.ArgoCDNamespace); err != nil {

@@ -107,9 +107,3 @@ func (c *Client) CheckIfPipelinesExists(ns string) error {
 func GetFullName(parentName, name string) string {
 	return parentName + " " + name
 }
-
-// DisplayUnsealedSecretsWarning display unsealed secrets warning
-func DisplayUnsealedSecretsWarning() {
-	log.Progressf("  WARNING: Unencrypted secrets will be created in a secrets folder that is a sibling to the designated output or pipelines folder")
-	log.Progressf("           Deploying this GitOps configuration without encrypting secrets is insecure and is not recommended")
-}

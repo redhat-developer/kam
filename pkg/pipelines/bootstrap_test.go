@@ -27,7 +27,6 @@ var testpipelineConfig = &config.PipelinesConfig{Name: "tst-cicd"}
 var testArgoCDConfig = &config.ArgoCDConfig{Namespace: "tst-argocd"}
 var Config = &config.Config{ArgoCD: testArgoCDConfig, Pipelines: testpipelineConfig}
 
-//retest this one
 func TestBootstrapManifest(t *testing.T) {
 
 	params := &BootstrapOptions{

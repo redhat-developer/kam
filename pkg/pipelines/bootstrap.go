@@ -609,7 +609,7 @@ func generateSecrets(outputs res.Resources, otherOutputs res.Resources, sa *core
 	tokenSecret, err := secrets.CreateUnsealedSecret(meta.NamespacedName(
 		ns, authTokenSecretName), o.GitHostAccessToken, "token")
 	if err != nil {
-		return fmt.Errorf("failed to generate unencrypted Secret: %w", err)
+		return fmt.Errorf("failed to generate Secret: %w", err)
 	}
 	otherOutputs[filepath.Join("secrets", "git-host-access-token.yaml")] = tokenSecret
 	outputs[serviceAccountPath] = roles.AddSecretToSA(sa, tokenSecret.Name)

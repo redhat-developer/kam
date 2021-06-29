@@ -2,7 +2,6 @@ package secrets
 
 import (
 	"crypto/rsa"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -10,10 +9,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
-	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
-	"k8s.io/client-go/util/cert"
 
-	"github.com/redhat-developer/kam/pkg/pipelines/clientconfig"
 	"github.com/redhat-developer/kam/pkg/pipelines/meta"
 )
 
@@ -51,41 +47,6 @@ func CreateUnsealedSecret(name types.NamespacedName, data, secretKey string) (*c
 func CreateUnsealedBasicAuthSecret(name, service types.NamespacedName, token string,
 	opts ...meta.ObjectMetaOpt) *corev1.Secret {
 	return createBasicAuthSecret(name, token, opts...)
-}
-
-// Reads and parses a public key from a reader
-func parseKey(r io.Reader) (*rsa.PublicKey, error) {
-	data, err := ioutil.ReadAll(r)
-	if err != nil {
-		return nil, err
-	}
-
-	certs, err := cert.ParseCertsPEM(data)
-	if err != nil {
-		return nil, err
-	}
-
-	// ParseCertsPem returns error if len(certs) == 0, but best to be sure...
-	if len(certs) == 0 {
-		return nil, errors.New("failed to read any certificates")
-	}
-
-	publicKey, ok := certs[0].PublicKey.(*rsa.PublicKey)
-	if !ok {
-		return nil, fmt.Errorf("expected RSA public key but found %v", certs[0].PublicKey)
-	}
-
-	return publicKey, nil
-}
-
-// Gets a REST client
-func getRESTClient() (*clientv1.CoreV1Client, error) {
-	config, err := clientconfig.GetRESTConfig()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get Kubernetes client config: %w", err)
-	}
-	config.AcceptContentTypes = "application/x-pem-file, */*"
-	return clientv1.NewForConfig(config)
 }
 
 // createOpaqueSecret creates a Kubernetes v1/Secret with the provided name and
