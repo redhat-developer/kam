@@ -110,7 +110,7 @@ func TestServiceResourcesWithCICD(t *testing.T) {
 		t.Fatalf("other resources contain one entry:\n%s", diff)
 	}
 	if diff := cmp.Diff(otherResources, wantOther); diff != "" {
-		t.Fatalf("serviceResources() failed to create unsealed secrets properly:\n%s", diff)
+		t.Fatalf("serviceResources() failed to create secrets properly:\n%s", diff)
 	}
 }
 
@@ -514,7 +514,7 @@ func TestAddServiceWithoutImage(t *testing.T) {
 	assertNoError(t, err)
 
 	files := res.Resources{
-		"config/cicd/base/06-bindings/staging-new-app-test-binding.yaml": triggers.CreateImageRepoBinding("cicd", "staging-new-app-test-binding", "image-registry.openshift-image-registry.svc:5000/cicd/test", "false"),
+		"config/cicd/base/05-bindings/staging-new-app-test-binding.yaml": triggers.CreateImageRepoBinding("cicd", "staging-new-app-test-binding", "image-registry.openshift-image-registry.svc:5000/cicd/test", "false"),
 	}
 
 	for path, resource := range files {
@@ -603,7 +603,7 @@ func TestCreateSvcImageBinding(t *testing.T) {
 	if diff := cmp.Diff(bindingName, "new-env-newapp-new-svc-binding"); diff != "" {
 		t.Errorf("bindingName failed: %v", diff)
 	}
-	if diff := cmp.Diff(bindingFilename, "06-bindings/new-env-newapp-new-svc-binding.yaml"); diff != "" {
+	if diff := cmp.Diff(bindingFilename, "05-bindings/new-env-newapp-new-svc-binding.yaml"); diff != "" {
 		t.Errorf("bindingFilename failed: %v", diff)
 	}
 
@@ -624,7 +624,7 @@ func TestCreateSvcImageBinding(t *testing.T) {
 		},
 	}
 
-	wantResources := res.Resources{"config/cicd/base/06-bindings/new-env-newapp-new-svc-binding.yaml": triggerBinding}
+	wantResources := res.Resources{"config/cicd/base/05-bindings/new-env-newapp-new-svc-binding.yaml": triggerBinding}
 	if diff := cmp.Diff(resources, wantResources); diff != "" {
 		t.Errorf("resources failed: %v", diff)
 	}

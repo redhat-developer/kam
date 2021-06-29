@@ -210,7 +210,7 @@ func makeSvcImageBindingName(envName, appName, svcName string) string {
 }
 
 func makeSvcImageBindingFilename(bindingName string) string {
-	return filepath.ToSlash(filepath.Join("06-bindings", bindingName+".yaml"))
+	return filepath.ToSlash(filepath.Join("05-bindings", bindingName+".yaml"))
 }
 
 func makeImageBindingPath(cfg *config.PipelinesConfig, imageRepoBindingFilename string) string {

@@ -45,14 +45,14 @@ const (
 	rolebindingsPath      = "02-rolebindings/pipeline-service-rolebinding.yaml"
 	serviceAccountPath    = "02-rolebindings/pipeline-service-account.yaml"
 	argocdAdminRolePath   = "02-rolebindings/argocd-admin.yaml"
-	gitopsTasksPath       = "04-tasks/deploy-from-source-task.yaml"
-	commitStatusTaskPath  = "04-tasks/set-commit-status-task.yaml"
-	ciPipelinesPath       = "05-pipelines/ci-dryrun-from-push-pipeline.yaml"
-	appCiPipelinesPath    = "05-pipelines/app-ci-pipeline.yaml"
-	pushTemplatePath      = "07-templates/ci-dryrun-from-push-template.yaml"
-	appCIPushTemplatePath = "07-templates/app-ci-build-from-push-template.yaml"
-	eventListenerPath     = "08-eventlisteners/cicd-event-listener.yaml"
-	routePath             = "09-routes/gitops-webhook-event-listener.yaml"
+	gitopsTasksPath       = "03-tasks/deploy-from-source-task.yaml"
+	commitStatusTaskPath  = "03-tasks/set-commit-status-task.yaml"
+	ciPipelinesPath       = "04-pipelines/ci-dryrun-from-push-pipeline.yaml"
+	appCiPipelinesPath    = "04-pipelines/app-ci-pipeline.yaml"
+	pushTemplatePath      = "06-templates/ci-dryrun-from-push-template.yaml"
+	appCIPushTemplatePath = "06-templates/app-ci-build-from-push-template.yaml"
+	eventListenerPath     = "07-eventlisteners/cicd-event-listener.yaml"
+	routePath             = "08-routes/gitops-webhook-event-listener.yaml"
 
 	dockerSecretName = "regcred"
 
@@ -510,7 +510,7 @@ func createCICDResources(fs afero.Fs, repo scm.Repository, pipelineConfig *confi
 	otherOutputs := map[string]interface{}{}
 	githubSecret, err := secrets.CreateUnsealedSecret(meta.NamespacedName(cicdNamespace, eventlisteners.GitOpsWebhookSecret), o.GitOpsWebhookSecret, eventlisteners.WebhookSecretKey)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to generate GitHub Webhook Unsealed Secret: %w", err)
+		return nil, nil, fmt.Errorf("failed to generate GitHub Webhook Secret: %w", err)
 	}
 	unEncSecretPath := filepath.Join("secrets", "gitops-webhook-secret.yaml")
 	otherOutputs[unEncSecretPath] = githubSecret
@@ -550,7 +550,7 @@ func createCICDResources(fs afero.Fs, repo scm.Repository, pipelineConfig *confi
 	outputs[ciPipelinesPath] = pipelines.CreateCIPipeline(meta.NamespacedName(cicdNamespace, "ci-dryrun-from-push-pipeline"), cicdNamespace)
 	outputs[appCiPipelinesPath] = pipelines.CreateAppCIPipeline(meta.NamespacedName(cicdNamespace, "app-ci-pipeline"))
 	pushBinding, pushBindingName := repo.CreatePushBinding(cicdNamespace)
-	outputs[filepath.ToSlash(filepath.Join("06-bindings", pushBindingName+".yaml"))] = pushBinding
+	outputs[filepath.ToSlash(filepath.Join("05-bindings", pushBindingName+".yaml"))] = pushBinding
 	outputs[pushTemplatePath] = triggers.CreateCIDryRunTemplate(cicdNamespace, saName)
 	outputs[appCIPushTemplatePath] = triggers.CreateDevCIBuildPRTemplate(cicdNamespace, saName)
 	outputs[eventListenerPath] = eventlisteners.Generate(repo, cicdNamespace, saName, eventlisteners.GitOpsWebhookSecret)

@@ -163,7 +163,7 @@ An unencryped secret is generated into  the `secrets` folder that is a sibling o
 
 The Event Listener is modified as below to add a `trigger` for the new Service's source repository to trigger continous integration:
 
-* `config/cicd/base/08-eventlisteners/cicd-event-listener.yaml`
+* `config/cicd/base/07-eventlisteners/cicd-event-listener.yaml`
 
 ```yaml
   - bindings:
