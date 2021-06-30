@@ -13,9 +13,12 @@ import (
 	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
 	"github.com/redhat-developer/kam/pkg/pipelines/meta"
 	res "github.com/redhat-developer/kam/pkg/pipelines/resources"
+	"github.com/redhat-developer/kam/pkg/pipelines/roles"
 	"github.com/redhat-developer/kam/pkg/pipelines/routes"
 	"github.com/redhat-developer/kam/pkg/pipelines/scm"
 	"github.com/redhat-developer/kam/pkg/pipelines/secrets"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 const (
@@ -299,6 +302,30 @@ func TestGetCICDKustomization(t *testing.T) {
 	}
 }
 
+func TestGenerateSecrets(t *testing.T) {
+	ns := "test-ns"
+	outputs := res.Resources{}
+	otherOutputs := res.Resources{}
+	sa := roles.CreateServiceAccount(meta.NamespacedName("test-ns", "test-sa"))
+	o := &BootstrapOptions{
+		GitHostAccessToken: "abc123",
+		ServiceRepoURL:     "https://gl.example.com/my-org/my-project.git",
+	}
+
+	err := generateSecrets(outputs, otherOutputs, sa, ns, o)
+	fatalIfError(t, err)
+
+	wantSA := &corev1.ServiceAccount{
+		TypeMeta: meta.TypeMeta("ServiceAccount", "v1"),
+		ObjectMeta: meta.ObjectMeta(
+			types.NamespacedName{Name: "test-sa", Namespace: "test-ns"},
+		),
+		Secrets: []corev1.ObjectReference{{Name: authTokenSecretName}},
+	}
+	if diff := cmp.Diff(wantSA, outputs[serviceAccountPath]); diff != "" {
+		t.Fatalf("generatedSecrets failed to update the ServiceAccount:\n%s", diff)
+	}
+}
 func TestAddPrefixToResources(t *testing.T) {
 	files := map[string]interface{}{
 		"base/kustomization.yaml": map[string]interface{}{
