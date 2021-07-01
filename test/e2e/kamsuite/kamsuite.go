@@ -108,8 +108,13 @@ func envVariableCheck() bool {
 	} else {
 		if val == "prow" {
 			fmt.Printf("Running e2e test in OpenShift CI\n")
+			majorVersion, err := openhiftServerVersion()
+			if err != nil {
+				fmt.Printf("OpenShift API server version not found\n")
+				return false
+			}
 			os.Setenv("SERVICE_REPO_URL", "https://github.com/kam-bot/taxi")
-			os.Setenv("GITOPS_REPO_URL", "https://github.com/kam-bot/taxi-"+os.Getenv("PRNO"))
+			os.Setenv("GITOPS_REPO_URL", "https://github.com/kam-bot/taxi-"+os.Getenv("PRNO")+majorVersion)
 			os.Setenv("IMAGE_REPO", "quay.io/kam-bot/taxi")
 			os.Setenv("DOCKERCONFIGJSON_PATH", os.Getenv("KAM_QUAY_DOCKER_CONF_SECRET_FILE"))
 			os.Setenv("GIT_ACCESS_TOKEN", os.Getenv("GITHUB_TOKEN"))
@@ -318,4 +323,20 @@ func argoAppStatusMatch(matchString string, appName string) error {
 		return nil
 	}
 	return fmt.Errorf("Error is : %v", stderr.String())
+}
+
+func openhiftServerVersion() (string, error) {
+	var stdout bytes.Buffer
+	ocPath, err := executableBinaryPath("oc")
+	if err != nil {
+		return "", err
+	}
+	cmd := exec.Command(ocPath, "version")
+	cmd.Stdout = &stdout
+	if err = cmd.Run(); err != nil {
+		return "", err
+	}
+
+	re := regexp.MustCompile(`Server\s+Version:\s+(\d.{2})`)
+	return strings.Replace(strings.Trim(re.FindStringSubmatch(stdout.String())[1], "\""), ".", "", -1), nil
 }
