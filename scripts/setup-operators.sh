@@ -23,7 +23,7 @@ install_openshift_pipelines_operator
 count=0
 while [ "$count" -lt "15" ];
 do
-    operator_status=`oc get csv -n openshift-operators | grep openshift-pipelines-operator`
+    operator_status=`oc get csv -n openshift-operators | grep redhat-openshift-pipelines`
     if [[ $operator_status == *"Succeeded"* ]]; then
         break
     else
