@@ -26,7 +26,6 @@ kam bootstrap [flags]
       --gitops-webhook-secret string    Provide a secret that we can use to authenticate incoming hooks from your Git hosting service for the GitOps repository. (if not provided, it will be auto-generated)
   -h, --help                            help for bootstrap
       --image-repo string               Image repository of the form <registry>/<username>/<repository> or <project>/<app> which is used to push newly built images
-      --insecure                        Set to true to use unencrypted secrets instead of sealed secrets.
       --interactive                     If true, enable prompting for most options if not already specified on the command line
       --output string                   Path to write GitOps resources (default "./gitops")
       --overwrite                       Overwrites previously existing GitOps configuration (if any) on the local filesystem
@@ -34,8 +33,6 @@ kam bootstrap [flags]
       --private-repo-driver string      If your Git repositories are on a custom domain, please indicate which driver to use github or gitlab
       --push-to-git                     If true, automatically creates and populates the gitops-repo-url with the generated resources
       --save-token-keyring              Explicitly pass this flag to update the git-host-access-token in the keyring on your local machine
-      --sealed-secrets-ns string        Namespace in which the Sealed Secrets operator is installed, automatically generated secrets are encrypted with this operator (default "cicd")
-      --sealed-secrets-svc string       Name of the Sealed Secrets Services that encrypts secrets (default "sealedsecretcontroller-sealed-secrets")
       --service-repo-url string         Provide the URL for your Service repository e.g. https://github.com/organisation/service.git
       --service-webhook-secret string   Provide a secret that we can use to authenticate incoming hooks from your Git hosting service for the Service repository. (if not provided, it will be auto-generated)
 ```

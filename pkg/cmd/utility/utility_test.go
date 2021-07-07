@@ -7,10 +7,8 @@ import (
 	v1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	operatorsfake "github.com/operator-framework/operator-lifecycle-manager/pkg/api/client/clientset/versioned/fake"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/fake"
 )
 
@@ -78,26 +76,6 @@ func TestMaybeCompletePrefix(t *testing.T) {
 				rt.Fatalf("prefixing failed, got %#v, want %#v", got, tt.want)
 			}
 		})
-	}
-}
-
-func TestCheckIfSealedSecretsExists(t *testing.T) {
-	fakeClientSet := fake.NewSimpleClientset(&v1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "sealed-secrets-controller",
-			Namespace: "kube-system",
-		},
-	})
-
-	fakeClient := Client{KubeClient: fakeClientSet}
-	err := fakeClient.CheckIfSealedSecretsExists(types.NamespacedName{Namespace: "kube-system", Name: "sealed-secrets-controller"})
-	if err != nil {
-		t.Fatalf("CheckIfSealedSecretsExists failed: got %v,want %v", err, nil)
-	}
-	err = fakeClient.CheckIfSealedSecretsExists(types.NamespacedName{Namespace: "unknown", Name: "unknown"})
-	wantErr := `services "unknown" not found`
-	if err == nil {
-		t.Fatalf("CheckIfSealedSecretsExists failed: got %v,want %v", nil, wantErr)
 	}
 }
 

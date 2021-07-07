@@ -33,7 +33,7 @@ _GitOps is about speeding up application feedback loops, with more automation, i
 ## I have a non-globally trusted certificate in front of my private GitHub/GitLab installation, how do I get it to work?
 You'll need to reconfigure the automatically generated PipelineRuns.
 
-In file `config/cicd/base/07-templates/app-ci-build-from-push-template.yaml`
+In file `config/cicd/base/06-templates/app-ci-build-from-push-template.yaml`
 
 ```yaml
       pipelineRef:
@@ -74,7 +74,7 @@ This requires an additional parameter:
 
 This additional parameter configures the TLS to be insecure, i.e. it will not do _any_ validation of the TLS certificate that the server presents, so yes, the data is encrypted, but you don't know who you are sending it to.
 
-The `config/cicd/base/07-templates/app-ci-build-from-push-template.yaml` template will need the same change applied.
+The `config/cicd/base/06-templates/app-ci-build-from-push-template.yaml` template will need the same change applied.
 
 You will also need to configure Argo CD to fetch your data insecurely.
 

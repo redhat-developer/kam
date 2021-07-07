@@ -1,8 +1,6 @@
 package pipelines
 
 import (
-	"crypto/rand"
-	"crypto/rsa"
 	"fmt"
 	"path/filepath"
 	"testing"
@@ -20,108 +18,15 @@ import (
 	"github.com/spf13/afero"
 	triggersv1 "github.com/tektoncd/triggers/pkg/apis/triggers/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/yaml"
 )
 
 func TestServiceResourcesWithCICD(t *testing.T) {
-	defer stubDefaultPublicKeyFunc(t)()
-	fakeFs := ioutils.NewMemoryFilesystem()
-	m := buildManifest(true, false)
-	hookSecret, err := secrets.CreateSealedSecret(
-		meta.NamespacedName(
-			"cicd", "webhook-secret-test-dev-test"),
-		meta.NamespacedName("test-ns", "service"),
-		"123",
-		eventlisteners.WebhookSecretKey)
-	assertNoError(t, err)
-
-	want := res.Resources{
-		"config/cicd/base/03-secrets/webhook-secret-test-dev-test.yaml": hookSecret,
-		"environments/test-dev/apps/test-app/base/kustomization.yaml": &res.Kustomization{
-			Bases: []string{"../services/test-svc", "../services/test"}},
-		"environments/test-dev/apps/test-app/kustomization.yaml": &res.Kustomization{
-			Bases:        []string{"overlays"},
-			CommonLabels: map[string]string{"app.openshift.io/vcs-source": "org/test"},
-		},
-		"environments/test-dev/apps/test-app/overlays/kustomization.yaml": &res.Kustomization{
-			Bases: []string{"../base"}},
-		"pipelines.yaml": &config.Manifest{
-			Config: &config.Config{
-				Pipelines: &config.PipelinesConfig{
-					Name: "cicd",
-				},
-			},
-			GitOpsURL: "http://github.com/org/test",
-			Environments: []*config.Environment{
-				{
-					Name: "test-dev",
-					Apps: []*config.Application{
-						{
-							Name: "test-app",
-							Services: []*config.Service{
-								{
-									Name:      "test-svc",
-									SourceURL: "https://github.com/myproject/test-svc",
-									Webhook: &config.Webhook{
-										Secret: &config.Secret{
-											Name:      "webhook-secret-test-dev-test-svc",
-											Namespace: "cicd",
-										},
-									},
-								},
-								{
-									Name:      "test",
-									SourceURL: "http://github.com/org/test",
-									Webhook: &config.Webhook{
-										Secret: &config.Secret{
-											Name:      "webhook-secret-test-dev-test",
-											Namespace: "cicd",
-										},
-									},
-									Pipelines: &config.Pipelines{
-										Integration: &config.TemplateBinding{Bindings: []string{"test-dev-test-app-test-binding", "github-push-binding"}},
-									},
-								},
-							},
-						},
-					},
-					Pipelines: &config.Pipelines{
-						Integration: &config.TemplateBinding{Template: "app-ci-template", Bindings: []string{"github-push-binding"}},
-					},
-				},
-			},
-		},
-	}
-
-	got, otherResources, err := serviceResources(m, fakeFs, &AddServiceOptions{
-		AppName:             "test-app",
-		EnvName:             "test-dev",
-		GitRepoURL:          "http://github.com/org/test",
-		PipelinesFolderPath: pipelinesFile,
-		WebhookSecret:       "123",
-		ServiceName:         "test",
-	})
-	assertNoError(t, err)
-	if diff := cmp.Diff(got, want, cmpopts.IgnoreMapEntries(func(k string, v interface{}) bool {
-		_, ok := want[k]
-		return !ok
-	})); diff != "" {
-		t.Fatalf("serviceResources() failed: %v", diff)
-	}
-	if diff := cmp.Diff(0, len(otherResources)); diff != "" {
-		t.Fatalf("other resources is not empty:\n%s", diff)
-	}
-}
-
-func TestServiceResourcesAndUnsealedSecretsWithCICD(t *testing.T) {
-	defer stubDefaultPublicKeyFunc(t)()
 	fakeFs := ioutils.NewMemoryFilesystem()
 	m := buildManifest(true, false)
 	hookSecret, err := secrets.CreateUnsealedSecret(
 		meta.NamespacedName(
 			"cicd", "webhook-secret-test-dev-test"),
-		meta.NamespacedName("test-ns", "service"),
 		"123",
 		eventlisteners.WebhookSecretKey)
 	assertNoError(t, err)
@@ -130,7 +35,6 @@ func TestServiceResourcesAndUnsealedSecretsWithCICD(t *testing.T) {
 		"secrets/webhook-secret-test-dev-test.yaml": hookSecret,
 	}
 	want := res.Resources{
-		//"config/cicd/base/03-secrets/webhook-secret-test-dev-test.yaml": hookSecret,
 		"environments/test-dev/apps/test-app/base/kustomization.yaml": &res.Kustomization{
 			Bases: []string{"../services/test-svc", "../services/test"}},
 		"environments/test-dev/apps/test-app/kustomization.yaml": &res.Kustomization{
@@ -194,7 +98,6 @@ func TestServiceResourcesAndUnsealedSecretsWithCICD(t *testing.T) {
 		PipelinesFolderPath: pipelinesFile,
 		WebhookSecret:       "123",
 		ServiceName:         "test",
-		Insecure:            true,
 	})
 	assertNoError(t, err)
 	if diff := cmp.Diff(got, want, cmpopts.IgnoreMapEntries(func(k string, v interface{}) bool {
@@ -206,16 +109,12 @@ func TestServiceResourcesAndUnsealedSecretsWithCICD(t *testing.T) {
 	if diff := cmp.Diff(1, len(otherResources)); diff != "" {
 		t.Fatalf("other resources contain one entry:\n%s", diff)
 	}
-	if diff := cmp.Diff(otherResources, wantOther, cmpopts.IgnoreMapEntries(func(k string, v interface{}) bool {
-		_, ok := wantOther[k]
-		return !ok
-	})); diff != "" {
-		t.Fatalf("serviceResources() failed to create unsealed secrets properly:\n%s", diff)
+	if diff := cmp.Diff(otherResources, wantOther); diff != "" {
+		t.Fatalf("serviceResources() failed to create secrets properly:\n%s", diff)
 	}
 }
 
 func TestServiceResourcesWithArgoCD(t *testing.T) {
-	defer stubDefaultPublicKeyFunc(t)()
 	fakeFs := ioutils.NewMemoryFilesystem()
 	m := buildManifest(false, true)
 
@@ -406,8 +305,6 @@ func TestAddServiceWithoutApp(t *testing.T) {
 }
 
 func TestAddServiceFilePaths(t *testing.T) {
-	defer stubDefaultPublicKeyFunc(t)()
-
 	fakeFs := ioutils.NewMemoryFilesystem()
 	outputPath := afero.GetTempDir(fakeFs, "test")
 	pipelinesPath := filepath.Join(outputPath, pipelinesFile) // Don't call filepath.ToSlash
@@ -423,7 +320,6 @@ func TestAddServiceFilePaths(t *testing.T) {
 		"environments/test-dev/apps/new-app/services/test/base/kustomization.yaml",
 		"environments/test-dev/apps/new-app/services/test/overlays/kustomization.yaml",
 		"environments/test-dev/apps/new-app/services/test/kustomization.yaml",
-		"config/cicd/base/03-secrets/webhook-secret-test-dev-test.yaml",
 		"config/cicd/base/kustomization.yaml",
 		"pipelines.yaml",
 		"config/argocd/test-dev-test-app-app.yaml",
@@ -450,8 +346,6 @@ func TestAddServiceFilePaths(t *testing.T) {
 }
 
 func TestAddServiceFolderPaths(t *testing.T) {
-	defer stubDefaultPublicKeyFunc(t)()
-
 	fakeFs := ioutils.NewMemoryFilesystem()
 	outputPath := afero.GetTempDir(fakeFs, "test")
 	pipelinesPath := filepath.Join(outputPath, pipelinesFile) // Don't call filepath.ToSlash
@@ -484,7 +378,6 @@ func TestAddServiceFolderPaths(t *testing.T) {
 }
 
 func TestServiceWithArgoCD(t *testing.T) {
-	defer stubDefaultPublicKeyFunc(t)()
 	fakeFs := ioutils.NewMemoryFilesystem()
 	m := buildManifest(true, true)
 	want := res.Resources{
@@ -556,14 +449,12 @@ func TestServiceWithArgoCD(t *testing.T) {
 	})); diff != "" {
 		t.Fatalf("serviceResources() failed: %v", diff)
 	}
-	if diff := cmp.Diff(0, len(otherResources)); diff != "" {
+	if diff := cmp.Diff(1, len(otherResources)); diff != "" {
 		t.Fatalf("other resources is not empty:\n%s", diff)
 	}
 }
 
 func TestAddServiceWithImageWithNoPipelines(t *testing.T) {
-	defer stubDefaultPublicKeyFunc(t)()
-
 	fakeFs := ioutils.NewMemoryFilesystem()
 	outputPath := afero.GetTempDir(fakeFs, "test")
 	pipelinesPath := filepath.Join(outputPath, pipelinesFile) // Don't call filepath.ToSlash
@@ -600,8 +491,6 @@ func TestAddServiceWithImageWithNoPipelines(t *testing.T) {
 }
 
 func TestAddServiceWithoutImage(t *testing.T) {
-	defer stubDefaultPublicKeyFunc(t)()
-
 	fakeFs := ioutils.NewMemoryFilesystem()
 	outputPath := afero.GetTempDir(fakeFs, "test")
 	pipelinesPath := filepath.ToSlash(filepath.Join(outputPath, pipelinesFile))
@@ -625,7 +514,7 @@ func TestAddServiceWithoutImage(t *testing.T) {
 	assertNoError(t, err)
 
 	files := res.Resources{
-		"config/cicd/base/06-bindings/staging-new-app-test-binding.yaml": triggers.CreateImageRepoBinding("cicd", "staging-new-app-test-binding", "image-registry.openshift-image-registry.svc:5000/cicd/test", "false"),
+		"config/cicd/base/05-bindings/staging-new-app-test-binding.yaml": triggers.CreateImageRepoBinding("cicd", "staging-new-app-test-binding", "image-registry.openshift-image-registry.svc:5000/cicd/test", "false"),
 	}
 
 	for path, resource := range files {
@@ -714,7 +603,7 @@ func TestCreateSvcImageBinding(t *testing.T) {
 	if diff := cmp.Diff(bindingName, "new-env-newapp-new-svc-binding"); diff != "" {
 		t.Errorf("bindingName failed: %v", diff)
 	}
-	if diff := cmp.Diff(bindingFilename, "06-bindings/new-env-newapp-new-svc-binding.yaml"); diff != "" {
+	if diff := cmp.Diff(bindingFilename, "05-bindings/new-env-newapp-new-svc-binding.yaml"); diff != "" {
 		t.Errorf("bindingFilename failed: %v", diff)
 	}
 
@@ -735,23 +624,8 @@ func TestCreateSvcImageBinding(t *testing.T) {
 		},
 	}
 
-	wantResources := res.Resources{"config/cicd/base/06-bindings/new-env-newapp-new-svc-binding.yaml": triggerBinding}
+	wantResources := res.Resources{"config/cicd/base/05-bindings/new-env-newapp-new-svc-binding.yaml": triggerBinding}
 	if diff := cmp.Diff(resources, wantResources); diff != "" {
 		t.Errorf("resources failed: %v", diff)
-	}
-}
-
-func stubDefaultPublicKeyFunc(t *testing.T) func() {
-	origDefaultPublicKeyFunc := secrets.DefaultPublicKeyFunc
-	secrets.DefaultPublicKeyFunc = func(types.NamespacedName) (*rsa.PublicKey, error) {
-		key, err := rsa.GenerateKey(rand.Reader, 2048)
-		if err != nil {
-			t.Fatalf("failed to generate a private RSA key: %s", err)
-		}
-		return &key.PublicKey, nil
-	}
-
-	return func() {
-		secrets.DefaultPublicKeyFunc = origDefaultPublicKeyFunc
 	}
 }

@@ -10,7 +10,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -81,15 +80,6 @@ func NewClient() (*Client, error) {
 	return &Client{KubeClient: clientSet, OperatorClient: operatorClientSet}, nil
 }
 
-// CheckIfSealedSecretsExists checks if sealed secrets is installed
-func (c *Client) CheckIfSealedSecretsExists(secret types.NamespacedName) error {
-	_, err := c.KubeClient.CoreV1().Services(secret.Namespace).Get(context.Background(), secret.Name, v1.GetOptions{})
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 // CheckIfArgoCDExists checks if ArgoCD operator is installed
 func (c *Client) CheckIfArgoCDExists(ns string) error {
 	csvList, err := c.OperatorClient.ClusterServiceVersions(ns).List(context.Background(), v1.ListOptions{})
@@ -116,10 +106,4 @@ func (c *Client) CheckIfPipelinesExists(ns string) error {
 // GetFullName generates a command's full name based on its parent's full name and its own name
 func GetFullName(parentName, name string) string {
 	return parentName + " " + name
-}
-
-// DisplayUnsealedSecretsWarning display unsealed secrets warning
-func DisplayUnsealedSecretsWarning() {
-	log.Progressf("  WARNING: Unencrypted secrets will be created in a secrets folder that is a sibling to the designated output or pipelines folder")
-	log.Progressf("           Deploying this GitOps configuration without encrypting secrets is insecure and is not recommended")
 }

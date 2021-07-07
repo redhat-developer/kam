@@ -15,11 +15,6 @@ You need to have the following installed in the OCP 4.x cluster.
 
 * [OpenShift GitOps Operator](prerequisites/gitops_operator.md)
 * [OpenShift Pipelines Operator](prerequisites/pipelines_operator.md)
-* [Sealed Secrets Operator](prerequisites/sealed_secrets.md)
-    * If you opt to not install the Sealed Secrets Operator, the `kam bootstrap` and `kam service add` commands will generate unencrypted or unsealed secrets in the `secrets` folder that is a sibling folder of the designated output folder that contains the GitOps configuration files.
-    * The `secrets` folder will not be staged for commit via Git, since it is outside of the designated output folder.  This is necessary so that the unencrypted secrets are not inadvertantly pushed to GitHub.
-    * If you opt to not install the Sealed Secrets Operator, make sure to push the unsealed secrets in the secrets folder to your cluster.
-    * WARNING: using unsealed unencrypted secrets is not recommended.
     
 
 And, you will need these:
@@ -198,12 +193,12 @@ is opened.
 This is the default pipeline specification for the `dev` environment, you
 can find the definitions for these in these two files:
 
- * `config/cicd/base/07-templates/app-ci-build-from-push-template.yaml`
- * `config/cicd/base/06-bindings/github-push-binding.yaml`
+ * `config/cicd/base/06-templates/app-ci-build-from-push-template.yaml`
+ * `config/cicd/base/05-bindings/github-push-binding.yaml`
 
 By default, this triggers a `PipelineRun` of this pipeline
 
- * `config/cicd/base/05-pipelines/app-ci-pipeline.yaml`
+ * `config/cicd/base/04-pipelines/app-ci-pipeline.yaml`
 
 These files are not managed directly by the manifest, you're free to change them
 for your own needs, by default they use [Buildah](https://github.com/containers/buildah)
@@ -381,7 +376,7 @@ The default CI pipeline we provide is defined in the manifest file:
 
 This template drives a pipeline that is stored in this file:
 
- * `config/cicd/base/05-pipelines/app-ci-pipeline.yaml`
+ * `config/cicd/base/04-pipelines/app-ci-pipeline.yaml`
 
 An abridged version is shown below, it has a single task `build-image`, which
 executes the `buildah` task, which builds the source and generates an
@@ -409,7 +404,7 @@ application code.
 
 Write the following Task to this file:
 
- * `config/cicd/base/04-tasks/go-test-task.yaml`
+ * `config/cicd/base/03-tasks/go-test-task.yaml`
 
 ```yaml
 apiVersion: tekton.dev/v1beta1
@@ -436,7 +431,7 @@ Append the newly added task to the existing kustomize file
 
 Update the pipeline in this file:
 
- * `config/cicd/base/05-pipelines/app-ci-pipeline.yaml`
+ * `config/cicd/base/04-pipelines/app-ci-pipeline.yaml`
 
 ```yaml
 apiVersion: tekton.dev/v1beta1

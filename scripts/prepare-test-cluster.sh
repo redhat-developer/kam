@@ -45,7 +45,7 @@ for i in `echo $OPERATOR_NAMESPACES`; do
     oc new-project $i
 done
 
-# Setup the cluster for sealed secrets and OpenShift GitOps operator
+# Setup the cluster for OpenShift GitOps operator
 sh $SETUP_OPERATORS
 
 # Client version
