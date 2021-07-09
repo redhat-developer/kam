@@ -57,6 +57,7 @@ const (
 	dockerSecretName = "regcred"
 
 	authTokenSecretName = "git-host-access-token"
+	basicAuthTokenName  = "git-host-basic-auth-token"
 
 	saName              = "pipeline"
 	roleBindingName     = "pipelines-service-role-binding"
@@ -613,5 +614,17 @@ func generateSecrets(outputs res.Resources, otherOutputs res.Resources, sa *core
 	}
 	otherOutputs[filepath.Join("secrets", "git-host-access-token.yaml")] = tokenSecret
 	outputs[serviceAccountPath] = roles.AddSecretToSA(sa, tokenSecret.Name)
+
+	// basic auth token is used by Tekton pipelines to access private repositories
+	secretTargetHost, err := repoURL(o.ServiceRepoURL)
+	if err != nil {
+		return fmt.Errorf("failed to parse the Service Repo URL %q: %w", o.ServiceRepoURL, err)
+	}
+	basicAuthSecret := secrets.CreateUnsealedBasicAuthSecret(meta.NamespacedName(
+		ns, basicAuthTokenName), o.GitHostAccessToken, meta.AddAnnotations(map[string]string{
+		"tekton.dev/git-0": secretTargetHost,
+	}))
+	otherOutputs[filepath.Join("secrets", basicAuthTokenName+".yaml")] = basicAuthSecret
+	outputs[serviceAccountPath] = roles.AddSecretToSA(sa, basicAuthSecret.Name)
 	return nil
 }
