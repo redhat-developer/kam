@@ -44,7 +44,7 @@ func TestBootstrapManifest(t *testing.T) {
 	r, otherResources, err := bootstrapResources(params, ioutils.NewMemoryFilesystem())
 	fatalIfError(t, err)
 
-	otherResourcesNotEmpty := 3
+	otherResourcesNotEmpty := 4
 	if diff := cmp.Diff(otherResourcesNotEmpty, len(otherResources)); diff != "" {
 		t.Fatalf("other resources is empty:\n%s", diff)
 	}
@@ -320,7 +320,7 @@ func TestGenerateSecrets(t *testing.T) {
 		ObjectMeta: meta.ObjectMeta(
 			types.NamespacedName{Name: "test-sa", Namespace: "test-ns"},
 		),
-		Secrets: []corev1.ObjectReference{{Name: authTokenSecretName}},
+		Secrets: []corev1.ObjectReference{{Name: authTokenSecretName}, {Name: basicAuthTokenName}},
 	}
 	if diff := cmp.Diff(wantSA, outputs[serviceAccountPath]); diff != "" {
 		t.Fatalf("generatedSecrets failed to update the ServiceAccount:\n%s", diff)

@@ -44,7 +44,7 @@ func CreateUnsealedSecret(name types.NamespacedName, data, secretKey string) (*c
 
 // CreateUnsealedBasicAuthSecret creates a SealedSecret with a BasicAuth type
 // secret.
-func CreateUnsealedBasicAuthSecret(name, service types.NamespacedName, token string,
+func CreateUnsealedBasicAuthSecret(name types.NamespacedName, token string,
 	opts ...meta.ObjectMetaOpt) *corev1.Secret {
 	return createBasicAuthSecret(name, token, opts...)
 }
