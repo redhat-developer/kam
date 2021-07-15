@@ -2,6 +2,7 @@ package environments
 
 import (
 	"os"
+	"runtime"
 	"sort"
 	"testing"
 
@@ -205,6 +206,50 @@ func TestBuildEnvironmentFilesWithNoCICDEnv(t *testing.T) {
 	}
 
 	if diff := cmp.Diff(want, files); diff != "" {
+		t.Fatalf("files didn't match: %s\n", diff)
+	}
+}
+
+func TestListFiles(t *testing.T) {
+	var appFs = ioutils.NewMemoryFilesystem()
+	var envPath = "environments/test-dev"
+	var basePath = "environments/test-dev/base"
+	err := appFs.MkdirAll(basePath, 0755)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if runtime.GOOS == "windows" {
+		envPath = "environments\\test-dev"
+		basePath = "environments\\test-dev\\base"
+		mustWriteFile(t, appFs, "environments\\test-dev\\base\\01-namespaces\\cicd-environment.yaml", []byte(`this is a file`), 0644)
+		mustWriteFile(t, appFs, "environments\\test-dev\\base\\02-rolebindings\\argocd-admin.yaml", []byte(`this is a file`), 0644)
+		mustWriteFile(t, appFs, "environments\\test-dev\\base\\03-tasks\\deploy-from-source-task.yaml", []byte(`this is a file`), 0644)
+		mustWriteFile(t, appFs, "environments\\test-dev\\base\\04-pipelines\\app-ci-pipeline.yaml", []byte(`this is a file`), 0644)
+		mustWriteFile(t, appFs, "environments\\test-dev\\base\\08-routes\\gitops-webhook-event-listener.yaml", []byte(`this is a file`), 0644)
+	} else {
+		mustWriteFile(t, appFs, "environments/test-dev/base/01-namespaces/cicd-environment.yaml", []byte(`this is a file`), 0644)
+		mustWriteFile(t, appFs, "environments/test-dev/base/02-rolebindings/argocd-admin.yaml", []byte(`this is a file`), 0644)
+		mustWriteFile(t, appFs, "environments/test-dev/base/03-tasks/deploy-from-source-task.yaml", []byte(`this is a file`), 0644)
+		mustWriteFile(t, appFs, "environments/test-dev/base/04-pipelines/app-ci-pipeline.yaml", []byte(`this is a file`), 0644)
+		mustWriteFile(t, appFs, "environments/test-dev/base/08-routes/gitops-webhook-event-listener.yaml", []byte(`this is a file`), 0644)
+	}
+	exists, err := appFs.DirExists(envPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !exists {
+		t.Fatal("Folder does not exist")
+	}
+	// This will strip the prefix base from the list of files
+	listFiles, err := ListFiles(appFs, basePath)
+	want := StringSet{
+		"01-namespaces/cicd-environment.yaml":          true,
+		"02-rolebindings/argocd-admin.yaml":            true,
+		"03-tasks/deploy-from-source-task.yaml":        true,
+		"04-pipelines/app-ci-pipeline.yaml":            true,
+		"08-routes/gitops-webhook-event-listener.yaml": true,
+	}
+	if diff := cmp.Diff(want, listFiles); diff != "" {
 		t.Fatalf("files didn't match: %s\n", diff)
 	}
 }
