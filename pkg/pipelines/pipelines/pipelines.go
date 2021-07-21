@@ -16,7 +16,11 @@ var (
 	pipelineTypeMeta = meta.TypeMeta("Pipeline", "tekton.dev/v1beta1")
 )
 
-const pipelineWorkspace = "shared-data"
+const (
+	pipelineWorkspace = "shared-data"
+	// PendingCommitStatusTask is a task that sets pending commit status
+	PendingCommitStatusTask = "set-pending-status"
+)
 
 // CreateAppCIPipeline creates AppCIPipeline
 func CreateAppCIPipeline(name types.NamespacedName) *pipelinev1.Pipeline {
@@ -36,7 +40,7 @@ func CreateAppCIPipeline(name types.NamespacedName) *pipelinev1.Pipeline {
 				"COMMIT_MESSAGE",
 				"GIT_REPO"),
 			Tasks: []pipelinev1.PipelineTask{
-				createCommitStatusPipelineTask("set-pending-status", "pending", "The build has started"),
+				createCommitStatusPipelineTask(PendingCommitStatusTask, "pending", "The build has started"),
 				createGitCloneTask("clone-source"),
 				createBuildImageTask("build-image", "clone-source"),
 			},
@@ -78,7 +82,7 @@ func createGitCloneTask(name string) pipelinev1.PipelineTask {
 			createTaskParam("url", "$(params.GIT_REPO)"),
 			createTaskParam("revision", "$(params.GIT_REF)"),
 		},
-		RunAfter: []string{"set-pending-status"},
+		RunAfter: []string{PendingCommitStatusTask},
 	}
 }
 
@@ -120,7 +124,7 @@ func CreateCIPipeline(name types.NamespacedName, stageNamespace string) *pipelin
 			},
 
 			Tasks: []pipelinev1.PipelineTask{
-				createCommitStatusPipelineTask("set-pending-status", "pending", "The build has started"),
+				createCommitStatusPipelineTask(PendingCommitStatusTask, "pending", "The build has started"),
 				createCIPipelineTask("apply-source"),
 			},
 			Params: paramSpecs("REPO", "COMMIT_SHA", "GIT_REPO"),
@@ -159,7 +163,7 @@ func createCIPipelineTask(taskName string) pipelinev1.PipelineTask {
 		Params: []pipelinev1.Param{
 			createTaskParam("DRYRUN", "true"),
 		},
-		RunAfter: []string{"set-pending-status"},
+		RunAfter: []string{PendingCommitStatusTask},
 	}
 }
 

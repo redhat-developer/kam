@@ -639,14 +639,13 @@ func removeCommitStatus(pipeline *pipelinev1.Pipeline, driver string) *pipelinev
 	if driver == "" {
 		return pipeline
 	}
-	const setPendingStatusTask = "set-pending-status"
 	pipeline.Spec.Finally = nil
 	tasks := []pipelinev1.PipelineTask{}
 	for _, task := range pipeline.Spec.Tasks {
-		if len(task.RunAfter) > 0 && task.RunAfter[0] == setPendingStatusTask {
+		if len(task.RunAfter) > 0 && task.RunAfter[0] == pipelines.PendingCommitStatusTask {
 			task.RunAfter = nil
 		}
-		if task.Name != setPendingStatusTask {
+		if task.Name != pipelines.PendingCommitStatusTask {
 			tasks = append(tasks, task)
 		}
 	}

@@ -72,7 +72,7 @@ func TestCreateAppCIPipeline(t *testing.T) {
 				{Name: pipelineWorkspace, Description: "This workspace will receive the cloned git repo."},
 			},
 			Tasks: []pipelinev1.PipelineTask{
-				createCommitStatusPipelineTask("set-pending-status", "pending", "The build has started"),
+				createCommitStatusPipelineTask(PendingCommitStatusTask, "pending", "The build has started"),
 
 				{
 					Name:    "clone-source",
@@ -84,7 +84,7 @@ func TestCreateAppCIPipeline(t *testing.T) {
 					Workspaces: []pipelinev1.WorkspacePipelineTaskBinding{
 						{Name: "output", Workspace: pipelineWorkspace},
 					},
-					RunAfter: []string{"set-pending-status"},
+					RunAfter: []string{PendingCommitStatusTask},
 				},
 
 				{
