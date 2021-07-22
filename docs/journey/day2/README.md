@@ -157,9 +157,11 @@ The new Service/Application will be deployed by Argo CD. An Argo CD application 
 
 In the CI/CD Environment, a couple of resources are added or modified.
 
-An unencryped secret is generated into  the `secrets` folder that is a sibling of the folder that contains the `pipelines.yaml` file (or the parent of the `config` folder)
+An unencrypted secret is generated into  the `secrets` folder that is a sibling of the folder that contains the `pipelines.yaml` file (or the parent of the `config` folder)
 
 * `secrets/webhook-secret-<env>-<service>.yaml`
+
+Warning: The `kam service add` command displays a warning message to indicate that deploying unencrypted secrets is not recommended. See https://github.com/redhat-developer/kam/tree/master/docs/journey/day1#secrets for more information.
 
 The Event Listener is modified as below to add a `trigger` for the new Service's source repository to trigger continous integration:
 
