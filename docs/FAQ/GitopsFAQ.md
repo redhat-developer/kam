@@ -31,40 +31,44 @@ _GitOps is a subset of DevOps, specifically focussed on deploying the applicatio
 _GitOps is about speeding up application feedback loops, with more automation, it frees up developers to work on the product features that customers love._
 
 ## I have a non-globally trusted certificate in front of my private GitHub/GitLab installation, how do I get it to work?
-You'll need to reconfigure the automatically generated PipelineRuns.
+You'll need to reconfigure the automatically generated pipeline resources. Append `sslVerify` parameter in the following files:
 
-In file `config/cicd/base/06-templates/app-ci-build-from-push-template.yaml`
+1. `config/cicd/base/06-templates/ci-dryrun-from-push-template.yaml`
 
 ```yaml
       pipelineRef:
-        name: app-ci-pipeline
+        name: ci-dryrun-from-push-pipeline
       resources:
       - name: source-repo
         resourceSpec:
           params:
           - name: revision
-            value: $(params.io.openshift.build.commit.id)
+            value: $(tt.params.io.openshift.build.commit.id)
           - name: url
-            value: $(params.gitrepositoryurl)
-          type: git
-```
-
-This requires an additional parameter:
-
-```yaml
-      pipelineRef:
-        name: app-ci-pipeline
-      resources:
-      - name: source-repo
-        resourceSpec:
-          params:
-          - name: revision
-            value: $(params.io.openshift.build.commit.id)
-          - name: url
-            value: $(params.gitrepositoryurl)
+            value: $(tt.params.gitrepositoryurl)
           - name: sslVerify
             value: "false"
           type: git
+```
+
+2. `config/cicd/base/04-pipelines/app-ci-pipeline.yaml`
+
+```yaml
+      tasks:
+      - name: clone-source
+        params:
+        - name: url
+          value: $(params.GIT_REPO)
+        - name: revision
+          value: $(params.GIT_REF)
+        - name: sslVerify
+          value: "false"
+        taskRef:
+          kind: ClusterTask
+          name: git-clone
+        workspaces:
+        - name: output
+          workspace: shared-data
 ```
 
 ```yaml
@@ -73,8 +77,6 @@ This requires an additional parameter:
 ```
 
 This additional parameter configures the TLS to be insecure, i.e. it will not do _any_ validation of the TLS certificate that the server presents, so yes, the data is encrypted, but you don't know who you are sending it to.
-
-The `config/cicd/base/06-templates/app-ci-build-from-push-template.yaml` template will need the same change applied.
 
 You will also need to configure Argo CD to fetch your data insecurely.
 
