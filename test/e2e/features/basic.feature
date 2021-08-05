@@ -43,9 +43,35 @@ Feature: Basic test
         Then executing "git push -u origin main" succeeds
         Then executing "oc apply -k config/argocd/" succeeds
         Then login argocd API server
-        And Wait for "120" seconds
+        And Wait for "180" seconds
         Then application "argo-app" should be in "Synced" state
         And application "dev-app-taxi" should be in "Synced" state
         And application "dev-env" should be in "Synced" state
         And application "stage-env" should be in "Synced" state
         And application "cicd-app" should be in "Synced" state
+        Then executing "oc delete -k config/argocd"
+        Then executing "cd .." succeeds
+
+    Scenario: Create an Application/Service in the new Environment
+        Given gitops repository is created
+        When executing "kam bootstrap --service-repo-url $SERVICE_REPO_URL --gitops-repo-url $GITOPS_REPO_URL --image-repo $IMAGE_REPO --dockercfgjson $DOCKERCONFIGJSON_PATH --git-host-access-token $GIT_ACCESS_TOKEN --output servicescenario --overwrite" succeeds
+        Then executing "cd servicescenario" succeeds
+        Then executing "git init ." succeeds
+        Then executing "git add ." succeeds
+        Then executing "git commit -m 'Initial commit.'" succeeds
+        Then executing "git remote add origin $GITOPS_REPO_URL" succeeds
+        Then executing "git branch -M main" succeeds
+        Then executing "git push -u origin main" succeeds
+        Then executing "oc apply -k config/argocd/" succeeds
+        Then login argocd API server
+        And Wait for "180" seconds
+        Then application "argo-app" should be in "Synced" state
+        And application "dev-app-taxi" should be in "Synced" state
+        And application "dev-env" should be in "Synced" state
+        And application "stage-env" should be in "Synced" state
+        And application "cicd-app" should be in "Synced" state
+        Then executing "cd .."
+        When executing "kam environment add --env-name new-env --pipelines-folder servicescenario" succeeds
+        Then stderr should be empty
+        When executing "kam service add --env-name new-env --app-name app-bus --service-name bus --git-repo-url https://github.com/kam-bot/bus.git --pipelines-folder servicescenario" succeeds
+        Then stderr should be empty
