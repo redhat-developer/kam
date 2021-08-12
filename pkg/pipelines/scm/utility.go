@@ -1,12 +1,14 @@
 package scm
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"strings"
 
 	"github.com/jenkins-x/go-scm/scm/factory"
 	triggersv1 "github.com/tektoncd/triggers/pkg/apis/triggers/v1alpha1"
+	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 )
 
 var (
@@ -27,13 +29,30 @@ func invalidRepoURLError(repoURL, reason string) error {
 	return fmt.Errorf("invalid repository URL %s: %s", repoURL, reason)
 }
 
-func createEventInterceptor(filter, repoName string) *triggersv1.EventInterceptor {
-	return &triggersv1.EventInterceptor{
-		CEL: &triggersv1.CELInterceptor{
-			Filter:   fmt.Sprintf(filter, repoName),
-			Overlays: branchRefOverlay,
-		},
+func createEventInterceptor(filter, repoName string) (*triggersv1.EventInterceptor, error) {
+	rawFilter, rawOverlays, err := celParams(filter, repoName)
+	if err != nil {
+		return nil, err
 	}
+	return &triggersv1.EventInterceptor{
+		Ref: triggersv1.InterceptorRef{
+			Name: "cel",
+		},
+		Params: []triggersv1.InterceptorParams{
+			{
+				Name: "filter",
+				Value: v1.JSON{
+					Raw: rawFilter,
+				},
+			},
+			{
+				Name: "overlays",
+				Value: v1.JSON{
+					Raw: rawOverlays,
+				},
+			},
+		},
+	}, nil
 }
 
 func createListenerTemplate(name *string) *triggersv1.EventListenerTemplate {
@@ -106,4 +125,39 @@ func HostnameFromURL(rawURL string) (string, error) {
 		return "", err
 	}
 	return strings.ToLower(u.Host), nil
+}
+
+func secretParam(name, key string) ([]byte, error) {
+	return json.Marshal(map[string]string{
+		"secretName": name,
+		"secretKey":  key,
+	})
+}
+
+func celParams(filter, repoName string) ([]byte, []byte, error) {
+	rawFilter, err := json.Marshal(fmt.Sprintf(filter, repoName))
+	if err != nil {
+		return nil, nil, err
+	}
+	rawOverlays, err := json.Marshal(branchRefOverlay)
+	if err != nil {
+		return nil, nil, err
+	}
+	return rawFilter, rawOverlays, nil
+}
+
+func eventInterceptorWithSecret(name string, secretInfo []byte) *triggersv1.EventInterceptor {
+	return &triggersv1.EventInterceptor{
+		Ref: triggersv1.InterceptorRef{
+			Name: name,
+		},
+		Params: []triggersv1.InterceptorParams{
+			{
+				Name: "secretRef",
+				Value: v1.JSON{
+					Raw: secretInfo,
+				},
+			},
+		},
+	}
 }

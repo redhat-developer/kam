@@ -14,7 +14,7 @@ type Repository interface {
 	CreatePushBinding(namespace string) (triggersv1.TriggerBinding, string)
 
 	// Create an eventlistener trigger for Push event
-	CreatePushTrigger(name, secretName, secretNs, template string, bindings []string) triggersv1.EventListenerTrigger
+	CreatePushTrigger(name, secretName, secretNs, template string, bindings []string) (triggersv1.EventListenerTrigger, error)
 
 	// Git Repository URL
 	URL() string

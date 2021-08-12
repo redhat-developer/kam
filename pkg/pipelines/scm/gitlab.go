@@ -61,13 +61,10 @@ func (r *gitlabSpec) pushEventFilters() string {
 	return gitlabPushEventFilters
 }
 
-func (r *gitlabSpec) eventInterceptor(secretNamespace, secretName string) *triggersv1.EventInterceptor {
-	return &triggersv1.EventInterceptor{
-		GitLab: &triggersv1.GitLabInterceptor{
-			SecretRef: &triggersv1.SecretRef{
-				SecretName: secretName,
-				SecretKey:  webhookSecretKey,
-			},
-		},
+func (r *gitlabSpec) eventInterceptor(secretNamespace, secretName string) (*triggersv1.EventInterceptor, error) {
+	raw, err := secretParam(secretName, webhookSecretKey)
+	if err != nil {
+		return nil, err
 	}
+	return eventInterceptorWithSecret(gitlabType, raw), nil
 }

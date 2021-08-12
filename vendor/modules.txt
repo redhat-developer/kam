@@ -13,6 +13,8 @@ github.com/PuerkitoBio/urlesc
 github.com/antlr/antlr4/runtime/Go/antlr
 # github.com/blang/semver/v4 v4.0.0
 github.com/blang/semver/v4
+# github.com/blendle/zapdriver v1.3.1
+github.com/blendle/zapdriver
 # github.com/bluekeyes/go-gitdiff v0.4.0
 github.com/bluekeyes/go-gitdiff/gitdiff
 # github.com/code-ready/clicumber v0.0.0-20210201104241-cecb794bdf9a
@@ -64,18 +66,12 @@ github.com/gogo/protobuf/sortkeys
 # github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
 github.com/golang/groupcache/lru
 # github.com/golang/protobuf v1.5.2
-github.com/golang/protobuf/descriptor
-github.com/golang/protobuf/jsonpb
 github.com/golang/protobuf/proto
-github.com/golang/protobuf/protoc-gen-go/descriptor
 github.com/golang/protobuf/ptypes
 github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
-github.com/golang/protobuf/ptypes/empty
-github.com/golang/protobuf/ptypes/struct
 github.com/golang/protobuf/ptypes/timestamp
-github.com/golang/protobuf/ptypes/wrappers
-# github.com/google/cel-go v0.6.0
+# github.com/google/cel-go v0.7.3
 github.com/google/cel-go/cel
 github.com/google/cel-go/checker
 github.com/google/cel-go/checker/decls
@@ -239,10 +235,12 @@ github.com/spf13/cobra
 github.com/spf13/cobra/doc
 # github.com/spf13/pflag v1.0.5
 github.com/spf13/pflag
+# github.com/stoewer/go-strcase v1.2.0
+github.com/stoewer/go-strcase
 # github.com/stretchr/testify v1.6.1
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
-# github.com/tektoncd/pipeline v0.22.0
+# github.com/tektoncd/pipeline v0.24.2
 ## explicit
 github.com/tektoncd/pipeline/pkg/apis/config
 github.com/tektoncd/pipeline/pkg/apis/pipeline
@@ -256,13 +254,25 @@ github.com/tektoncd/pipeline/pkg/contexts
 github.com/tektoncd/pipeline/pkg/list
 github.com/tektoncd/pipeline/pkg/reconciler/pipeline/dag
 github.com/tektoncd/pipeline/pkg/substitution
-# github.com/tektoncd/triggers v0.12.1
+# github.com/tektoncd/triggers v0.14.2
 ## explicit
+github.com/tektoncd/triggers/pkg/apis/triggers/config
 github.com/tektoncd/triggers/pkg/apis/triggers/v1alpha1
 # github.com/zalando/go-keyring v0.1.1
 ## explicit
 github.com/zalando/go-keyring
 github.com/zalando/go-keyring/secret_service
+# go.uber.org/atomic v1.7.0
+go.uber.org/atomic
+# go.uber.org/multierr v1.5.0
+go.uber.org/multierr
+# go.uber.org/zap v1.16.0
+go.uber.org/zap
+go.uber.org/zap/buffer
+go.uber.org/zap/internal/bufferpool
+go.uber.org/zap/internal/color
+go.uber.org/zap/internal/exit
+go.uber.org/zap/zapcore
 # golang.org/x/crypto v0.0.0-20210415154028-4f45737414dc
 golang.org/x/crypto/ssh/terminal
 # golang.org/x/net v0.0.0-20210415231046-e915ea6b2b7d
@@ -338,6 +348,7 @@ google.golang.org/protobuf/reflect/protoregistry
 google.golang.org/protobuf/runtime/protoiface
 google.golang.org/protobuf/runtime/protoimpl
 google.golang.org/protobuf/types/descriptorpb
+google.golang.org/protobuf/types/dynamicpb
 google.golang.org/protobuf/types/known/anypb
 google.golang.org/protobuf/types/known/durationpb
 google.golang.org/protobuf/types/known/emptypb
@@ -402,6 +413,10 @@ k8s.io/api/scheduling/v1beta1
 k8s.io/api/storage/v1
 k8s.io/api/storage/v1alpha1
 k8s.io/api/storage/v1beta1
+# k8s.io/apiextensions-apiserver v0.20.6
+## explicit
+k8s.io/apiextensions-apiserver/pkg/apis/apiextensions
+k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1
 # k8s.io/apimachinery v0.21.0
 ## explicit
 k8s.io/apimachinery/pkg/api/equality
@@ -638,6 +653,7 @@ k8s.io/kubectl/pkg/util/term
 # k8s.io/utils v0.0.0-20210111153108-fddb29f9d009
 k8s.io/utils/buffer
 k8s.io/utils/integer
+k8s.io/utils/pointer
 k8s.io/utils/trace
 # knative.dev/pkg v0.0.0-20210428141353-878c85083565
 ## explicit
@@ -647,9 +663,13 @@ knative.dev/pkg/apis/duck/ducktypes
 knative.dev/pkg/apis/duck/v1
 knative.dev/pkg/apis/duck/v1alpha1
 knative.dev/pkg/apis/duck/v1beta1
+knative.dev/pkg/changeset
 knative.dev/pkg/configmap
 knative.dev/pkg/kmeta
 knative.dev/pkg/kmp
+knative.dev/pkg/logging
+knative.dev/pkg/logging/logkey
+knative.dev/pkg/ptr
 knative.dev/pkg/tracker
 # sigs.k8s.io/controller-runtime v0.8.3
 sigs.k8s.io/controller-runtime/pkg/scheme

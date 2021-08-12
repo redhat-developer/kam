@@ -7,6 +7,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/redhat-developer/kam/pkg/pipelines/triggers"
 	triggersv1 "github.com/tektoncd/triggers/pkg/apis/triggers/v1alpha1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -65,6 +66,10 @@ func TestCreatePushBindingForGitlab(t *testing.T) {
 func TestCreateCDTriggersForGitLab(t *testing.T) {
 	repo, err := NewRepository("http://gitlab.com/org/test")
 	assertNoError(t, err)
+	rawSecret, err := secretParam("secret", "webhook-secret-key")
+	assertNoError(t, err)
+	rawFilter, rawOverlays, err := celParams(gitlabPushEventFilters, "org/test")
+	assertNoError(t, err)
 	name := "test-template"
 	want := triggersv1.EventListenerTrigger{
 		Name: "test",
@@ -73,20 +78,42 @@ func TestCreateCDTriggersForGitLab(t *testing.T) {
 		},
 		Template: &triggersv1.EventListenerTemplate{Ref: &name},
 		Interceptors: []*triggersv1.EventInterceptor{
-			{
-				GitLab: &triggersv1.GitLabInterceptor{
-					SecretRef: &triggersv1.SecretRef{SecretKey: "webhook-secret-key", SecretName: "secret"},
+			&triggersv1.TriggerInterceptor{
+				Ref: triggersv1.InterceptorRef{
+					Name: "gitlab",
+				},
+				Params: []triggersv1.InterceptorParams{
+					{
+						Name: "secretRef",
+						Value: apiextensionsv1.JSON{
+							Raw: rawSecret,
+						},
+					},
 				},
 			},
-			{
-				CEL: &triggersv1.CELInterceptor{
-					Filter:   fmt.Sprintf(gitlabPushEventFilters, "org/test"),
-					Overlays: branchRefOverlay,
+			&triggersv1.TriggerInterceptor{
+				Ref: triggersv1.InterceptorRef{
+					Name: "cel",
+				},
+				Params: []triggersv1.InterceptorParams{
+					{
+						Name: "filter",
+						Value: apiextensionsv1.JSON{
+							Raw: rawFilter,
+						},
+					},
+					{
+						Name: "overlays",
+						Value: apiextensionsv1.JSON{
+							Raw: rawOverlays,
+						},
+					},
 				},
 			},
 		},
 	}
-	got := repo.CreatePushTrigger("test", "secret", "ns", "test-template", []string{"test-binding"})
+	got, err := repo.CreatePushTrigger("test", "secret", "ns", "test-template", []string{"test-binding"})
+	assertNoError(t, err)
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Fatalf("CreateCDTrigger() failed:\n%s", diff)
 	}

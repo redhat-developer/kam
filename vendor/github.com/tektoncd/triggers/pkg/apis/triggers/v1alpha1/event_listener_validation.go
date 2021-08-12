@@ -38,28 +38,29 @@ var (
 
 // Validate EventListener.
 func (e *EventListener) Validate(ctx context.Context) *apis.FieldError {
-	errs := e.validate(ctx)
-	errs = errs.Also(e.Spec.validate(ctx))
-	return errs
-}
-
-func (e *EventListener) validate(ctx context.Context) (errs *apis.FieldError) {
+	var errs *apis.FieldError
 	if len(e.ObjectMeta.Name) > 60 {
 		// Since `el-` is added as the prefix of EventListener services, the name of EventListener must be no more than 60 characters long.
 		errs = errs.Also(apis.ErrInvalidValue(fmt.Sprintf("eventListener name '%s' must be no more than 60 characters long", e.ObjectMeta.Name), "metadata.name"))
 	}
-	return errs
+	if apis.IsInDelete(ctx) {
+		return nil
+	}
+	return errs.Also(e.Spec.validate(ctx))
 }
 
 func (s *EventListenerSpec) validate(ctx context.Context) (errs *apis.FieldError) {
-	if s.Replicas != nil {
-		if *s.Replicas < 0 {
-			errs = errs.Also(apis.ErrInvalidValue(*s.Replicas, "spec.replicas"))
-		}
-	}
 	for i, trigger := range s.Triggers {
 		errs = errs.Also(trigger.validate(ctx).ViaField(fmt.Sprintf("spec.triggers[%d]", i)))
 	}
+
+	// To be removed in a later release #1020
+	if s.DeprecatedReplicas != nil {
+		if *s.DeprecatedReplicas < 0 {
+			errs = errs.Also(apis.ErrInvalidValue(*s.DeprecatedReplicas, "spec.replicas"))
+		}
+	}
+
 	// Both Kubernetes and Custom resource can't be present at the same time
 	if s.Resources.KubernetesResource != nil && s.Resources.CustomResource != nil {
 		return apis.ErrMultipleOneOf("spec.resources.kubernetesResource", "spec.resources.customResource")
@@ -101,6 +102,11 @@ func validateCustomObject(customData *CustomResource) (errs *apis.FieldError) {
 }
 
 func validateKubernetesObject(orig *KubernetesResource) (errs *apis.FieldError) {
+	if orig.Replicas != nil {
+		if *orig.Replicas < 0 {
+			errs = errs.Also(apis.ErrInvalidValue(*orig.Replicas, "spec.replicas"))
+		}
+	}
 	if len(orig.Template.Spec.Containers) > 1 {
 		errs = errs.Also(apis.ErrMultipleOneOf("containers").ViaField("spec.template.spec"))
 	}
@@ -262,6 +268,10 @@ func podSpecMask(in *corev1.PodSpec) *corev1.PodSpec {
 func (t *EventListenerTrigger) validate(ctx context.Context) (errs *apis.FieldError) {
 	if t.Template == nil && t.TriggerRef == "" {
 		errs = errs.Also(apis.ErrMissingOneOf("template", "triggerRef"))
+	}
+
+	if t.TriggerRef != "" && (t.Template != nil || t.Bindings != nil || t.Interceptors != nil) {
+		errs = errs.Also(apis.ErrMultipleOneOf("triggerRef", "template or bindings or interceptors"))
 	}
 
 	// Validate optional Bindings

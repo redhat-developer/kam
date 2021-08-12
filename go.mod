@@ -19,11 +19,12 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/afero v1.6.0
 	github.com/spf13/cobra v1.1.3
-	github.com/tektoncd/pipeline v0.22.0
-	github.com/tektoncd/triggers v0.12.1
+	github.com/tektoncd/pipeline v0.24.2
+	github.com/tektoncd/triggers v0.14.2
 	github.com/zalando/go-keyring v0.1.1
 	gopkg.in/AlecAivazis/survey.v1 v1.8.8
 	k8s.io/api v0.21.0
+	k8s.io/apiextensions-apiserver v0.20.6
 	k8s.io/apimachinery v0.21.0
 	k8s.io/client-go v0.21.0
 	k8s.io/klog v1.0.0

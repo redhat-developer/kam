@@ -24,17 +24,21 @@ var (
 )
 
 // Generate will create the required eventlisteners.
-func Generate(repo scm.Repository, ns, saName, secretName string) triggersv1.EventListener {
+func Generate(repo scm.Repository, ns, saName, secretName string) (triggersv1.EventListener, error) {
+	pushTrigger, err := repo.CreatePushTrigger("ci-dryrun-from-push", secretName, ns, "ci-dryrun-from-push-template", []string{"github-push-binding"})
+	if err != nil {
+		return triggersv1.EventListener{}, err
+	}
 	return triggersv1.EventListener{
 		TypeMeta:   eventListenerTypeMeta,
 		ObjectMeta: createListenerObjectMeta("cicd-event-listener", ns),
 		Spec: triggersv1.EventListenerSpec{
 			ServiceAccountName: saName,
 			Triggers: []triggersv1.EventListenerTrigger{
-				repo.CreatePushTrigger("ci-dryrun-from-push", secretName, ns, "ci-dryrun-from-push-template", []string{"github-push-binding"}),
+				pushTrigger,
 			},
 		},
-	}
+	}, nil
 }
 
 // CreateELFromTriggers creates an EventListener from a supplied set of

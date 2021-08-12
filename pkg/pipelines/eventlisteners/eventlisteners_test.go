@@ -10,7 +10,14 @@ import (
 )
 
 func TestGenerateEventListener(t *testing.T) {
-	name := "ci-dryrun-from-push-template"
+	repo, err := scm.NewRepository("http://github.com/org/test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	trigger, err := repo.CreatePushTrigger("ci-dryrun-from-push", "test", "testing", "ci-dryrun-from-push-template", []string{"github-push-binding"})
+	if err != nil {
+		t.Fatal(err)
+	}
 	validEventListener := triggersv1.EventListener{
 		TypeMeta: eventListenerTypeMeta,
 		ObjectMeta: metav1.ObjectMeta{
@@ -20,43 +27,14 @@ func TestGenerateEventListener(t *testing.T) {
 		Spec: triggersv1.EventListenerSpec{
 			ServiceAccountName: "pipeline",
 			Triggers: []triggersv1.EventListenerTrigger{
-				{
-					Name: "ci-dryrun-from-push",
-					Interceptors: []*triggersv1.EventInterceptor{
-						{
-							GitHub: &triggersv1.GitHubInterceptor{
-								SecretRef: &triggersv1.SecretRef{
-									SecretName: "test",
-									SecretKey:  WebhookSecretKey,
-								},
-							},
-						},
-						{
-							CEL: &triggersv1.CELInterceptor{
-								Filter: "(header.match('X-GitHub-Event', 'push') && body.repository.full_name == 'org/test')",
-								Overlays: []triggersv1.CELOverlay{
-									{Key: "ref", Expression: "body.ref.split('/')[2]"},
-								},
-							},
-						},
-					},
-					Bindings: []*triggersv1.EventListenerBinding{
-						{
-							Ref: "github-push-binding",
-						},
-					},
-					Template: &triggersv1.EventListenerTemplate{
-						Ref: &name,
-					},
-				},
+				trigger,
 			},
 		},
 	}
-	repo, err := scm.NewRepository("http://github.com/org/test")
+	eventListener, err := Generate(repo, "testing", "pipeline", "test")
 	if err != nil {
 		t.Fatal(err)
 	}
-	eventListener := Generate(repo, "testing", "pipeline", "test")
 	if diff := cmp.Diff(validEventListener, eventListener); diff != "" {
 		t.Fatalf("Generate() failed:\n%s", diff)
 	}

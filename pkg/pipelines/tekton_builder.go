@@ -50,7 +50,10 @@ func (tb *tektonBuilder) Service(app *config.Application, env *config.Environmen
 		return err
 	}
 	pipelines := getPipelines(env, svc, repo)
-	ciTrigger := repo.CreatePushTrigger(triggerName(svc.Name), svc.Webhook.Secret.Name, svc.Webhook.Secret.Namespace, pipelines.Integration.Template, pipelines.Integration.Bindings)
+	ciTrigger, err := repo.CreatePushTrigger(triggerName(svc.Name), svc.Webhook.Secret.Name, svc.Webhook.Secret.Namespace, pipelines.Integration.Template, pipelines.Integration.Bindings)
+	if err != nil {
+		return err
+	}
 	tb.triggers = append(tb.triggers, ciTrigger)
 	return nil
 }
@@ -65,7 +68,10 @@ func createTriggersForCICD(gitOpsRepo string, cfg *config.PipelinesConfig) ([]v1
 	if err != nil {
 		return []v1alpha1.EventListenerTrigger{}, err
 	}
-	ciTrigger := repo.CreatePushTrigger("ci-dryrun-from-push", eventlisteners.GitOpsWebhookSecret, cfg.Name, "ci-dryrun-from-push-template", []string{repo.PushBindingName()})
+	ciTrigger, err := repo.CreatePushTrigger("ci-dryrun-from-push", eventlisteners.GitOpsWebhookSecret, cfg.Name, "ci-dryrun-from-push-template", []string{repo.PushBindingName()})
+	if err != nil {
+		return []v1alpha1.EventListenerTrigger{}, err
+	}
 	triggers = append(triggers, ciTrigger)
 	return triggers, nil
 }

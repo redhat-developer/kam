@@ -23,7 +23,7 @@ type repository struct {
 type triggerSpec interface {
 	pushBindingParams() []triggersv1.Param
 	pushEventFilters() string
-	eventInterceptor(secretNamespace, secretName string) *triggersv1.EventInterceptor
+	eventInterceptor(secretNamespace, secretName string) (*triggersv1.EventInterceptor, error)
 	pushBindingName() string
 }
 
@@ -55,10 +55,14 @@ func (r *repository) CreatePushBinding(ns string) (triggersv1.TriggerBinding, st
 }
 
 // CreatePushTrigger implements the Repository interface.
-func (r *repository) CreatePushTrigger(name, secretName, secretNS, template string, bindings []string) triggersv1.EventListenerTrigger {
+func (r *repository) CreatePushTrigger(name, secretName, secretNS, template string, bindings []string) (triggersv1.EventListenerTrigger, error) {
+	eventInterceptorForCEL, err := r.spec.eventInterceptor(secretNS, secretName)
+	if err != nil {
+		return triggersv1.EventListenerTrigger{}, err
+	}
 	return r.createTrigger(name, r.spec.pushEventFilters(),
 		template, bindings,
-		r.spec.eventInterceptor(secretNS, secretName))
+		eventInterceptorForCEL)
 }
 
 // URL implements the Repository interface.
@@ -71,14 +75,18 @@ func (r *repository) PushBindingName() string {
 	return r.spec.pushBindingName()
 }
 
-func (r *repository) createTrigger(name, filters, template string, bindings []string, interceptor *triggersv1.EventInterceptor) triggersv1.EventListenerTrigger {
+func (r *repository) createTrigger(name, filters, template string, bindings []string, interceptor *triggersv1.EventInterceptor) (triggersv1.EventListenerTrigger, error) {
+	eventInterceptor, err := createEventInterceptor(filters, r.path)
+	if err != nil {
+		return triggersv1.EventListenerTrigger{}, err
+	}
 	return triggersv1.EventListenerTrigger{
 		Name: name,
 		Interceptors: []*triggersv1.EventInterceptor{
 			interceptor,
-			createEventInterceptor(filters, r.path),
+			eventInterceptor,
 		},
 		Bindings: createBindings(bindings),
 		Template: createListenerTemplate(&template),
-	}
+	}, nil
 }

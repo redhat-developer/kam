@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 
 	triggersv1 "github.com/tektoncd/triggers/pkg/apis/triggers/v1alpha1"
 )
@@ -30,13 +31,31 @@ func TestCreateListenerTemplate(t *testing.T) {
 }
 
 func TestCreateEventInterceptor(t *testing.T) {
+	filter := "sampleFilter %s"
+	repo := "sample"
+	rawFilter, rawOverlays, err := celParams(filter, repo)
+	assertNoError(t, err)
 	validEventInterceptor := triggersv1.EventInterceptor{
-		CEL: &triggersv1.CELInterceptor{
-			Filter:   "sampleFilter sample",
-			Overlays: branchRefOverlay,
+		Ref: triggersv1.InterceptorRef{
+			Name: "cel",
+		},
+		Params: []triggersv1.InterceptorParams{
+			{
+				Name: "filter",
+				Value: v1.JSON{
+					Raw: rawFilter,
+				},
+			},
+			{
+				Name: "overlays",
+				Value: v1.JSON{
+					Raw: rawOverlays,
+				},
+			},
 		},
 	}
-	eventInterceptor := createEventInterceptor("sampleFilter %s", "sample")
+	eventInterceptor, err := createEventInterceptor("sampleFilter %s", "sample")
+	assertNoError(t, err)
 	if diff := cmp.Diff(validEventInterceptor, *eventInterceptor); diff != "" {
 		t.Fatalf("createEventInterceptor() failed:\n%s", diff)
 	}

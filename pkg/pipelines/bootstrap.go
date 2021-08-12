@@ -559,7 +559,10 @@ func createCICDResources(fs afero.Fs, repo scm.Repository, pipelineConfig *confi
 	outputs[filepath.ToSlash(filepath.Join("05-bindings", pushBindingName+".yaml"))] = pushBinding
 	outputs[pushTemplatePath] = triggers.CreateCIDryRunTemplate(cicdNamespace, saName)
 	outputs[appCIPushTemplatePath] = triggers.CreateDevCIBuildPRTemplate(cicdNamespace, saName)
-	outputs[eventListenerPath] = eventlisteners.Generate(repo, cicdNamespace, saName, eventlisteners.GitOpsWebhookSecret)
+	outputs[eventListenerPath], err = eventlisteners.Generate(repo, cicdNamespace, saName, eventlisteners.GitOpsWebhookSecret)
+	if err != nil {
+		return nil, nil, err
+	}
 	log.Success("OpenShift Pipelines resources created")
 	route, err := eventlisteners.GenerateRoute(cicdNamespace)
 	if err != nil {
