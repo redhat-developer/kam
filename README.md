@@ -14,7 +14,7 @@ The GitOps Application Manager provides command line interface to bootstrap GitO
   
 
 
-Please visit the CLI [user documentation](./docs/README.md) to try out the CLI.
+Please visit the CLI [user documentation](./docs/README.md) to try out the CLI. For more information regarding how kam CLI is used, please refer to this [blog](https://developers.redhat.com/articles/2021/07/21/bootstrap-gitops-red-hat-openshift-pipelines-and-kam-cli).
 
 ### OpenShift Console
 
