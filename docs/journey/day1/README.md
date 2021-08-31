@@ -85,6 +85,9 @@ To use Bitnami Sealed Secrets, do the following:
      > gitops-webhook-sealedsecret.yaml
 ```
   5. Apply the sealed secrets, but be careful not to apply the unsealed secrets.
+```shell
+     oc apply -f <secrets-folder>
+```
 
 Alternatively instead of the above steps and to avoid installing the operator, you can use key certificates:
    1. `helm repo add sealed-secrets https://bitnami-labs.github.io/sealed-secrets`
@@ -99,6 +102,9 @@ Alternatively instead of the above steps and to avoid installing the operator, y
    4. To encrypt the secret, run
       `cat docker-config.yaml | kubeseal --cert cert.pem`
    5. Apply the sealed secrets, but be careful not to apply the unsealed secrets.
+```shell
+     oc apply -f <secrets-folder>
+```
 
 You can then check in the sealed secrets into Git
 For more information see: https://github.com/bitnami-labs/sealed-secrets and https://engineering.bitnami.com/articles/sealed-secrets.html
