@@ -8,8 +8,6 @@ import (
 	// version of k8s in common with kam.
 
 	argoappv1 "github.com/redhat-developer/kam/pkg/pipelines/argocd/v1alpha1"
-	"github.com/redhat-developer/kam/pkg/pipelines/roles"
-	rbacv1 "k8s.io/api/rbac/v1"
 
 	"github.com/redhat-developer/kam/pkg/pipelines/config"
 	"github.com/redhat-developer/kam/pkg/pipelines/meta"
@@ -63,11 +61,11 @@ type resource struct {
 const (
 	// ArgoCDNamespace is the default namespace for ArgoCD installations.
 	ArgoCDNamespace = "openshift-gitops"
-
-	defaultServer          = "https://kubernetes.default.svc"
-	defaultProject         = "default"
-	argoCDSAName           = "openshift-gitops-argocd-application-controller"
-	argocdAdminBindingName = "argocd-admin"
+	// ArgoCDManagedByLabel is needed to identify the namespace managed by Argo CD
+	ArgoCDManagedByLabel = "argocd.argoproj.io/managed-by"
+	defaultServer        = "https://kubernetes.default.svc"
+	defaultProject       = "default"
+	argoCDSAName         = "openshift-gitops-argocd-application-controller"
 )
 
 // Build creates and returns a set of resources to be used for the ArgoCD
@@ -213,10 +211,4 @@ func clusterForEnv(env *config.Environment) string {
 		return env.Cluster
 	}
 	return defaultServer
-}
-
-// MakeApplicationControllerAdmin returns a rolebinding with argocd application controller as an admin in the given namespace
-func MakeApplicationControllerAdmin(ns string) *rbacv1.RoleBinding {
-	argocdSA := roles.CreateServiceAccount(meta.NamespacedName(ArgoCDNamespace, argoCDSAName))
-	return roles.CreateRoleBinding(meta.NamespacedName(ns, argocdAdminBindingName), argocdSA, "ClusterRole", "admin")
 }

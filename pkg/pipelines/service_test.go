@@ -196,7 +196,7 @@ func TestServiceResourcesWithoutArgoCD(t *testing.T) {
 		"environments/test-dev/apps/test-app/overlays/kustomization.yaml": &res.Kustomization{
 			Bases: []string{"../base"}},
 		"environments/test-dev/env/base/kustomization.yaml": &res.Kustomization{
-			Resources: []string{"argocd-admin.yaml", "test-dev-environment.yaml"},
+			Resources: []string{"test-dev-environment.yaml"},
 			Bases:     []string{"../../apps/test-app/overlays"},
 		},
 		"pipelines.yaml": &config.Manifest{

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	argocd "github.com/redhat-developer/kam/pkg/pipelines/argocd"
 	"github.com/redhat-developer/kam/pkg/pipelines/clientconfig"
 	"github.com/redhat-developer/kam/pkg/pipelines/meta"
 	corev1 "k8s.io/api/core/v1"
@@ -52,6 +53,9 @@ func Create(name, gitOpsRepoURL string) *corev1.Namespace {
 			Name: name,
 			Annotations: map[string]string{
 				vcsURIAnnotation: gitOpsRepoURL + "?ref=HEAD",
+			},
+			Labels: map[string]string{
+				argocd.ArgoCDManagedByLabel: argocd.ArgoCDNamespace,
 			},
 		},
 	}

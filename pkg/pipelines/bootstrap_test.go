@@ -130,7 +130,6 @@ func TestBootstrapManifest(t *testing.T) {
 	wantResources := []string{
 		"01-namespaces/cicd-environment.yaml",
 		"01-namespaces/image-environment.yaml",
-		"02-rolebindings/argocd-admin.yaml",
 		"02-rolebindings/internal-registry-image-binding.yaml",
 		"02-rolebindings/pipeline-service-account.yaml",
 		"02-rolebindings/pipeline-service-role.yaml",

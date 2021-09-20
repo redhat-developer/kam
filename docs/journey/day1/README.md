@@ -281,11 +281,7 @@ The`webhook.secret` is used to authenticate incoming hooks from Git host.
 
 ## Argo CD Permissions
 
-By default, kam provides admin privileges to Argo CD application controller service account. For each environment
-managed by kam, a rolebinding file is generated, that makes Argo CD an admin in that environment. In order to modify it, 
-update the argocd-admin rolebinding file
-
-* `environments/<name>/env/base/argocd-admin.yaml`
+For each environment managed by kam, the namespace is labelled with `argocd.argoproj.io/managed-by:<argocd-namespace>` and the GitOps operator creates the necessary RBAC resources for the Argo CD instance to manage that namespace. In order to provide custom permissions for a namespace, update the role `<argocd-instance>-argocd-application-controller` in that namespace.
 
 ## Bringing the bootstrapped environment up
 
