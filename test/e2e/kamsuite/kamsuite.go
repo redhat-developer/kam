@@ -21,6 +21,7 @@ import (
 	"github.com/redhat-developer/kam/pkg/pipelines/yaml"
 	"k8s.io/apimachinery/pkg/util/wait"
 
+
 	deployment "github.com/redhat-developer/kam/pkg/pipelines/deployment"
 	"github.com/redhat-developer/kam/pkg/pipelines/git"
 	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
@@ -49,6 +50,10 @@ func FeatureContext(s *godog.Suite) {
 
 	// Adding sample kubernetes resource
 	s.Step(`^add kubernetes resource to newly created config file$`,
+		addResource)
+
+	// Adding sample kubernetes resource
+	s.Step(`^add kubernetes resource to the service in new environment$`,
 		addResource)
 
 	// Adding sample kubernetes resource
@@ -202,7 +207,7 @@ func waitSync(app string, state string) error {
 		return true, nil
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("error is : %v", err)
 	}
 	return nil
 }
@@ -231,7 +236,7 @@ func parse(repo string) (string, *url.URL, error) {
 		name := strings.Split(os.Getenv("BUS_REPO_URL"), "/")
 		return name[4], parsed, err
 	}
-}
+} 
 
 func createRepository(repo string) error {
 	name, parsed, err := parse(repo)

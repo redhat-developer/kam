@@ -45,7 +45,6 @@ const (
 	rolesPath             = "02-rolebindings/pipeline-service-role.yaml"
 	rolebindingsPath      = "02-rolebindings/pipeline-service-rolebinding.yaml"
 	serviceAccountPath    = "02-rolebindings/pipeline-service-account.yaml"
-	argocdAdminRolePath   = "02-rolebindings/argocd-admin.yaml"
 	gitopsTasksPath       = "03-tasks/deploy-from-source-task.yaml"
 	commitStatusTaskPath  = "03-tasks/set-commit-status-task.yaml"
 	ciPipelinesPath       = "04-pipelines/ci-dryrun-from-push-pipeline.yaml"
@@ -539,8 +538,6 @@ func createCICDResources(fs afero.Fs, repo scm.Repository, pipelineConfig *confi
 			return nil, nil, err
 		}
 	}
-
-	outputs[argocdAdminRolePath] = argocd.MakeApplicationControllerAdmin(cicdNamespace)
 
 	outputs[rolebindingsPath] = roles.CreateClusterRoleBinding(meta.NamespacedName("", roleBindingName), sa, "ClusterRole", roles.ClusterRoleName)
 	script, err := dryrun.MakeScript("kubectl", cicdNamespace)

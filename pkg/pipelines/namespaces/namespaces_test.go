@@ -20,6 +20,9 @@ func TestCreate(t *testing.T) {
 			Annotations: map[string]string{
 				vcsURIAnnotation: testGitOpsRepoURL + "?ref=HEAD",
 			},
+			Labels: map[string]string{
+				"argocd.argoproj.io/managed-by": "openshift-gitops",
+			},
 		},
 	}
 

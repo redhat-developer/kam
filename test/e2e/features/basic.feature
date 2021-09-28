@@ -112,7 +112,7 @@ Feature: Basic test
         Then stderr should be empty
         When executing "kam service add --env-name new-env --app-name app-bus --service-name bus --git-repo-url $BUS_REPO_URL --pipelines-folder bootstrapresources" succeeds
         And executing "oc apply -f secrets/webhook-secret-new-env-bus.yaml" succeeds
-        Then add kubernetes resource to newly created config file
+        Then add kubernetes resource to the service in new environment
         And executing "cd bootstrapresources" succeeds
         Then executing "git add ." succeeds
         And executing "git commit -m 'Add new service'" succeeds
@@ -158,7 +158,7 @@ Feature: Basic test
         Then stderr should be empty
         When executing "kam service add --env-name new-env --app-name app-bus --service-name bus --git-repo-url $BUS_REPO_URL --pipelines-folder bootstrapresources" succeeds
         And executing "oc apply -f secrets/webhook-secret-new-env-bus.yaml" succeeds
-        Then add kubernetes resource to newly created config file
+        Then add kubernetes resource to the service in new environment
         And executing "cd bootstrapresources" succeeds
         Then executing "git add ." succeeds
         And executing "git commit -m 'Add new service'" succeeds
@@ -171,6 +171,7 @@ Feature: Basic test
         And Wait for application "stage-env" to be in "Synced" state
         And Wait for application "cicd-app" to be in "Synced" state
         And Wait for application "new-env-app-bus" to be in "Synced" state
+
         Then executing "cd .." succeeds
         When executing "kam webhook create --git-host-access-token $GIT_ACCESS_TOKEN --env-name new-env --service-name bus --pipelines-folder bootstrapresources" succeeds
         Then stderr should be empty

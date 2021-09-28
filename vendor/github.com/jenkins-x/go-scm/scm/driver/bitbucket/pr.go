@@ -26,7 +26,10 @@ func (s *pullService) Find(ctx context.Context, repo string, number int) (*scm.P
 	path := fmt.Sprintf("2.0/repositories/%s/pullrequests/%d", repo, number)
 	out := new(pullRequest)
 	res, err := s.client.do(ctx, "GET", path, nil, out)
-	return convertPullRequest(out), res, err
+	responsePR := convertPullRequest(out)
+	populateMergeableState(ctx, s, out, responsePR)
+
+	return responsePR, res, err
 }
 
 func (s *pullService) List(ctx context.Context, repo string, opts scm.PullRequestListOptions) ([]*scm.PullRequest, *scm.Response, error) {
@@ -43,7 +46,7 @@ func (s *pullService) List(ctx context.Context, repo string, opts scm.PullReques
 		return nil, res, err
 	}
 	err = copyPagination(out.pagination, res)
-	return convertPullRequests(out), res, err
+	return convertPullRequests(ctx, s, out), res, err
 }
 
 type prCommentInput struct {
@@ -124,7 +127,8 @@ func convertPRComment(from *prComment) *scm.Comment {
 		ID:   from.ID,
 		Body: from.Content.Raw,
 		Author: scm.User{
-			Login:  from.User.DisplayName,
+			Name:   from.User.DisplayName,
+			Login:  from.User.AccountID,
 			Avatar: from.User.Links.Avatar.Href,
 		},
 		Link:    from.Links.HTML.Href,
@@ -262,7 +266,11 @@ func (s *pullService) Create(ctx context.Context, repo string, input *scm.PullRe
 	}
 	out := new(pullRequest)
 	res, err := s.client.do(ctx, "POST", path, in, out)
-	return convertPullRequest(out), res, err
+
+	responsePR := convertPullRequest(out)
+
+	populateMergeableState(ctx, s, out, responsePR)
+	return responsePR, res, err
 }
 
 func (s *pullService) RequestReview(ctx context.Context, repo string, number int, logins []string) (*scm.Response, error) {
@@ -293,7 +301,7 @@ type prDestination struct {
 	Commit struct {
 		Type   string `json:"type"`
 		Ref    string `json:"ref"`
-		Commit string `json:"Commit"`
+		Commit string `json:"hash"`
 	} `json:"commit"`
 	Repository repository `json:"repository"`
 	Branch     struct {
@@ -316,9 +324,10 @@ type pullRequest struct {
 	Reviewers    []user        `json:"reviewers"`
 	Participants []user        `json:"participants"`
 	Links        struct {
-		Self link `json:"self"`
-		Diff link `json:"diff"`
-		HTML link `json:"html"`
+		DiffStat link `json:"diffstat"`
+		Self     link `json:"self"`
+		Diff     link `json:"diff"`
+		HTML     link `json:"html"`
 	} `json:"links"`
 }
 
@@ -327,10 +336,21 @@ type pullRequests struct {
 	Values []*pullRequest `json:"values"`
 }
 
+func findRefs(from *pullRequest) (string, string) {
+	baseRef := from.Destination.Commit.Ref
+	headRef := from.Source.Commit.Ref
+	if baseRef == "" {
+		baseRef = from.Destination.Branch.Name
+	}
+	if headRef == "" {
+		headRef = from.Source.Branch.Name
+	}
+	return baseRef, headRef
+}
 func convertPullRequest(from *pullRequest) *scm.PullRequest {
-	// TODO
 	fork := "false"
 	closed := strings.ToLower(from.State) != "open"
+	baseRef, headRef := findRefs(from)
 	return &scm.PullRequest{
 		Number:   from.ID,
 		Title:    from.Title,
@@ -340,8 +360,8 @@ func convertPullRequest(from *pullRequest) *scm.PullRequest {
 		Source:   from.Source.Commit.Commit,
 		Target:   from.Destination.Commit.Commit,
 		Fork:     fork,
-		Base:     convertPullRequestBranch(from.Destination.Commit.Ref, from.Destination.Commit.Commit, from.Destination.Repository),
-		Head:     convertPullRequestBranch(from.Source.Commit.Ref, from.Source.Commit.Commit, from.Source.Repository),
+		Base:     convertPullRequestBranch(baseRef, from.Destination.Commit.Commit, from.Destination.Repository),
+		Head:     convertPullRequestBranch(headRef, from.Source.Commit.Commit, from.Source.Repository),
 		Link:     from.Links.HTML.Href,
 		DiffLink: from.Links.Diff.Href,
 		State:    strings.ToLower(from.State),
@@ -367,10 +387,41 @@ func convertPullRequestBranch(ref string, sha string, repo repository) scm.PullR
 	}
 }
 
-func convertPullRequests(from *pullRequests) []*scm.PullRequest {
+func convertPullRequests(ctx context.Context, prsvc *pullService, from *pullRequests) []*scm.PullRequest {
 	answer := []*scm.PullRequest{}
 	for _, pr := range from.Values {
-		answer = append(answer, convertPullRequest(pr))
+		responsePR := convertPullRequest(pr)
+		responsePR = populateMergeableState(ctx, prsvc, pr, responsePR)
+		answer = append(answer, responsePR)
 	}
 	return answer
+}
+
+func populateMergeableState(ctx context.Context, prsvc *pullService, from *pullRequest, to *scm.PullRequest) *scm.PullRequest {
+	out := new(diffstats)
+	_, err := prsvc.client.do(ctx, "GET", from.Links.DiffStat.Href, nil, out)
+
+	if err != nil {
+		// error judging PR mergeable status, defaulting to, unknown
+		to.MergeableState = scm.MergeableStateUnknown
+		to.Mergeable = false
+		return to
+	}
+
+	mergeableFlag := true
+	mergeableState := scm.MergeableStateMergeable
+
+	for _, diff := range out.Values {
+		if diff.Status == "merge conflict" {
+			// there exists conflict, no need to scan subsequent diffs
+			mergeableFlag = false
+			mergeableState = scm.MergeableStateConflicting
+			break
+		}
+	}
+
+	to.Mergeable = mergeableFlag
+	to.MergeableState = mergeableState
+
+	return to
 }
