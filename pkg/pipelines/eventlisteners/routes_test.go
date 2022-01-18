@@ -19,6 +19,7 @@ func TestGenerateRoute(t *testing.T) {
 			"namespace":         "cicd-environment",
 		},
 		"spec": map[string]interface{}{
+			"host": string(""),
 			"port": map[string]interface{}{"targetPort": defaultRoutePortName},
 			"to": map[string]interface{}{
 				"kind":   "Service",

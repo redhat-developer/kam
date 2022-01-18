@@ -5,13 +5,12 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/redhat-developer/kam/pkg/pipelines/config"
 	"github.com/redhat-developer/kam/pkg/pipelines/meta"
 
-	// This is a hack because ArgoCD doesn't support a compatible (code-wise)
-	// version of k8s in common with kam
-
-	argoappv1 "github.com/redhat-developer/kam/pkg/pipelines/argocd/v1alpha1"
+	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
+	argoappv1 "github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	res "github.com/redhat-developer/kam/pkg/pipelines/resources"
 )
 
@@ -39,6 +38,8 @@ var (
 
 	testEnvPath     = filepath.ToSlash(filepath.Join(config.PathForEnvironment(testEnv), "env"))
 	testEnvBasePath = filepath.ToSlash(filepath.Join(testEnvPath, "overlays"))
+
+	ignoreUnexportedDestinationField = cmpopts.IgnoreUnexported(v1alpha1.ApplicationDestination{})
 )
 
 func TestBuildCreatesArgoCD(t *testing.T) {
@@ -106,7 +107,7 @@ func TestBuildCreatesArgoCD(t *testing.T) {
 		},
 	}
 
-	if diff := cmp.Diff(want, files); diff != "" {
+	if diff := cmp.Diff(want, files, ignoreUnexportedDestinationField); diff != "" {
 		t.Fatalf("files didn't match: %s\n", diff)
 	}
 }
@@ -250,7 +251,7 @@ func TestBuildWithRepoConfig(t *testing.T) {
 		},
 	}
 
-	if diff := cmp.Diff(want, files); diff != "" {
+	if diff := cmp.Diff(want, files, ignoreUnexportedDestinationField); diff != "" {
 		t.Fatalf("files didn't match: %s\n", diff)
 	}
 }
@@ -322,7 +323,7 @@ func TestBuildAddsClusterToApp(t *testing.T) {
 		},
 	}
 
-	if diff := cmp.Diff(want, files); diff != "" {
+	if diff := cmp.Diff(want, files, ignoreUnexportedDestinationField); diff != "" {
 		t.Fatalf("files didn't match: %s\n", diff)
 	}
 }
@@ -339,7 +340,7 @@ func TestIgnoreDifferences(t *testing.T) {
 	}
 	got := ignoreDifferences(want)
 	want.Spec.IgnoreDifferences = ignoreDifferencesFields
-	if diff := cmp.Diff(got, want); diff != "" {
+	if diff := cmp.Diff(got, want, ignoreUnexportedDestinationField); diff != "" {
 		t.Fatalf("ignoreDifferences() failed: %s", diff)
 	}
 }

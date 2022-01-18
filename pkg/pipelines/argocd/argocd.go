@@ -4,10 +4,7 @@ import (
 	"path/filepath"
 	"sort"
 
-	// This is a hack because ArgoCD doesn't support a compatible (code-wise)
-	// version of k8s in common with kam.
-
-	argoappv1 "github.com/redhat-developer/kam/pkg/pipelines/argocd/v1alpha1"
+	argoappv1 "github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 
 	"github.com/redhat-developer/kam/pkg/pipelines/config"
 	"github.com/redhat-developer/kam/pkg/pipelines/meta"

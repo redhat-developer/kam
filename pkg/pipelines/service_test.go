@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/redhat-developer/kam/pkg/pipelines/argocd"
@@ -443,7 +444,7 @@ func TestServiceWithArgoCD(t *testing.T) {
 		ServiceName:         "test",
 	})
 	assertNoError(t, err)
-	if diff := cmp.Diff(got, want, cmpopts.IgnoreMapEntries(func(k string, v interface{}) bool {
+	if diff := cmp.Diff(got, want, cmpopts.IgnoreUnexported(v1alpha1.ApplicationDestination{}), cmpopts.IgnoreMapEntries(func(k string, v interface{}) bool {
 		_, ok := want[k]
 		return !ok
 	})); diff != "" {
