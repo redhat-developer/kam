@@ -42,6 +42,8 @@ type Images struct {
 	PRImage string
 	// ImageDigestExporterImage is the container image containing our image digest exporter binary.
 	ImageDigestExporterImage string
+	// WorkingDirInitImage is the container image containing our working dir init binary.
+	WorkingDirInitImage string
 
 	// NOTE: Make sure to add any new images to Validate below!
 }
@@ -52,15 +54,16 @@ func (i Images) Validate() error {
 	for _, f := range []struct {
 		v, name string
 	}{
-		{i.EntrypointImage, "entrypoint"},
-		{i.NopImage, "nop"},
-		{i.GitImage, "git"},
-		{i.KubeconfigWriterImage, "kubeconfig-writer"},
-		{i.ShellImage, "shell"},
-		{i.ShellImageWin, "windows-shell"},
-		{i.GsutilImage, "gsutil"},
-		{i.PRImage, "pr"},
-		{i.ImageDigestExporterImage, "imagedigest-exporter"},
+		{i.EntrypointImage, "entrypoint-image"},
+		{i.NopImage, "nop-image"},
+		{i.GitImage, "git-image"},
+		{i.KubeconfigWriterImage, "kubeconfig-writer-image"},
+		{i.ShellImage, "shell-image"},
+		{i.ShellImageWin, "shell-image-win"},
+		{i.GsutilImage, "gsutil-image"},
+		{i.PRImage, "pr-image"},
+		{i.ImageDigestExporterImage, "imagedigest-exporter-image"},
+		{i.WorkingDirInitImage, "workingdirinit-image"},
 	} {
 		if f.v == "" {
 			unset = append(unset, f.name)
