@@ -60,6 +60,8 @@ func (d drivers) supported(s string) bool {
 var (
 	bootstrapExample = ktemplates.Examples(`
     # Bootstrap OpenShift pipelines.
+		kam bootstrap --service-repo-url https://github.com/<your organization>/taxi.git --gitops-repo-url https://github.com/<your organization>/gitops.git --image-repo quay.io/<username>/<image-repo> --dockercfgjson ~/Downloads/<username>-robot-auth.json --git-host-access-token <your git access token> --output <path to write GitOps resources> --push-to-git=true
+		
     %[1]s 
     `)
 

@@ -17,7 +17,10 @@ import (
 const createRecommendedCommandName = "create"
 
 var (
-	createExample = ktemplates.Examples(`	# Create a new Git repository webhook 
+	createExample = ktemplates.Examples(`	
+	# Create a new Git repository webhook.
+	# Example: kam webhook create --git-host-access-token <git host access token> --env-name dev --service-name taxi
+	
 	%[1]s`)
 )
 

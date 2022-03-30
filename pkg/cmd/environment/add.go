@@ -20,6 +20,8 @@ const (
 var (
 	addEnvExample = ktemplates.Examples(`
 	# Add a new environment to GitOps
+	# Example: kam environment add --env-name new-env --pipelines-folder <path to GitOps folder>
+	
 	%[1]s 
 	`)
 

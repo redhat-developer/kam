@@ -20,7 +20,10 @@ const (
 )
 
 var (
-	addExample = ktemplates.Examples(`	Add a Service to an environment in GitOps
+	addExample = ktemplates.Examples(`	
+	# Add a Service to an environment in GitOps
+	# Example: kam service add --env-name new-env --app-name app-bus --service-name bus --git-repo-url http://github.com/<your organization>/bus.git --pipelines-folder <path to GitOps file>
+	
 	%[1]s`)
 
 	addLongDesc  = ktemplates.LongDesc(`Add a Service to an environment in GitOps`)

@@ -16,7 +16,10 @@ import (
 const deleteRecommendedCommandName = "delete"
 
 var (
-	deleteExample = ktemplates.Examples(`	# Delete a Git repository webhook 
+	deleteExample = ktemplates.Examples(`	
+	# Delete a Git repository webhook.
+	# Example: kam webhook delete --git-host-access-token <git host access token> --env-name dev --service-name taxi 
+	
 	%[1]s`)
 )
 

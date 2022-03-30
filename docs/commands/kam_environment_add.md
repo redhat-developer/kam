@@ -14,6 +14,8 @@ kam environment add [flags]
 
 ```
   # Add a new environment to GitOps
+  # Example: kam environment add --env-name new-env --pipelines-folder <path to GitOps folder>
+  
   kam environment add
 ```
 

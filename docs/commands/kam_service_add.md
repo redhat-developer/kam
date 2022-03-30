@@ -13,7 +13,9 @@ kam service add [flags]
 ### Examples
 
 ```
-  Add a Service to an environment in GitOps
+  # Add a Service to an environment in GitOps
+  # Example: kam service add --env-name new-env --app-name app-bus --service-name bus --git-repo-url http://github.com/<your organization>/bus.git --pipelines-folder <path to GitOps file>
+  
   kam service add
 ```
 

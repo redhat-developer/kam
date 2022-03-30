@@ -13,7 +13,9 @@ kam webhook delete [flags]
 ### Examples
 
 ```
-  # Delete a Git repository webhook
+  # Delete a Git repository webhook.
+  # Example: kam webhook delete --git-host-access-token <git host access token> --env-name dev --service-name taxi
+  
   kam webhook delete
 ```
 
