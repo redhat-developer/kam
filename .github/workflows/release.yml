@@ -13,9 +13,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Build project
+      - name: Build project with checksum
         run: |
           make all_platforms
+          make checksum
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -55,4 +56,14 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
           asset_path: ./dist/kam_darwin_amd64
           asset_name: kam_darwin_amd64
-          asset_content_type: application/octet-stream             
+          asset_content_type: application/octet-stream 
+      - name: Upload checksum file
+        id: upload-checksum-file
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/kam_checksums.txt
+          asset_name: kam_checksums.txt
+          asset_content_type: text/plain         

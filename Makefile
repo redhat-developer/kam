@@ -79,3 +79,7 @@ e2e:
 .PHONY: e2e-local
 e2e-local:
 	@go test --timeout=180m ./test/e2e -v --godog.tags=local
+
+.PHONY: checksum
+checksum:
+	. ./scripts/generate-checksum.sh
