@@ -17,7 +17,6 @@ all_platforms: windows linux darwin
 windows: $(WINDOWS)
 
 .PHONY: linux
-linux: $(LINUX)
 
 .PHONY: darwin
 darwin: $(DARWIN)
@@ -25,8 +24,10 @@ darwin: $(DARWIN)
 $(WINDOWS):
 	env GOOS=windows GOARCH=amd64 go build -o $(DIST_DIR)/$(WINDOWS)  -ldflags=$(LD_FLAGS)  cmd/kam/kam.go
 
-$(LINUX):
-	env GOOS=linux GOARCH=$(ARCHITECTURE) go build -o $(DIST_DIR)/$(LINUX) -ldflags=$(LD_FLAGS) cmd/kam/kam.go
+linux:
+	env GOOS=linux GOARCH=amd64 go build -o $(DIST_DIR)/$(EXECUTABLE)_linux_amd64 -ldflags=$(LD_FLAGS) cmd/kam/kam.go
+	env GOOS=linux GOARCH=ppc64le go build -o $(DIST_DIR)/$(EXECUTABLE)_linux_ppc64le -ldflags=$(LD_FLAGS) cmd/kam/kam.go
+	env GOOS=linux GOARCH=s390x go build -o $(DIST_DIR)/$(EXECUTABLE)_linux_s390x -ldflags=$(LD_FLAGS) cmd/kam/kam.go
 
 $(DARWIN):
 	env GOOS=darwin GOARCH=amd64 go build -o $(DIST_DIR)/$(DARWIN) -ldflags=$(LD_FLAGS) cmd/kam/kam.go
