@@ -28,7 +28,7 @@ jobs:
           draft: false
           prerelease: false
       - name: Upload kam_linux_amd64
-        id: upload-linux-binary
+        id: upload-linux-amd64-binary
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -36,6 +36,26 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
           asset_path: ./dist/kam_linux_amd64
           asset_name: kam_linux_amd64
+          asset_content_type: application/octet-stream
+      - name: Upload kam_linux_ppc64le
+        id: upload-linux-ppc64le-binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ./dist/kam_linux_ppc64le
+          asset_name: kam_linux_ppc64le
+          asset_content_type: application/octet-stream
+      - name: Upload kam_linux_s390x
+        id: upload-linux-s390x-binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ./dist/kam_linux_s390x
+          asset_name: kam_linux_s390x
           asset_content_type: application/octet-stream
       - name: Upload kam_windows_amd64.exe
         id: upload-windows-binary
