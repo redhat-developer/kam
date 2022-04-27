@@ -39,4 +39,6 @@ make all_platforms
 
 cp dist/kam_darwin_amd64 $ARTIFACT_DIR
 cp dist/kam_linux_amd64 $ARTIFACT_DIR
+cp dist/kam_linux_ppc64le $ARTIFACT_DIR
+cp dist/kam_linux_s390x $ARTIFACT_DIR
 cp dist/kam_windows_amd64.exe $ARTIFACT_DIR
