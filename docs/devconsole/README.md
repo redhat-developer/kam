@@ -25,9 +25,17 @@ Visualize your GitOps environment stages and applications on DevConsole in OpenS
 
 ![Application_List](./img/GitOps_4.8_Environments_Tooltip.png)
 
-8. Clicking on the application name will take you to the application details page.
+6. Clicking on the application name will take you to the application details page with the `Overview` tab selected.
 
-![GitOps Details Page](./img/GitOps_App_Details.png)
+![GitOps Details Page 4.11](./img/GitOps_4.11_App_Details_Overview.png)
+
+7. Click on the `Deployment history` tab to get the successful deployment history for the application environments. This feature is new to Red Hat OpenShift 4.11.
+
+![GitOps Deployment History Tab 4.11](./img/GitOps_4.11_App_Details_DeploymentHistory.png)
+
+8. The history will update once a successful deployment or sync is made in Argo CD.
+
+![GitOps Deployment History Tab 4.11](./img/GitOps_4.11_App_Details_DeploymentHistory_AfterSync.png)
 
 9. Hover over the icons on the right of a resource to see it's health status and sync status. Only when a resource is out of sync or/and not healthy the corresponding icon is displayed.
 
