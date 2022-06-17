@@ -69,13 +69,13 @@ cmd-docs:
 prepare-test-cluster:
 	. ./scripts/prepare-test-cluster.sh
 
+
 .PHONY: e2e
-e2e:
-GODOG_OPTS = --godog.tags=basic
-
-e2e:
-	@go test --timeout=180m ./test/e2e -v $(GODOG_OPTS)
-
+e2e:	
+	export VCS=github && \
+	go test --timeout=180m ./test/e2e -v --godog.tags=$$VCS || true
+	export VCS=gitlab && \
+	go test --timeout=180m ./test/e2e -v --godog.tags=$$VCS 
 
 .PHONY: e2e-local
 e2e-local:

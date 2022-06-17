@@ -87,18 +87,18 @@ NOTE: See the [Gherkin Reference](https://cucumber.io/docs/gherkin/reference/) f
 
 #### Run E2E test locally:
 
-To run the e2e test locally, user need to export the environment variables SERVICE_REPO_URL, GITOPS_REPO_URL, IMAGE_REPO, DOCKERCONFIGJSON_PATH and GIT_ACCESS_TOKEN corresponding to its flag --service-repo-url, --gitops-repo-url, --image-repo, --dockercfgjson and --git-host-access-token respectively.
+To run the e2e test locally, user need to set the environment variables SERVICE_REPO_URL, GITOPS_REPO_URL, IMAGE_REPO, DOCKERCONFIGJSON_PATH and GIT_ACCESS_TOKEN corresponding to its flag --service-repo-url, --gitops-repo-url, --image-repo, --dockercfgjson and --git-host-access-token respectively. Provide variables.json file with respective data and kamsuite.go will set all the required variables.
 
-For example:
+
 ```
-$ export SERVICE_REPO_URL=<Provide the URL for your Service repository>
-$ export GITOPS_REPO_URL=<Provide the URL for your GitOps repository>
-$ export IMAGE_REPO=<Image repository which is used to push newly built images>
-$ export DOCKERCONFIGJSON_PATH=<Filepath to config.json which authenticates the image push to the desired image registry>
-$ export GIT_ACCESS_TOKEN=<Used to authenticate repository clones, and commit-status notifications (if enabled)>
+SERVICE_REPO_URL=<Provide the URL for your Service repository>
+GITOPS_REPO_URL=<Provide the URL for your GitOps repository>
+IMAGE_REPO=<Image repository which is used to push newly built images>
+DOCKERCONFIGJSON_PATH=<Filepath to config.json which authenticates the image push to the desired image registry>
+GIT_ACCESS_TOKEN=<Used to authenticate repository clones, and commit-status notifications (if enabled)>
 ```
 
-Then run the command `make e2e`. Target `make e2e` runs the test scenario under `@basic` tag.
+Then run the command `make e2e`. Target `make e2e` runs the test scenario under `@github` and `@gitlab` tag.
 
 For running test scenarios which are specifically design for local verification, use target `make e2e-local`. Target `make e2e-local` runs the test scenario under `@local` tag.
 

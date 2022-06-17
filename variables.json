@@ -1,0 +1,20 @@
+{
+    "github":
+        {
+            "service_repo_url":"",
+            "gitops_repo_url":"",
+            "image_repo":"",
+            "bus_repo_url":"",
+            "dockerconfigjson_path":"",
+            "git_access_token":""
+        },
+    "gitlab":
+        {
+            "service_repo_url":"",
+            "gitops_repo_url":"",
+            "image_repo":"",
+            "bus_repo_url":"",
+            "dockerconfigjson_path":"",
+            "git_access_token":""
+        }
+}

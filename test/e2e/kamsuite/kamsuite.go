@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/url"
 	"os"
@@ -22,7 +24,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	deployment "github.com/redhat-developer/kam/pkg/pipelines/deployment"
-	"github.com/redhat-developer/kam/pkg/pipelines/git"
 	"github.com/redhat-developer/kam/pkg/pipelines/ioutils"
 	res "github.com/redhat-developer/kam/pkg/pipelines/resources"
 )
@@ -30,7 +31,7 @@ import (
 // FeatureContext defines godog.Suite steps for the test suite.
 func FeatureContext(s *godog.Suite) {
 
-	// KAM related steps
+	// Check if directory exists
 	s.Step(`^directory "([^"]*)" should exist$`,
 		DirectoryShouldExist)
 
@@ -38,18 +39,19 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^"([^"]*)" repository is created$`,
 		createRepository)
 
-	s.Step(`^Wait for application "([^"]*)" to be in "([^"]*)" state$`,
+	// For checking if the repository exists
+	s.Step(`^"([^"]*)" repository exists$`,
+		checkRepository)
+
+	s.Step(`^wait for application "([^"]*)" to be in "([^"]*)" state$`,
 		waitSync)
 
 	// Adding sample kubernetes resource
-	s.Step(`^Add kubernetes resource to the service in new environment$`,
+	s.Step(`^add kubernetes resource to the service in new environment$`,
 		addResource)
 
-	s.Step(`^Create a pull request$`,
+	s.Step(`^create and merge pull request after all the checks pass$`,
 		createPR)
-
-	s.Step(`^Wait for all the checks to pass and merge the pull request$`,
-		waitPass)
 
 	s.BeforeSuite(func() {
 		fmt.Println("Before suite")
@@ -95,47 +97,83 @@ func FeatureContext(s *godog.Suite) {
 
 	s.AfterScenario(func(*messages.Pickle, error) {
 		fmt.Println("After scenario")
-		re := regexp.MustCompile(`[a-z]+`)
-		scm := re.FindAllString(os.Getenv("GITOPS_REPO_URL"), 2)[1]
-
-		switch scm {
-		case "github":
-			deleteGithubRepository(os.Getenv("GITOPS_REPO_URL"), os.Getenv("GIT_ACCESS_TOKEN"))
-		case "gitlab":
-			deleteGitlabRepoStep := []string{"repo", "delete", strings.Split(strings.Split(os.Getenv("GITOPS_REPO_URL"), ".com/")[1], ".")[0], "-y"}
-			ok, errMessage := deleteGitlabRepository(deleteGitlabRepoStep)
-			if !ok {
-				fmt.Println(errMessage)
-			}
-		default:
-			fmt.Println("SCM is not supported")
+		err := deleteRepository(os.Getenv("GITOPS_REPO_URL"))
+		if err != nil {
+			fmt.Println(os.Getenv("GITOPS_REPO_URL"), ":", err)
 		}
 	})
 }
 
+type VCS struct {
+	GITHUB GIT `json:"github"`
+	GITLAB GIT `json:"gitlab"`
+}
+
+type GIT struct {
+	SERVICE_REPO_URL      string `json:"service_repo_url"`
+	GITOPS_REPO_URL       string `json:"gitops_repo_url"`
+	IMAGE_REPO            string `json:"image_repo"`
+	BUS_REPO_URL          string `json:"bus_repo_url"`
+	DOCKERCONFIGJSON_PATH string `json:"dockerconfigjson_path"`
+	GIT_ACCESS_TOKEN      string `json:"git_access_token"`
+}
+
 func envVariableCheck() bool {
-	envVars := []string{"SERVICE_REPO_URL", "GITOPS_REPO_URL", "IMAGE_REPO", "DOCKERCONFIGJSON_PATH", "GIT_ACCESS_TOKEN", "BUS_REPO_URL"}
+
+	var stdout bytes.Buffer
+	var vcs VCS
+
 	val, ok := os.LookupEnv("CI")
 	if !ok {
+
+		cmd := exec.Command("pwd")
+		cmd.Stdout = &stdout
+
+		err := cmd.Run()
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		jsonFile, err := os.Open(strings.Split(stdout.String(), "/test")[0] + "/variables.json")
+		if err != nil {
+			fmt.Println(err)
+			fmt.Println("Configuration file not set")
+			return false
+		}
+
+		defer jsonFile.Close()
+
+		byteValue, _ := ioutil.ReadAll(jsonFile)
+		json.Unmarshal(byteValue, &vcs)
+
+		if os.Getenv("VCS") == "github" {
+			os.Setenv("SERVICE_REPO_URL", vcs.GITHUB.SERVICE_REPO_URL)
+			os.Setenv("GITOPS_REPO_URL", vcs.GITHUB.GITOPS_REPO_URL)
+			os.Setenv("IMAGE_REPO", vcs.GITHUB.IMAGE_REPO)
+			os.Setenv("BUS_REPO_URL", vcs.GITHUB.BUS_REPO_URL)
+			os.Setenv("DOCKERCONFIGJSON_PATH", vcs.GITHUB.DOCKERCONFIGJSON_PATH)
+			os.Setenv("GIT_ACCESS_TOKEN", vcs.GITHUB.GIT_ACCESS_TOKEN)
+		} else if os.Getenv("VCS") == "gitlab" {
+			os.Setenv("SERVICE_REPO_URL", vcs.GITLAB.SERVICE_REPO_URL)
+			os.Setenv("GITOPS_REPO_URL", vcs.GITLAB.GITOPS_REPO_URL)
+			os.Setenv("IMAGE_REPO", vcs.GITLAB.IMAGE_REPO)
+			os.Setenv("BUS_REPO_URL", vcs.GITLAB.BUS_REPO_URL)
+			os.Setenv("DOCKERCONFIGJSON_PATH", vcs.GITLAB.DOCKERCONFIGJSON_PATH)
+			os.Setenv("GIT_ACCESS_TOKEN", vcs.GITLAB.GIT_ACCESS_TOKEN)
+		} else {
+			fmt.Println("VCS not set")
+			os.Exit(1)
+		}
+
+		envVars := []string{"SERVICE_REPO_URL", "GITOPS_REPO_URL", "IMAGE_REPO", "DOCKERCONFIGJSON_PATH", "GIT_ACCESS_TOKEN", "BUS_REPO_URL"}
 		for _, envVar := range envVars {
-			_, ok := os.LookupEnv(envVar)
-			if !ok {
+			value := os.Getenv(envVar)
+			if len(value) == 0 {
 				fmt.Printf("%s is not set\n", envVar)
 				return false
 			}
 		}
 
-		re := regexp.MustCompile(`[a-z]+`)
-		scm := re.FindAllString(os.Getenv("GITOPS_REPO_URL"), 2)[1]
-
-		switch scm {
-		case "github":
-			os.Setenv("GITHUB_TOKEN", os.Getenv("GIT_ACCESS_TOKEN"))
-		case "gitlab":
-			os.Setenv("GITLAB_TOKEN", os.Getenv("GIT_ACCESS_TOKEN"))
-		default:
-			fmt.Println("SCM is not supported")
-		}
 	} else {
 		if val == "prow" {
 			fmt.Printf("Running e2e test in OpenShift CI\n")
@@ -144,56 +182,32 @@ func envVariableCheck() bool {
 				fmt.Printf("OpenShift API server version not found\n")
 				return false
 			}
-			os.Setenv("SERVICE_REPO_URL", "https://github.com/kam-bot/taxi")
-			os.Setenv("GITOPS_REPO_URL", "https://github.com/kam-bot/gitops-"+os.Getenv("PRNO")+majorVersion)
-			os.Setenv("IMAGE_REPO", "quay.io/kam-bot/taxi")
-			os.Setenv("BUS_REPO_URL", "https://github.com/kam-bot/bus")
-			os.Setenv("DOCKERCONFIGJSON_PATH", os.Getenv("KAM_QUAY_DOCKER_CONF_SECRET_FILE"))
-			os.Setenv("GIT_ACCESS_TOKEN", os.Getenv("GITHUB_TOKEN"))
+			if os.Getenv("VCS") == "github" {
+				os.Setenv("SERVICE_REPO_URL", "https://github.com/kam-bot/taxi")
+				os.Setenv("GITOPS_REPO_URL", "https://github.com/kam-bot/gitops-"+os.Getenv("PRNO")+majorVersion)
+				os.Setenv("IMAGE_REPO", "quay.io/kam-bot/taxi")
+				os.Setenv("BUS_REPO_URL", "https://github.com/kam-bot/bus")
+				os.Setenv("DOCKERCONFIGJSON_PATH", os.Getenv("KAM_QUAY_DOCKER_CONF_SECRET_FILE"))
+				os.Setenv("GIT_ACCESS_TOKEN", os.Getenv("GITHUB_TOKEN"))
+			} else if os.Getenv("VCS") == "gitlab" {
+				os.Setenv("SERVICE_REPO_URL", "https://gitlab.com/kam-bot/taxi")
+				os.Setenv("GITOPS_REPO_URL", "https://gitlab.com/kam-bot/gitops-"+os.Getenv("PRNO")+majorVersion)
+				os.Setenv("IMAGE_REPO", "quay.io/kam-bot/taxi")
+				os.Setenv("BUS_REPO_URL", "https://gitlab.com/kam-bot/bus")
+				os.Setenv("DOCKERCONFIGJSON_PATH", os.Getenv("KAM_QUAY_DOCKER_CONF_SECRET_FILE"))
+				os.Setenv("GIT_ACCESS_TOKEN", os.Getenv("GITLAB_TOKEN"))
+			}
+
 		} else {
 			fmt.Printf("You cannot run e2e test locally against OpenShift CI\n")
 			return false
 		}
-		return true
 	}
 	return true
 }
 
-func deleteGitlabRepository(arg []string) (bool, string) {
-	var stderr bytes.Buffer
-	cmd := exec.Command("glab", arg...)
-	fmt.Println("gitlab command is : ", cmd.Args)
-	cmd.Stderr = &stderr
-	err := cmd.Run()
-	if err != nil {
-		return false, stderr.String()
-	}
-	return true, stderr.String()
-}
-
-func deleteGithubRepository(repoURL, token string) {
-	repo, err := git.NewRepository(repoURL, token)
-	if err != nil {
-		log.Fatal(err)
-	}
-	parsed, err := url.Parse(repoURL)
-	if err != nil {
-		log.Fatalf("failed to parse repository URL %q: %v", repoURL, err)
-	}
-	repoName, err := git.GetRepoName(parsed)
-	if err != nil {
-		log.Fatal(err)
-	}
-	_, err = repo.Repositories.Delete(context.TODO(), repoName)
-	if err != nil {
-		log.Printf("unable to delete repository %v: %v", repoName, err)
-	} else {
-		log.Printf("Successfully deleted repository: %q", repoURL)
-	}
-}
-
 func waitSync(app string, state string) error {
-	err := wait.Poll(time.Second*1, time.Minute*20, func() (bool, error) {
+	err := wait.Poll(time.Second*1, time.Minute*15, func() (bool, error) {
 		return argoAppStatusMatch(state, app)
 	})
 	if err != nil {
@@ -203,12 +217,12 @@ func waitSync(app string, state string) error {
 }
 
 func parse(repo string) (string, *scm.Client, error) {
-	parsed, err := url.Parse(os.Getenv("GITOPS_REPO_URL"))
+	parsed, err := url.Parse(repo)
 	if err != nil {
 		return "", nil, err
 	}
-	name := strings.Split(os.Getenv("GITOPS_REPO_URL"), "/")
-	parsed.User = url.UserPassword("", os.Getenv("GITHUB_TOKEN"))
+	name := strings.Split(repo, "/")
+	parsed.User = url.UserPassword("", os.Getenv("GIT_ACCESS_TOKEN"))
 	client, err := factory.FromRepoURL(parsed.String())
 	if err != nil {
 		return "", nil, err
@@ -216,29 +230,87 @@ func parse(repo string) (string, *scm.Client, error) {
 	return name[4], client, err
 }
 
+func checkRepository(repo string) error {
+	if repo == "taxi" {
+		_, _, err := parse(os.Getenv("SERVICE_REPO_URL"))
+		if err != nil {
+			return err
+		}
+	} else if repo == "bus" {
+		_, _, err := parse(os.Getenv("BUS_REPO_URL"))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func createRepository(repo string) error {
-	name, client, err := parse(repo)
+
+	name, client, err := parse(os.Getenv("GITOPS_REPO_URL"))
 	if err != nil {
 		return err
 	}
 
 	ri := &scm.RepositoryInput{
 		Private:     false,
-		Description: "repocreate",
+		Description: "",
 		Namespace:   "",
 		Name:        name,
 	}
 
 	_, _, err = client.Repositories.Create(context.Background(), ri)
+
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Created repositry: %v\n", name)
+	fmt.Printf("Created repositry: %v\n", repo)
+	return nil
+}
+
+func deleteRepository(repo string) error {
+	if os.Getenv("VCS") == "github" {
+		name, client, err := parse(repo)
+		if err != nil {
+			return err
+		}
+
+		_, err = client.Repositories.Delete(context.Background(), strings.Split(repo, ".com/")[1])
+		if err != nil {
+			return err
+		}
+		fmt.Printf("Deleted repositry: %v\n", name)
+
+		return nil
+	} else if os.Getenv("VCS") == "gitlab" {
+		var stderr bytes.Buffer
+
+		glabPath, err := executableBinaryPath("glab")
+		if err != nil {
+			return err
+		}
+
+		cmd := exec.Command(glabPath, "auth", "login", "-t", os.Getenv("GIT_ACCESS_TOKEN"))
+		cmd.Stderr = &stderr
+		err = cmd.Run()
+		if err != nil {
+			return err
+		}
+
+		cmd = exec.Command(glabPath, "repo", "delete", strings.Split(os.Getenv("GITOPS_REPO_URL"), ".com/")[1], "-y")
+		cmd.Stderr = &stderr
+		err = cmd.Run()
+		if err != nil {
+			return err
+		}
+		fmt.Printf("Deleted repositry: %v\n", os.Getenv("GITOPS_REPO_URL"))
+
+	}
 	return nil
 }
 
 func createPR() error {
-	_, client, err := parse(strings.Split(os.Getenv("GITOPS_REPO_URL"), "/")[4])
+	_, client, err := parse(os.Getenv("GITOPS_REPO_URL"))
 	if err != nil {
 		return err
 	}
@@ -250,25 +322,31 @@ func createPR() error {
 		Body:  "Add new service",
 	}
 
-	_, _, err = client.PullRequests.Create(context.Background(), strings.Split(os.Getenv("GITOPS_REPO_URL"), ".com/")[1], pr)
+	var response *scm.PullRequest
+	response, _, err = client.PullRequests.Create(context.Background(), strings.Split(os.Getenv("GITOPS_REPO_URL"), ".com/")[1], pr)
 	if err != nil {
 		return err
 	}
 	fmt.Println("PR has been created")
+	err = waitPass(response.Number)
+	if err != nil {
+		fmt.Println(err)
+	}
 	return nil
 }
 
-func mergePR() error {
-	_, client, err := parse(strings.Split(os.Getenv("GITOPS_REPO_URL"), "/")[4])
+func mergePR(number int) error {
+	_, client, err := parse(os.Getenv("GITOPS_REPO_URL"))
 	if err != nil {
 		return err
 	}
 
 	merge := &scm.PullRequestMergeOptions{
+		MergeMethod:        "merge",
 		DeleteSourceBranch: true,
 	}
 
-	_, err = client.PullRequests.Merge(context.Background(), strings.Split(os.Getenv("GITOPS_REPO_URL"), ".com/")[1], 1, merge)
+	_, err = client.PullRequests.Merge(context.Background(), strings.Split(os.Getenv("GITOPS_REPO_URL"), ".com/")[1], number, merge)
 	if err != nil {
 		return err
 	}
@@ -276,7 +354,7 @@ func mergePR() error {
 	return nil
 }
 
-func waitPass() error {
+func waitPass(number int) error {
 
 	var stderr bytes.Buffer
 	var stdout bytes.Buffer
@@ -333,7 +411,10 @@ func waitPass() error {
 	if err != nil {
 		return err
 	} else {
-		mergePR()
+		err := mergePR(number)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 	return nil
 }
