@@ -23,7 +23,7 @@ EOF
 set -x
 
 # Its not an actual secret
-ls -a $KAM_GITLAB_TOKEN_FILE 
+ls $KAM_GITLAB_TOKEN_FILE 
 
 export CI="prow"
 export PRNO="$(jq .refs.pulls[0].number <<< $(echo $JOB_SPEC))"
@@ -42,6 +42,7 @@ INSTALL_KUBECTL="./scripts/install-kubectl.sh"
 sh $INSTALL_KUBECTL
 
 INSTALL_GLAB="./scripts/install-glab.sh"
+sh $INSTALL_GLAB
 
 export PATH="$PATH:$(pwd)/bin"
 
