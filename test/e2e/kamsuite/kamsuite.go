@@ -207,7 +207,7 @@ func envVariableCheck() bool {
 }
 
 func waitSync(app string, state string) error {
-	err := wait.Poll(time.Second*1, time.Minute*15, func() (bool, error) {
+	err := wait.Poll(time.Second*1, time.Minute*20, func() (bool, error) {
 		return argoAppStatusMatch(state, app)
 	})
 	if err != nil {
@@ -247,6 +247,8 @@ func checkRepository(repo string) error {
 
 func createRepository(repo string) error {
 
+	var repository *scm.Repository
+
 	name, client, err := parse(os.Getenv("GITOPS_REPO_URL"))
 	if err != nil {
 		return err
@@ -259,12 +261,12 @@ func createRepository(repo string) error {
 		Name:        name,
 	}
 
-	_, _, err = client.Repositories.Create(context.Background(), ri)
+	repository, _, err = client.Repositories.Create(context.Background(), ri)
 
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Created repositry: %v\n", repo)
+	fmt.Printf("Created repositry: %v\n", repository.Name)
 	return nil
 }
 

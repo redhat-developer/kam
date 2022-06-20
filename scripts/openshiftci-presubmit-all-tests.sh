@@ -7,6 +7,7 @@ set -e
 set +x
 export GITHUB_TOKEN=`cat $KAM_GITHUB_TOKEN_FILE`
 export KUBEADMIN_PASSWORD=`cat $KUBEADMIN_PASSWORD_FILE`
+export GITLAB_TOKEN=`cat $KAM_GITLAB_TOKEN_FILE`
 
 gitconfig=`cat <<'EOF'
 [user]
@@ -20,13 +21,6 @@ EOF
 
 # show commands
 set -x
-
-# Its not an actual secret 
-export GITLAB_TOKEN=`cat $KAM_GITLAB_TOKEN_FILE`
-echo $GITLAB_TOKEN
-
-# In case its a directory
-ls $KAM_GITLAB_TOKEN_FILE 
 
 export CI="prow"
 export PRNO="$(jq .refs.pulls[0].number <<< $(echo $JOB_SPEC))"
