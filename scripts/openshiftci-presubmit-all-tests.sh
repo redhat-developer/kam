@@ -16,6 +16,9 @@ email = kambotuser@gmail.com
 [credential "https://github.com"]
 username = kam-bot
 helper = "!f() { test \"$1\" = get && echo \"password=$(cat $KAM_GITHUB_TOKEN_FILE)\"; }; f"
+[credential "https://gitlab.com"]
+username = kam-bot
+helper = "!f() { test \"$1\" = get && echo \"password=$(cat $KAM_GITLAB_TOKEN_FILE)\"; }; f"
 EOF
 `
 
