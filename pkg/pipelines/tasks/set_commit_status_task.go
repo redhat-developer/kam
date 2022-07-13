@@ -28,7 +28,7 @@ func CreateCommitStatusTask(namespace string) *pipelinev1.Task {
 				{
 					Container: v1.Container{
 						Name:  "set-commit-status",
-						Image: "quay.io/redhat-developer/gitops-commit-status@sha256:ef5b3b242bf3b42a3a5d3ff74b3c7d495c608297b7428ae57b8ece10954e7546",
+						Image: "quay.io/redhat-developer/gitops-commit-status@sha256:bce4bd73d5394551f0640a6f07f5fef6d5d54bbf201c3d9b5ecc9a7ff86dd988",
 						Env: []v1.EnvVar{
 							{
 								Name: "GITHOSTACCESSTOKEN",
