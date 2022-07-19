@@ -3,6 +3,7 @@ package cmd
 import (
 	"log"
 
+	bootstrapnew "github.com/redhat-developer/kam/pkg/cmd/component"
 	"github.com/redhat-developer/kam/pkg/cmd/environment"
 	"github.com/redhat-developer/kam/pkg/cmd/service"
 	"github.com/redhat-developer/kam/pkg/cmd/utility"
@@ -34,6 +35,7 @@ func MakeRootCmd() *cobra.Command {
 		webhook.NewCmdWebhook(webhook.RecommendedCommandName, utility.GetFullName(fullName, webhook.RecommendedCommandName)),
 		NewCmdBuild(BuildRecommendedCommandName, utility.GetFullName(fullName, BuildRecommendedCommandName)),
 		completionCmd,
+		bootstrapnew.NewCmdComponent(bootstrapnew.ComponentRecommendedCommandName, utility.GetFullName(fullName, bootstrapnew.ComponentRecommendedCommandName)),
 	)
 	return rootCmd
 }

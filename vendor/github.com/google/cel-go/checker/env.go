@@ -20,6 +20,7 @@ import (
 
 	"github.com/google/cel-go/checker/decls"
 	"github.com/google/cel-go/common/containers"
+	"github.com/google/cel-go/common/overloads"
 	"github.com/google/cel-go/common/types"
 	"github.com/google/cel-go/common/types/pb"
 	"github.com/google/cel-go/common/types/ref"
@@ -35,49 +36,76 @@ const (
 	homogenousElementType aggregateLiteralElementType = 1 << iota
 )
 
+var (
+	crossTypeNumericComparisonOverloads = map[string]struct{}{
+		// double <-> int | uint
+		overloads.LessDoubleInt64:           {},
+		overloads.LessDoubleUint64:          {},
+		overloads.LessEqualsDoubleInt64:     {},
+		overloads.LessEqualsDoubleUint64:    {},
+		overloads.GreaterDoubleInt64:        {},
+		overloads.GreaterDoubleUint64:       {},
+		overloads.GreaterEqualsDoubleInt64:  {},
+		overloads.GreaterEqualsDoubleUint64: {},
+		// int <-> double | uint
+		overloads.LessInt64Double:          {},
+		overloads.LessInt64Uint64:          {},
+		overloads.LessEqualsInt64Double:    {},
+		overloads.LessEqualsInt64Uint64:    {},
+		overloads.GreaterInt64Double:       {},
+		overloads.GreaterInt64Uint64:       {},
+		overloads.GreaterEqualsInt64Double: {},
+		overloads.GreaterEqualsInt64Uint64: {},
+		// uint <-> double | int
+		overloads.LessUint64Double:          {},
+		overloads.LessUint64Int64:           {},
+		overloads.LessEqualsUint64Double:    {},
+		overloads.LessEqualsUint64Int64:     {},
+		overloads.GreaterUint64Double:       {},
+		overloads.GreaterUint64Int64:        {},
+		overloads.GreaterEqualsUint64Double: {},
+		overloads.GreaterEqualsUint64Int64:  {},
+	}
+)
+
 // Env is the environment for type checking.
 //
 // The Env is comprised of a container, type provider, declarations, and other related objects
 // which can be used to assist with type-checking.
 type Env struct {
-	container      *containers.Container
-	provider       ref.TypeProvider
-	declarations   *decls.Scopes
-	aggLitElemType aggregateLiteralElementType
+	container           *containers.Container
+	provider            ref.TypeProvider
+	declarations        *decls.Scopes
+	aggLitElemType      aggregateLiteralElementType
+	filteredOverloadIDs map[string]struct{}
 }
 
 // NewEnv returns a new *Env with the given parameters.
-func NewEnv(container *containers.Container, provider ref.TypeProvider) *Env {
+func NewEnv(container *containers.Container, provider ref.TypeProvider, opts ...Option) (*Env, error) {
 	declarations := decls.NewScopes()
 	declarations.Push()
 
+	envOptions := &options{}
+	for _, opt := range opts {
+		if err := opt(envOptions); err != nil {
+			return nil, err
+		}
+	}
+	aggLitElemType := dynElementType
+	if envOptions.homogeneousAggregateLiterals {
+		aggLitElemType = homogenousElementType
+	}
+	filteredOverloadIDs := crossTypeNumericComparisonOverloads
+	if envOptions.crossTypeNumericComparisons {
+		filteredOverloadIDs = make(map[string]struct{})
+	}
 	return &Env{
-		container:    container,
-		provider:     provider,
-		declarations: declarations,
-	}
-}
-
-// NewStandardEnv returns a new *Env with the given params plus standard declarations.
-func NewStandardEnv(container *containers.Container, provider ref.TypeProvider) *Env {
-	e := NewEnv(container, provider)
-	if err := e.Add(StandardDeclarations()...); err != nil {
-		// The standard declaration set should never have duplicate declarations.
-		panic(err)
-	}
-	// TODO: isolate standard declarations from the custom set which may be provided layer.
-	return e
-}
-
-// EnableDynamicAggregateLiterals detmerines whether list and map literals may support mixed
-// element types at check-time. This does not preclude the presence of a dynamic list or map
-// somewhere in the CEL evaluation process.
-func (e *Env) EnableDynamicAggregateLiterals(enabled bool) *Env {
-	e.aggLitElemType = dynElementType
-	if !enabled {
-		e.aggLitElemType = homogenousElementType
-	}
-	return e
+		container:           container,
+		provider:            provider,
+		declarations:        declarations,
+		aggLitElemType:      aggLitElemType,
+		filteredOverloadIDs: filteredOverloadIDs,
+	}, nil
 }
 
 // Add adds new Decl protos to the Env.
@@ -189,6 +217,9 @@ func (e *Env) addFunction(decl *exprpb.Decl) []errorMsg {
 
 	errorMsgs := make([]errorMsg, 0)
 	for _, overload := range decl.GetFunction().GetOverloads() {
+		if _, found := e.filteredOverloadIDs[overload.GetOverloadId()]; found {
+			continue
+		}
 		errorMsgs = append(errorMsgs, e.addOverload(current, overload)...)
 	}
 	return errorMsgs
@@ -231,34 +262,26 @@ func sanitizeFunction(decl *exprpb.Decl) *exprpb.Decl {
 	}
 
 	// Sanitize all of the overloads if any overload requires an update to its type references.
-	overloads := make([]*exprpb.Decl_FunctionDecl_Overload, 0, len(fn.GetOverloads()))
+	overloads := make([]*exprpb.Decl_FunctionDecl_Overload, len(fn.GetOverloads()))
 	for i, o := range fn.GetOverloads() {
-		var sanitized bool
 		rt := o.GetResultType()
 		if isObjectWellKnownType(rt) {
 			rt = getObjectWellKnownType(rt)
-			sanitized = true
 		}
-		params := make([]*exprpb.Type, 0, len(o.GetParams()))
+		params := make([]*exprpb.Type, len(o.GetParams()))
 		copy(params, o.GetParams())
 		for j, p := range params {
 			if isObjectWellKnownType(p) {
 				params[j] = getObjectWellKnownType(p)
-				sanitized = true
 			}
 		}
 		// If sanitized, replace the overload definition.
-		if sanitized {
-			if o.IsInstanceFunction {
-				overloads[i] =
-					decls.NewInstanceOverload(o.GetOverloadId(), params, rt)
-			} else {
-				overloads[i] =
-					decls.NewOverload(o.GetOverloadId(), params, rt)
-			}
+		if o.IsInstanceFunction {
+			overloads[i] =
+				decls.NewInstanceOverload(o.GetOverloadId(), params, rt)
 		} else {
-			// Otherwise, preserve the original overload.
-			overloads[i] = o
+			overloads[i] =
+				decls.NewOverload(o.GetOverloadId(), params, rt)
 		}
 	}
 	return decls.NewFunction(decl.GetName(), overloads...)

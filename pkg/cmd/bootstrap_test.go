@@ -62,6 +62,7 @@ func TestValidatePrefix(t *testing.T) {
 		if o.Prefix != tt.wantPrefix {
 			t.Errorf("Validate() %#v prefix: got %s, want %s", tt.name, o.Prefix, tt.wantPrefix)
 		}
+
 	}
 }
 
