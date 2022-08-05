@@ -73,9 +73,9 @@ prepare-test-cluster:
 .PHONY: e2e
 e2e:	
 	export VCS=github && \
-	go test --timeout=180m ./test/e2e -v --godog.tags=$$VCS || true
+	go test --timeout=180m ./test/e2e -v --godog.tags=basic || true
 	export VCS=gitlab && \
-	go test --timeout=180m ./test/e2e -v --godog.tags=$$VCS 
+	go test --timeout=180m ./test/e2e -v --godog.tags=basic
 
 .PHONY: e2e-local
 e2e-local:

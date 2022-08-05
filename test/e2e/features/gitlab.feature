@@ -1,6 +1,11 @@
-@gitlab
-Feature: GitLab test
+@basic
+Feature: basic test
     Checks whether KAM top-level commands behave correctly.
+
+    Scenario: KAM version
+        When executing "kam version" succeeds
+        Then stderr should be empty
+        And stdout should match "kam\sversion\sv\d+\.\d+\.\d+"
 
     Scenario: Execute KAM bootstrap command without --overwrite flag
         When executing "kam bootstrap --service-repo-url $SERVICE_REPO_URL --gitops-repo-url $GITOPS_REPO_URL --image-repo $IMAGE_REPO --dockercfgjson $DOCKERCONFIGJSON_PATH --git-host-access-token $GIT_ACCESS_TOKEN --output bootstrapresources" succeeds
@@ -16,7 +21,7 @@ Feature: GitLab test
         When executing "kam bootstrap --service-repo-url $SERVICE_REPO_URL --gitops-repo-url $GITOPS_REPO_URL" fails
         Then exitcode should not equal "0"
 
-    Scenario: Public GitLab repository without --push-to-git flag 
+    Scenario: Public repository without --push-to-git flag 
         Given "gitops" repository is created
         Given "taxi" repository exists
         Given "bus" repository exists
@@ -25,7 +30,7 @@ Feature: GitLab test
         And executing "git init ." succeeds
         And executing "git add ." succeeds
         And executing "git commit -m 'Initial commit.'" succeeds
-        And executing "git remote add origin $GITOPS_REPO_URL'.git'" succeeds
+        And executing "git remote add origin $GITOPS_REPO_URL" succeeds
         And executing "git branch -M main" succeeds
         And executing "git push -u origin main" succeeds
         Then executing "oc apply -k config/argocd/" succeeds
@@ -64,5 +69,5 @@ Feature: GitLab test
         And executing "kam webhook delete --git-host-access-token $GIT_ACCESS_TOKEN --env-name new-env --service-name bus --pipelines-folder ." succeeds
         And executing "kam webhook delete --git-host-access-token $GIT_ACCESS_TOKEN --env-name dev --service-name taxi" succeeds
         And executing "oc delete -f ../secrets" succeeds
-        And executing "oc delete ns cicd dev new-env stage" succeeds
         And executing "oc delete -k config/argocd/" succeeds
+        And executing "oc delete ns cicd dev new-env stage" succeeds
