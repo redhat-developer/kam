@@ -89,6 +89,7 @@ NOTE: See the [Gherkin Reference](https://cucumber.io/docs/gherkin/reference/) f
 
 To run the e2e test locally, provide values for SERVICE_REPO_URL, GITOPS_REPO_URL, BUS_REPO_URL, IMAGE_REPO, DOCKERCONFIGJSON_PATH and GIT_ACCESS_TOKEN in variables.json file
 
+For example:
 
 ```
 SERVICE_REPO_URL=<Provide the URL for your Service repository>
@@ -99,7 +100,7 @@ DOCKERCONFIGJSON_PATH=<Filepath to config.json which authenticates the image pus
 GIT_ACCESS_TOKEN=<Used to authenticate repository clones, and commit-status notifications (if enabled)>
 ```
 
-Then run the command `make e2e`. Target `make e2e` runs the test scenario under `@github` and `@gitlab` tag.
+Then run the command `make e2e`. Target `make e2e` runs the test scenario under `@basic` tag.
 
 For running test scenarios which are specifically design for local verification, use target `make e2e-local`. Target `make e2e-local` runs the test scenario under `@local` tag.
 
