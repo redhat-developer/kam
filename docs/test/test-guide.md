@@ -87,12 +87,13 @@ NOTE: See the [Gherkin Reference](https://cucumber.io/docs/gherkin/reference/) f
 
 #### Run E2E test locally:
 
-To run the e2e test locally, user need to set the environment variables SERVICE_REPO_URL, GITOPS_REPO_URL, IMAGE_REPO, DOCKERCONFIGJSON_PATH and GIT_ACCESS_TOKEN corresponding to its flag --service-repo-url, --gitops-repo-url, --image-repo, --dockercfgjson and --git-host-access-token respectively. Provide variables.json file with respective data and kamsuite.go will set all the required variables.
+To run the e2e test locally, provide values for SERVICE_REPO_URL, GITOPS_REPO_URL, BUS_REPO_URL, IMAGE_REPO, DOCKERCONFIGJSON_PATH and GIT_ACCESS_TOKEN in variables.json file
 
 
 ```
 SERVICE_REPO_URL=<Provide the URL for your Service repository>
 GITOPS_REPO_URL=<Provide the URL for your GitOps repository>
+BUS_REPO_URL=<Provide the URL for yet another Service repository>
 IMAGE_REPO=<Image repository which is used to push newly built images>
 DOCKERCONFIGJSON_PATH=<Filepath to config.json which authenticates the image push to the desired image registry>
 GIT_ACCESS_TOKEN=<Used to authenticate repository clones, and commit-status notifications (if enabled)>

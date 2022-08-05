@@ -35,7 +35,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^directory "([^"]*)" should exist$`,
 		DirectoryShouldExist)
 
-	// For creating repository with name specified in basic.feature
+	// For creating repository with specified name
 	s.Step(`^"([^"]*)" repository is created$`,
 		createRepository)
 
