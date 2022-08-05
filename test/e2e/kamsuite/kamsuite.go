@@ -183,17 +183,17 @@ func envVariableCheck() bool {
 				return false
 			}
 			if os.Getenv("VCS") == "github" {
-				os.Setenv("SERVICE_REPO_URL", "https://github.com/kam-bot/taxi")
-				os.Setenv("GITOPS_REPO_URL", "https://github.com/kam-bot/gitops-"+os.Getenv("PRNO")+majorVersion)
-				os.Setenv("IMAGE_REPO", "quay.io/kam-bot/taxi")
-				os.Setenv("BUS_REPO_URL", "https://github.com/kam-bot/bus")
+				os.Setenv("SERVICE_REPO_URL", vcs.GITHUB.SERVICE_REPO_URL)
+				os.Setenv("GITOPS_REPO_URL", vcs.GITHUB.GITOPS_REPO_URL+os.Getenv("PRNO")+majorVersion)
+				os.Setenv("IMAGE_REPO", vcs.GITHUB.IMAGE_REPO)
+				os.Setenv("BUS_REPO_URL", vcs.GITHUB.BUS_REPO_URL)
 				os.Setenv("DOCKERCONFIGJSON_PATH", os.Getenv("KAM_QUAY_DOCKER_CONF_SECRET_FILE"))
 				os.Setenv("GIT_ACCESS_TOKEN", os.Getenv("GITHUB_TOKEN"))
 			} else if os.Getenv("VCS") == "gitlab" {
-				os.Setenv("SERVICE_REPO_URL", "https://gitlab.com/kam-bot/taxi")
-				os.Setenv("GITOPS_REPO_URL", "https://gitlab.com/kam-bot/gitops-"+os.Getenv("PRNO")+majorVersion)
-				os.Setenv("IMAGE_REPO", "quay.io/kam-bot/taxi")
-				os.Setenv("BUS_REPO_URL", "https://gitlab.com/kam-bot/bus")
+				os.Setenv("SERVICE_REPO_URL", vcs.GITLAB.SERVICE_REPO_URL)
+				os.Setenv("GITOPS_REPO_URL", vcs.GITLAB.GITOPS_REPO_URL+os.Getenv("PRNO")+majorVersion)
+				os.Setenv("IMAGE_REPO", vcs.GITLAB.IMAGE_REPO)
+				os.Setenv("BUS_REPO_URL", vcs.GITLAB.BUS_REPO_URL)
 				os.Setenv("DOCKERCONFIGJSON_PATH", os.Getenv("KAM_QUAY_DOCKER_CONF_SECRET_FILE"))
 				os.Setenv("GIT_ACCESS_TOKEN", os.Getenv("GITLAB_TOKEN"))
 			}
