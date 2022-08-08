@@ -123,28 +123,28 @@ func envVariableCheck() bool {
 	var stdout bytes.Buffer
 	var vcs VCS
 
-	cmd := exec.Command("pwd")
-	cmd.Stdout = &stdout
-
-	err := cmd.Run()
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	jsonFile, err := os.Open(strings.Split(stdout.String(), "/test")[0] + "/variables.json")
-	if err != nil {
-		fmt.Println(err)
-		fmt.Println("Configuration file not set")
-		return false
-	}
-
-	defer jsonFile.Close()
-
-	byteValue, _ := ioutil.ReadAll(jsonFile)
-	json.Unmarshal(byteValue, &vcs)
-
 	val, ok := os.LookupEnv("CI")
 	if !ok {
+
+		cmd := exec.Command("pwd")
+		cmd.Stdout = &stdout
+
+		err := cmd.Run()
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		jsonFile, err := os.Open(strings.Split(stdout.String(), "/test")[0] + "/variables.json")
+		if err != nil {
+			fmt.Println(err)
+			fmt.Println("Configuration file not set")
+			return false
+		}
+
+		defer jsonFile.Close()
+
+		byteValue, _ := ioutil.ReadAll(jsonFile)
+		json.Unmarshal(byteValue, &vcs)
 
 		if os.Getenv("VCS") == "github" {
 			os.Setenv("SERVICE_REPO_URL", vcs.GITHUB.SERVICE_REPO_URL)
@@ -196,9 +196,6 @@ func envVariableCheck() bool {
 				os.Setenv("BUS_REPO_URL", vcs.GITLAB.BUS_REPO_URL)
 				os.Setenv("DOCKERCONFIGJSON_PATH", os.Getenv("KAM_QUAY_DOCKER_CONF_SECRET_FILE"))
 				os.Setenv("GIT_ACCESS_TOKEN", os.Getenv("GITLAB_TOKEN"))
-			} else {
-				fmt.Println("VCS not set")
-				os.Exit(1)
 			}
 
 		} else {
