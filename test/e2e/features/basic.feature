@@ -30,7 +30,7 @@ Feature: basic test
         And executing "git init ." succeeds
         And executing "git add ." succeeds
         And executing "git commit -m 'Initial commit.'" succeeds
-        And executing "git remote add origin $GITOPS_REPO_URL" succeeds
+        And executing "git remote add origin $GITOPS_REPO_URL'.git'" succeeds
         And executing "git branch -M main" succeeds
         And executing "git push -u origin main" succeeds
         Then executing "oc apply -k config/argocd/" succeeds
