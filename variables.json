@@ -1,19 +1,19 @@
 {
     "github":
         {
-            "service_repo_url":"",
-            "gitops_repo_url":"",
-            "image_repo":"",
-            "bus_repo_url":"",
+            "service_repo_url":"https://github.com/kam-bot/taxi",
+            "gitops_repo_url":"https://github.com/kam-bot/gitops",
+            "image_repo":"quay.io/kam-bot/taxi",
+            "bus_repo_url":"https://github.com/kam-bot/bus",
             "dockerconfigjson_path":"",
             "git_access_token":""
         },
     "gitlab":
         {
-            "service_repo_url":"",
-            "gitops_repo_url":"",
-            "image_repo":"",
-            "bus_repo_url":"",
+            "service_repo_url":"https://gitlab.com/kam-bot/taxi",
+            "gitops_repo_url":"https://gitlab.com/kam-bot/gitops",
+            "image_repo":"quay.io/kam-bot/taxi",
+            "bus_repo_url":"https://gitlab.com/kam-bot/bus",
             "dockerconfigjson_path":"",
             "git_access_token":""
         }

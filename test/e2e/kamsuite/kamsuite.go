@@ -123,41 +123,47 @@ func envVariableCheck() bool {
 	var stdout bytes.Buffer
 	var vcs VCS
 
-	val, ok := os.LookupEnv("CI")
-	if !ok {
+	cmd := exec.Command("pwd")
+	cmd.Stdout = &stdout
 
-		cmd := exec.Command("pwd")
-		cmd.Stdout = &stdout
+	err := cmd.Run()
+	if err != nil {
+		fmt.Println(err)
+	}
 
-		err := cmd.Run()
-		if err != nil {
-			fmt.Println(err)
-		}
+	jsonFile, err := os.Open(strings.Split(stdout.String(), "/test")[0] + "/variables.json")
+	if err != nil {
+		fmt.Println(err)
+		fmt.Println("Configuration file not set")
+		return false
+	}
 
-		jsonFile, err := os.Open(strings.Split(stdout.String(), "/test")[0] + "/variables.json")
-		if err != nil {
-			fmt.Println(err)
-			fmt.Println("Configuration file not set")
-			return false
-		}
+	defer jsonFile.Close()
 
-		defer jsonFile.Close()
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+	json.Unmarshal(byteValue, &vcs)
 
-		byteValue, _ := ioutil.ReadAll(jsonFile)
-		json.Unmarshal(byteValue, &vcs)
+	if os.Getenv("VCS") == "github" {
+		os.Setenv("SERVICE_REPO_URL", vcs.GITHUB.SERVICE_REPO_URL)
+		os.Setenv("GITOPS_REPO_URL", vcs.GITHUB.GITOPS_REPO_URL)
+		os.Setenv("IMAGE_REPO", vcs.GITHUB.IMAGE_REPO)
+		os.Setenv("BUS_REPO_URL", vcs.GITHUB.BUS_REPO_URL)
+	} else if os.Getenv("VCS") == "gitlab" {
+		os.Setenv("SERVICE_REPO_URL", vcs.GITLAB.SERVICE_REPO_URL)
+		os.Setenv("GITOPS_REPO_URL", vcs.GITLAB.GITOPS_REPO_URL)
+		os.Setenv("IMAGE_REPO", vcs.GITLAB.IMAGE_REPO)
+		os.Setenv("BUS_REPO_URL", vcs.GITLAB.BUS_REPO_URL)
+	} else {
+		fmt.Println("VCS not set")
+		os.Exit(1)
+	}
 
+	val, prow := os.LookupEnv("CI")
+	if !prow {
 		if os.Getenv("VCS") == "github" {
-			os.Setenv("SERVICE_REPO_URL", vcs.GITHUB.SERVICE_REPO_URL)
-			os.Setenv("GITOPS_REPO_URL", vcs.GITHUB.GITOPS_REPO_URL)
-			os.Setenv("IMAGE_REPO", vcs.GITHUB.IMAGE_REPO)
-			os.Setenv("BUS_REPO_URL", vcs.GITHUB.BUS_REPO_URL)
 			os.Setenv("DOCKERCONFIGJSON_PATH", vcs.GITHUB.DOCKERCONFIGJSON_PATH)
 			os.Setenv("GIT_ACCESS_TOKEN", vcs.GITHUB.GIT_ACCESS_TOKEN)
 		} else if os.Getenv("VCS") == "gitlab" {
-			os.Setenv("SERVICE_REPO_URL", vcs.GITLAB.SERVICE_REPO_URL)
-			os.Setenv("GITOPS_REPO_URL", vcs.GITLAB.GITOPS_REPO_URL)
-			os.Setenv("IMAGE_REPO", vcs.GITLAB.IMAGE_REPO)
-			os.Setenv("BUS_REPO_URL", vcs.GITLAB.BUS_REPO_URL)
 			os.Setenv("DOCKERCONFIGJSON_PATH", vcs.GITLAB.DOCKERCONFIGJSON_PATH)
 			os.Setenv("GIT_ACCESS_TOKEN", vcs.GITLAB.GIT_ACCESS_TOKEN)
 		} else {
@@ -165,37 +171,27 @@ func envVariableCheck() bool {
 			os.Exit(1)
 		}
 
-		envVars := []string{"SERVICE_REPO_URL", "GITOPS_REPO_URL", "IMAGE_REPO", "DOCKERCONFIGJSON_PATH", "GIT_ACCESS_TOKEN", "BUS_REPO_URL"}
-		for _, envVar := range envVars {
-			value := os.Getenv(envVar)
-			if len(value) == 0 {
-				fmt.Printf("%s is not set\n", envVar)
-				return false
-			}
-		}
-
 	} else {
 		if val == "prow" {
 			fmt.Printf("Running e2e test in OpenShift CI\n")
+
 			majorVersion, err := openhiftServerVersion()
 			if err != nil {
 				fmt.Printf("OpenShift API server version not found\n")
 				return false
 			}
+
 			if os.Getenv("VCS") == "github" {
-				os.Setenv("SERVICE_REPO_URL", "https://github.com/kam-bot/taxi")
-				os.Setenv("GITOPS_REPO_URL", "https://github.com/kam-bot/gitops-"+os.Getenv("PRNO")+majorVersion)
-				os.Setenv("IMAGE_REPO", "quay.io/kam-bot/taxi")
-				os.Setenv("BUS_REPO_URL", "https://github.com/kam-bot/bus")
+				os.Setenv("GITOPS_REPO_URL", os.Getenv("GITOPS_REPO_URL")+os.Getenv("PRNO")+majorVersion)
 				os.Setenv("DOCKERCONFIGJSON_PATH", os.Getenv("KAM_QUAY_DOCKER_CONF_SECRET_FILE"))
 				os.Setenv("GIT_ACCESS_TOKEN", os.Getenv("GITHUB_TOKEN"))
 			} else if os.Getenv("VCS") == "gitlab" {
-				os.Setenv("SERVICE_REPO_URL", "https://gitlab.com/kam-bot/taxi")
-				os.Setenv("GITOPS_REPO_URL", "https://gitlab.com/kam-bot/gitops-"+os.Getenv("PRNO")+majorVersion)
-				os.Setenv("IMAGE_REPO", "quay.io/kam-bot/taxi")
-				os.Setenv("BUS_REPO_URL", "https://gitlab.com/kam-bot/bus")
+				os.Setenv("GITOPS_REPO_URL", os.Getenv("GITOPS_REPO_URL")+os.Getenv("PRNO")+majorVersion)
 				os.Setenv("DOCKERCONFIGJSON_PATH", os.Getenv("KAM_QUAY_DOCKER_CONF_SECRET_FILE"))
 				os.Setenv("GIT_ACCESS_TOKEN", os.Getenv("GITLAB_TOKEN"))
+			} else {
+				fmt.Println("VCS not set")
+				os.Exit(1)
 			}
 
 		} else {
@@ -203,6 +199,16 @@ func envVariableCheck() bool {
 			return false
 		}
 	}
+
+	envVars := []string{"SERVICE_REPO_URL", "GITOPS_REPO_URL", "IMAGE_REPO", "DOCKERCONFIGJSON_PATH", "GIT_ACCESS_TOKEN", "BUS_REPO_URL"}
+	for _, envVar := range envVars {
+		value := os.Getenv(envVar)
+		if len(value) == 0 {
+			fmt.Printf("%s is not set\n", envVar)
+			return false
+		}
+	}
+
 	return true
 }
 
