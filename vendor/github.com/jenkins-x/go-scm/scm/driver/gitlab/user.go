@@ -36,7 +36,7 @@ func (s *userService) FindLogin(ctx context.Context, login string) (*scm.User, *
 	var resp *scm.Response
 	var err error
 	firstRun := false
-	opts := scm.ListOptions{
+	opts := &scm.ListOptions{
 		Page: 1,
 	}
 	for !firstRun || (resp != nil && opts.Page <= resp.Page.Last) {

@@ -24,12 +24,12 @@ func (s *organizationService) Delete(context.Context, string) (*scm.Response, er
 	return nil, scm.ErrNotSupported
 }
 
-func (s *organizationService) IsMember(ctx context.Context, org string, user string) (bool, *scm.Response, error) {
+func (s *organizationService) IsMember(ctx context.Context, org, user string) (bool, *scm.Response, error) {
 	var resp *scm.Response
 	var users []scm.User
 	var err error
 	firstRun := false
-	opts := scm.ListOptions{
+	opts := &scm.ListOptions{
 		Page: 1,
 	}
 	for !firstRun || (resp != nil && opts.Page <= resp.Page.Last) {
@@ -38,8 +38,8 @@ func (s *organizationService) IsMember(ctx context.Context, org string, user str
 			return false, resp, err
 		}
 		firstRun = true
-		for _, u := range users {
-			if u.Login == user {
+		for k := range users {
+			if users[k].Login == user {
 				return true, resp, nil
 			}
 		}
@@ -48,34 +48,34 @@ func (s *organizationService) IsMember(ctx context.Context, org string, user str
 	return false, resp, err
 }
 
-func (s *organizationService) IsAdmin(ctx context.Context, org string, user string) (bool, *scm.Response, error) {
+func (s *organizationService) IsAdmin(ctx context.Context, org, user string) (bool, *scm.Response, error) {
 	// TODO implement me
 	return false, nil, nil
 }
 
-func (s *organizationService) ListTeams(ctx context.Context, org string, ops scm.ListOptions) ([]*scm.Team, *scm.Response, error) {
+func (s *organizationService) ListTeams(ctx context.Context, org string, opts *scm.ListOptions) ([]*scm.Team, *scm.Response, error) {
 	// TODO implement me
 	return nil, nil, nil
 }
 
-func (s *organizationService) ListTeamMembers(ctx context.Context, id int, role string, ops scm.ListOptions) ([]*scm.TeamMember, *scm.Response, error) {
+func (s *organizationService) ListTeamMembers(ctx context.Context, id int, role string, opts *scm.ListOptions) ([]*scm.TeamMember, *scm.Response, error) {
 	// TODO implement me
 	return nil, nil, nil
 }
 
-func (s *organizationService) ListOrgMembers(ctx context.Context, org string, ops scm.ListOptions) ([]*scm.TeamMember, *scm.Response, error) {
-	users, res, err := s.ListMemberUsers(ctx, org, ops)
+func (s *organizationService) ListOrgMembers(ctx context.Context, org string, opts *scm.ListOptions) ([]*scm.TeamMember, *scm.Response, error) {
+	users, res, err := s.ListMemberUsers(ctx, org, opts)
 	if err != nil {
 		return nil, res, err
 	}
 	var members []*scm.TeamMember
-	for _, u := range users {
-		members = append(members, &scm.TeamMember{Login: u.Login})
+	for k := range users {
+		members = append(members, &scm.TeamMember{Login: users[k].Login})
 	}
 	return members, res, nil
 }
 
-func (s *organizationService) ListMemberUsers(ctx context.Context, org string, opts scm.ListOptions) ([]scm.User, *scm.Response, error) {
+func (s *organizationService) ListMemberUsers(ctx context.Context, org string, opts *scm.ListOptions) ([]scm.User, *scm.Response, error) {
 	path := fmt.Sprintf("api/v4/groups/%s/members/all?%s", org, encodeListOptions(opts))
 	out := []*user{}
 	res, err := s.client.do(ctx, "GET", path, nil, &out)
@@ -89,14 +89,14 @@ func (s *organizationService) Find(ctx context.Context, name string) (*scm.Organ
 	return convertOrganization(out), res, err
 }
 
-func (s *organizationService) List(ctx context.Context, opts scm.ListOptions) ([]*scm.Organization, *scm.Response, error) {
+func (s *organizationService) List(ctx context.Context, opts *scm.ListOptions) ([]*scm.Organization, *scm.Response, error) {
 	path := fmt.Sprintf("api/v4/groups?%s", encodeListOptions(opts))
 	out := []*organization{}
 	res, err := s.client.do(ctx, "GET", path, nil, &out)
 	return convertOrganizationList(out), res, err
 }
 
-func (s *organizationService) ListPendingInvitations(ctx context.Context, org string, opts scm.ListOptions) ([]*scm.OrganizationPendingInvite, *scm.Response, error) {
+func (s *organizationService) ListPendingInvitations(ctx context.Context, org string, opts *scm.ListOptions) ([]*scm.OrganizationPendingInvite, *scm.Response, error) {
 	return nil, nil, scm.ErrNotSupported
 }
 
@@ -104,7 +104,7 @@ func (s *organizationService) AcceptOrganizationInvitation(ctx context.Context, 
 	return nil, scm.ErrNotSupported
 }
 
-func (s *organizationService) ListMemberships(ctx context.Context, opts scm.ListOptions) ([]*scm.Membership, *scm.Response, error) {
+func (s *organizationService) ListMemberships(ctx context.Context, opts *scm.ListOptions) ([]*scm.Membership, *scm.Response, error) {
 	return nil, nil, scm.ErrNotSupported
 }
 

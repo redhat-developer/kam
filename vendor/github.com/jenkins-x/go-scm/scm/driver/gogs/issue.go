@@ -29,11 +29,11 @@ func (s *issueService) UnassignIssue(ctx context.Context, repo string, number in
 	return nil, scm.ErrNotSupported
 }
 
-func (s *issueService) ListEvents(context.Context, string, int, scm.ListOptions) ([]*scm.ListedIssueEvent, *scm.Response, error) {
+func (s *issueService) ListEvents(context.Context, string, int, *scm.ListOptions) ([]*scm.ListedIssueEvent, *scm.Response, error) {
 	return nil, nil, scm.ErrNotSupported
 }
 
-func (s *issueService) ListLabels(context.Context, string, int, scm.ListOptions) ([]*scm.Label, *scm.Response, error) {
+func (s *issueService) ListLabels(context.Context, string, int, *scm.ListOptions) ([]*scm.Label, *scm.Response, error) {
 	return nil, nil, scm.ErrNotSupported
 }
 
@@ -63,7 +63,7 @@ func (s *issueService) List(ctx context.Context, repo string, _ scm.IssueListOpt
 	return convertIssueList(out), res, err
 }
 
-func (s *issueService) ListComments(ctx context.Context, repo string, index int, _ scm.ListOptions) ([]*scm.Comment, *scm.Response, error) {
+func (s *issueService) ListComments(ctx context.Context, repo string, index int, _ *scm.ListOptions) ([]*scm.Comment, *scm.Response, error) {
 	path := fmt.Sprintf("api/v1/repos/%s/issues/%d/comments", repo, index)
 	out := []*issueComment{}
 	res, err := s.client.do(ctx, "GET", path, nil, &out)
@@ -96,7 +96,7 @@ func (s *issueService) DeleteComment(ctx context.Context, repo string, index, id
 	return s.client.do(ctx, "DELETE", path, nil, nil)
 }
 
-func (s *issueService) EditComment(ctx context.Context, repo string, number int, id int, input *scm.CommentInput) (*scm.Comment, *scm.Response, error) {
+func (s *issueService) EditComment(ctx context.Context, repo string, number, id int, input *scm.CommentInput) (*scm.Comment, *scm.Response, error) {
 	return nil, nil, scm.ErrNotSupported
 }
 
@@ -116,7 +116,7 @@ func (s *issueService) Unlock(ctx context.Context, repo string, number int) (*sc
 	return nil, scm.ErrNotSupported
 }
 
-func (s *issueService) SetMilestone(ctx context.Context, repo string, issueID int, number int) (*scm.Response, error) {
+func (s *issueService) SetMilestone(ctx context.Context, repo string, issueID, number int) (*scm.Response, error) {
 	return nil, scm.ErrNotSupported
 }
 

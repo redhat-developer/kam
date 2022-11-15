@@ -21,7 +21,7 @@ func (s *issueService) Search(context.Context, scm.SearchOptions) ([]*scm.Search
 	return nil, nil, nil
 }
 
-func (s *issueService) ListEvents(ctx context.Context, repo string, number int, opts scm.ListOptions) ([]*scm.ListedIssueEvent, *scm.Response, error) {
+func (s *issueService) ListEvents(ctx context.Context, repo string, number int, opts *scm.ListOptions) ([]*scm.ListedIssueEvent, *scm.Response, error) {
 	f := s.data
 	return append([]*scm.ListedIssueEvent{}, f.IssueEvents[number]...), nil, nil
 }
@@ -38,7 +38,7 @@ func (s *issueService) Find(ctx context.Context, repo string, number int) (*scm.
 	return nil, nil, nil
 }
 
-func (s *issueService) ListLabels(ctx context.Context, repo string, number int, opts scm.ListOptions) ([]*scm.Label, *scm.Response, error) {
+func (s *issueService) ListLabels(ctx context.Context, repo string, number int, opts *scm.ListOptions) ([]*scm.Label, *scm.Response, error) {
 	f := s.data
 	re := regexp.MustCompile(fmt.Sprintf(`^%s#%d:(.*)$`, repo, number))
 	la := []*scm.Label{}
@@ -125,7 +125,7 @@ func (s *issueService) List(context.Context, string, scm.IssueListOptions) ([]*s
 	panic("implement me")
 }
 
-func (s *issueService) ListComments(ctx context.Context, repo string, number int, opts scm.ListOptions) ([]*scm.Comment, *scm.Response, error) {
+func (s *issueService) ListComments(ctx context.Context, repo string, number int, opts *scm.ListOptions) ([]*scm.Comment, *scm.Response, error) {
 	f := s.data
 	return append([]*scm.Comment{}, f.IssueComments[number]...), nil, nil
 }
@@ -147,7 +147,7 @@ func (s *issueService) CreateComment(ctx context.Context, repo string, number in
 	return answer, nil, nil
 }
 
-func (s *issueService) DeleteComment(ctx context.Context, repo string, number int, id int) (*scm.Response, error) {
+func (s *issueService) DeleteComment(ctx context.Context, repo string, number, id int) (*scm.Response, error) {
 	f := s.data
 	f.IssueCommentsDeleted = append(f.IssueCommentsDeleted, fmt.Sprintf("%s#%d", repo, id))
 	for num, ics := range f.IssueComments {
@@ -161,7 +161,7 @@ func (s *issueService) DeleteComment(ctx context.Context, repo string, number in
 	return nil, fmt.Errorf("could not find issue comment %d", id)
 }
 
-func (s *issueService) EditComment(ctx context.Context, repo string, number int, id int, input *scm.CommentInput) (*scm.Comment, *scm.Response, error) {
+func (s *issueService) EditComment(ctx context.Context, repo string, number, id int, input *scm.CommentInput) (*scm.Comment, *scm.Response, error) {
 	return nil, nil, scm.ErrNotSupported
 }
 
@@ -181,7 +181,7 @@ func (s *issueService) Unlock(context.Context, string, int) (*scm.Response, erro
 	panic("implement me")
 }
 
-func (s *issueService) SetMilestone(ctx context.Context, repo string, issueID int, number int) (*scm.Response, error) {
+func (s *issueService) SetMilestone(ctx context.Context, repo string, issueID, number int) (*scm.Response, error) {
 	return nil, scm.ErrNotSupported
 }
 

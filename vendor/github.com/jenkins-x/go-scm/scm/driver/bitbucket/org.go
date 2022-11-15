@@ -23,11 +23,10 @@ func (s *organizationService) Delete(context.Context, string) (*scm.Response, er
 	return nil, scm.ErrNotSupported
 }
 
-func (s *organizationService) IsMember(ctx context.Context, org string, user string) (bool, *scm.Response, error) {
-	path := fmt.Sprintf("2.0/workspaces/%s/permissions?q=user.account_id=\"%s\"", org, user)
+func (s *organizationService) IsMember(ctx context.Context, org, user string) (bool, *scm.Response, error) {
+	path := fmt.Sprintf("2.0/workspaces/%s/permissions?q=user.account_id=%q", org, user)
 	result := new(organizationMemberships)
 	res, err := s.client.do(ctx, "GET", path, nil, result)
-
 	if err != nil {
 		return false, res, err
 	}
@@ -45,31 +44,31 @@ func (s *organizationService) IsMember(ctx context.Context, org string, user str
 	return false, res, nil
 }
 
-func (s *organizationService) IsAdmin(ctx context.Context, org string, user string) (bool, *scm.Response, error) {
+func (s *organizationService) IsAdmin(ctx context.Context, org, user string) (bool, *scm.Response, error) {
 	return false, nil, scm.ErrNotSupported
 }
 
-func (s *organizationService) ListTeams(ctx context.Context, org string, ops scm.ListOptions) ([]*scm.Team, *scm.Response, error) {
+func (s *organizationService) ListTeams(ctx context.Context, org string, ops *scm.ListOptions) ([]*scm.Team, *scm.Response, error) {
 	return nil, nil, scm.ErrNotSupported
 }
 
-func (s *organizationService) ListTeamMembers(ctx context.Context, id int, role string, ops scm.ListOptions) ([]*scm.TeamMember, *scm.Response, error) {
+func (s *organizationService) ListTeamMembers(ctx context.Context, id int, role string, ops *scm.ListOptions) ([]*scm.TeamMember, *scm.Response, error) {
 	return nil, nil, scm.ErrNotSupported
 }
 
-func (s *organizationService) ListOrgMembers(ctx context.Context, org string, ops scm.ListOptions) ([]*scm.TeamMember, *scm.Response, error) {
+func (s *organizationService) ListOrgMembers(ctx context.Context, org string, ops *scm.ListOptions) ([]*scm.TeamMember, *scm.Response, error) {
 	return nil, nil, scm.ErrNotSupported
 }
 
 func (s *organizationService) Find(ctx context.Context, name string) (*scm.Organization, *scm.Response, error) {
-	path := fmt.Sprintf("2.0/teams/%s", name)
+	path := fmt.Sprintf("2.0/workspaces/%s", name)
 	out := new(organization)
 	res, err := s.client.do(ctx, "GET", path, nil, out)
 	return convertOrganization(out), res, err
 }
 
-func (s *organizationService) List(ctx context.Context, opts scm.ListOptions) ([]*scm.Organization, *scm.Response, error) {
-	path := fmt.Sprintf("2.0/teams?%s", encodeListRoleOptions(opts))
+func (s *organizationService) List(ctx context.Context, opts *scm.ListOptions) ([]*scm.Organization, *scm.Response, error) {
+	path := fmt.Sprintf("2.0/workspaces?%s", encodeListRoleOptions(opts))
 	out := new(organizationList)
 	res, err := s.client.do(ctx, "GET", path, nil, out)
 	if err != nil {
@@ -79,7 +78,7 @@ func (s *organizationService) List(ctx context.Context, opts scm.ListOptions) ([
 	return convertOrganizationList(out), res, err
 }
 
-func (s *organizationService) ListPendingInvitations(ctx context.Context, org string, opts scm.ListOptions) ([]*scm.OrganizationPendingInvite, *scm.Response, error) {
+func (s *organizationService) ListPendingInvitations(ctx context.Context, org string, opts *scm.ListOptions) ([]*scm.OrganizationPendingInvite, *scm.Response, error) {
 	return nil, nil, scm.ErrNotSupported
 }
 
@@ -87,7 +86,7 @@ func (s *organizationService) AcceptOrganizationInvitation(ctx context.Context, 
 	return nil, scm.ErrNotSupported
 }
 
-func (s *organizationService) ListMemberships(ctx context.Context, opts scm.ListOptions) ([]*scm.Membership, *scm.Response, error) {
+func (s *organizationService) ListMemberships(ctx context.Context, opts *scm.ListOptions) ([]*scm.Membership, *scm.Response, error) {
 	return nil, nil, scm.ErrNotSupported
 }
 
@@ -110,7 +109,8 @@ type organizationList struct {
 }
 
 type organization struct {
-	Login string `json:"username"`
+	Name string `json:"name"`
+	Slug string `json:"slug"`
 }
 
 type orgMemberPermission struct {
@@ -119,7 +119,7 @@ type orgMemberPermission struct {
 
 func convertOrganization(from *organization) *scm.Organization {
 	return &scm.Organization{
-		Name:   from.Login,
-		Avatar: fmt.Sprintf("https://bitbucket.org/account/%s/avatar/32/", from.Login),
+		Name:   from.Slug,
+		Avatar: fmt.Sprintf("https://bitbucket.org/workspaces/%s/avatar", from.Slug),
 	}
 }

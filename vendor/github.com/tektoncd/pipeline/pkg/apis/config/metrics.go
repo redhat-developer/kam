@@ -38,9 +38,7 @@ const (
 
 	// DefaultTaskrunLevel determines to what level to aggregate metrics
 	// when it isn't specified in configmap
-	// TBD: Change to task in next
-	// relase and taskrun level will be deprecated
-	DefaultTaskrunLevel = "taskrun"
+	DefaultTaskrunLevel = TaskrunLevelAtTask
 	// TaskrunLevelAtTaskrun specify that aggregation will be done at
 	// taskrun level
 	TaskrunLevelAtTaskrun = "taskrun"
@@ -50,11 +48,9 @@ const (
 	TaskrunLevelAtNS = "namespace"
 	// DefaultPipelinerunLevel determines to what level to aggregate metrics
 	// when it isn't specified in configmap
-	// TBD: Change to pipeline in next
-	// relase and pipelinerun level will be deprecated
-	DefaultPipelinerunLevel = "pipelinerun"
+	DefaultPipelinerunLevel = PipelinerunLevelAtPipeline
 	// PipelinerunLevelAtPipelinerun specify that aggregation will be done at
-	// pipelienrun level
+	// pipelinerun level
 	PipelinerunLevelAtPipelinerun = "pipelinerun"
 	// PipelinerunLevelAtPipeline specify that aggregation will be done at
 	// pipeline level
@@ -136,8 +132,8 @@ func newMetricsFromMap(cfgMap map[string]string) (*Metrics, error) {
 	if durationTaskrun, ok := cfgMap[metricsDurationTaskrunType]; ok {
 		tc.DurationTaskrunType = durationTaskrun
 	}
-	if durationPipelienrun, ok := cfgMap[metricsDurationPipelinerunType]; ok {
-		tc.DurationPipelinerunType = durationPipelienrun
+	if durationPipelinerun, ok := cfgMap[metricsDurationPipelinerunType]; ok {
+		tc.DurationPipelinerunType = durationPipelinerun
 	}
 	return &tc, nil
 }

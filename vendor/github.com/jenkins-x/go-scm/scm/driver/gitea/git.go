@@ -42,13 +42,11 @@ func (s *gitService) CreateRef(ctx context.Context, repo, ref, sha string) (*scm
 
 func (s *gitService) DeleteRef(ctx context.Context, repo, ref string) (*scm.Response, error) {
 	namespace, name := scm.Split(repo)
-	if strings.HasPrefix(ref, "heads/") {
-		ref = strings.TrimPrefix(ref, "heads/")
-	}
+	ref = strings.TrimPrefix(ref, "heads/")
 	out, giteaResp, err := s.client.GiteaClient.DeleteRepoBranch(namespace, name, ref)
 	resp := toSCMResponse(giteaResp)
 	if !out {
-		return resp, errors.New("Failed to delete branch")
+		return resp, errors.New("failed to delete branch")
 	}
 	return resp, err
 }
@@ -69,7 +67,7 @@ func (s *gitService) FindTag(ctx context.Context, repo, name string) (*scm.Refer
 	return nil, nil, scm.ErrNotSupported
 }
 
-func (s *gitService) ListBranches(ctx context.Context, repo string, opts scm.ListOptions) ([]*scm.Reference, *scm.Response, error) {
+func (s *gitService) ListBranches(ctx context.Context, repo string, opts *scm.ListOptions) ([]*scm.Reference, *scm.Response, error) {
 	namespace, name := scm.Split(repo)
 	out, resp, err := s.client.GiteaClient.ListRepoBranches(namespace, name, gitea.ListRepoBranchesOptions{ListOptions: toGiteaListOptions(opts)})
 	return convertBranchList(out), toSCMResponse(resp), err
@@ -89,18 +87,18 @@ func (s *gitService) ListCommits(ctx context.Context, repo string, opts scm.Comm
 	return convertCommitList(out), toSCMResponse(resp), err
 }
 
-func (s *gitService) ListTags(ctx context.Context, repo string, opts scm.ListOptions) ([]*scm.Reference, *scm.Response, error) {
+func (s *gitService) ListTags(ctx context.Context, repo string, opts *scm.ListOptions) ([]*scm.Reference, *scm.Response, error) {
 	namespace, name := scm.Split(repo)
 
 	out, resp, err := s.client.GiteaClient.ListRepoTags(namespace, name, gitea.ListRepoTagsOptions{ListOptions: toGiteaListOptions(opts)})
 	return convertTagList(out), toSCMResponse(resp), err
 }
 
-func (s *gitService) ListChanges(ctx context.Context, repo, ref string, _ scm.ListOptions) ([]*scm.Change, *scm.Response, error) {
+func (s *gitService) ListChanges(ctx context.Context, repo, ref string, _ *scm.ListOptions) ([]*scm.Change, *scm.Response, error) {
 	return nil, nil, scm.ErrNotSupported
 }
 
-func (s *gitService) CompareCommits(ctx context.Context, repo, ref1, ref2 string, _ scm.ListOptions) ([]*scm.Change, *scm.Response, error) {
+func (s *gitService) CompareCommits(ctx context.Context, repo, ref1, ref2 string, _ *scm.ListOptions) ([]*scm.Change, *scm.Response, error) {
 	return nil, nil, scm.ErrNotSupported
 }
 

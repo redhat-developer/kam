@@ -22,23 +22,27 @@ func (s *pullService) FindComment(context.Context, string, int, int) (*scm.Comme
 	return nil, nil, scm.ErrNotSupported
 }
 
-func (s *pullService) List(context.Context, string, scm.PullRequestListOptions) ([]*scm.PullRequest, *scm.Response, error) {
+func (s *pullService) List(context.Context, string, *scm.PullRequestListOptions) ([]*scm.PullRequest, *scm.Response, error) {
 	return nil, nil, scm.ErrNotSupported
 }
 
-func (s *pullService) ListComments(context.Context, string, int, scm.ListOptions) ([]*scm.Comment, *scm.Response, error) {
+func (s *pullService) ListComments(context.Context, string, int, *scm.ListOptions) ([]*scm.Comment, *scm.Response, error) {
 	return nil, nil, scm.ErrNotSupported
 }
 
-func (s *pullService) ListChanges(context.Context, string, int, scm.ListOptions) ([]*scm.Change, *scm.Response, error) {
+func (s *pullService) ListChanges(context.Context, string, int, *scm.ListOptions) ([]*scm.Change, *scm.Response, error) {
 	return nil, nil, scm.ErrNotSupported
 }
 
-func (s *pullService) ListLabels(context.Context, string, int, scm.ListOptions) ([]*scm.Label, *scm.Response, error) {
+func (s *pullService) ListCommits(ctx context.Context, repo string, number int, opts *scm.ListOptions) ([]*scm.Commit, *scm.Response, error) {
 	return nil, nil, scm.ErrNotSupported
 }
 
-func (s *pullService) ListEvents(context.Context, string, int, scm.ListOptions) ([]*scm.ListedIssueEvent, *scm.Response, error) {
+func (s *pullService) ListLabels(context.Context, string, int, *scm.ListOptions) ([]*scm.Label, *scm.Response, error) {
+	return nil, nil, scm.ErrNotSupported
+}
+
+func (s *pullService) ListEvents(context.Context, string, int, *scm.ListOptions) ([]*scm.ListedIssueEvent, *scm.Response, error) {
 	return nil, nil, scm.ErrNotSupported
 }
 
@@ -59,7 +63,7 @@ func (s *pullService) DeleteComment(context.Context, string, int, int) (*scm.Res
 	return nil, scm.ErrNotSupported
 }
 
-func (s *pullService) EditComment(ctx context.Context, repo string, number int, id int, input *scm.CommentInput) (*scm.Comment, *scm.Response, error) {
+func (s *pullService) EditComment(ctx context.Context, repo string, number, id int, input *scm.CommentInput) (*scm.Comment, *scm.Response, error) {
 	return nil, nil, scm.ErrNotSupported
 }
 
@@ -99,7 +103,7 @@ func (s *pullService) UnrequestReview(ctx context.Context, repo string, number i
 	return nil, scm.ErrNotSupported
 }
 
-func (s *pullService) SetMilestone(ctx context.Context, repo string, prID int, number int) (*scm.Response, error) {
+func (s *pullService) SetMilestone(ctx context.Context, repo string, prID, number int) (*scm.Response, error) {
 	return nil, scm.ErrNotSupported
 }
 

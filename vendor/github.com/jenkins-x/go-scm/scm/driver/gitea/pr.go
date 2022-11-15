@@ -24,7 +24,7 @@ func (s *pullService) Find(ctx context.Context, repo string, index int) (*scm.Pu
 	return convertPullRequest(out), toSCMResponse(resp), err
 }
 
-func (s *pullService) List(ctx context.Context, repo string, opts scm.PullRequestListOptions) ([]*scm.PullRequest, *scm.Response, error) {
+func (s *pullService) List(ctx context.Context, repo string, opts *scm.PullRequestListOptions) ([]*scm.PullRequest, *scm.Response, error) { //nolint:gocritic
 	namespace, name := scm.Split(repo)
 	in := gitea.ListPullRequestsOptions{
 		ListOptions: gitea.ListOptions{
@@ -42,7 +42,7 @@ func (s *pullService) List(ctx context.Context, repo string, opts scm.PullReques
 }
 
 // TODO: Maybe contribute to gitea/go-sdk with .patch function?
-func (s *pullService) ListChanges(ctx context.Context, repo string, number int, _ scm.ListOptions) ([]*scm.Change, *scm.Response, error) {
+func (s *pullService) ListChanges(ctx context.Context, repo string, number int, _ *scm.ListOptions) ([]*scm.Change, *scm.Response, error) {
 	// Get the patch and then parse it.
 	path := fmt.Sprintf("api/v1/repos/%s/pulls/%d.patch", repo, number)
 	buf := new(bytes.Buffer)
@@ -74,6 +74,10 @@ func (s *pullService) ListChanges(ctx context.Context, repo string, number int, 
 		})
 	}
 	return changes, res, nil
+}
+
+func (s *pullService) ListCommits(ctx context.Context, repo string, number int, opts *scm.ListOptions) ([]*scm.Commit, *scm.Response, error) {
+	return nil, nil, scm.ErrNotSupported
 }
 
 func (s *pullService) Merge(ctx context.Context, repo string, index int, options *scm.PullRequestMergeOptions) (*scm.Response, error) {

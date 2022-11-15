@@ -35,18 +35,18 @@ func (s *organizationService) Delete(_ context.Context, org string) (*scm.Respon
 	return toSCMResponse(resp), err
 }
 
-func (s *organizationService) IsMember(ctx context.Context, org string, user string) (bool, *scm.Response, error) {
+func (s *organizationService) IsMember(ctx context.Context, org, user string) (bool, *scm.Response, error) {
 	isMember, resp, err := s.client.GiteaClient.CheckOrgMembership(org, user)
 	return isMember, toSCMResponse(resp), err
 }
 
-func (s *organizationService) IsAdmin(ctx context.Context, org string, user string) (bool, *scm.Response, error) {
+func (s *organizationService) IsAdmin(ctx context.Context, org, user string) (bool, *scm.Response, error) {
 	var members []*scm.TeamMember
 	var res *scm.Response
 	var membersPage []*scm.TeamMember
 	var err error
 	firstRun := false
-	opts := scm.ListOptions{
+	opts := &scm.ListOptions{
 		Page: 1,
 	}
 	for !firstRun || (res != nil && opts.Page <= res.Page.Last) {
@@ -66,20 +66,20 @@ func (s *organizationService) IsAdmin(ctx context.Context, org string, user stri
 	return false, res, nil
 }
 
-func (s *organizationService) ListTeams(ctx context.Context, org string, ops scm.ListOptions) ([]*scm.Team, *scm.Response, error) {
-	out, resp, err := s.client.GiteaClient.ListOrgTeams(org, gitea.ListTeamsOptions{ListOptions: toGiteaListOptions(ops)})
+func (s *organizationService) ListTeams(ctx context.Context, org string, opts *scm.ListOptions) ([]*scm.Team, *scm.Response, error) {
+	out, resp, err := s.client.GiteaClient.ListOrgTeams(org, gitea.ListTeamsOptions{ListOptions: toGiteaListOptions(opts)})
 	return convertTeamList(out), toSCMResponse(resp), err
 }
 
-func (s *organizationService) ListTeamMembers(ctx context.Context, id int, role string, ops scm.ListOptions) ([]*scm.TeamMember, *scm.Response, error) {
+func (s *organizationService) ListTeamMembers(ctx context.Context, id int, role string, opts *scm.ListOptions) ([]*scm.TeamMember, *scm.Response, error) {
 	out, resp, err := s.client.GiteaClient.ListTeamMembers(int64(id), gitea.ListTeamMembersOptions{
-		ListOptions: toGiteaListOptions(ops),
+		ListOptions: toGiteaListOptions(opts),
 	})
 	return convertMemberList(out), toSCMResponse(resp), err
 }
 
-func (s *organizationService) ListOrgMembers(ctx context.Context, org string, ops scm.ListOptions) ([]*scm.TeamMember, *scm.Response, error) {
-	out, resp, err := s.client.GiteaClient.ListOrgMembership(org, gitea.ListOrgMembershipOption{ListOptions: toGiteaListOptions(ops)})
+func (s *organizationService) ListOrgMembers(ctx context.Context, org string, opts *scm.ListOptions) ([]*scm.TeamMember, *scm.Response, error) {
+	out, resp, err := s.client.GiteaClient.ListOrgMembership(org, gitea.ListOrgMembershipOption{ListOptions: toGiteaListOptions(opts)})
 	return convertMemberList(out), toSCMResponse(resp), err
 }
 
@@ -88,12 +88,12 @@ func (s *organizationService) Find(ctx context.Context, name string) (*scm.Organ
 	return convertOrg(out), toSCMResponse(resp), err
 }
 
-func (s *organizationService) List(ctx context.Context, opts scm.ListOptions) ([]*scm.Organization, *scm.Response, error) {
+func (s *organizationService) List(ctx context.Context, opts *scm.ListOptions) ([]*scm.Organization, *scm.Response, error) {
 	out, resp, err := s.client.GiteaClient.ListMyOrgs(gitea.ListOrgsOptions{ListOptions: toGiteaListOptions(opts)})
 	return convertOrgList(out), toSCMResponse(resp), err
 }
 
-func (s *organizationService) ListPendingInvitations(ctx context.Context, org string, opts scm.ListOptions) ([]*scm.OrganizationPendingInvite, *scm.Response, error) {
+func (s *organizationService) ListPendingInvitations(ctx context.Context, org string, opts *scm.ListOptions) ([]*scm.OrganizationPendingInvite, *scm.Response, error) {
 	return nil, nil, scm.ErrNotSupported
 }
 
@@ -101,7 +101,7 @@ func (s *organizationService) AcceptOrganizationInvitation(ctx context.Context, 
 	return nil, scm.ErrNotSupported
 }
 
-func (s *organizationService) ListMemberships(ctx context.Context, opts scm.ListOptions) ([]*scm.Membership, *scm.Response, error) {
+func (s *organizationService) ListMemberships(ctx context.Context, opts *scm.ListOptions) ([]*scm.Membership, *scm.Response, error) {
 	return nil, nil, scm.ErrNotSupported
 }
 

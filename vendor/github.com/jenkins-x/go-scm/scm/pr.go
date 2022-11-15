@@ -131,19 +131,22 @@ type (
 		FindComment(context.Context, string, int, int) (*Comment, *Response, error)
 
 		// Find returns the repository pull request list.
-		List(context.Context, string, PullRequestListOptions) ([]*PullRequest, *Response, error)
+		List(context.Context, string, *PullRequestListOptions) ([]*PullRequest, *Response, error)
 
 		// ListChanges returns the pull request changeset.
-		ListChanges(context.Context, string, int, ListOptions) ([]*Change, *Response, error)
+		ListChanges(context.Context, string, int, *ListOptions) ([]*Change, *Response, error)
+
+		// ListCommits returns the pull request commits.
+		ListCommits(context.Context, string, int, *ListOptions) ([]*Commit, *Response, error)
 
 		// ListComments returns the pull request comment list.
-		ListComments(context.Context, string, int, ListOptions) ([]*Comment, *Response, error)
+		ListComments(context.Context, string, int, *ListOptions) ([]*Comment, *Response, error)
 
 		// ListLabels returns the labels on a pull request
-		ListLabels(context.Context, string, int, ListOptions) ([]*Label, *Response, error)
+		ListLabels(context.Context, string, int, *ListOptions) ([]*Label, *Response, error)
 
 		// ListEvents returns the events creating and removing the labels on an pull request
-		ListEvents(context.Context, string, int, ListOptions) ([]*ListedIssueEvent, *Response, error)
+		ListEvents(context.Context, string, int, *ListOptions) ([]*ListedIssueEvent, *Response, error)
 
 		// Merge merges the repository pull request.
 		Merge(context.Context, string, int, *PullRequestMergeOptions) (*Response, error)

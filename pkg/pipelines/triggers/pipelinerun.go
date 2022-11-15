@@ -1,8 +1,8 @@
 package triggers
 
 import (
-	pipelinev1alpha1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	pipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	pipelineresource "github.com/tektoncd/pipeline/pkg/apis/resource/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
@@ -96,7 +96,7 @@ func createDevResource(revision string) []pipelinev1.PipelineResourceBinding {
 	return []pipelinev1.PipelineResourceBinding{
 		{
 			Name: "source-repo",
-			ResourceSpec: &pipelinev1alpha1.PipelineResourceSpec{
+			ResourceSpec: &pipelineresource.PipelineResourceSpec{
 				Type: "git",
 				Params: []pipelinev1.ResourceParam{
 					createResourceParams("revision", revision),
@@ -111,7 +111,7 @@ func createResources() []pipelinev1.PipelineResourceBinding {
 	return []pipelinev1.PipelineResourceBinding{
 		{
 			Name: "source-repo",
-			ResourceSpec: &pipelinev1alpha1.PipelineResourceSpec{
+			ResourceSpec: &pipelineresource.PipelineResourceSpec{
 				Type: "git",
 				Params: []pipelinev1.ResourceParam{
 					createResourceParams("revision", "$(tt.params."+GitCommitID+")"),

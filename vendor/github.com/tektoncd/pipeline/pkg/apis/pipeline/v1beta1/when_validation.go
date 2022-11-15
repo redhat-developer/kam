@@ -32,8 +32,7 @@ var validWhenOperators = []string{
 }
 
 func (wes WhenExpressions) validate() *apis.FieldError {
-	errs := wes.validateWhenExpressionsFields().ViaField("when")
-	return errs.Also(wes.validateTaskResultsVariables().ViaField("when"))
+	return wes.validateWhenExpressionsFields().ViaField("when")
 }
 
 func (wes WhenExpressions) validateWhenExpressionsFields() (errs *apis.FieldError) {
@@ -57,34 +56,17 @@ func (we *WhenExpression) validateWhenExpressionFields() *apis.FieldError {
 	return nil
 }
 
-func (wes WhenExpressions) validateTaskResultsVariables() *apis.FieldError {
+func (wes WhenExpressions) validatePipelineParametersVariables(prefix string, paramNames sets.String, arrayParamNames sets.String, objectParamNameKeys map[string][]string) (errs *apis.FieldError) {
 	for idx, we := range wes {
-		expressions, ok := we.GetVarSubstitutionExpressions()
-		if ok {
-			if LooksLikeContainsResultRefs(expressions) {
-				expressions = filter(expressions, looksLikeResultRef)
-				resultRefs := NewResultRefs(expressions)
-				if len(expressions) != len(resultRefs) {
-					message := fmt.Sprintf("expected all of the expressions %v to be result expressions but only %v were", expressions, resultRefs)
-					return apis.ErrInvalidValue(message, apis.CurrentField).ViaIndex(idx)
-				}
-			}
-		}
-	}
-	return nil
-}
-
-func (wes WhenExpressions) validatePipelineParametersVariables(prefix string, paramNames sets.String, arrayParamNames sets.String) (errs *apis.FieldError) {
-	for idx, we := range wes {
-		errs = errs.Also(validateStringVariable(we.Input, prefix, paramNames, arrayParamNames).ViaField("input").ViaFieldIndex("when", idx))
+		errs = errs.Also(validateStringVariable(we.Input, prefix, paramNames, arrayParamNames, objectParamNameKeys).ViaField("input").ViaFieldIndex("when", idx))
 		for _, val := range we.Values {
 			// one of the values could be a reference to an array param, such as, $(params.foo[*])
 			// extract the variable name from the pattern $(params.foo[*]), if the variable name matches with one of the array params
 			// validate the param as an array variable otherwise, validate it as a string variable
 			if arrayParamNames.Has(ArrayReference(val)) {
-				errs = errs.Also(validateArrayVariable(val, prefix, paramNames, arrayParamNames).ViaField("values").ViaFieldIndex("when", idx))
+				errs = errs.Also(validateArrayVariable(val, prefix, paramNames, arrayParamNames, objectParamNameKeys).ViaField("values").ViaFieldIndex("when", idx))
 			} else {
-				errs = errs.Also(validateStringVariable(val, prefix, paramNames, arrayParamNames).ViaField("values").ViaFieldIndex("when", idx))
+				errs = errs.Also(validateStringVariable(val, prefix, paramNames, arrayParamNames, objectParamNameKeys).ViaField("values").ViaFieldIndex("when", idx))
 			}
 		}
 	}

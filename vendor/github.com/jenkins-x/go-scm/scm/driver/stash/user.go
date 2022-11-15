@@ -29,7 +29,7 @@ func (s *userService) DeleteToken(context.Context, int64) (*scm.Response, error)
 }
 
 func (s *userService) Find(ctx context.Context) (*scm.User, *scm.Response, error) {
-	path := fmt.Sprintf("plugins/servlet/applinks/whoami")
+	path := "plugins/servlet/applinks/whoami"
 	out := new(bytes.Buffer)
 	res, err := s.client.do(ctx, "GET", path, nil, out)
 	if err != nil {
@@ -96,7 +96,7 @@ func convertUser(from *user) *scm.User {
 func avatarLink(email string) string {
 	hasher := md5.New()                          // #nosec
 	hasher.Write([]byte(strings.ToLower(email))) // #nosec
-	emailHash := fmt.Sprintf("%v", hex.EncodeToString(hasher.Sum(nil)))
+	emailHash := hex.EncodeToString(hasher.Sum(nil))
 	avatarURL := fmt.Sprintf("https://www.gravatar.com/avatar/%s.jpg", emailHash)
 	return avatarURL
 }

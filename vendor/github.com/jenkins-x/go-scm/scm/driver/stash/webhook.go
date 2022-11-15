@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -32,7 +31,7 @@ type webhookService struct {
 
 // Parse for the bitbucket server webhook payloads see: https://confluence.atlassian.com/bitbucketserver/event-payload-938025882.html
 func (s *webhookService) Parse(req *http.Request, fn scm.SecretFunc) (scm.Webhook, error) {
-	data, err := ioutil.ReadAll(
+	data, err := io.ReadAll(
 		io.LimitReader(req.Body, 10000000),
 	)
 	if err != nil {
@@ -87,7 +86,7 @@ func (s *webhookService) parsePushHook(data []byte, guid string) (scm.Webhook, e
 		return nil, err
 	}
 	if len(dst.Changes) == 0 {
-		return nil, errors.New("Push hook has empty changeset")
+		return nil, errors.New("push hook has empty changeset")
 	}
 	change := dst.Changes[0]
 	switch {
@@ -375,6 +374,7 @@ func convertPullRequestApprovalHook(src *pullRequestApprovalHook) *scm.ReviewHoo
 		Review:      review,
 	}
 }
+
 func convertReviewStateFromEvent(src string) string {
 	switch src {
 	case "pr:reviewer:approved":
