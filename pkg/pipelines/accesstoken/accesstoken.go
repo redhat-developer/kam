@@ -38,7 +38,7 @@ func HostFromURL(s string) (string, error) {
 	return strings.ToLower(p.Host), nil
 }
 
-//SetSecret sets the secret in the keyring
+// SetSecret sets the secret in the keyring
 func SetAccessToken(repoURL, accessToken string) error {
 	hostName, err := HostFromURL(repoURL)
 	if err != nil {
@@ -57,7 +57,7 @@ func SetAccessToken(repoURL, accessToken string) error {
 	return nil
 }
 
-//GetEnvVarName contains the logic for the naming convention of the environment variable that contains the accesstoken
+// GetEnvVarName contains the logic for the naming convention of the environment variable that contains the accesstoken
 func GetEnvVarName(hostName string) string {
 	FmtHostName := strings.ReplaceAll(hostName, ".", "_")
 	envVarName := strings.ToUpper(FmtHostName) + "_TOKEN"

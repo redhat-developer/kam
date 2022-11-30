@@ -102,7 +102,6 @@ func (m *Manifest) GetArgoCDConfig() *ArgoCDConfig {
 }
 
 // Environment is a slice of Apps, these are the named apps in the namespace.
-//
 type Environment struct {
 	Name      string         `json:"name,omitempty"`
 	Cluster   string         `json:"cluster,omitempty"`
