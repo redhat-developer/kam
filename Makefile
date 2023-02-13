@@ -69,10 +69,12 @@ prepare-test-cluster:
 
 .PHONY: e2e
 e2e:
-GODOG_OPTS = --godog.tags=basic
+CURRENT_TIME ?= $(shell date "+%Y.%m.%d-%H.%M.%S")
+GODOG_OPTS = --godog.tags=basic --godog.format=junit
 
 e2e:
-	@go test --timeout=180m ./test/e2e -v $(GODOG_OPTS)
+	@go test --timeout=180m ./test/e2e -v $(GODOG_OPTS) | tee results.out
+	@awk '/<?xml version="1.0"/{flag=1;print;next}/<?xml version="1.0"/{flag=1}flag' results.out | tee kam-test-$(CURRENT_TIME).xml
 
 
 .PHONY: e2e-local
