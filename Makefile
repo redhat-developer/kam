@@ -75,10 +75,9 @@ GODOG_OPTS = --godog.tags=basic --godog.format=junit
 e2e:
 	@go test --timeout=180m ./test/e2e -v $(GODOG_OPTS) | tee results.out; \
 	e=$${PIPESTATUS[0]}; \
-	echo $$e; \
 	awk '/<?xml version="1.0"/{flag=1;print;next}/<?xml version="1.0"/{flag=1}flag' results.out | tee kam-test-$(CURRENT_TIME).xml; \
+	sed -i  '/testsuites>/q' kam-test-$(CURRENT_TIME).xml; \
 	exit $$e
-
 
 .PHONY: e2e-local
 e2e-local:
