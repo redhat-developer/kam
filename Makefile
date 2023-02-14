@@ -70,11 +70,15 @@ prepare-test-cluster:
 .PHONY: e2e
 e2e:
 CURRENT_TIME ?= $(shell date "+%Y.%m.%d-%H.%M.%S")
-GODOG_OPTS = --godog.tags=basic --godog.format=pretty
+GODOG_OPTS = --godog.tags=basic --godog.format=junit
 
 e2e:
-	@go test --timeout=180m ./test/e2e -v $(GODOG_OPTS) | tee results.out
-	@go-junit-report -set-exit-code < results.out > kam-test-${CURRENT_TIME}.xml
+	@go test --timeout=180m ./test/e2e -v $(GODOG_OPTS) | tee results.out; \
+	e=$${PIPESTATUS[0]}; \
+	echo $$e; \
+	awk '/<?xml version="1.0"/{flag=1;print;next}/<?xml version="1.0"/{flag=1}flag' results.out | tee kam-test-$(CURRENT_TIME).xml; \
+	exit $$e
+
 
 .PHONY: e2e-local
 e2e-local:
