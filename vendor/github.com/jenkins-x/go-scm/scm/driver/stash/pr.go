@@ -29,7 +29,7 @@ func (s *pullService) Find(ctx context.Context, repo string, number int) (*scm.P
 	return convertPullRequest(out), res, err
 }
 
-func (s *pullService) FindComment(ctx context.Context, repo string, number int, id int) (*scm.Comment, *scm.Response, error) {
+func (s *pullService) FindComment(ctx context.Context, repo string, number, id int) (*scm.Comment, *scm.Response, error) {
 	namespace, name := scm.Split(repo)
 	path := fmt.Sprintf("rest/api/1.0/projects/%s/repos/%s/pull-requests/%d/comments/%d", namespace, name, number, id)
 	out := new(pullRequestComment)
@@ -37,7 +37,7 @@ func (s *pullService) FindComment(ctx context.Context, repo string, number int, 
 	return convertPullRequestComment(out), res, err
 }
 
-func (s *pullService) List(ctx context.Context, repo string, opts scm.PullRequestListOptions) ([]*scm.PullRequest, *scm.Response, error) {
+func (s *pullService) List(ctx context.Context, repo string, opts *scm.PullRequestListOptions) ([]*scm.PullRequest, *scm.Response, error) {
 	namespace, name := scm.Split(repo)
 	path := fmt.Sprintf("rest/api/1.0/projects/%s/repos/%s/pull-requests", namespace, name)
 	out := new(pullRequests)
@@ -49,7 +49,7 @@ func (s *pullService) List(ctx context.Context, repo string, opts scm.PullReques
 	return convertPullRequests(out), res, err
 }
 
-func (s *pullService) ListChanges(ctx context.Context, repo string, number int, opts scm.ListOptions) ([]*scm.Change, *scm.Response, error) {
+func (s *pullService) ListChanges(ctx context.Context, repo string, number int, opts *scm.ListOptions) ([]*scm.Change, *scm.Response, error) {
 	namespace, name := scm.Split(repo)
 	path := fmt.Sprintf("rest/api/1.0/projects/%s/repos/%s/pull-requests/%d/changes", namespace, name, number)
 	out := new(diffstats)
@@ -61,7 +61,11 @@ func (s *pullService) ListChanges(ctx context.Context, repo string, number int, 
 	return convertDiffstats(out), res, err
 }
 
-func (s *pullService) ListLabels(ctx context.Context, repo string, number int, opts scm.ListOptions) ([]*scm.Label, *scm.Response, error) {
+func (s *pullService) ListCommits(ctx context.Context, repo string, number int, opts *scm.ListOptions) ([]*scm.Commit, *scm.Response, error) {
+	return nil, nil, scm.ErrNotSupported
+}
+
+func (s *pullService) ListLabels(ctx context.Context, repo string, number int, opts *scm.ListOptions) ([]*scm.Label, *scm.Response, error) {
 	// Get all comments, parse out labels (removing and added based off time)
 	cs, res, err := s.ListComments(ctx, repo, number, opts)
 	if err == nil {
@@ -83,11 +87,11 @@ func (s *pullService) DeleteLabel(ctx context.Context, repo string, number int, 
 	return res, err
 }
 
-func (s *pullService) ListEvents(context.Context, string, int, scm.ListOptions) ([]*scm.ListedIssueEvent, *scm.Response, error) {
+func (s *pullService) ListEvents(context.Context, string, int, *scm.ListOptions) ([]*scm.ListedIssueEvent, *scm.Response, error) {
 	return nil, nil, scm.ErrNotSupported
 }
 
-func (s *pullService) ListComments(ctx context.Context, repo string, number int, opts scm.ListOptions) ([]*scm.Comment, *scm.Response, error) {
+func (s *pullService) ListComments(ctx context.Context, repo string, number int, opts *scm.ListOptions) ([]*scm.Comment, *scm.Response, error) {
 	// TODO(bradrydzewski) the challenge with comments is that we need to use
 	// the activities endpoint, which returns entries that may or may not be
 	// comments. This complicates how we handle counts and pagination.
@@ -169,7 +173,7 @@ func (s *pullService) CreateComment(ctx context.Context, repo string, number int
 	return convertPullRequestComment(out), res, err
 }
 
-func (s *pullService) DeleteComment(ctx context.Context, repo string, number int, id int) (*scm.Response, error) {
+func (s *pullService) DeleteComment(ctx context.Context, repo string, number, id int) (*scm.Response, error) {
 	namespace, name := scm.Split(repo)
 	existingComment, res, err := s.FindComment(ctx, repo, number, id)
 	if err != nil {
@@ -185,7 +189,7 @@ func (s *pullService) DeleteComment(ctx context.Context, repo string, number int
 	return s.client.do(ctx, "DELETE", path, nil, nil)
 }
 
-func (s *pullService) EditComment(ctx context.Context, repo string, number int, id int, in *scm.CommentInput) (*scm.Comment, *scm.Response, error) {
+func (s *pullService) EditComment(ctx context.Context, repo string, number, id int, in *scm.CommentInput) (*scm.Comment, *scm.Response, error) {
 	input := pullRequestCommentInput{Text: in.Body}
 	namespace, name := scm.Split(repo)
 	existingComment, res, err := s.FindComment(ctx, repo, number, id)
@@ -293,7 +297,7 @@ func (s *pullService) UnrequestReview(ctx context.Context, repo string, number i
 	return res, err
 }
 
-func (s *pullService) SetMilestone(ctx context.Context, repo string, prID int, number int) (*scm.Response, error) {
+func (s *pullService) SetMilestone(ctx context.Context, repo string, prID, number int) (*scm.Response, error) {
 	return nil, scm.ErrNotSupported
 }
 
@@ -435,11 +439,6 @@ type pullRequestComment struct {
 	} `json:"permittedOperations"`
 }
 
-type pullRequestComments struct {
-	pagination
-	Values []*pullRequestComment `json:"values"`
-}
-
 type pullRequestCommentInput struct {
 	Text    string `json:"text"`
 	Version int    `json:"version"`
@@ -479,14 +478,6 @@ func convertPullRequestActivities(from *pullRequestActivities) []*scm.Comment {
 	return to
 }
 
-func convertPullRequestComments(from *pullRequestComments) []*scm.Comment {
-	to := []*scm.Comment{}
-	for _, v := range from.Values {
-		to = append(to, convertPullRequestComment(v))
-	}
-	return to
-}
-
 func convertPullRequestComment(from *pullRequestComment) *scm.Comment {
 	return &scm.Comment{
 		ID:      from.ID,
@@ -506,8 +497,8 @@ func convertPullRequestComment(from *pullRequestComment) *scm.Comment {
 func convertReviewers(from []prUser) []scm.User {
 	var answer []scm.User
 
-	for _, u := range from {
-		answer = append(answer, *convertUser(&u.User))
+	for k := range from {
+		answer = append(answer, *convertUser(&from[k].User))
 	}
 
 	return answer

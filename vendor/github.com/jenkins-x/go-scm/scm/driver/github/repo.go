@@ -134,8 +134,8 @@ func (s *repositoryService) IsCollaborator(ctx context.Context, repo, user strin
 //
 // See 'IsCollaborator' for more details.
 // See https://developer.github.com/v3/repos/collaborators/
-func (s *repositoryService) ListCollaborators(ctx context.Context, repo string, ops scm.ListOptions) ([]scm.User, *scm.Response, error) {
-	params := encodeListOptions(ops)
+func (s *repositoryService) ListCollaborators(ctx context.Context, repo string, opts *scm.ListOptions) ([]scm.User, *scm.Response, error) {
+	params := encodeListOptions(opts)
 
 	req := &scm.Request{
 		Method: http.MethodGet,
@@ -160,7 +160,7 @@ func (s *repositoryService) Find(ctx context.Context, repo string) (*scm.Reposit
 }
 
 // FindHook returns a repository hook.
-func (s *repositoryService) FindHook(ctx context.Context, repo string, id string) (*scm.Hook, *scm.Response, error) {
+func (s *repositoryService) FindHook(ctx context.Context, repo, id string) (*scm.Hook, *scm.Response, error) {
 	path := fmt.Sprintf("repos/%s/hooks/%s", repo, id)
 	out := new(hook)
 	res, err := s.client.do(ctx, "GET", path, nil, out)
@@ -175,10 +175,9 @@ func (s *repositoryService) FindPerms(ctx context.Context, repo string) (*scm.Pe
 	return convertRepository(out).Perm, res, err
 }
 
-// FindPerms returns the repository permissions.
-//
+// FindUserPermission returns the repository permissions.
 // https://developer.github.com/v3/repos/collaborators/#review-a-users-permission-level
-func (s *repositoryService) FindUserPermission(ctx context.Context, repo string, user string) (string, *scm.Response, error) {
+func (s *repositoryService) FindUserPermission(ctx context.Context, repo, user string) (string, *scm.Response, error) {
 	path := fmt.Sprintf("repos/%s/collaborators/%s/permission", repo, user)
 	var out struct {
 		Perm string `json:"permission"`
@@ -188,12 +187,12 @@ func (s *repositoryService) FindUserPermission(ctx context.Context, repo string,
 }
 
 // List returns the user repository list.
-func (s *repositoryService) List(ctx context.Context, opts scm.ListOptions) ([]*scm.Repository, *scm.Response, error) {
+func (s *repositoryService) List(ctx context.Context, opts *scm.ListOptions) ([]*scm.Repository, *scm.Response, error) {
 	req := &scm.Request{
 		Method: http.MethodGet,
 		Path:   fmt.Sprintf("user/repos?visibility=all&affiliation=owner&%s", encodeListOptions(opts)),
 		Header: map[string][]string{
-			// This accept header enables the visibility parameter.
+			// This accepts header enables the visibility parameter.
 			// https://developer.github.com/changes/2019-12-03-internal-visibility-changes/
 			"Accept": {"application/vnd.github.nebula-preview+json"},
 		},
@@ -203,16 +202,16 @@ func (s *repositoryService) List(ctx context.Context, opts scm.ListOptions) ([]*
 	return convertRepositoryList(out), res, err
 }
 
-// List returns the repositories for an organisation
-func (s *repositoryService) ListOrganisation(ctx context.Context, org string, opts scm.ListOptions) ([]*scm.Repository, *scm.Response, error) {
+// ListOrganisation returns the repositories for an organisation
+func (s *repositoryService) ListOrganisation(ctx context.Context, org string, opts *scm.ListOptions) ([]*scm.Repository, *scm.Response, error) {
 	path := fmt.Sprintf("orgs/%s/repos?%s", org, encodeListOptions(opts))
 	out := []*repository{}
 	res, err := s.client.do(ctx, "GET", path, nil, &out)
 	return convertRepositoryList(out), res, err
 }
 
-// List returns the repositories for a user
-func (s *repositoryService) ListUser(ctx context.Context, user string, opts scm.ListOptions) ([]*scm.Repository, *scm.Response, error) {
+// ListUser returns the public repositories for the specified user
+func (s *repositoryService) ListUser(ctx context.Context, user string, opts *scm.ListOptions) ([]*scm.Repository, *scm.Response, error) {
 	path := fmt.Sprintf("users/%s/repos?%s", user, encodeListOptions(opts))
 	out := []*repository{}
 	res, err := s.client.do(ctx, "GET", path, nil, &out)
@@ -220,7 +219,7 @@ func (s *repositoryService) ListUser(ctx context.Context, user string, opts scm.
 }
 
 // ListHooks returns a list or repository hooks.
-func (s *repositoryService) ListHooks(ctx context.Context, repo string, opts scm.ListOptions) ([]*scm.Hook, *scm.Response, error) {
+func (s *repositoryService) ListHooks(ctx context.Context, repo string, opts *scm.ListOptions) ([]*scm.Hook, *scm.Response, error) {
 	path := fmt.Sprintf("repos/%s/hooks?%s", repo, encodeListOptions(opts))
 	out := []*hook{}
 	res, err := s.client.do(ctx, "GET", path, nil, &out)
@@ -228,7 +227,7 @@ func (s *repositoryService) ListHooks(ctx context.Context, repo string, opts scm
 }
 
 // ListStatus returns a list of commit statuses.
-func (s *repositoryService) ListStatus(ctx context.Context, repo, ref string, opts scm.ListOptions) ([]*scm.Status, *scm.Response, error) {
+func (s *repositoryService) ListStatus(ctx context.Context, repo, ref string, opts *scm.ListOptions) ([]*scm.Status, *scm.Response, error) {
 	path := fmt.Sprintf("repos/%s/statuses/%s?%s", repo, ref, encodeListOptions(opts))
 	out := []*status{}
 	res, err := s.client.do(ctx, "GET", path, nil, &out)
@@ -245,7 +244,7 @@ func (s *repositoryService) FindCombinedStatus(ctx context.Context, repo, ref st
 	return convertCombinedStatus(out), res, err
 }
 
-func (s *repositoryService) ListLabels(ctx context.Context, repo string, opts scm.ListOptions) ([]*scm.Label, *scm.Response, error) {
+func (s *repositoryService) ListLabels(ctx context.Context, repo string, opts *scm.ListOptions) ([]*scm.Label, *scm.Response, error) {
 	path := fmt.Sprintf("repos/%s/labels?%s", repo, encodeListOptions(opts))
 	out := []*label{}
 	res, err := s.client.do(ctx, "GET", path, nil, &out)
@@ -300,10 +299,11 @@ func (s *repositoryService) CreateHook(ctx context.Context, repo string, input *
 	} else {
 		in.Config.InsecureSSL = "0"
 	}
-	in.Events = append(
+	input.NativeEvents = append(
 		input.NativeEvents,
 		convertHookEvents(input.Events)...,
 	)
+	in.Events = input.NativeEvents
 	out := new(hook)
 	res, err := s.client.do(ctx, "POST", path, in, out)
 	return convertHook(out), res, err
@@ -328,7 +328,7 @@ func (s *repositoryService) CreateStatus(ctx context.Context, repo, ref string, 
 }
 
 // DeleteHook deletes a repository webhook.
-func (s *repositoryService) DeleteHook(ctx context.Context, repo string, id string) (*scm.Response, error) {
+func (s *repositoryService) DeleteHook(ctx context.Context, repo, id string) (*scm.Response, error) {
 	path := fmt.Sprintf("repos/%s/hooks/%s", repo, id)
 	return s.client.do(ctx, "DELETE", path, nil, nil)
 }
@@ -419,8 +419,7 @@ func convertHookEvents(from scm.HookEvents) []string {
 		events = append(events, "issue_comment")
 	}
 	if from.Branch || from.Tag {
-		events = append(events, "create")
-		events = append(events, "delete")
+		events = append(events, "create", "delete")
 	}
 	if from.Deployment {
 		events = append(events, "deployment")
@@ -459,19 +458,9 @@ func convertCombinedStatus(from *combinedStatus) *scm.CombinedStatus {
 }
 
 func convertStatusList(from []*status) []*scm.Status {
-	// The GitHub API may return multiple statuses with the same Context, in
-	// reverse chronological order:
-	// https://developer.github.com/v3/repos/statuses/#list-statuses-for-a-specific-ref.
-	// We only expose the most recent one to consumers.
 	to := []*scm.Status{}
-	unique := make(map[string]interface{})
 	for _, v := range from {
-		convertedStatus := convertStatus(v)
-		if _, ok := unique[convertedStatus.Label]; ok {
-			continue
-		}
-		to = append(to, convertedStatus)
-		unique[convertedStatus.Label] = nil
+		to = append(to, convertStatus(v))
 	}
 	return to
 }

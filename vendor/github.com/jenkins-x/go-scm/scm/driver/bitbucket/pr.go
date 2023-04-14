@@ -32,7 +32,7 @@ func (s *pullService) Find(ctx context.Context, repo string, number int) (*scm.P
 	return responsePR, res, err
 }
 
-func (s *pullService) List(ctx context.Context, repo string, opts scm.PullRequestListOptions) ([]*scm.PullRequest, *scm.Response, error) {
+func (s *pullService) List(ctx context.Context, repo string, opts *scm.PullRequestListOptions) ([]*scm.PullRequest, *scm.Response, error) {
 	path := fmt.Sprintf("2.0/repositories/%s/pullrequests?%s", repo, encodePullRequestListOptions(opts))
 	out := new(pullRequests)
 	if debugDump {
@@ -122,7 +122,6 @@ type prComment struct {
 }
 
 func convertPRComment(from *prComment) *scm.Comment {
-
 	return &scm.Comment{
 		ID:   from.ID,
 		Body: from.Content.Raw,
@@ -159,14 +158,14 @@ func convertPRCommentList(from *pullRequestComments) []*scm.Comment {
 	return to
 }
 
-func (s *pullService) ListComments(ctx context.Context, repo string, index int, opts scm.ListOptions) ([]*scm.Comment, *scm.Response, error) {
+func (s *pullService) ListComments(ctx context.Context, repo string, index int, opts *scm.ListOptions) ([]*scm.Comment, *scm.Response, error) {
 	path := fmt.Sprintf("2.0/repositories/%s/pullrequests/%d/comments?%s", repo, index, encodeListOptions(opts))
 	out := new(pullRequestComments)
 	res, err := s.client.do(ctx, "GET", path, nil, &out)
 	return convertPRCommentList(out), res, err
 }
 
-func (s *pullService) ListChanges(ctx context.Context, repo string, number int, opts scm.ListOptions) ([]*scm.Change, *scm.Response, error) {
+func (s *pullService) ListChanges(ctx context.Context, repo string, number int, opts *scm.ListOptions) ([]*scm.Change, *scm.Response, error) {
 	path := fmt.Sprintf("2.0/repositories/%s/pullrequests/%d/diffstat?%s", repo, number, encodeListOptions(opts))
 	out := new(diffstats)
 	res, err := s.client.do(ctx, "GET", path, nil, out)
@@ -177,7 +176,7 @@ func (s *pullService) ListChanges(ctx context.Context, repo string, number int, 
 	return convertDiffstats(out), res, err
 }
 
-func (s *pullService) ListLabels(ctx context.Context, repo string, number int, opts scm.ListOptions) ([]*scm.Label, *scm.Response, error) {
+func (s *pullService) ListLabels(ctx context.Context, repo string, number int, opts *scm.ListOptions) ([]*scm.Label, *scm.Response, error) {
 	// Get all comments, parse out labels (removing and added based off time)
 	cs, res, err := s.ListComments(ctx, repo, number, opts)
 	if err == nil {
@@ -199,7 +198,11 @@ func (s *pullService) DeleteLabel(ctx context.Context, repo string, number int, 
 	return res, err
 }
 
-func (s *pullService) ListEvents(context.Context, string, int, scm.ListOptions) ([]*scm.ListedIssueEvent, *scm.Response, error) {
+func (s *pullService) ListEvents(context.Context, string, int, *scm.ListOptions) ([]*scm.ListedIssueEvent, *scm.Response, error) {
+	return nil, nil, scm.ErrNotSupported
+}
+
+func (s *pullService) ListCommits(ctx context.Context, repo string, number int, opts *scm.ListOptions) ([]*scm.Commit, *scm.Response, error) {
 	return nil, nil, scm.ErrNotSupported
 }
 
@@ -281,10 +284,6 @@ func (s *pullService) UnrequestReview(ctx context.Context, repo string, number i
 	return nil, scm.ErrNotSupported
 }
 
-type prCommit struct {
-	LatestCommit string `json:"hash"`
-}
-
 type prSource struct {
 	Commit struct {
 		Type   string `json:"type"`
@@ -310,8 +309,7 @@ type prDestination struct {
 }
 
 type pullRequest struct {
-	ID int `json:"id"`
-	//Version     int    `json:"version"`
+	ID           int           `json:"id"`
 	Title        string        `json:"title"`
 	Description  string        `json:"description"`
 	State        string        `json:"state"`
@@ -347,9 +345,11 @@ func findRefs(from *pullRequest) (string, string) {
 	}
 	return baseRef, headRef
 }
+
 func convertPullRequest(from *pullRequest) *scm.PullRequest {
 	fork := "false"
-	closed := strings.ToLower(from.State) != "open"
+	closed := !(strings.EqualFold(from.State, "open"))
+
 	baseRef, headRef := findRefs(from)
 	return &scm.PullRequest{
 		Number:   from.ID,
@@ -360,8 +360,8 @@ func convertPullRequest(from *pullRequest) *scm.PullRequest {
 		Source:   from.Source.Commit.Commit,
 		Target:   from.Destination.Commit.Commit,
 		Fork:     fork,
-		Base:     convertPullRequestBranch(baseRef, from.Destination.Commit.Commit, from.Destination.Repository),
-		Head:     convertPullRequestBranch(headRef, from.Source.Commit.Commit, from.Source.Repository),
+		Base:     convertPullRequestBranch(baseRef, from.Destination.Commit.Commit, &from.Destination.Repository),
+		Head:     convertPullRequestBranch(headRef, from.Source.Commit.Commit, &from.Source.Repository),
 		Link:     from.Links.HTML.Href,
 		DiffLink: from.Links.Diff.Href,
 		State:    strings.ToLower(from.State),
@@ -379,11 +379,11 @@ func convertPullRequest(from *pullRequest) *scm.PullRequest {
 	}
 }
 
-func convertPullRequestBranch(ref string, sha string, repo repository) scm.PullRequestBranch {
+func convertPullRequestBranch(ref, sha string, repo *repository) scm.PullRequestBranch {
 	return scm.PullRequestBranch{
 		Ref:  ref,
 		Sha:  sha,
-		Repo: *convertRepository(&repo),
+		Repo: *convertRepository(repo),
 	}
 }
 
@@ -400,7 +400,6 @@ func convertPullRequests(ctx context.Context, prsvc *pullService, from *pullRequ
 func populateMergeableState(ctx context.Context, prsvc *pullService, from *pullRequest, to *scm.PullRequest) *scm.PullRequest {
 	out := new(diffstats)
 	_, err := prsvc.client.do(ctx, "GET", from.Links.DiffStat.Href, nil, out)
-
 	if err != nil {
 		// error judging PR mergeable status, defaulting to, unknown
 		to.MergeableState = scm.MergeableStateUnknown

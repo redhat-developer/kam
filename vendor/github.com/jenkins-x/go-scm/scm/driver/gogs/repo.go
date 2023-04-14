@@ -29,7 +29,7 @@ func (s *repositoryService) FindCombinedStatus(ctx context.Context, repo, ref st
 	return nil, nil, scm.ErrNotSupported
 }
 
-func (s *repositoryService) FindUserPermission(ctx context.Context, repo string, user string) (string, *scm.Response, error) {
+func (s *repositoryService) FindUserPermission(ctx context.Context, repo, user string) (string, *scm.Response, error) {
 	return "", nil, scm.ErrNotSupported
 }
 
@@ -41,11 +41,11 @@ func (s *repositoryService) IsCollaborator(ctx context.Context, repo, user strin
 	return false, nil, scm.ErrNotSupported
 }
 
-func (s *repositoryService) ListCollaborators(ctx context.Context, repo string, ops scm.ListOptions) ([]scm.User, *scm.Response, error) {
+func (s *repositoryService) ListCollaborators(ctx context.Context, repo string, opts *scm.ListOptions) ([]scm.User, *scm.Response, error) {
 	return nil, nil, scm.ErrNotSupported
 }
 
-func (s *repositoryService) ListLabels(context.Context, string, scm.ListOptions) ([]*scm.Label, *scm.Response, error) {
+func (s *repositoryService) ListLabels(context.Context, string, *scm.ListOptions) ([]*scm.Label, *scm.Response, error) {
 	return nil, nil, scm.ErrNotSupported
 }
 
@@ -56,7 +56,7 @@ func (s *repositoryService) Find(ctx context.Context, repo string) (*scm.Reposit
 	return convertRepository(out), res, err
 }
 
-func (s *repositoryService) FindHook(ctx context.Context, repo string, id string) (*scm.Hook, *scm.Response, error) {
+func (s *repositoryService) FindHook(ctx context.Context, repo, id string) (*scm.Hook, *scm.Response, error) {
 	path := fmt.Sprintf("api/v1/repos/%s/hooks/%s", repo, id)
 	out := new(hook)
 	res, err := s.client.do(ctx, "GET", path, nil, out)
@@ -70,34 +70,35 @@ func (s *repositoryService) FindPerms(ctx context.Context, repo string) (*scm.Pe
 	return convertRepository(out).Perm, res, err
 }
 
-func (s *repositoryService) List(ctx context.Context, _ scm.ListOptions) ([]*scm.Repository, *scm.Response, error) {
-	path := fmt.Sprintf("api/v1/user/repos")
+func (s *repositoryService) List(ctx context.Context, _ *scm.ListOptions) ([]*scm.Repository, *scm.Response, error) {
+	path := "api/v1/user/repos"
 	out := []*repository{}
 	res, err := s.client.do(ctx, "GET", path, nil, &out)
 	return convertRepositoryList(out), res, err
 }
 
-func (s *repositoryService) ListOrganisation(ctx context.Context, org string, opts scm.ListOptions) ([]*scm.Repository, *scm.Response, error) {
+func (s *repositoryService) ListOrganisation(ctx context.Context, org string, opts *scm.ListOptions) ([]*scm.Repository, *scm.Response, error) {
 	path := fmt.Sprintf("api/v1/orgs/%s/repos", org)
 	out := []*repository{}
 	res, err := s.client.do(ctx, "GET", path, nil, &out)
 	return convertRepositoryList(out), res, err
 }
 
-func (s *repositoryService) ListUser(ctx context.Context, username string, opts scm.ListOptions) ([]*scm.Repository, *scm.Response, error) {
+func (s *repositoryService) ListUser(ctx context.Context, username string, opts *scm.ListOptions) ([]*scm.Repository, *scm.Response, error) {
 	path := fmt.Sprintf("api/v1/users/%s/repos", username)
 	out := []*repository{}
 	res, err := s.client.do(ctx, "GET", path, nil, &out)
 	return convertRepositoryList(out), res, err
 }
-func (s *repositoryService) ListHooks(ctx context.Context, repo string, _ scm.ListOptions) ([]*scm.Hook, *scm.Response, error) {
+
+func (s *repositoryService) ListHooks(ctx context.Context, repo string, _ *scm.ListOptions) ([]*scm.Hook, *scm.Response, error) {
 	path := fmt.Sprintf("api/v1/repos/%s/hooks", repo)
 	out := []*hook{}
 	res, err := s.client.do(ctx, "GET", path, nil, &out)
 	return convertHookList(out), res, err
 }
 
-func (s *repositoryService) ListStatus(context.Context, string, string, scm.ListOptions) ([]*scm.Status, *scm.Response, error) {
+func (s *repositoryService) ListStatus(context.Context, string, string, *scm.ListOptions) ([]*scm.Status, *scm.Response, error) {
 	return nil, nil, scm.ErrNotSupported
 }
 
@@ -109,6 +110,7 @@ func (s *repositoryService) CreateHook(ctx context.Context, repo string, input *
 	in.Config.Secret = input.Secret
 	in.Config.ContentType = "json"
 	in.Config.URL = input.Target
+	// nolint
 	in.Events = append(
 		input.NativeEvents,
 		convertHookEvent(input.Events)...,
@@ -126,7 +128,7 @@ func (s *repositoryService) CreateStatus(context.Context, string, string, *scm.S
 	return nil, nil, scm.ErrNotSupported
 }
 
-func (s *repositoryService) DeleteHook(ctx context.Context, repo string, id string) (*scm.Response, error) {
+func (s *repositoryService) DeleteHook(ctx context.Context, repo, id string) (*scm.Response, error) {
 	path := fmt.Sprintf("api/v1/repos/%s/hooks/%s", repo, id)
 	return s.client.do(ctx, "DELETE", path, nil, nil)
 }
@@ -244,8 +246,7 @@ func convertHookEvent(from scm.HookEvents) []string {
 		events = append(events, "issue_comment")
 	}
 	if from.Branch || from.Tag {
-		events = append(events, "create")
-		events = append(events, "delete")
+		events = append(events, "create", "delete")
 	}
 	if from.Push {
 		events = append(events, "push")

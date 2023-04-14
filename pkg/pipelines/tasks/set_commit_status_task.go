@@ -26,19 +26,17 @@ func CreateCommitStatusTask(namespace string) *pipelinev1.Task {
 			},
 			Steps: []v1beta1.Step{
 				{
-					Container: v1.Container{
-						Name:  "set-commit-status",
-						Image: "quay.io/redhat-developer/gitops-commit-status@sha256:b28e5d207f70fc37f5cbf79fabcfa2708459316d09e9def9647c06807d9464cd",
-						Env: []v1.EnvVar{
-							{
-								Name: "GITHOSTACCESSTOKEN",
-								ValueFrom: &v1.EnvVarSource{
-									SecretKeyRef: &v1.SecretKeySelector{
-										LocalObjectReference: v1.LocalObjectReference{
-											Name: "$(params.GIT_TOKEN_SECRET_NAME)",
-										},
-										Key: "$(params.GIT_TOKEN_SECRET_KEY)",
+					Name:  "set-commit-status",
+					Image: "quay.io/redhat-developer/gitops-commit-status@sha256:b28e5d207f70fc37f5cbf79fabcfa2708459316d09e9def9647c06807d9464cd",
+					Env: []v1.EnvVar{
+						{
+							Name: "GITHOSTACCESSTOKEN",
+							ValueFrom: &v1.EnvVarSource{
+								SecretKeyRef: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "$(params.GIT_TOKEN_SECRET_NAME)",
 									},
+									Key: "$(params.GIT_TOKEN_SECRET_KEY)",
 								},
 							},
 						},

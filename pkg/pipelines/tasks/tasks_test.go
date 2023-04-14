@@ -23,12 +23,10 @@ func TestDeployFromSourceTask(t *testing.T) {
 			Resources: createResourcesForDeployFromSourceTask(),
 			Steps: []pipelinev1.Step{
 				{
-					Container: corev1.Container{
-						Name:       "run-kubectl",
-						Image:      "quay.io/redhat-developer/k8s-kubectl",
-						WorkingDir: "/workspace/source",
-					},
-					Script: "test",
+					Name:       "run-kubectl",
+					Image:      "quay.io/redhat-developer/k8s-kubectl",
+					WorkingDir: "/workspace/source",
+					Script:     "test",
 				},
 			},
 		},

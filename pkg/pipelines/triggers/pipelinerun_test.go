@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	pipelinev1alpha1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	pipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	pipelineresource "github.com/tektoncd/pipeline/pkg/apis/resource/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
@@ -116,7 +116,7 @@ func TestCreateDevResource(t *testing.T) {
 	want := []pipelinev1.PipelineResourceBinding{
 		{
 			Name: "source-repo",
-			ResourceSpec: &pipelinev1alpha1.PipelineResourceSpec{
+			ResourceSpec: &pipelineresource.PipelineResourceSpec{
 				Type: "git",
 				Params: []pipelinev1.ResourceParam{
 					createResourceParams("revision", "test"),

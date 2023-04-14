@@ -23,14 +23,12 @@ func CreateDeployFromSourceTask(ns, script string) pipelinev1.Task {
 func createStepsForDeployFromSourceTask(script string) []pipelinev1.Step {
 	return []pipelinev1.Step{
 		{
-			Container: createContainer(
-				"run-kubectl",
-				"quay.io/redhat-developer/k8s-kubectl",
-				"/workspace/source",
-				nil,
-				nil,
-			),
-			Script: script,
+			Name:       "run-kubectl",
+			Image:      "quay.io/redhat-developer/k8s-kubectl",
+			WorkingDir: "/workspace/source",
+			Command:    nil,
+			Args:       nil,
+			Script:     script,
 		},
 	}
 }

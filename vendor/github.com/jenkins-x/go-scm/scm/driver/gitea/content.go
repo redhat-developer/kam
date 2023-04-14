@@ -31,7 +31,7 @@ func (s *contentService) Find(ctx context.Context, repo, path, ref string) (*scm
 
 	return &scm.Content{
 		Path: path,
-		Data: []byte(raw),
+		Data: raw,
 		Sha:  out.SHA,
 	}, toSCMResponse(resp), err
 }
@@ -91,7 +91,7 @@ func (s *contentService) Update(ctx context.Context, repo, path string, params *
 	return toSCMResponse(resp), err
 }
 
-func (s *contentService) Delete(ctx context.Context, repo, path, ref string) (*scm.Response, error) {
+func (s *contentService) Delete(ctx context.Context, repo, path string, params *scm.ContentParams) (*scm.Response, error) {
 	return nil, scm.ErrNotSupported
 }
 

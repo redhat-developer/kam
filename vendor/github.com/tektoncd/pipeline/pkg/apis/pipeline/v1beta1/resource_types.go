@@ -46,14 +46,8 @@ const (
 	// PipelineResourceTypeImage indicates that this source is a docker Image.
 	PipelineResourceTypeImage PipelineResourceType = resource.PipelineResourceTypeImage
 
-	// PipelineResourceTypeCluster indicates that this source is a k8s cluster Image.
-	PipelineResourceTypeCluster PipelineResourceType = resource.PipelineResourceTypeCluster
-
 	// PipelineResourceTypePullRequest indicates that this source is a SCM Pull Request.
 	PipelineResourceTypePullRequest PipelineResourceType = resource.PipelineResourceTypePullRequest
-
-	// PipelineResourceTypeCloudEvent indicates that this source is a cloud event URI
-	PipelineResourceTypeCloudEvent PipelineResourceType = resource.PipelineResourceTypeCloudEvent
 )
 
 // AllResourceTypes can be used for validation to check if a provided Resource type is one of the known types.
@@ -64,9 +58,11 @@ var AllResourceTypes = resource.AllResourceTypes
 type TaskResources struct {
 	// Inputs holds the mapping from the PipelineResources declared in
 	// DeclaredPipelineResources to the input PipelineResources required by the Task.
+	// +listType=atomic
 	Inputs []TaskResource `json:"inputs,omitempty"`
 	// Outputs holds the mapping from the PipelineResources declared in
 	// DeclaredPipelineResources to the input PipelineResources required by the Task.
+	// +listType=atomic
 	Outputs []TaskResource `json:"outputs,omitempty"`
 }
 
@@ -82,8 +78,10 @@ type TaskResource struct {
 // TaskRunResources allows a TaskRun to declare inputs and outputs TaskResourceBinding
 type TaskRunResources struct {
 	// Inputs holds the inputs resources this task was invoked with
+	// +listType=atomic
 	Inputs []TaskResourceBinding `json:"inputs,omitempty"`
 	// Outputs holds the inputs resources this task was invoked with
+	// +listType=atomic
 	Outputs []TaskResourceBinding `json:"outputs,omitempty"`
 }
 
@@ -95,6 +93,7 @@ type TaskResourceBinding struct {
 	// The optional Path field corresponds to a path on disk at which the Resource can be found
 	// (used when providing the resource via mounted volume, overriding the default logic to fetch the Resource).
 	// +optional
+	// +listType=atomic
 	Paths []string `json:"paths,omitempty"`
 }
 
@@ -123,16 +122,15 @@ type PipelineResourceBinding struct {
 
 // PipelineResourceResult used to export the image name and digest as json
 type PipelineResourceResult struct {
-	Key          string `json:"key"`
-	Value        string `json:"value"`
-	ResourceName string `json:"resourceName,omitempty"`
-	// The field ResourceRef should be deprecated and removed in the next API version.
-	// See https://github.com/tektoncd/pipeline/issues/2694 for more information.
-	ResourceRef *PipelineResourceRef `json:"resourceRef,omitempty"`
-	ResultType  ResultType           `json:"type,omitempty"`
+	Key          string     `json:"key"`
+	Value        string     `json:"value"`
+	ResourceName string     `json:"resourceName,omitempty"`
+	ResultType   ResultType `json:"type,omitempty"`
 }
 
 // ResultType used to find out whether a PipelineResourceResult is from a task result or not
+// Note that ResultsType is another type which is used to define the data type
+// (e.g. string, array, etc) we used for Results
 type ResultType int
 
 // UnmarshalJSON unmarshals either an int or a string into a ResultType. String
@@ -143,7 +141,6 @@ type ResultType int
 // of string, and then fail the running TaskRun because it doesn't know how to interpret
 // the string value that the TaskRun's entrypoint will emit when it completes.
 func (r *ResultType) UnmarshalJSON(data []byte) error {
-
 	var asInt int
 	var intErr error
 
@@ -209,9 +206,12 @@ type TaskModifier interface {
 
 // InternalTaskModifier implements TaskModifier for resources that are built-in to Tekton Pipelines.
 type InternalTaskModifier struct {
-	StepsToPrepend []Step
-	StepsToAppend  []Step
-	Volumes        []v1.Volume
+	// +listType=atomic
+	StepsToPrepend []Step `json:"stepsToPrepend"`
+	// +listType=atomic
+	StepsToAppend []Step `json:"stepsToAppend"`
+	// +listType=atomic
+	Volumes []v1.Volume `json:"volumes"`
 }
 
 // GetStepsToPrepend returns a set of Steps to prepend to the Task.

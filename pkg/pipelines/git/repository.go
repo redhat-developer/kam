@@ -40,7 +40,7 @@ func NewRepository(rawURL, token string) (*Repository, error) {
 
 // ListWebhooks returns a list of webhook IDs of the given listener in this repository
 func (r *Repository) ListWebhooks(listenerURL string) ([]string, error) {
-	hooks, _, err := r.Client.Repositories.ListHooks(context.Background(), r.name, scm.ListOptions{})
+	hooks, _, err := r.Client.Repositories.ListHooks(context.Background(), r.name, &scm.ListOptions{})
 	if err != nil {
 		return nil, err
 	}

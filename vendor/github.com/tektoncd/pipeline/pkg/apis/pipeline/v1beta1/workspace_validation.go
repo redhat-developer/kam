@@ -36,7 +36,7 @@ var allVolumeSourceFields = []string{
 // Validate looks at the Volume provided in wb and makes sure that it is valid.
 // This means that only one VolumeSource can be specified, and also that the
 // supported VolumeSource is itself valid.
-func (b *WorkspaceBinding) Validate(ctx context.Context) *apis.FieldError {
+func (b *WorkspaceBinding) Validate(ctx context.Context) (errs *apis.FieldError) {
 	if equality.Semantic.DeepEqual(b, &WorkspaceBinding{}) || b == nil {
 		return apis.ErrMissingField(apis.CurrentField)
 	}
@@ -66,6 +66,16 @@ func (b *WorkspaceBinding) Validate(ctx context.Context) *apis.FieldError {
 		return apis.ErrMissingField("secret.secretName")
 	}
 
+	// For a Projected volume to work, you must provide at least one source.
+	if b.Projected != nil && len(b.Projected.Sources) == 0 {
+		return apis.ErrMissingField("projected.sources")
+	}
+
+	// For a CSI to work, you must provide and have installed the driver to use.
+	if b.CSI != nil && b.CSI.Driver == "" {
+		return apis.ErrMissingField("csi.driver")
+	}
+
 	return nil
 }
 
@@ -86,6 +96,12 @@ func (b *WorkspaceBinding) numSources() int {
 		n++
 	}
 	if b.Secret != nil {
+		n++
+	}
+	if b.Projected != nil {
+		n++
+	}
+	if b.CSI != nil {
 		n++
 	}
 	return n

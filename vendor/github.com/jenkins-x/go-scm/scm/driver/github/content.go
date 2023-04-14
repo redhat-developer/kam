@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"time"
 
 	"github.com/jenkins-x/go-scm/scm"
 )
@@ -59,7 +58,7 @@ func (s *contentService) Update(ctx context.Context, repo, path string, params *
 	return s.client.do(ctx, "PUT", endpoint, &body, nil)
 }
 
-func (s *contentService) Delete(ctx context.Context, repo, path, ref string) (*scm.Response, error) {
+func (s *contentService) Delete(ctx context.Context, repo, path string, params *scm.ContentParams) (*scm.Response, error) {
 	return nil, scm.ErrNotSupported
 }
 
@@ -77,22 +76,6 @@ type entry struct {
 	Size int    `json:"size"`
 	Sha  string `json:"sha"`
 	URL  string `json:"url"`
-}
-
-type contentUpdate struct {
-	Sha     string `json:"sha"`
-	Message string `json:"message"`
-	HTMLURL string `json:"html_url"`
-	Author  struct {
-		Name  string    `json:"name"`
-		Email string    `json:"email"`
-		Date  time.Time `json:"date"`
-	} `json:"author"`
-	Committer struct {
-		Name  string    `json:"name"`
-		Email string    `json:"email"`
-		Date  time.Time `json:"date"`
-	} `json:"committer"`
 }
 
 type contentBody struct {

@@ -43,21 +43,15 @@ const (
 	// PipelineResourceTypeImage indicates that this source is a docker Image.
 	PipelineResourceTypeImage PipelineResourceType = "image"
 
-	// PipelineResourceTypeCluster indicates that this source is a k8s cluster Image.
-	PipelineResourceTypeCluster PipelineResourceType = "cluster"
-
 	// PipelineResourceTypePullRequest indicates that this source is a SCM Pull Request.
 	PipelineResourceTypePullRequest PipelineResourceType = "pullRequest"
-
-	// PipelineResourceTypeCloudEvent indicates that this source is a cloud event URI
-	PipelineResourceTypeCloudEvent PipelineResourceType = "cloudEvent"
 
 	// PipelineResourceTypeGCS is the subtype for the GCSResources, which is backed by a GCS blob/directory.
 	PipelineResourceTypeGCS PipelineResourceType = "gcs"
 )
 
 // AllResourceTypes can be used for validation to check if a provided Resource type is one of the known types.
-var AllResourceTypes = []PipelineResourceType{PipelineResourceTypeGit, PipelineResourceTypeStorage, PipelineResourceTypeImage, PipelineResourceTypeCluster, PipelineResourceTypePullRequest, PipelineResourceTypeCloudEvent}
+var AllResourceTypes = []PipelineResourceType{PipelineResourceTypeGit, PipelineResourceTypeStorage, PipelineResourceTypeImage, PipelineResourceTypePullRequest}
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -95,9 +89,11 @@ type PipelineResourceSpec struct {
 	// +optional
 	Description string               `json:"description,omitempty"`
 	Type        PipelineResourceType `json:"type"`
-	Params      []ResourceParam      `json:"params"`
+	// +listType=atomic
+	Params []ResourceParam `json:"params"`
 	// Secrets to fetch to populate some of resource fields
 	// +optional
+	// +listType=atomic
 	SecretParams []SecretParam `json:"secrets,omitempty"`
 }
 
