@@ -26,23 +26,15 @@ import (
 // return information to clients about the names and states of the route under each router.
 // If a client chooses a duplicate name, for instance, the route status conditions are used
 // to indicate the route cannot be chosen.
-//
-// To enable HTTP/2 ALPN on a route it requires a custom
-// (non-wildcard) certificate. This prevents connection coalescing by
-// clients, notably web browsers. We do not support HTTP/2 ALPN on
-// routes that use the default certificate because of the risk of
-// connection re-use/coalescing. Routes that do not have their own
-// custom certificate will not be HTTP/2 ALPN-enabled on either the
-// frontend or the backend.
 type Route struct {
-	metav1.TypeMeta   `json:",inline"`
+	metav1.TypeMeta `json:",inline"`
+	// Standard object metadata.
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
 	// spec is the desired state of the route
 	Spec RouteSpec `json:"spec" protobuf:"bytes,2,opt,name=spec"`
 	// status is the current state of the route
-	// +optional
-	Status RouteStatus `json:"status,omitempty" protobuf:"bytes,3,opt,name=status"`
+	Status RouteStatus `json:"status" protobuf:"bytes,3,opt,name=status"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -50,6 +42,7 @@ type Route struct {
 // RouteList is a collection of Routes.
 type RouteList struct {
 	metav1.TypeMeta `json:",inline"`
+	// Standard object metadata.
 	metav1.ListMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
 	// items is a list of routes
@@ -62,7 +55,7 @@ type RouteList struct {
 // roundrobin scheduling the portion of requests that go to each backend is the backend
 // weight divided by the sum of all of the backend weights. When the backend has more than
 // one endpoint the requests that end up on the backend are roundrobin distributed among
-// the endpoints. Weights are between 0 and 256 with default 100. Weight 0 causes no requests
+// the endpoints. Weights are between 0 and 256 with default 1. Weight 0 causes no requests
 // to the backend. If all weights are zero the route will be considered to have no backends
 // and return a standard 503 response.
 //
@@ -76,29 +69,12 @@ type RouteSpec struct {
 	// If not specified a route name will typically be automatically
 	// chosen.
 	// Must follow DNS952 subdomain conventions.
-	// +optional
-	Host string `json:"host,omitempty" protobuf:"bytes,1,opt,name=host"`
-	// subdomain is a DNS subdomain that is requested within the ingress controller's
-	// domain (as a subdomain). If host is set this field is ignored. An ingress
-	// controller may choose to ignore this suggested name, in which case the controller
-	// will report the assigned name in the status.ingress array or refuse to admit the
-	// route. If this value is set and the server does not support this field host will
-	// be populated automatically. Otherwise host is left empty. The field may have
-	// multiple parts separated by a dot, but not all ingress controllers may honor
-	// the request. This field may not be changed after creation except by a user with
-	// the update routes/custom-host permission.
-	//
-	// Example: subdomain `frontend` automatically receives the router subdomain
-	// `apps.mycluster.com` to have a full hostname `frontend.apps.mycluster.com`.
-	//
-	// +optional
-	Subdomain string `json:"subdomain,omitempty" protobuf:"bytes,8,opt,name=subdomain"`
-
-	// path that the router watches for, to route traffic for to the service. Optional
+	Host string `json:"host" protobuf:"bytes,1,opt,name=host"`
+	// Path that the router watches for, to route traffic for to the service. Optional
 	Path string `json:"path,omitempty" protobuf:"bytes,2,opt,name=path"`
 
 	// to is an object the route should use as the primary backend. Only the Service kind
-	// is allowed, and it will be defaulted to Service. If the weight field (0-256 default 100)
+	// is allowed, and it will be defaulted to Service. If the weight field (0-256 default 1)
 	// is set to zero, no traffic will be sent to this backend.
 	To RouteTargetReference `json:"to" protobuf:"bytes,3,opt,name=to"`
 
@@ -129,9 +105,8 @@ type RouteTargetReference struct {
 	// name of the service/target that is being referred to. e.g. name of the service
 	Name string `json:"name" protobuf:"bytes,2,opt,name=name"`
 
-	// weight as an integer between 0 and 256, default 100, that specifies the target's relative weight
+	// weight as an integer between 0 and 256, default 1, that specifies the target's relative weight
 	// against other target reference objects. 0 suppresses requests to this backend.
-	// +optional
 	Weight *int32 `json:"weight" protobuf:"varint,3,opt,name=weight"`
 }
 
@@ -149,7 +124,7 @@ type RouteStatus struct {
 	// ingress describes the places where the route may be exposed. The list of
 	// ingress points may contain duplicate Host or RouterName values. Routes
 	// are considered live once they are `Ready`
-	Ingress []RouteIngress `json:"ingress,omitempty" protobuf:"bytes,1,rep,name=ingress"`
+	Ingress []RouteIngress `json:"ingress" protobuf:"bytes,1,rep,name=ingress"`
 }
 
 // RouteIngress holds information about the places where a route is exposed.
@@ -212,10 +187,6 @@ type RouterShard struct {
 // TLSConfig defines config used to secure a route and provide termination
 type TLSConfig struct {
 	// termination indicates termination type.
-	//
-	// * edge - TLS termination is done by the router and http is used to communicate with the backend (default)
-	// * passthrough - Traffic is sent straight to the destination without the router providing TLS termination
-	// * reencrypt - TLS termination is done by the router and https is used to communicate with the backend
 	Termination TLSTerminationType `json:"termination" protobuf:"bytes,1,opt,name=termination,casttype=TLSTerminationType"`
 
 	// certificate provides certificate contents
@@ -281,33 +252,4 @@ const (
 	//          should support requests for *.acme.test
 	//          Note that this will not match acme.test only *.acme.test
 	WildcardPolicySubdomain WildcardPolicyType = "Subdomain"
-)
-
-// Route Annotations
-const (
-	// AllowNonDNSCompliantHostAnnotation indicates that the host name in a route
-	// configuration is not required to follow strict DNS compliance.
-	// Unless the annotation is set to true, the route host name must have
-	// at least two labels, with each label no more than 63 characters from the set of
-	// alphanumeric characters, '-' or '.', and must start and end with an alphanumeric
-	// character. A trailing dot is allowed. The total host name length must be no more
-	// than 253 characters.
-	//
-	// When the annotation is set to true, the host name must pass a smaller set of
-	// requirements, i.e.: character set as described above, and total host name
-	// length must be no more than 253 characters.
-	//
-	// NOTE: use of this annotation may validate routes that cannot be admitted and will
-	// not function.  The annotation is provided to allow a custom scenario, e.g. a custom
-	// ingress controller that relies on the route API, but for some customized purpose
-	// needs to use routes with invalid hosts.
-	AllowNonDNSCompliantHostAnnotation = "route.openshift.io/allow-non-dns-compliant-host"
-)
-
-// Ingress-to-route controller
-const (
-	// IngressToRouteIngressClassControllerName is the name of the
-	// controller that translates ingresses into routes.  This value is
-	// intended to be used for the spec.controller field of ingressclasses.
-	IngressToRouteIngressClassControllerName = "openshift.io/ingress-to-route"
 )
