@@ -20,7 +20,7 @@ const defaultRoutePortName = "http-listener"
 
 // GenerateRoute generates an OpenShift route for the EventListener.
 //
-// It strips out the Status field from the route as this causes issues when
+// It strips out the Status & Spec.Host field from the route as this causes issues when
 // being created in a cluster.
 func GenerateRoute(ns string) (interface{}, error) {
 	r := createRoute(ns)
@@ -34,6 +34,7 @@ func GenerateRoute(ns string) (interface{}, error) {
 		return nil, err
 	}
 	delete(result, "status")
+	delete(result["spec"].(map[string]interface{}), "host")
 	return result, nil
 }
 
