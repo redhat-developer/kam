@@ -1,6 +1,14 @@
 # #!/bin/bash
 set -x
 
+PIPELINES_CHANNEL="latest"
+
+# workaround for https://github.com/redhat-developer/kam/issues/344
+OPENSHIFT_VERSION=$(oc version | grep 'Server Version' | awk '{print $3}')
+if [[ "$OPENSHIFT_VERSION" == "4.12"* || "$OPENSHIFT_VERSION" == "4.13"* ]]; then
+    PIPELINES_CHANNEL="pipelines-1.10"
+fi
+
 echo "Installing OpenShift Pipelines operator"
 echo -e "Ensure pipelines subscription exists"
 oc get subscription openshift-pipelines-operator-rh -n openshift-operators 2>/dev/null || \
@@ -11,7 +19,7 @@ metadata:
   name: openshift-pipelines-operator-rh
   namespace: openshift-operators
 spec:
-  channel: latest
+  channel: $PIPELINES_CHANNEL
   name: openshift-pipelines-operator-rh
   source: redhat-operators
   sourceNamespace: openshift-marketplace
