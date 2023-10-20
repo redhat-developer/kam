@@ -294,7 +294,11 @@ func (a *absoluteAttribute) Resolve(vars Activation) (any, error) {
 				return nil, err
 			}
 			if isOpt {
-				return types.OptionalOf(a.adapter.NativeToValue(obj)), nil
+				val := a.adapter.NativeToValue(obj)
+				if types.IsUnknown(val) {
+					return val, nil
+				}
+				return types.OptionalOf(val), nil
 			}
 			return obj, nil
 		}
@@ -558,7 +562,11 @@ func (a *relativeAttribute) Resolve(vars Activation) (any, error) {
 		return nil, err
 	}
 	if isOpt {
-		return types.OptionalOf(a.adapter.NativeToValue(obj)), nil
+		val := a.adapter.NativeToValue(obj)
+		if types.IsUnknown(val) {
+			return val, nil
+		}
+		return types.OptionalOf(val), nil
 	}
 	return obj, nil
 }
@@ -1171,6 +1179,9 @@ func applyQualifiers(vars Activation, obj any, qualifiers []Qualifier) (any, boo
 				return nil, false, err
 			}
 			if !present {
+				// We return optional none here with a presence of 'false' as the layers
+				// above will attempt to call types.OptionalOf() on a present value if any
+				// of the qualifiers is optional.
 				return types.OptionalNone, false, nil
 			}
 		} else {
@@ -1223,6 +1234,8 @@ func refQualify(adapter ref.TypeAdapter, obj any, idx ref.Val, presenceTest, pre
 		return nil, false, v
 	case traits.Mapper:
 		val, found := v.Find(idx)
+		// If the index is of the wrong type for the map, then it is possible
+		// for the Find call to produce an error.
 		if types.IsError(val) {
 			return nil, false, val.(*types.Err)
 		}
@@ -1234,6 +1247,8 @@ func refQualify(adapter ref.TypeAdapter, obj any, idx ref.Val, presenceTest, pre
 		}
 		return nil, false, missingKey(idx)
 	case traits.Lister:
+		// If the index argument is not a valid numeric type, then it is possible
+		// for the index operation to produce an error.
 		i, err := types.IndexOrError(idx)
 		if err != nil {
 			return nil, false, err
@@ -1254,6 +1269,8 @@ func refQualify(adapter ref.TypeAdapter, obj any, idx ref.Val, presenceTest, pre
 				if types.IsError(presence) {
 					return nil, false, presence.(*types.Err)
 				}
+				// If not found or presence only test, then return.
+				// Otherwise, if found, obtain the value later on.
 				if presenceOnly || presence == types.False {
 					return nil, presence == types.True, nil
 				}
@@ -1319,18 +1336,4 @@ func (e *resolutionError) Error() string {
 // Is implements the errors.Is() method used by more recent versions of Go.
 func (e *resolutionError) Is(err error) bool {
 	return err.Error() == e.Error()
-}
-
-func findMin(x, y int64) int64 {
-	if x < y {
-		return x
-	}
-	return y
-}
-
-func findMax(x, y int64) int64 {
-	if x > y {
-		return x
-	}
-	return y
 }
