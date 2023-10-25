@@ -37,9 +37,9 @@ func paramsForDeploymentFromSourceTask() []pipelinev1.ParamSpec {
 	return []pipelinev1.ParamSpec{
 		createTaskParamWithDefault(
 			"DRYRUN",
-			"If true run a server-side dryrun.",
+			"If 'server' run a server-side dryrun.",
 			pipelinev1.ParamTypeString,
-			"false",
+			"none",
 		),
 	}
 }

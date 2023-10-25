@@ -161,7 +161,7 @@ func createCIPipelineTask(taskName string) pipelinev1.PipelineTask {
 			Inputs: []pipelinev1.PipelineTaskInputResource{createInputTaskResource("source", "source-repo")},
 		},
 		Params: []pipelinev1.Param{
-			createTaskParam("DRYRUN", "true"),
+			createTaskParam("DRYRUN", "server"),
 		},
 		RunAfter: []string{PendingCommitStatusTask},
 	}

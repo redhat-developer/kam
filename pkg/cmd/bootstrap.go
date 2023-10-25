@@ -311,8 +311,8 @@ func (io *BootstrapParameters) Validate() error {
 		return fmt.Errorf("failed to parse url %s: %w", io.GitOpsRepoURL, err)
 	}
 
-	// TODO: this may not work with GitLab as the repo can have more path elements.
-	if len(utility.RemoveEmptyStrings(strings.Split(gr.Path, "/"))) != 2 {
+	// GitLab as the repo can have more path elements. Check that there are at least 2.
+	if len(utility.RemoveEmptyStrings(strings.Split(gr.Path, "/"))) <= 2 {
 		return fmt.Errorf("repo must be org/repo: %s", strings.Trim(gr.Path, ".git"))
 	}
 
