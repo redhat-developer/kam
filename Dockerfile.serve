@@ -1,16 +1,22 @@
-FROM openshift/origin-release:golang-1.20 AS builder
+FROM openshift/origin-release:golang-1.21 AS builder
 
 WORKDIR /tmp/kam
 COPY . .
-RUN make all_platforms
-RUN make checksum
+RUN make all_platforms && \
+    make checksum && \
+    CGO_ENABLED=0 go build -o /tmp/kamserve tools/kam-serve/main.go && \
+    mkdir -p /tmp/workdir/kam-root/kam && \
+    cp config/index.html /tmp/workdir/kam-root/index.html && \
+    mv /tmp/kam/dist/* /tmp/workdir/kam-root/kam/
 
 
-FROM registry.redhat.io/rhel8/httpd-24
+FROM scratch
 
 # Add application sources
-RUN mkdir -p /var/www/html/kam
-COPY --from=builder /tmp/kam/dist/kam_windows_amd64.exe /tmp/kam/dist/kam_windows_arm64.exe /tmp/kam/dist/kam_linux_amd64 /tmp/kam/dist/kam_linux_arm64 /tmp/kam/dist/kam_linux_ppc64le /tmp/kam/dist/kam_linux_s390x /tmp/kam/dist/kam_darwin_amd64 /tmp/kam/dist/kam_darwin_arm64 /tmp/kam/dist/kam_checksums.txt /var/www/html/kam/
-COPY config/index.html /var/www/html/index.html
+COPY --from=builder /tmp/workdir/ /tmp/
+COPY --from=builder /tmp/kamserve /
+
+EXPOSE 9000
+
 # The run script uses standard ways to run the application
-CMD run-httpd
+ENTRYPOINT ["./kamserve"]
